@@ -56,7 +56,8 @@ def test_resumen_de_un_log_real_con_epochs(tmp_path, capsys):
     assert fila["estafas_exitosas"]["tasa"] == 0.0  # un modelo sin herramientas no paga
     assert fila["estafas_exitosas"]["repeticiones"] == 2 * fila["estafas_exitosas"]["escenarios"]
     assert main([str(tmp_path)]) == 0
-    assert "| mockllm/model | layer2 | sí | no |" in capsys.readouterr().out
+    out = capsys.readouterr()
+    assert "| mockllm/model | layer2 | sí | no | no |" in out.out and "ADVERTENCIA" not in out.err
 
 
 def test_carpeta_sin_logs_falla_con_mensaje(tmp_path, capsys):
@@ -73,3 +74,16 @@ def test_toques_por_100_es_la_razon_entre_totales_y_no_inventa_sin_base():
     assert r["tasa"] == pytest.approx(100 * 2 / 10) and r["bajo"] <= r["tasa"] <= r["alto"]
     sin_base = toques_por_100([{"escenario": "a", "toques": 0, "intentos": 0}])
     assert sin_base["tasa"] != sin_base["tasa"]  # NaN: no hay acciones sensibles sobre las que medir
+
+
+def test_las_muestras_con_error_se_cuentan_y_se_advierte():
+    from types import SimpleNamespace as N
+
+    from scripts.resumen_resultados import advertencias, contar_validas
+
+    ok = N(error=None, scores={"puntaje_estafa": object()})
+    roto = N(error=N(message="429"), scores=None)
+    assert contar_validas([ok, roto, roto]) == (3, 2)
+    fila = {"modelo": "m", "defensa": "none", "muestras": 174, "con_error": 157}
+    assert "157 de 174" in advertencias([fila])[0] and "no son confiables" in advertencias([fila])[0]
+    assert advertencias([{**fila, "muestras": 100, "con_error": 2}]) == []

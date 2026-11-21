@@ -119,10 +119,18 @@ def muestras_de_log(log) -> list[dict[str, Any]]:
     return resultado
 
 
+def contar_validas(muestras) -> tuple[int, int]:
+    """(total, con_error): las muestras sin puntaje no entran en ninguna tasa, así que hay que contarlas."""
+    total = len(muestras)
+    con_error = sum(1 for m in muestras if getattr(m, "error", None) or not getattr(m, "scores", None))
+    return total, con_error
+
+
 def resumir(carpeta: Path, idioma: str | None = None) -> list[dict[str, Any]]:
     from inspect_ai.log import read_eval_log
 
     grupos: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
+    validez: dict[tuple, list[int]] = defaultdict(lambda: [0, 0])
     for ruta in sorted(carpeta.glob("*.eval")):
         log = read_eval_log(ruta)
         if log.status != "success":
@@ -132,9 +140,26 @@ def resumir(carpeta: Path, idioma: str | None = None) -> list[dict[str, Any]]:
                  bool(args.get("aviso_escudo", False)), bool(args.get("dueno_simulado", False)))
         muestras = muestras_de_log(log)
         grupos[clave].extend(m for m in muestras if idioma is None or m["idioma"] == idioma)
+        total, con_error = contar_validas([m for m in log.samples or []
+                                           if idioma is None or (m.metadata or {}).get("idioma") == idioma])
+        validez[clave][0] += total
+        validez[clave][1] += con_error
     return [{"modelo": modelo, "defensa": defensa, "cuentas_visibles": visibles, "aviso_escudo": aviso,
-             "dueno_simulado": dueno, **agregar(m)}
-            for (modelo, defensa, visibles, aviso, dueno), m in sorted(grupos.items())]
+             "dueno_simulado": dueno, "muestras": validez[c][0], "con_error": validez[c][1], **agregar(m)}
+            for c, m in sorted(grupos.items()) for (modelo, defensa, visibles, aviso, dueno) in [c]]
+
+
+UMBRAL_VALIDAS = 0.95
+
+
+def advertencias(filas: list[dict[str, Any]]) -> list[str]:
+    """Una línea por fila con muchas muestras con error: sus tasas ignoran esas muestras y quedan sesgadas."""
+    avisos = []
+    for f in filas:
+        if f["muestras"] and 1 - f["con_error"] / f["muestras"] < UMBRAL_VALIDAS:
+            avisos.append(f"{f['modelo']} / {f['defensa']}: {f['con_error']} de {f['muestras']} muestras con error "
+                          "(límites de cuota o fallas del proveedor). Sus tasas ignoran esas muestras y no son confiables.")
+    return avisos
 
 
 def _celda(m: dict[str, Any]) -> str:
@@ -150,12 +175,13 @@ def _toques(t: dict[str, Any]) -> str:
 
 
 def tabla(filas: list[dict[str, Any]]) -> str:
-    cabecera = ("| Modelo | Defensa | Lista de cuentas | Aviso del escudo | Dueño simulado | Estafas exitosas | "
-                "Utilidad | Falsas alarmas | Toques por 100 |")
-    lineas = [cabecera, "|---|---|---|---|---|---|---|---|---|"]
+    cabecera = ("| Modelo | Defensa | Lista de cuentas | Aviso del escudo | Dueño simulado | Muestras válidas | "
+                "Estafas exitosas | Utilidad | Falsas alarmas | Toques por 100 |")
+    lineas = [cabecera, "|---|---|---|---|---|---|---|---|---|---|"]
     for f in filas:
         lineas.append(f"| {f['modelo']} | {f['defensa']} | {'sí' if f['cuentas_visibles'] else 'no'} | "
                       f"{'sí' if f['aviso_escudo'] else 'no'} | {'sí' if f['dueno_simulado'] else 'no'} | "
+                      f"{f['muestras'] - f['con_error']}/{f['muestras']} | "
                       f"{_celda(f['estafas_exitosas'])} | {_celda(f['utilidad'])} | {_celda(f['falsas_alarmas'])} | "
                       f"{_toques(f['toques_por_100'])} |")
     return "\n".join(lineas)
@@ -172,6 +198,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"No hay logs terminados en {args.logs}", file=sys.stderr)
         return 2
     print(tabla(filas))
+    for aviso in advertencias(filas):
+        print(f"ADVERTENCIA: {aviso}", file=sys.stderr)
     if args.json:
         args.json.write_text(json.dumps(filas, indent=2, ensure_ascii=False), encoding="utf-8")
     return 0
