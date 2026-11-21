@@ -11,6 +11,10 @@ quiere, el texto del encargo. Los clientes MCP no exponen el mensaje del usuario
 que sin `encargo` la regla es conservadora: solo vale como confiable lo inscrito. Lo que escribe el
 agente en los argumentos nunca vuelve confiable un valor.
 
+Integridad (#102): Grifter guarda la huella de la política que aprobó el dueño. Si `grifter.yaml` cambia, retiene
+todo lo sensible y le manda el diff al dueño hasta que apruebe; y avisa (latido) al arrancar y al detenerse.
+Ver `integridad.py`.
+
 Uso: python -m scamshield.mcp.proxy --config grifter.yaml
 Ejemplo de configuración: scamshield/mcp/grifter.ejemplo.yaml
 """
@@ -28,7 +32,7 @@ from contextlib import AsyncExitStack
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Mapping, Optional, Union
+from typing import Any, Awaitable, Callable, Mapping, Optional, Protocol, Union
 
 import mcp.types as types
 import yaml
@@ -39,6 +43,9 @@ from mcp.server.stdio import stdio_server
 
 from ..defenses.layer2 import MOTIVO_CREDENCIAL, SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen, visible
 from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
+from .aprobaciones import (APROBADA, PENDIENTE, Aprobaciones, Aprobador, RegistroEncadenado, Solicitud,
+                           aprobadores_de, cargar_semillas)
+from .integridad import ENTORNO_CLAVE, Cambio, Integridad, corta
 
 log = logging.getLogger("grifter")
 
@@ -80,6 +87,15 @@ class Config:
     sensibles: dict[str, AccionSensible] = field(default_factory=lambda: dict(SENSIBLES_POR_DEFECTO))
     acciones: dict[str, str] = field(default_factory=lambda: dict(ACCION_POR_DEFECTO))
     registro: Optional[Path] = None
+    capas: dict[str, bool] = field(default_factory=lambda: {"capa2": True})
+    # Doble autorización (#102): quiénes aprueban, cuántos hacen falta y desde qué monto un pago los necesita.
+    aprobadores: list[Aprobador] = field(default_factory=list)
+    quorum: int = 1
+    umbral_doble: int = 0            # 0 = los pagos no piden doble autorización
+    semillas: Optional[Path] = None  # JSON {nombre: base32} fuera del repo; si no, GRIFTER_SEMILLAS
+    registro_aprobaciones: Optional[Path] = None
+    ruta: Optional[Path] = None      # el grifter.yaml del que salió, para vigilar que no cambie
+    estado: Optional[Path] = None    # dónde se guarda la política aprobada (por defecto, junto al yaml)
 
 
 def cargar_config(ruta: Union[str, Path]) -> Config:
@@ -104,7 +120,19 @@ def cargar_config(ruta: Union[str, Path]) -> Config:
         cuentas_inscritas={str(k): str(v) for k, v in (datos.get("cuentas_inscritas") or {}).items()},
         datos_dueno={str(k): str(v) for k, v in (datos.get("datos_dueno") or {}).items()},
         encargo=str(datos.get("encargo") or ""),
+        ruta=ruta,
     )
+    config.capas.update({str(k): bool(v) for k, v in (datos.get("capas") or {}).items()})
+    if datos.get("estado"):
+        estado = Path(str(datos["estado"]))
+        config.estado = estado if estado.is_absolute() else base / estado
+    config.aprobadores = [Aprobador(str(a["nombre"]), str(a.get("canal", ""))) for a in (datos.get("aprobadores") or [])]
+    config.quorum = int(datos.get("quorum") or (2 if len(config.aprobadores) >= 2 else 1))
+    config.umbral_doble = int(datos.get("umbral_doble") or 0)
+    for campo, clave in (("semillas", "semillas"), ("registro_aprobaciones", "registro_aprobaciones")):
+        if datos.get(clave):
+            ruta_ = Path(str(datos[clave]))
+            setattr(config, campo, ruta_ if ruta_.is_absolute() else base / ruta_)
     if datos.get("sensibles"):
         config.sensibles, config.acciones = {}, {}
         for herramienta, regla in datos["sensibles"].items():
@@ -148,6 +176,53 @@ class Alerta:
 Escalar = Callable[[Alerta], Union[Optional[bool], Awaitable[Optional[bool]]]]
 
 
+class AprobadorPolitica(Protocol):
+    """Quien le pregunta al dueño por un cambio de la política (por ejemplo, por Telegram)."""
+
+    def pedir(self, cambio: Cambio) -> Any: ...
+
+    def estado(self) -> Any:
+        """True si el dueño aprobó, False si rechazó, None si todavía no responde."""
+
+
+# Latido: (evento, datos) con evento «arranque» o «parada».
+Latido = Callable[[str, dict[str, Any]], Any]
+
+
+class Quorum(Protocol):
+    """Lo que el proxy necesita para pedir y contar aprobaciones de varias personas (por Telegram, por ejemplo)."""
+
+    aprobaciones: Aprobaciones
+
+    def notificar(self, solicitud: Solicitud) -> Any: ...
+
+    def sondear(self) -> Any:
+        """Recoge los votos que llegaron desde la última vez."""
+
+    def reconfigurar(self, politica: Mapping[str, Any]) -> None:
+        """Pasa a los aprobadores y el quórum de esa política (cuando el dueño aprobó un cambio)."""
+
+
+def _es_pago(herramienta: str, args: Mapping[str, Any]) -> bool:
+    claves = {str(k).lower() for k in args}
+    return herramienta in ("pagar", "transferir") or any(m in claves for m in CLAVES_DINERO)
+
+
+def _monto(args: Mapping[str, Any]) -> float:
+    """El monto de la llamada en pesos. Si no se puede leer, infinito: ante la duda, pide quórum."""
+    for k, v in args.items():
+        if str(k).lower() in CLAVES_DINERO:
+            if isinstance(v, (int, float)) and not isinstance(v, bool):
+                return float(v)
+            digitos = "".join(ch for ch in str(v) if ch.isdigit())
+            return float(digitos) if digitos else float("inf")
+    return float("inf")
+
+
+async def _resolver(valor: Any) -> Any:
+    return await valor if inspect.isawaitable(valor) else valor
+
+
 def escalar_por_defecto(alerta: Alerta) -> Optional[bool]:
     """Gancho para avisar al dueño. Devuelve True si el dueño aprueba y la llamada debe seguir.
 
@@ -171,6 +246,16 @@ class Guardia:
         # Lista paralela: (origen, texto) para la política y la fuente para el aviso.
         self.leidos: list[tuple[str, str]] = []
         self.fuentes: list[Optional[Fuente]] = []
+        if config.encargo:
+            self._anotar(DUENO, config.encargo, None)
+        for nombre, cuenta in config.cuentas_inscritas.items():
+            self._anotar(CONFIABLE, f"{nombre}: {cuenta}", None)
+
+    def actualizar(self, config: Config) -> None:
+        """Pasa a la política nueva que aprobó el dueño. Lo confiable viejo sale; lo leído de los servidores se queda."""
+        pares = [(l, f) for l, f in zip(self.leidos, self.fuentes) if f is not None]
+        self.leidos, self.fuentes = [l for l, _ in pares], [f for _, f in pares]
+        self.config, self.datos_dueno, self.encargo = config, dict(config.datos_dueno), config.encargo
         if config.encargo:
             self._anotar(DUENO, config.encargo, None)
         for nombre, cuenta in config.cuentas_inscritas.items():
@@ -264,10 +349,16 @@ def _error(mensaje: str) -> types.CallToolResult:
 
 
 class Grifter:
-    def __init__(self, config: Config, escalar: Escalar = escalar_por_defecto):
+    def __init__(self, config: Config, escalar: Escalar = escalar_por_defecto,
+                 integridad: Optional[Integridad] = None, aprobador: Optional[AprobadorPolitica] = None,
+                 latido: Optional[Latido] = None, quorum: Optional[Quorum] = None):
         self.config = config
         self.guardia = Guardia(config)
         self.escalar = escalar
+        self.integridad, self.aprobador, self.latido, self.quorum = integridad, aprobador, latido, quorum
+        self._pagos: dict[tuple[str, str, float], str] = {}   # pago grande pendiente -> id de su solicitud
+        self._pedido: Optional[str] = None      # la huella cuyo cambio ya se le mandó al dueño
+        self._rechazado: Optional[str] = None   # la huella que el dueño rechazó
         self.sesiones: dict[str, ClientSession] = {}
         # Nombre expuesto -> (servidor, nombre original de la herramienta).
         self.rutas: dict[str, tuple[str, str]] = {}
@@ -307,7 +398,22 @@ class Grifter:
                 self.config.sensibles[original] = regla
         if original in self.config.sensibles:
             try:
-                alerta = self.guardia.revisar(original, args, servidor)
+                retenida = await self._politica_pendiente()
+                if retenida:
+                    self._registrar("retenido_por_politica", herramienta=original, servidor=servidor, args=args)
+                    return _error(f"Grifter retuvo la llamada a {original}: {retenida}")
+                alerta = None
+                if self.config.capas.get("capa2", True):
+                    alerta = self.guardia.revisar(original, args, servidor)
+                else:
+                    self._registrar("capa2_apagada", herramienta=original, servidor=servidor, args=args)
+                if self.quorum is not None and self.config.umbral_doble > 0 and _es_pago(original, args):
+                    monto = _monto(args)
+                    if monto > self.config.umbral_doble:
+                        espera = await self._quorum_de_pago(original, servidor, args, alerta, monto)
+                        if espera is not None:
+                            return espera
+                        alerta = None   # los aprobadores lo aprobaron: ya no depende del aviso al dueño
                 if alerta is not None:
                     if self._inundado():
                         self._registrar("retenido_sin_preguntar", alerta=alerta)
@@ -334,6 +440,127 @@ class Grifter:
         resultado = await self.sesiones[servidor].call_tool(original, args)
         self.guardia.anotar_resultado(servidor, original, _texto_de(resultado))
         return resultado
+
+    # --- Doble autorización (#102) -------------------------------------------------------------------
+    async def _quorum_de_pago(self, herramienta: str, servidor: str, args: dict[str, Any],
+                              alerta: Optional[Alerta], monto: float) -> Optional[types.CallToolResult]:
+        """None si los aprobadores ya aprobaron este pago (sale una sola vez); si no, el error con el avance."""
+        regla = self.config.sensibles[herramienta]
+        valor = str(args.get(regla.destino, ""))
+        accion = self.config.acciones.get(herramienta, f"la llamada a {herramienta}")
+        ap = self.quorum.aprobaciones
+        clave = (herramienta, valor, monto)
+        id_ = self._pagos.get(clave)
+        if id_ is not None:
+            await _resolver(self.quorum.sondear())
+            estado = ap.estado(id_)
+            if estado == APROBADA:
+                ap.consumir(id_)
+                del self._pagos[clave]
+                self._registrar("aprobado_por_quorum", herramienta=herramienta, servidor=servidor, args=args)
+                return None
+            if estado == PENDIENTE:
+                return _error(f"Grifter retuvo {accion}: es un pago sobre el umbral y espera la doble autorización "
+                              f"({ap.progreso(id_)}). No lo reintentes con otra cuenta.")
+            del self._pagos[clave]   # rechazada o vencida
+            self._registrar("rechazado_por_quorum", herramienta=herramienta, servidor=servidor, args=args,
+                            estado=estado)
+            return _error(f"Grifter retuvo {accion}: los aprobadores no lo aprobaron ({estado}).")
+        if self._inundado():
+            self._registrar("retenido_sin_preguntar", herramienta=herramienta, servidor=servidor, args=args)
+            return _error(f"Grifter retuvo {accion}: hay demasiadas solicitudes seguidas; retiene todo por unos minutos.")
+        de_cuanto = f"${int(monto):,}".replace(",", ".") if monto != float("inf") else "un monto que no se pudo leer"
+        detalle = f"{accion[0].upper() + accion[1:]} de {de_cuanto} a {regla.que} {valor}"
+        if alerta is not None:
+            detalle += f"\n{alerta.mensaje}"
+        s = ap.abrir("pago", detalle, int(monto) if monto != float("inf") else "?", valor)
+        self._pagos[clave] = s.id
+        self._registrar("quorum_pedido", herramienta=herramienta, servidor=servidor, args=args, solicitud=s.id)
+        await _resolver(self.quorum.notificar(s))
+        return _error(f"Grifter retuvo {accion}: es un pago sobre el umbral y espera la doble autorización "
+                      f"({ap.progreso(s.id)}).")
+
+    # --- Integridad (#102) ---------------------------------------------------------------------------
+    async def _politica_pendiente(self) -> str:
+        """Vacío si la política es la que aprobó el dueño; si no, el motivo de la retención.
+
+        La primera vez que ve un cambio le manda el diff al dueño; después solo pregunta si ya respondió. Si
+        aprueba, Grifter pasa a la política nueva; si rechaza, sigue reteniendo hasta que se restaure el archivo.
+        """
+        if self.integridad is None:
+            return ""
+        cambio = self.integridad.cambio()
+        if cambio is None:
+            self._pedido = self._rechazado = None
+            return ""
+        clave = cambio.huella_nueva or f"ilegible:{cambio.ilegible}"
+        if self._pedido != clave:
+            self._pedido = clave
+            self._registrar("politica_cambio", cambio=cambio.texto, huella=corta(cambio.huella_nueva))
+            if self.aprobador is not None:
+                await _resolver(self.aprobador.pedir(cambio))
+        if self._rechazado == clave:
+            return "el dueño rechazó el cambio de la política; restaura grifter.yaml."
+        decision = await _resolver(self.aprobador.estado()) if self.aprobador is not None else None
+        if decision is True and not cambio.ilegible:
+            config, politica, _ = self.integridad.leer_actual()
+            if config is not None and politica is not None:
+                self.integridad.aprobar(politica, "dueño")
+                self.config.cuentas_inscritas = dict(config.cuentas_inscritas)
+                self.config.datos_dueno, self.config.encargo = dict(config.datos_dueno), config.encargo
+                self.config.sensibles, self.config.acciones = dict(config.sensibles), dict(config.acciones)
+                self.config.capas = dict(config.capas)
+                self.config.aprobadores, self.config.quorum = list(config.aprobadores), config.quorum
+                self.config.umbral_doble = config.umbral_doble
+                self.guardia.actualizar(self.config)
+                if self.quorum is not None:
+                    self.quorum.reconfigurar(politica)
+                self._pedido = None
+                self._registrar("politica_aprobada", huella=corta(cambio.huella_nueva))
+                return ""
+        if decision is False:
+            self._rechazado = clave
+            self._registrar("politica_rechazada", huella=corta(cambio.huella_nueva))
+            return "el dueño rechazó el cambio de la política; restaura grifter.yaml."
+        return ("la política (grifter.yaml) cambió desde la última que aprobó el dueño y espera su aprobación. "
+                "Hasta entonces no sale ningún pago ni envío de datos.")
+
+    def _datos_latido(self) -> dict[str, Any]:
+        aprobada = None
+        if self.integridad is not None:
+            try:
+                estado = self.integridad.estado()
+                aprobada = corta(estado.huella) if estado else None
+            except Exception:
+                aprobada = None
+        return {"capas": dict(self.config.capas), "huella": aprobada,
+                "servidores": [s.nombre for s in self.config.servidores]}
+
+    async def arrancar(self) -> str:
+        """Al arrancar: revisa la política, avisa al dueño del cambio si lo hay y manda el latido."""
+        modo = "sin_vigilancia"
+        if self.integridad is not None:
+            try:
+                modo = self.integridad.arrancar()
+            except Exception:
+                log.exception("no se pudo revisar la política al arrancar")
+                modo = "cambio"
+            if modo == "cambio":
+                await self._politica_pendiente()   # le manda el diff al dueño desde el principio
+        await self._avisar("arranque", {**self._datos_latido(), "politica": modo})
+        return modo
+
+    async def detener(self) -> None:
+        await self._avisar("parada", self._datos_latido())
+
+    async def _avisar(self, evento: str, datos: dict[str, Any]) -> None:
+        self._registrar("latido_" + evento, **datos)
+        if self.latido is None:
+            return
+        try:
+            await _resolver(self.latido(evento, datos))
+        except Exception:   # un aviso caído no detiene al proxy, pero queda dicho
+            log.exception("no se pudo mandar el latido de %s", evento)
 
     def _inundado(self) -> bool:
         """Cuenta esta alerta y dice si ya se pasó el tope de la ventana (contra el cansancio)."""
@@ -367,13 +594,19 @@ class Grifter:
         return servidor
 
 
-async def correr(config: Config, escalar: Escalar = escalar_por_defecto) -> None:
-    grifter = Grifter(config, escalar)
+async def correr(config: Config, escalar: Escalar = escalar_por_defecto,
+                 integridad: Optional[Integridad] = None, aprobador: Optional[AprobadorPolitica] = None,
+                 latido: Optional[Latido] = None, quorum: Optional[Quorum] = None) -> None:
+    grifter = Grifter(config, escalar, integridad, aprobador, latido, quorum)
     async with AsyncExitStack() as pila:
         await grifter.conectar(pila)
-        servidor = grifter.servidor_mcp()
-        async with stdio_server() as (read, write):
-            await servidor.run(read, write, servidor.create_initialization_options())
+        await grifter.arrancar()
+        try:
+            servidor = grifter.servidor_mcp()
+            async with stdio_server() as (read, write):
+                await servidor.run(read, write, servidor.create_initialization_options())
+        finally:
+            await grifter.detener()
 
 
 def main(argv: Optional[list[str]] = None) -> None:
@@ -389,7 +622,22 @@ def main(argv: Optional[list[str]] = None) -> None:
     config = cargar_config(args.config)
     if args.encargo:
         config.encargo = args.encargo
-    asyncio.run(correr(config))
+    integridad = None
+    if config.ruta is not None:
+        integridad = Integridad(config.ruta, config.estado, clave=os.environ.get(ENTORNO_CLAVE) or None)
+    escalar, aprobador, latido = escalar_por_defecto, None, None
+    from .alerta_telegram import ganchos_desde_entorno   # import tardío: el proxy no depende de la demo
+
+    telegram = ganchos_desde_entorno(os.environ)
+    quorum = None
+    if telegram is not None:
+        escalar, aprobador, latido = telegram.escalar, telegram.aprobador, telegram.latido
+        if config.aprobadores:   # con aprobadores, los cambios de política y los pagos grandes piden quórum
+            from .alerta_telegram import quorum_desde_entorno
+
+            quorum = quorum_desde_entorno(config, integridad, telegram.canal, os.environ)
+            aprobador = quorum.aprobador_de_politica()
+    asyncio.run(correr(config, escalar, integridad, aprobador, latido, quorum))
 
 
 if __name__ == "__main__":

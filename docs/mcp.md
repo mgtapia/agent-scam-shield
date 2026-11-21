@@ -23,6 +23,41 @@ En `grifter.yaml` van los servidores de abajo, las cuentas inscritas, los datos 
 
 Lo confiable es solo lo que escribe el dueño en `grifter.yaml` (o en `--encargo "..."`). Los clientes MCP no le pasan el mensaje del usuario al servidor, así que sin `encargo` la regla es conservadora: solo valen las cuentas inscritas. Lo que escribe el agente en los argumentos nunca cuenta como confiable.
 
+## Integridad: que nadie pueda apagar Grifter en silencio (#102)
+Quien controla la máquina podría editar `grifter.yaml` (inscribir la cuenta del estafador, apagar una capa) o apuntar al agente directo al banco. Grifter no lo impide, pero hace que **no pase sin que el dueño se entere**:
+
+1. **Solo Grifter tiene la credencial del banco.** La credencial va en el `env` del servidor en `grifter.yaml` y el banco la exige (`--clave-env BANCO_CLAVE`); un agente que lo levante por su cuenta no la tiene y el banco rechaza todo. Con el banco sandbox: `args: ["-m", "scamshield.mcp.servidor_banco", "--clave-env", "BANCO_CLAVE"]` y `env: {BANCO_CLAVE: ...}`.
+2. **Huella de la política.** Al arrancar y antes de cada llamada sensible, Grifter compara `grifter.yaml` (cuentas inscritas, datos del dueño, encargo, herramientas sensibles, capas, servidores) con la última política que aprobó el dueño (`.grifter_aprobada.json`, o la ruta de `estado:`). Si cambió, **retiene todo lo sensible, incluso a las cuentas inscritas**, y le manda al dueño el diff por Telegram con dos botones (aprobar o rechazar). El diff dice qué cambió en los datos del dueño y en las credenciales, nunca el valor. Un `grifter.yaml` ilegible o borrado también retiene. El primer arranque deja registrada la política inicial.
+3. **Registro firmado.** Si el proceso del proxy tiene `GRIFTER_CLAVE_ESTADO`, el registro de lo aprobado va firmado con HMAC: reescribirlo a mano sin la clave se nota.
+4. **Latido.** Al arrancar y al detenerse, Grifter le manda al dueño un aviso con las capas activas y si la política era la aprobada. Si se apaga sin aviso, el dueño lo sabe.
+
+La capa 2 se puede apagar con `capas: {capa2: false}`, pero es un cambio de política: se retiene y se avisa como cualquier otro. Para que el aviso llegue, el proxy necesita `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en su entorno.
+
+**Límite honesto:** alguien con acceso a la máquina, a la clave del registro *y* al teléfono del dueño puede todo.
+
+### Doble autorización: dos personas, no una
+Como en un banco para los montos grandes: nadie solo puede debilitar el escudo ni aprobar un pago grande. En `grifter.yaml`:
+```yaml
+aprobadores:
+  - {nombre: Sam, canal: "123456789"}     # el chat de Telegram de cada persona
+  - {nombre: Reed, canal: "987654321"}
+quorum: 2
+umbral_doble: 5000000                     # los pagos sobre este monto piden quórum, aunque la cuenta esté inscrita
+semillas: ../fuera-del-repo/semillas.json # o GRIFTER_SEMILLAS en el .env; nunca dentro del repo
+```
+**Piden quórum** (dos personas distintas): cualquier cambio de la política (cuenta inscrita nueva, apagar o bajar una capa, umbrales, aprobadores o quórum), los pagos sobre `umbral_doble` y los pagos que la capa 2 o 3 retuvo sobre ese umbral.
+
+**Reglas:** quien inició el cambio no cuenta como aprobador; un solo «no» rechaza (sin código); vence si no hay quórum (30 min un pago, 24 h la política) y queda rechazada; cambiar la lista de aprobadores o el quórum se aprueba con la lista *anterior*, así que nadie se agrega a sí mismo; un pago aprobado sale una sola vez.
+
+**Segundo factor tipo digipass:** el toque en Telegram no basta. Cada «Aprobar» pide el código de esa persona: un TOTP de RFC 6238 (HMAC, 30 s, 6 dígitos), de un solo uso y atado a la solicitud (su id, el monto y la cuenta), con la clave derivada de la semilla y del desafío, al estilo de la vinculación dinámica de PSD2. Un código sacado para otro pago no sirve para este. Tres códigos malos bloquean a ese aprobador para esa operación. El «digipass simulado» de la demo:
+```bash
+python -m scamshield.mcp.aprobaciones semillas Sam Reed --salida ../fuera-del-repo/semillas.json
+python -m scamshield.mcp.aprobaciones codigo --nombre Sam --id 3fa91c07 --monto 8000000 --cuenta 90-1188-4417
+```
+**Registro encadenado:** cada voto queda en `grifter_aprobaciones.jsonl` con quién, cuándo y por qué canal, y con el hash de la línea anterior. Cambiar o borrar una línea del medio rompe la cadena (`RegistroEncadenado.verificar()`); el código nunca se guarda. Quitar solo la última línea no rompe la cadena, por eso cada voto también le llega al otro aprobador.
+
+La alerta muestra el avance («1 de 2 aprobaciones») y el pago sale con la segunda aprobación. **Límite honesto:** quien tenga a la vez los dos teléfonos y los dos digipass puede todo.
+
 ## Claude Code
 Desde la raíz del repo, con el Python del venv:
 ```bash

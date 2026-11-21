@@ -29,3 +29,6 @@ grifter.yaml
 grifter_eventos.jsonl
 banco_sandbox.jsonl
 build/
+
+# La política aprobada por el dueño (huella de grifter.yaml): vive junto a la configuración.
+.grifter_aprobada.json
