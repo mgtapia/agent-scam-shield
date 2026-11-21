@@ -46,6 +46,10 @@
         <button type="button" data-ops-velocidad="2" aria-pressed="false">2x</button>
         <button type="button" data-ops-velocidad="4" aria-pressed="false">4x</button>
       </div>
+      <label class="campo solo-resultados">
+        <span class="oculto" data-t="modelo">Modelo</span>
+        <select id="sel-modelo"></select>
+      </label>
       <span class="fuente solo-resultados" id="fuente"></span>
       <div class="segmentado" role="group" aria-label="Idioma">
         <button type="button" data-idioma="es" aria-pressed="true">ES</button>
@@ -108,11 +112,11 @@
       <div class="kpis" id="kpis"></div>
       <div class="radares" id="radares" role="presentation"></div>
       <figure class="grafico calor">
-        <figcaption class="titulo"><span data-t="calor_tactica">Táctica × defensa</span><span class="nota" data-t="t_exito">éxito de la estafa</span></figcaption>
+        <figcaption class="titulo"><span data-t="calor_tactica">Táctica × defensa</span><span class="nota" id="nota-calor-tactica"></span><span class="leyenda" data-ayuda-t="ayuda_nbajo"><span class="muestra"></span><span data-t="n_bajo">n bajo</span></span></figcaption>
         <div class="lienzo" id="calor-tactica"></div>
       </figure>
       <figure class="grafico calor">
-        <figcaption class="titulo"><span data-t="calor_modelo">Modelo × idioma</span><span class="nota" data-t="modelo_nota">Sin defensa</span></figcaption>
+        <figcaption class="titulo"><span data-t="calor_modelo">Modelo × idioma</span><span class="nota" id="nota-calor-modelo"></span><span class="leyenda" data-ayuda-t="ayuda_nbajo"><span class="muestra"></span><span data-t="n_bajo">n bajo</span></span></figcaption>
         <div class="lienzo" id="calor-modelo"></div>
       </figure>
     </section>

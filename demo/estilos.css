@@ -261,6 +261,7 @@ body:not([data-vista="operaciones"]) .solo-ops { display: none; }
 .carril-cab { display: flex; align-items: center; gap: var(--e-1); height: 48px; padding: 0 var(--e-2); border-bottom: var(--linea); }
 .carril-cab h2 { font-size: var(--t-3); line-height: var(--l-3); font-weight: var(--p-fuerte); }
 .carril-cab .ms { color: var(--texto-2); }
+.carril-cab .modelo { font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); color: var(--texto-3); }
 .carril-cab .riesgo { margin-left: auto; font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); color: var(--texto-2); }
 
 .monitor { height: 96px; border-bottom: var(--linea); position: relative; }
@@ -399,11 +400,17 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .kpi .etiqueta { color: var(--texto-2); }
 .kpi .valor { font: var(--p-fuerte) var(--t-kpi) / var(--l-kpi) var(--mono); font-variant-numeric: tabular-nums; }
 .kpi .valor.sin { color: var(--texto-3); }
+.kpi .valor .intervalo { margin-left: var(--e-1); font: var(--p-normal) var(--t-2) / var(--l-2) var(--mono); color: var(--texto-2); }
 .kpi .delta { display: flex; align-items: center; gap: var(--e-1); font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); color: var(--texto-2); }
 .kpi .delta .ms { color: inherit; }
 .kpi .delta.c-rojo { color: var(--rojo); }
 .kpi .delta.c-verde { color: var(--verde); }
 .kpi .pie { color: var(--texto-3); font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); }
+
+/* Leyenda de «n bajo»: la muestra se ve igual que una celda atenuada. */
+.leyenda { display: flex; align-items: center; gap: var(--e-1); font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); color: var(--texto-2); }
+.leyenda .muestra { width: 12px; height: 12px; background: var(--rojo); opacity: 0.35; }
+.titulo .nota + .leyenda { margin-left: var(--e-2); }
 
 .grafico { border: var(--linea); background: var(--superficie); min-width: 0; }
 .radares .grafico { grid-column: span 4; }

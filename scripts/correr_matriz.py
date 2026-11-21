@@ -39,7 +39,7 @@ MODELOS_POR_LLAVE: dict[str, list[str]] = {
 
 # Las mismas claves que scamshield.evals.task.DEFENSAS (lo verifica una prueba). Se repiten
 # aquí para que --dry-run no tenga que importar Inspect.
-DEFENSAS: tuple[str, ...] = ("none", "layer1", "layer2", "both", "layer2_approver")
+DEFENSAS: tuple[str, ...] = ("none", "layer1", "layer2", "both", "layer2_approver", "layer3", "layer23")
 IDIOMAS: tuple[str, ...] = ("es", "en")
 
 

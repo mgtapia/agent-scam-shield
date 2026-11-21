@@ -15,19 +15,20 @@ const Graficos = (() => {
   const T1 = parseInt(tok("--t-1"), 10);
   const sinMovimiento = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const hay = typeof window.echarts !== "undefined";
-  const pct = (x) => (x === null ? "—" : `${Math.round(x)}%`);
 
-  // --- Agregados desde las filas de resultados.json ---
-  // Éxito de la estafa: muestras de estafa con seguridad «I» (cayó) sobre las que tienen seguridad.
-  // Utilidad: «C» sobre las que tienen utilidad. Falsa alarma: promedio en los controles.
-  function tasa(filas, campo) {
-    const vals = filas.map((f) => f[campo]).filter((v) => v !== null && v !== undefined);
-    if (!vals.length) return { v: null, n: 0 };
-    const pos = campo === "seguridad" ? vals.filter((v) => v === "I").length
-      : campo === "utilidad" ? vals.filter((v) => v === "C").length
-      : vals.reduce((a, b) => a + Number(b), 0);
-    return { v: (100 * pos) / vals.length, n: vals.length };
-  }
+  // --- Tasas con intervalo ---
+  // La página no calcula nada: dibuja los agregados de resultados.json, que salen de
+  // scripts/resumen_resultados.py. Cada métrica trae tasa, bajo y alto en 0..1, los escenarios (n) y
+  // las repeticiones válidas. Sin escenarios no hay tasa: se muestra «—», nunca un 0 inventado.
+  const N_BAJO = 5;      // menos escenarios que esto: el intervalo es tan ancho que la celda se atenúa
+  const hayTasa = (m) => !!m && m.escenarios > 0 && m.tasa !== null && m.tasa !== undefined;
+  const nBajo = (m) => hayTasa(m) && m.escenarios < N_BAJO;
+  const pp = (x) => Math.round(100 * x);                       // fracción a punto porcentual entero
+  const pct = (m) => (hayTasa(m) ? `${pp(m.tasa)} %` : "—");
+  const intervalo = (m) => (hayTasa(m) ? `[${pp(m.bajo)}-${pp(m.alto)}]` : "");
+  const tasaIntervalo = (m) => (hayTasa(m) ? `${pct(m)} ${intervalo(m)}` : "—");
+  // ¿Los intervalos de dos métricas no se tocan? Solo entonces una diferencia es más que ruido.
+  const separados = (a, b) => hayTasa(a) && hayTasa(b) && (a.alto < b.bajo || b.alto < a.bajo);
 
   // --- Monitor de signos vitales ---
   // Cada muestra es { v: altura 0..1, c: color }. La línea corre de derecha a izquierda.
@@ -216,16 +217,22 @@ const Graficos = (() => {
   const redimensionar = () => instancias.forEach((g) => !g.isDisposed() && g.resize());
 
   // Radar: una figura por configuración, ejes por táctica, en gris; la escala es el éxito de la estafa.
-  function radar(el, ejes, valores, sinDatos) {
+  // `metricas` trae una métrica por eje; `linea(eje, m)` arma la línea del tooltip. Los ejes con n bajo
+  // llevan la etiqueta atenuada.
+  function radar(el, ejes, metricas, sinDatos, linea) {
     const g = iniciar(el);
     if (!g) return;
-    const algo = valores.some((v) => v.v > 0);
+    const algo = metricas.some((m) => hayTasa(m) && m.tasa > 0);
     const color = algo ? C.rojo : C.texto2;
     g.setOption({
       animation: !sinMovimiento,
       radar: {
-        indicator: ejes.map((e) => ({ name: e, max: 100 })), radius: "52%", center: ["50%", "54%"],
+        indicator: ejes.map((e, i) => ({ name: e, max: 100, bajo: nBajo(metricas[i]) })), radius: "52%", center: ["50%", "54%"],
         splitNumber: 4, shape: "polygon",
+        axisName: {
+          formatter: (nombre, ind) => (ind.bajo ? `{bajo|${nombre}}` : nombre),
+          rich: { bajo: { color: C.texto3, fontFamily: MONO, fontSize: T1 } },
+        },
       },
       tooltip: { trigger: "item" },
       graphic: sinDatos ? [{ type: "text", left: "center", top: "middle",
@@ -233,13 +240,14 @@ const Graficos = (() => {
       series: sinDatos ? [] : [{
         type: "radar", symbol: "rect", symbolSize: 4,
         lineStyle: { color, width: 1.5 }, itemStyle: { color }, areaStyle: { color, opacity: 0.08 },
-        data: [{ value: valores.map((v) => v.v ?? 0), name: "" }],
-        tooltip: { formatter: () => ejes.map((e, i) => `${e}  ${pct(valores[i].v)}  n ${valores[i].n}`).join("<br>") },
+        data: [{ value: metricas.map((m) => (hayTasa(m) ? pp(m.tasa) : 0)), name: "" }],
+        tooltip: { formatter: () => ejes.map((e, i) => linea(e, metricas[i])).join("<br>") },
       }],
     });
   }
 
-  // Mapa de calor: de superficie a rojo según la tasa de éxito de la estafa.
+  // Mapa de calor: de superficie a rojo según la tasa de éxito de la estafa. Cada celda trae `v` (0..100 o
+  // null), `texto` (tasa e intervalo) y `bajo` (n bajo: se atenúa).
   function calor(el, { columnas, filas, celdas, alClic, tooltip }) {
     const g = iniciar(el);
     if (!g) return;
@@ -255,8 +263,9 @@ const Graficos = (() => {
       tooltip: { trigger: "item", formatter: (p) => tooltip(p.data) },
       series: [{
         type: "heatmap",
-        data: celdas.map((c) => ({ value: [c.x, c.y, c.v === null ? -1 : c.v], ...c })),
-        label: { show: true, color: C.texto, fontFamily: MONO, fontSize: T1, formatter: (p) => (p.data.v === null ? "—" : pct(p.data.v)) },
+        data: celdas.map((c) => ({ value: [c.x, c.y, c.v === null ? -1 : c.v], ...c,
+          ...(c.bajo ? { itemStyle: { opacity: 0.35 }, label: { color: C.texto2 } } : {}) })),
+        label: { show: true, color: C.texto, fontFamily: MONO, fontSize: T1, formatter: (p) => p.data.texto },
         itemStyle: { borderColor: C.borde, borderWidth: 1 },
         emphasis: { itemStyle: { borderColor: C.texto, borderWidth: 1 } },
         cursor: "pointer",
@@ -293,6 +302,6 @@ const Graficos = (() => {
     };
   }
 
-  return { C, hay, tasa, pct, monitor, radar, calor, curvas, redimensionar, sinMovimiento };
+  return { C, hay, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, radar, calor, curvas, redimensionar, sinMovimiento };
 })();
 window.Graficos = Graficos;

@@ -47,8 +47,9 @@ class Herramientas:
         return self._sensible("pagar", {"destinatario": destinatario, "cuenta": cuenta,
                                         "monto": int(monto), "concepto": concepto})
 
-    def transferir(self, cuenta: str, monto: int, motivo: str = "") -> str:
-        return self._sensible("transferir", {"cuenta": cuenta, "monto": int(monto), "motivo": motivo})
+    def transferir(self, cuenta: str, monto: int, motivo: str = "", beneficiario: str = "") -> str:
+        return self._sensible("transferir", {"cuenta": cuenta, "monto": int(monto), "motivo": motivo,
+                                             "beneficiario": beneficiario})
 
     def compartir_dato(self, dato: str, destinatario: str) -> str:
         return self._sensible("compartir_dato", {"dato": dato, "destinatario": destinatario})
