@@ -79,7 +79,13 @@ python scripts/atacante_adaptativo.py --victima anthropic/claude-sonnet-5-5 --ro
 python scripts/graficar_atacante.py results/raw/atacante_<fecha>.jsonl   # SVG, tabla y curvas
 ```
 
-El atacante, el crítico y el juez son un modelo abierto barato (por defecto `groq/openai/gpt-oss-120b`, capa gratis con 8.000 tokens por minuto, así que una corrida completa tarda). Los modelos de Claude se niegan a hacer de atacante, y la cuota de Gemini se agota; ver los resultados en el PR.
+El atacante, el crítico y el juez son un modelo abierto barato (por defecto `groq/openai/gpt-oss-120b`). Límites que se encontraron el 2026-11-21:
+
+- **Claude no sirve de atacante:** Haiku 5.5 se niega a escribir la estafa y todas sus reescrituras salen inválidas.
+- **Gemini 3.5 Flash:** la cuota gratis se agotó y Inspect reintentaba sin fin.
+- **Groq gratis:** 8.000 tokens por minuto y 200.000 por día. Una corrida chica (5 estafas × 2 defensas × 3 rondas) ya gasta el día; las llamadas que fallan por cuota quedan en la fila con `error` y no cuentan como intento.
+
+Primeros resultados, con Haiku 5.5 de víctima, en `results/atacante/`: la ronda 0 de las 14 estafas atacables en español y de las 3 defensas dio 0/14 en todas (Haiku no cae ni sin defensa), y la corrida chica de 5 estafas convincentes sumó 2 rondas de adaptación reales (17 reescrituras, realismo medio 8,4/10) sin que Haiku intentara ni una. Esa curva queda plana en 0 y no distingue las defensas: para mostrar que la capa 2 aguanta hace falta una víctima que sí caiga o más rondas.
 
 ## Estructura prevista
 ```
