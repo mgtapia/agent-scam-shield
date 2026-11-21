@@ -88,6 +88,29 @@ Sobre las 42 estafas (21 por idioma) y los 16 controles, medido con `capa1_cober
 
 Nota de licencia: los binarios oficiales de Pipelock traen además código bajo ELv2 (carpeta `enterprise/` del repo). No los redistribuimos: cada persona baja el suyo, y el proyecto solo lo corre como un proceso aparte.
 
+## Atacante adaptativo («grifter»)
+`scamshield/attacker/` reescribe cada estafa, ronda tras ronda, para ver si alguna defensa aguanta. Es una versión de PAIR (MIT) adaptada a estafas:
+
+- **Qué puede tocar:** solo el contenido no confiable que lleva la cuenta o el destinatario del estafador (correo, página o herramienta MCP). El encargo, las cuentas inscritas, los datos del dueño y los correos legítimos quedan fijos: el atacante nunca mete su cuenta por un canal del dueño. Las estafas donde el dueño ya fue engañado (`dueno_ya_enganado`) no se atacan.
+- **Cada ronda:** el atacante ve lo que hizo la víctima, qué defensa bloqueó y por qué, y un puntaje de 1 a 10 del crítico. Antes de gastar un episodio de la víctima, una validación determinista (el valor del estafador sigue ahí, nada de marcas reales, forma correcta) y un juez de realismo descartan lo que ningún estafador enviaría.
+- **Éxito:** sale del puntaje de la eval (la víctima ejecutó la acción del estafador), nunca del crítico. Además se mide si el agente *intentó* la estafa aunque la defensa la frenara, que separa lo que engaña al modelo de lo que cruza la defensa.
+- **Costo:** la ronda 0 es la estafa original; una estafa que ya cayó deja de atacarse; hay caché y un tope de episodios (`--max-episodios`).
+
+```bash
+python scripts/atacante_adaptativo.py --dry-run                  # plan y gasto máximo, sin llamar a ningún modelo
+python scripts/atacante_adaptativo.py --limit 2 --rondas 2       # humo
+python scripts/atacante_adaptativo.py --victima anthropic/claude-sonnet-5-5 --rondas 3
+python scripts/graficar_atacante.py results/raw/atacante_<fecha>.jsonl   # SVG, tabla y curvas
+```
+
+El atacante, el crítico y el juez son un modelo abierto barato (por defecto `groq/openai/gpt-oss-120b`). Límites que se encontraron el 2026-11-21:
+
+- **Claude no sirve de atacante:** Haiku 5.5 se niega a escribir la estafa y todas sus reescrituras salen inválidas.
+- **Gemini 3.5 Flash:** la cuota gratis se agotó y Inspect reintentaba sin fin.
+- **Groq gratis:** 8.000 tokens por minuto y 200.000 por día. Una corrida chica (5 estafas × 2 defensas × 3 rondas) ya gasta el día; las llamadas que fallan por cuota quedan en la fila con `error` y no cuentan como intento.
+
+Primeros resultados, con Haiku 5.5 de víctima, en `results/atacante/`: la ronda 0 de las 14 estafas atacables en español y de las 3 defensas dio 0/14 en todas (Haiku no cae ni sin defensa), y la corrida chica de 5 estafas convincentes sumó 2 rondas de adaptación reales (17 reescrituras, realismo medio 8,4/10) sin que Haiku intentara ni una. Esa curva queda plana en 0 y no distingue las defensas: para mostrar que la capa 2 aguanta hace falta una víctima que sí caiga o más rondas.
+
 ## Estructura prevista
 ```
 scamshield/
