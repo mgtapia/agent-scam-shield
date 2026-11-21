@@ -202,7 +202,9 @@
   // La entrada: la narradora cuenta el encargo mientras suena el teléfono, y termina antes de que conteste la abuela.
   const NE = { en: r2(A1 + 0.4), dura: 3.04 };
   // La llamada: los mp3 de la abuela y el nieto (#171) y su sincronía no cambian; todo se corre junto desde A1.
-  const LLAMADA = { suena: r2(A1 + 1.4), contesta: r2(A1 + 4), abuela: r2(A1 + 4.3), nieto: r2(A1 + 6.9), cuelga: r2(A1 + 31.6) };
+  // Cuelga apenas termina el nieto: su mp3 dura 23,52 s (medido decodificándolo en el navegador), más un respiro.
+  const NIETO_S = 23.52;
+  const LLAMADA = { suena: r2(A1 + 1.4), contesta: r2(A1 + 4), abuela: r2(A1 + 4.3), nieto: r2(A1 + 6.9), cuelga: r2(A1 + 6.9 + NIETO_S + 0.08) };
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
   // Después de colgar, la narradora cuenta todo de corrido (narracion_autoriza) y cada cosa aparece cuando la nombra:
