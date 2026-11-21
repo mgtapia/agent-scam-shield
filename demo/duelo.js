@@ -43,7 +43,7 @@ const Duelo = (() => {
   });
 
   const MODOS = ["congelado", "aprende"];
-  const d = { historial: [], visible: false };
+  const d = { historial: [], visible: false, cargado: false };
   const datos = () => estado.resultados?.duelo || null;
   const num = (n) => Number(n).toLocaleString(t("locale"));
   const pct = (x) => `${Math.round((x || 0) * 100)} %`;
@@ -110,8 +110,10 @@ const Duelo = (() => {
     return true;
   }
 
-  function pintar() {
-    if (estado.resultados === undefined) return;   // resultados.json todavía no llega
+  // `listo`: app.js avisa que resultados.json ya llegó (o que no está). Antes no se pinta, ni el estado vacío.
+  function pintar(listo = false) {
+    if (listo === true) d.cargado = true;
+    if (!d.cargado) return;
     const D = datos();
     if (pintarVacio(D)) return;
     pintarFranja(D);
@@ -139,10 +141,10 @@ const Duelo = (() => {
   function alCambiarVista(vista) {
     const antes = d.visible;
     d.visible = vista === "duelo";
-    if (d.visible && !antes) requestAnimationFrame(pintar);
+    if (d.visible && !antes) requestAnimationFrame(() => pintar());
   }
 
-  document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", pintar));
+  document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => pintar()));
   return { aplicar, cargar, alCambiarVista, pintar, _d: d };
 })();
 window.Duelo = Duelo;

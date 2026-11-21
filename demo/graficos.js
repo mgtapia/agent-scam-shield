@@ -277,7 +277,7 @@ const Graficos = (() => {
     g.setOption({
       animation: !sinMovimiento,
       grid: { left: 40, right: 16, top: 12, bottom: 40 },
-      xAxis: { type: "value", min: 1, max: n, interval: n > 10 ? 5 : 1, name: nombres.eje, nameLocation: "middle", nameGap: 24,
+      xAxis: { type: "value", min: 1, max: n, interval: 1, axisLabel: { color: C.texto2, formatter: (v) => (n <= 10 || v === 1 || v % 5 === 0 ? v : "") }, name: nombres.eje, nameLocation: "middle", nameGap: 24,
         nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, splitLine: { show: false } },
       yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
       tooltip: { trigger: "axis", formatter: (ps) => [`${nombres.gen} ${ps[0]?.value[0]}`,

@@ -683,5 +683,5 @@ if (params.get("escenario")) estado.escenario = params.get("escenario");
 llenarEscenarios();
 irA(location.hash.slice(1) || "operaciones");
 cargarEscenario();
-cargarResultados().then((R) => { estado.resultados = R; pintarAnalisis(); window.Duelo?.pintar(); });
+cargarResultados().then((R) => { estado.resultados = R; pintarAnalisis(); window.Duelo?.pintar(true); });
 if (params.has("auto")) reproducir();
