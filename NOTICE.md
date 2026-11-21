@@ -11,3 +11,18 @@ agent-scam-shield se publica con licencia MIT. Reutiliza ideas, estructura o có
 | [ScamWorld](https://github.com/wuyoscar/scamworld-bench) | Código Apache-2.0; datos CC BY-NC 4.0 | Solo su taxonomía de estafas, como referencia. No copiamos sus datos |
 
 Los textos de licencia completos están en cada repositorio de origen. Si un archivo de este repo copia código de alguno de ellos, lo dice en su encabezado.
+
+## Skills de Claude Code de terceros
+
+Las carpetas de `.claude/skills/` son copias de skills de otros proyectos, fijadas a un commit exacto. Cada carpeta trae su archivo de licencia; si el original la tenía solo en la raíz del repo, copiamos ese archivo dentro de la carpeta. No agregamos encabezados a los archivos copiados: el `SKILL.md` tiene que empezar con su frontmatter (`---`) para que Claude Code lo cargue, y los scripts quedan tal cual. La atribución de cada archivo es la licencia de su carpeta más esta tabla.
+
+| Repositorio | Licencia | Commit | Skills |
+|---|---|---|---|
+| [UKGovernmentBEIS/inspect_evals](https://github.com/UKGovernmentBEIS/inspect_evals/tree/c2d3d5e1335c07fb8032bcfc7869e9437e635c4c/.claude/skills). Copyright (c) 2024 UK AI Security Institute | MIT (`LICENSE` de la raíz, copiado en cada carpeta) | `c2d3d5e1335c07fb8032bcfc7869e9437e635c4c` | `create-eval`, `eval-validity-review` |
+| [anthropics/skills](https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills), de Anthropic | Apache-2.0 (`LICENSE.txt` propio de cada carpeta; en ese repo la licencia va por carpeta) | `e4bb5d960d87126ff3b3a8af1a104b7db67560ba` | `webapp-testing`, `frontend-design` |
+| [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills/tree/ec59a29a03d5c40f73ab40878df04860bc00e876/skills). Copyright (c) 2025 K-Dense Inc. | MIT (`LICENSE.md` de la raíz, copiado en cada carpeta) | `ec59a29a03d5c40f73ab40878df04860bc00e876` | `matplotlib`, `scientific-visualization` |
+
+Notas:
+- El frontmatter de `matplotlib/SKILL.md` dice `license:` con un enlace a la licencia de Matplotlib. Esa es la licencia de la biblioteca, no la de la skill: la skill está bajo la MIT de K-Dense.
+- `verify-scoring-change` de inspect_evals no se copió: uno de sus pasos lee el `.env` del checkout, y este proyecto no lee `.env`.
+- Único cambio respecto del original: en `matplotlib` y `scientific-visualization` quitamos la línea `allowed-tools` del frontmatter, que pre-aprobaba Bash mientras la skill está activa.
