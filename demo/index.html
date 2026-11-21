@@ -28,6 +28,7 @@
       <a role="tab" href="#operaciones" data-vista="operaciones" aria-selected="true"><span class="ms" aria-hidden="true">radar</span><span data-t="v_operaciones">Operaciones</span></a>
       <a role="tab" href="#vivo" data-vista="vivo" aria-selected="false" data-ayuda-solo="ayuda_v_vivo"><span class="ms" aria-hidden="true">replay</span><span data-t="v_vivo">Episodios</span></a>
       <a role="tab" href="#resultados" data-vista="resultados" aria-selected="false"><span class="ms" aria-hidden="true">grid_view</span><span data-t="v_resultados">Resultados</span></a>
+      <a role="tab" href="#duelo" data-vista="duelo" aria-selected="false" data-ayuda-solo="ayuda_v_duelo"><span class="ms" aria-hidden="true">swords</span><span data-t="v_duelo">Duelo</span></a>
     </nav>
     <div class="controles">
       <label class="campo solo-vivo">
@@ -129,6 +130,21 @@
       </section>
     </section>
 
+    <section class="vista duelo" id="vista-duelo" data-vista="duelo" aria-label="Duelo" hidden>
+      <div class="duelo-franja" id="duelo-franja"></div>
+      <section class="du-bloque du-congelado" aria-labelledby="t-du-congelado">
+        <h2 class="titulo" id="t-du-congelado" tabindex="0"><span class="ms" aria-hidden="true">ac_unit</span><span data-t="du_congelado">Escudo congelado</span><span class="nota" id="n-du-congelado"></span></h2>
+        <ol class="du-leyenda" id="du-ley-congelado"></ol>
+        <div class="lienzo" id="du-lienzo-congelado"></div>
+      </section>
+      <section class="du-bloque du-aprende" aria-labelledby="t-du-aprende">
+        <h2 class="titulo" id="t-du-aprende" tabindex="0"><span class="ms" aria-hidden="true">model_training</span><span data-t="du_aprende">Escudo que aprende</span><span class="nota" id="n-du-aprende"></span></h2>
+        <ol class="du-leyenda" id="du-ley-aprende"></ol>
+        <div class="lienzo" id="du-lienzo-aprende"></div>
+      </section>
+      <p class="du-ayuda" id="du-ayuda"></p>
+    </section>
+
   </main>
 
   <aside class="panel-lateral" id="panel-correo" role="dialog" aria-modal="false" aria-labelledby="pc-asunto" hidden></aside>
@@ -141,6 +157,7 @@
   <script src="graficos.js"></script>
   <script src="app.js"></script>
   <script src="vivo_simulado.js"></script>
+  <script src="duelo.js"></script>
   <script src="operaciones.js"></script>
   <script src="resultados_vista.js"></script>
 </body>

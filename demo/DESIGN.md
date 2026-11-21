@@ -67,7 +67,7 @@ Reglas:
 
 ## Arquitectura
 
-La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo después y los controles de la vista a la derecha. Las pestañas no cambian de lugar entre vistas: cada vista trae otros controles, y si estuvieran centradas saltarían al cambiar de pestaña. Cada vista tiene un solo propósito.
+La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo después y los controles de la vista a la derecha. Bajo 1440 px las pestañas van sin ícono, para que las cinco quepan sin tocar los controles de Episodios. Las pestañas no cambian de lugar entre vistas: cada vista trae otros controles, y si estuvieran centradas saltarían al cambiar de pestaña. Cada vista tiene un solo propósito.
 
 - **Operaciones** (primera pestaña): el centro de operaciones en vivo, alimentado por `/api/vivo`.
   - Arriba va una fila de agentes con su estado, su tarea y su cola. El agente cuyo correo está en Lectura se subraya como la pestaña activa.
@@ -96,6 +96,12 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo despu
   - «Modelos y firewall reales»: una fila por medición (Pipelock, Sonnet, Haiku y el clasificador), con el número en `--t-4` y su intervalo al lado. Para el clasificador va el rango entre corridas, y se dice que es un rango.
   - «Atacante adaptativo»: las estafas exitosas acumuladas por ronda, una línea gris por defensa, distinta por trazo y con su nombre al final. Pasa a rojo solo si una estafa le ganó a esa defensa. Si no hay curva con rondas, va un estado vacío que dice qué falta y con qué comando se regenera.
   - La fuente y el comando de cada número van en la ayuda (`data-ayuda`). Un número sin archivo de origen lleva la etiqueta «sin archivo».
+- **Duelo** (#82): un hacker que aprende de cómo lo bloqueamos, contra el escudo congelado y contra el que se reentrena con él. Los números son los del bloque `duelo` de `resultados.json`: seis corridas deterministas de `grifter duelo --generaciones 20` (semillas 0, 1 y 2, con y sin `--sin-entrenar`) en `results/duelo/`.
+  - Arriba va la franja: el titular, los pagos que cruzan la capa 2 (0, en `--verde`, en todas las generaciones); «Sin capa 2 habría cobrado» para cada escudo, en blanco, con el total de intentos; y una celda chica «En vivo» con el último evento `duelo` del flujo y, debajo, de dónde sale («Simulación · motor real» o «Simulación · emisor local», como el sello de Operaciones), o «sin eventos duelo».
+  - Al medio, dos gráficos lado a lado con la evasión del hacker contra el clasificador y la bóveda por generación, una línea por semilla y distinta por trazo: «Escudo congelado» en `--rojo` (sube) y «Escudo que aprende» en grises (termina en 0). En los dos, la capa 2 va en verde punteado, plana en 0. Sobre cada gráfico, la leyenda dice por semilla el inicio y el final (congelado) o el pico y el final (aprende), y el título lleva los archivos de origen.
+  - Abajo, una línea en `--texto-2`: el hacker es un atacante por mutaciones con Thompson sampling, sin API, y parte de la recuperación la hace la guardia de deriva, con las versiones revertidas (`revertidas` del evento, `Clasificador.revertidas`).
+  - Desde 1100 de ancho cabe en una pantalla, sin scroll de página: los gráficos toman el alto que dejan la franja y la ayuda. Bajo 1100 van uno sobre otro.
+  - Los eventos `duelo` siguen llegando por `/api/vivo` (Operaciones se los pasa al Duelo y los anota en su registro), y `/api/vivo/estado` trae `historial_duelo`.
 
 Hay un solo nivel de contenedores. Dentro de un bloque solo hay filas separadas por `--linea`, nunca tarjetas.
 

@@ -264,6 +264,39 @@ const Graficos = (() => {
     });
   }
 
-  return { C, hay, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, curvas, curvaAtacante, redimensionar, sinMovimiento };
+  // Curvas del duelo (vista Duelo): la evasión del hacker contra el clasificador por generación, una línea por
+  // semilla, distinta por trazo. Con el escudo congelado van en rojo (el riesgo sube); con el que aprende, en
+  // grises. La capa 2 va en verde punteado: los pagos que salieron con ella, que se quedan en 0.
+  // `series` trae { nombre, puntos: [[generacion, %], ...] }; `capa2`, [[generacion, pagos], ...] por semilla.
+  const TRAZOS_DUELO = ["solid", [6, 3], [2, 3]];
+  function curvaDuelo(el, { series, capa2, rojo, nombres }) {
+    const g = iniciar(el);
+    if (!g) return;
+    const grises = [C.texto, C.texto2, C.texto3];
+    const n = Math.max(1, ...series.map((x) => x.puntos.length));
+    g.setOption({
+      animation: !sinMovimiento,
+      grid: { left: 40, right: 16, top: 12, bottom: 40 },
+      xAxis: { type: "value", min: 1, max: n, interval: 1, axisLabel: { color: C.texto2, formatter: (v) => (n <= 10 || v === 1 || v % 5 === 0 ? v : "") }, name: nombres.eje, nameLocation: "middle", nameGap: 24,
+        nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, splitLine: { show: false } },
+      yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
+      tooltip: { trigger: "axis", formatter: (ps) => [`${nombres.gen} ${ps[0]?.value[0]}`,
+        ...ps.filter((p) => p.seriesIndex < series.length).map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`),
+        `${nombres.capa2}  ${ps.filter((p) => p.seriesIndex >= series.length).map((p) => p.value[1]).join(" · ")}`].join("<br>") },
+      series: [
+        ...series.map((x, i) => {
+          const color = rojo ? C.rojo : grises[i % 3];
+          return { type: "line", name: x.nombre, data: x.puntos, showSymbol: false, symbol: "rect", symbolSize: 4, smooth: false,
+            lineStyle: { color, width: 1.5, type: TRAZOS_DUELO[i % 3] }, itemStyle: { color }, emphasis: { disabled: true } };
+        }),
+        ...capa2.map((puntos, i) => ({ type: "line", name: nombres.capa2, data: puntos, showSymbol: false, smooth: false, z: 3,
+          lineStyle: { color: C.verde, width: 1.5, type: [6, 3] }, itemStyle: { color: C.verde }, emphasis: { disabled: true },
+          ...(i === 0 ? { endLabel: { show: true, color: C.verde, fontFamily: MONO, fontSize: T1, offset: [-8, -10], align: "right",
+            formatter: () => nombres.capa2_fin } } : {}) })),
+      ],
+    });
+  }
+
+  return { C, hay, curvaDuelo, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, curvas, curvaAtacante, redimensionar, sinMovimiento };
 })();
 window.Graficos = Graficos;
