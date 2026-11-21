@@ -205,7 +205,11 @@ class Flujo:
     """Genera episodios con variaciones desde el corpus. Determinista para una semilla dada."""
 
     def __init__(self, semilla: int = 7, idiomas: tuple[str, ...] = ("es", "en"),
-                 proporcion: Optional[dict[str, float]] = None, activos: tuple[str, ...] = ("es",)):
+                 proporcion: Optional[dict[str, float]] = None, activos: tuple[str, ...] = ("es",),
+                 pliegue: int = 1):
+        if pliegue not in (0, 1, 2):
+            raise ValueError("pliegue debe ser 0, 1 o 2")
+        self.pliegue = pliegue   # cuál tercio de los escenarios se aparta para evaluar
         self.rng = random.Random(semilla)
         self.idiomas = idiomas
         # Idiomas que salen en el flujo. Por defecto, solo español; el inglés se pide aparte.
@@ -299,12 +303,14 @@ class Flujo:
         """Un tercio de los escenarios queda apartado para evaluar y nunca se usa para entrenar.
 
         Se separa por escenario (no por correo) y con los dos idiomas juntos, para que la evaluación
-        no vea variaciones ni traducciones de lo que se entrenó.
+        no vea variaciones ni traducciones de lo que se entrenó. `pliegue` elige cuál de los tres tercios:
+        un solo pliegue puede salir mejor o peor que el promedio, así que para reportar el recall se
+        rotan los tres (ver scripts/validacion_cruzada_vivo.py).
         """
         claves: set[str] = set()
         for familia in ("control", "ingenieria_social", "tecnico"):
             us = [u.clave for u in self.unidades if u.familia == familia]
-            claves.update(us[i] for i in range(1, len(us), 3))
+            claves.update(us[i] for i in range(self.pliegue, len(us), 3))
         return claves
 
     def es_evaluacion(self, correo: Correo) -> bool:
