@@ -273,12 +273,18 @@ class Guardia:
     def origenes_de(self, valor: str) -> set[str]:
         return origenes_en(self.leidos, valor)
 
-    def revisar(self, herramienta: str, args: Mapping[str, Any], servidor: str = "") -> Optional[Alerta]:
-        """None si la llamada puede seguir; si no, la alerta con el aviso para el agente."""
-        motivo = politica_origen(self, herramienta, args, self.config.sensibles)
+    def revisar(self, herramienta: str, args: Mapping[str, Any], servidor: str = "",
+                regla: Optional[AccionSensible] = None) -> Optional[Alerta]:
+        """None si la llamada puede seguir; si no, la alerta con el aviso para el agente.
+
+        `regla` es la de un pago anidado dentro de los argumentos (ver `subargumentos`); sin ella, la de `sensibles`.
+        """
+        regla = regla or self.config.sensibles.get(herramienta)
+        if regla is None:
+            return None
+        motivo = politica_origen(self, herramienta, args, {herramienta: regla})
         if motivo is None:
             return None
-        regla = self.config.sensibles[herramienta]
         valor = str(args.get(regla.destino, ""))
         credencial = motivo == MOTIVO_CREDENCIAL
         fuentes = [] if credencial else self._fuentes_de(valor)
@@ -344,6 +350,23 @@ def regla_por_argumentos(args: Mapping[str, Any]) -> Optional[AccionSensible]:
     return None
 
 
+def subargumentos(args: Any, profundidad: int = 6) -> list[Mapping[str, Any]]:
+    """Los diccionarios anidados dentro de los argumentos (en valores y listas), sin contar los argumentos mismos.
+
+    Un servidor puede recibir el pago como `{"pago": {"cuenta": ...}}` o `{"pagos": [{...}, {...}]}`: la cuenta
+    escondida ahí no está en el primer nivel, y revisar solo el primer nivel la dejaba pasar.
+    """
+    salida: list[Mapping[str, Any]] = []
+    if profundidad <= 0:
+        return salida
+    valores = args.values() if isinstance(args, Mapping) else args if isinstance(args, (list, tuple)) else ()
+    for v in valores:
+        if isinstance(v, Mapping):
+            salida.append(v)
+        salida.extend(subargumentos(v, profundidad - 1))
+    return salida
+
+
 def _error(mensaje: str) -> types.CallToolResult:
     return types.CallToolResult(content=[types.TextContent(type="text", text=mensaje)], isError=True)
 
@@ -396,7 +419,10 @@ class Grifter:
             if regla is not None:
                 log.warning("%s no estaba declarada como sensible; se revisa como pago", original)
                 self.config.sensibles[original] = regla
-        if original in self.config.sensibles:
+        # Pagos escondidos dentro de un argumento anidado: cada uno se revisa con su propia regla.
+        anidados = [(sub, r) for sub in subargumentos(args)
+                    for r in [self._regla_para(original, sub)] if r is not None]
+        if original in self.config.sensibles or anidados:
             try:
                 retenida = await self._politica_pendiente()
                 if retenida:
@@ -404,7 +430,12 @@ class Grifter:
                     return _error(f"Grifter retuvo la llamada a {original}: {retenida}")
                 alerta = None
                 if self.config.capas.get("capa2", True):
-                    alerta = self.guardia.revisar(original, args, servidor)
+                    if original in self.config.sensibles:
+                        alerta = self.guardia.revisar(original, args, servidor)
+                    for sub, regla in anidados:
+                        if alerta is not None:
+                            break
+                        alerta = self.guardia.revisar(original, sub, servidor, regla)
                 else:
                     self._registrar("capa2_apagada", herramienta=original, servidor=servidor, args=args)
                 if self.quorum is not None and self.config.umbral_doble > 0 and _es_pago(original, args):
@@ -440,6 +471,13 @@ class Grifter:
         resultado = await self.sesiones[servidor].call_tool(original, args)
         self.guardia.anotar_resultado(servidor, original, _texto_de(resultado))
         return resultado
+
+    def _regla_para(self, herramienta: str, args: Mapping[str, Any]) -> Optional[AccionSensible]:
+        """La regla con la que revisar un diccionario anidado: la de la herramienta si trae su destino, o la que delatan sus claves."""
+        declarada = self.config.sensibles.get(herramienta)
+        if declarada is not None and declarada.destino in args:
+            return declarada
+        return regla_por_argumentos(args)
 
     # --- Doble autorización (#102) -------------------------------------------------------------------
     async def _quorum_de_pago(self, herramienta: str, servidor: str, args: dict[str, Any],
