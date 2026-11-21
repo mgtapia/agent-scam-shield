@@ -3,71 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Agent Scam Shield · Demo</title>
+  <title>Agent Scam Shield</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..24,300,0,0&display=block">
   <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
-  <header class="encabezado">
-    <div class="logo">
-      <div class="escudo" aria-hidden="true">🍌</div>
-      <div>
-        <h1>Agent Scam Shield</h1>
-        <p data-t="lema">La misma estafa contra el mismo agente, con tres defensas distintas</p>
-      </div>
+  <header class="barra">
+    <div class="marca">
+      <span class="ms grande" aria-hidden="true">shield</span>
+      <span class="nombre">Agent Scam Shield</span>
     </div>
-    <div class="control">
-      <label for="sel-escenario" data-t="escenario">Escenario</label>
+    <label class="campo">
+      <span class="ms" aria-hidden="true">mail</span>
+      <span class="oculto" data-t="escenario">Escenario</span>
       <select id="sel-escenario"></select>
+    </label>
+    <div class="segmentado" role="group" aria-label="Idioma">
+      <button type="button" data-idioma="es" aria-pressed="true">ES</button>
+      <button type="button" data-idioma="en" aria-pressed="false">EN</button>
     </div>
-    <div class="control">
-      <span class="grupo" role="group" aria-label="Idioma">
-        <button type="button" data-idioma="es" aria-pressed="true">ES</button>
-        <button type="button" data-idioma="en" aria-pressed="false">EN</button>
-      </span>
-    </div>
-    <div class="control">
-      <button type="button" class="boton principal" id="btn-reproducir" data-t="reproducir">▶ Reproducir</button>
-      <button type="button" class="boton" id="btn-reiniciar" data-t="reiniciar">↺ Reiniciar</button>
-      <span class="grupo" role="group" aria-label="Velocidad">
+    <div class="reproductor">
+      <button type="button" class="boton principal" id="btn-reproducir">
+        <span class="ms" aria-hidden="true">play_arrow</span><span data-t="reproducir">Reproducir</span>
+      </button>
+      <button type="button" class="boton icono" id="btn-reiniciar" data-ayuda-t="reiniciar" aria-label="Reiniciar">
+        <span class="ms" aria-hidden="true">restart_alt</span>
+      </button>
+      <div class="segmentado" role="group" aria-label="Velocidad">
         <button type="button" data-velocidad="1" aria-pressed="true">1x</button>
         <button type="button" data-velocidad="2" aria-pressed="false">2x</button>
-      </span>
+      </div>
     </div>
+    <span class="fuente" id="fuente"></span>
+    <button type="button" class="boton alerta-pastilla" id="btn-alerta" hidden>
+      <span class="ms" aria-hidden="true">gpp_bad</span><span data-t="alerta">Alerta</span>
+    </button>
   </header>
 
-  <main class="escenario">
-    <section class="panel bandeja" aria-labelledby="t-bandeja">
-      <h2 class="titulo-panel" id="t-bandeja" data-t="bandeja">Bandeja</h2>
+  <section class="kpis" id="kpis" aria-label="KPI"></section>
+
+  <main class="reproduccion">
+    <section class="bandeja" aria-labelledby="t-bandeja">
+      <h2 class="titulo" id="t-bandeja"><span class="ms" aria-hidden="true">mail</span><span data-t="bandeja">Bandeja</span></h2>
       <div id="encargo"></div>
-      <div>
-        <h3 class="titulo-panel" data-t="inscritas">Tus cuentas inscritas</h3>
-        <div class="inscritas" id="inscritas"></div>
-      </div>
-      <div>
-        <h3 class="titulo-panel" data-t="correos">Correos</h3>
-        <div id="correos" class="lista-correos"></div>
-      </div>
+      <h3 class="titulo"><span class="ms" aria-hidden="true">account_balance</span><span data-t="inscritas">Inscritas</span></h3>
+      <ul class="filas" id="inscritas"></ul>
+      <h3 class="titulo"><span class="ms" aria-hidden="true">mail</span><span data-t="correos">Correos</span></h3>
+      <ul class="filas" id="correos"></ul>
     </section>
-
-    <section class="carriles" id="carriles" aria-label="Carriles"></section>
-
-    <aside class="celular-columna" id="celular-columna">
-      <button type="button" class="pastilla" id="cel-pastilla" data-t="ver_alerta">📱 Ver la alerta</button>
-      <div class="celular" id="celular">
-        <div class="pantalla">
-          <div class="isla"></div>
-          <div class="barra"><span id="cel-hora">9:41</span><span>5G ▮▮▮</span></div>
-          <div id="cel-contenido"></div>
-        </div>
-      </div>
-      <p class="leyenda-celular" data-t="leyenda_celular">El celular del dueño</p>
-    </aside>
+    <div class="carriles" id="carriles"></div>
   </main>
 
+  <section class="analisis" aria-label="Resultados">
+    <div class="radares" id="radares"></div>
+    <figure class="grafico calor">
+      <figcaption class="titulo"><span data-t="calor_tactica">Táctica × defensa</span></figcaption>
+      <div class="lienzo" id="calor-tactica"></div>
+    </figure>
+    <figure class="grafico calor">
+      <figcaption class="titulo"><span data-t="calor_modelo">Modelo × idioma</span></figcaption>
+      <div class="lienzo" id="calor-modelo"></div>
+    </figure>
+  </section>
+
+  <aside class="alerta" id="alerta" role="alertdialog" aria-modal="false" aria-labelledby="alerta-titulo" hidden></aside>
+  <div class="ayuda" id="ayuda" role="tooltip" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
   <script src="episodios/episodios.js"></script>
+  <script src="resultados.js"></script>
+  <script src="graficos.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
