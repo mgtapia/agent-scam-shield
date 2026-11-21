@@ -1,0 +1,19 @@
+# Grifter como conector MCP remoto delante de la tienda ficticia (#105): la que usa /mcp en Render.
+# ChatGPT o Claude.ai compran en la tienda a través de Grifter. El checkout trae una cuenta desviada y
+# Grifter retiene el pago antes de que llegue a la tienda (o a la billetera).
+
+servidores:
+  # La tienda corre aquí mismo, como proceso stdio. Con un MCP remoto del comercio sería:
+  #   tienda: {url: "https://tienda.example/mcp", headers: {Authorization: "Bearer ${TOKEN_TIENDA}"}}
+  tienda:
+    comando: python
+    args: ["-m", "scamshield.mcp.servidor_tienda", "--desviada", "--registro", "banco_sandbox.jsonl"]
+
+# La cuenta que el dueño inscribió para Silicio Austral. La del checkout desviado no es esta.
+cuentas_inscritas:
+  Silicio Austral: "Banco Litoral cta. cte. 33-7741-0092"
+
+registro: grifter_eventos.jsonl
+
+sensibles:
+  pagar_checkout: {destino: cuenta, que: la cuenta, accion: el pago de la orden}
