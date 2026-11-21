@@ -187,7 +187,7 @@ function pintarFranja() {
   const num = valor ? (String(valor).match(RE_CUENTA) || [valor])[0] : "";
   const monto = montoDe(ep);
   $("#franja").innerHTML = `
-    <div class="quien">${ms("person")}${esc(ep.dueno || t("dueno"))}${String(ep.modelo || "").startsWith("mockllm") ? `<span class="tag prueba" data-ayuda="${esc(ep.modelo)}">${esc(t("prueba"))}</span>` : ""}</div>
+    <div class="quien">${ms("person")}${esc(ep.dueno || t("dueno"))}</div>
     <div class="celda-tarea" data-ayuda="${esc(ep.encargo)}"><span class="tarea">${esc(ep.encargo)}</span></div>
     <div><span class="rotulo">${esc(t("monto"))}</span><span class="grande">${monto === null ? "—" : plata(monto)}</span></div>
     <div class="celda-inscrita" data-cuenta="${norm(num)}">${ms("account_balance")}${nombre
@@ -265,11 +265,20 @@ function tagOrigen(origen) {
 }
 
 // --- Carriles ---
+// De dónde sale el episodio de un carril: «Datos de prueba» si es de mockllm, y el modelo si es una corrida real.
+function etiquetaDeOrigen(ep) {
+  if (!ep) return "";
+  const modelo = String(ep.modelo || "");
+  return modelo.startsWith("mockllm")
+    ? `<span class="tag prueba" data-ayuda="${esc(modelo)}">${esc(t("prueba"))}</span>`
+    : `<span class="modelo" data-ayuda="${esc(modelo)}">${esc(modelo.split("/").pop())}</span>`;
+}
+
 function pintarCarriles() {
   $("#carriles").innerHTML = CARRILES.map((c) => {
     const ep = estado.carriles[c.clave]?.ep;
     return `<article class="carril${c.escudo ? " escudo" : ""}" id="carril-${c.clave}">
-      <header class="carril-cab" data-ayuda="${esc(t(`ayuda_${c.clave}`))}">${ms(c.icono)}<h2>${esc(t(`d_${c.clave}`))}</h2>
+      <header class="carril-cab" data-ayuda="${esc(t(`ayuda_${c.clave}`))}">${ms(c.icono)}<h2>${esc(t(`d_${c.clave}`))}</h2>${etiquetaDeOrigen(ep)}
         <span class="riesgo" data-ayuda="${esc(t("ayuda_pulso"))}">${ep ? esc(t("r_base")) : ""}</span></header>
       <div class="monitor" id="monitor-${c.clave}" aria-hidden="true"></div>
       <ol class="pasos">${ep ? `<li class="paso vacio">${esc(t("listo"))}</li>` : `<li class="paso vacio">${esc(t("sin_registro"))}</li>`}</ol>
