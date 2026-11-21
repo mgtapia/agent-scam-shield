@@ -1,0 +1,28 @@
+name: sincronizar hackathon
+
+on:
+  schedule:
+    # Cinco minutos, evitando el inicio de cada hora.
+    - cron: '2/5 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: sincronizar-hackathon-main
+  cancel-in-progress: false
+
+jobs:
+  sincronizar:
+    # El mismo código vive en ambos repositorios; solo el destino se actualiza.
+    if: github.repository == 'platanus-hack/platanus-hack-26-cl-team-40' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Actualizar main desde Grifter sin reescribir el historial
+        run: bash scripts/sincronizar_hackathon.sh

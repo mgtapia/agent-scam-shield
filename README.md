@@ -35,6 +35,6 @@ Para instalarlo según tu caso, sigue [docs/instalar.md](docs/instalar.md). Para
 
 [Matías Tapia](https://github.com/mgtapia) y [Matías Ramírez](https://github.com/maramir6).
 
-El despliegue permanece conectado al [repositorio de desarrollo](https://github.com/mgtapia/grifter); este repositorio contiene el código para la hackathon.
+El despliegue permanece conectado al [repositorio de desarrollo](https://github.com/mgtapia/grifter). El repositorio de la hackathon consulta su `main` cada cinco minutos y se actualiza automáticamente; los detalles están en [docs/sincronizacion.md](docs/sincronizacion.md).
 
 Todo el benchmark usa escenarios ficticios. Licencia [MIT](LICENSE); atribuciones en [NOTICE.md](NOTICE.md).
