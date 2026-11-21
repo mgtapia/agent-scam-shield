@@ -198,7 +198,7 @@
                 <p class="md-al-titulo">${ic("gpp_good")}<span>${esc(t("al_titulo"))}</span></p>
                 <p class="md-al-motivo">${esc(t("motivo1"))}</p>
                 <dl class="md-al-datos">
-                  <dt>${esc(t("al_titular"))}</dt><dd>Reed</dd>
+                  <dt>${esc(t("al_titular"))}</dt><dd>J. Contreras V.</dd>
                   <dt>${esc(t("al_a"))}</dt><dd>‹${idioma === "en" ? "your grandson" : "tu nieto"}› <b>$${f(650000)}</b></dd>
                   <dt>${esc(t("al_cuenta"))}</dt><dd class="dato">‹48-2210-7735›</dd>
                   <dt>${esc(t("al_de"))}</dt><dd>‹${esc(t("al_de_v"))}›</dd>
