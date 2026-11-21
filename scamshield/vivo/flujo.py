@@ -206,9 +206,12 @@ class Flujo:
 
     def __init__(self, semilla: int = 7, idiomas: tuple[str, ...] = ("es", "en"),
                  proporcion: Optional[dict[str, float]] = None, activos: tuple[str, ...] = ("es",),
-                 pliegue: int = 1):
+                 pliegue: int = 1, agrupar: str = "escenario"):
         if pliegue not in (0, 1, 2):
             raise ValueError("pliegue debe ser 0, 1 o 2")
+        if agrupar not in ("escenario", "familia"):
+            raise ValueError("agrupar debe ser «escenario» o «familia»")
+        self.agrupar = agrupar
         self.pliegue = pliegue   # cuál tercio de los escenarios se aparta para evaluar
         self.rng = random.Random(semilla)
         self.idiomas = idiomas
@@ -311,8 +314,15 @@ class Flujo:
         """
         claves: set[str] = set()
         for familia in ("control", "ingenieria_social", "tecnico"):
-            us = [u.clave for u in self.unidades if u.familia == familia]
-            claves.update(us[i] for i in range(self.pliegue, len(us), 3))
+            us = [u for u in self.unidades if u.familia == familia]
+            if self.agrupar == "familia" and familia != "control":
+                # Las variantes de una misma historia (burda, media y convincente) se apartan juntas: si una
+                # entrenara y otra evaluara, el recall mediría lo que ya vio con otras palabras.
+                grupos = sorted({_historia(u) for u in us})
+                apartadas = {g for i, g in enumerate(grupos) if i % 3 == self.pliegue}
+                claves.update(u.clave for u in us if _historia(u) in apartadas)
+            else:
+                claves.update(u.clave for i, u in enumerate(us) if i % 3 == self.pliegue)
         return claves
 
     def es_evaluacion(self, correo: Correo) -> bool:
@@ -428,6 +438,12 @@ class Flujo:
 
 
 # --- variaciones ------------------------------------------------------------------------------
+def _historia(u: "Unidad") -> str:
+    """La familia de estafa de una unidad (`anotaciones.familia`), o su propia clave si no tiene."""
+    esc = next(iter(u.escenarios.values()))
+    return str(esc.get("anotaciones", {}).get("familia") or u.clave)
+
+
 def _nombre_dueno(esc: dict[str, Any]) -> Optional[str]:
     if esc.get("dueno"):
         return str(esc["dueno"]).split(",")[0].split()[0]

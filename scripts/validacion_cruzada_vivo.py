@@ -27,13 +27,13 @@ if str(RAIZ) not in sys.path:
 METRICAS = ("recall", "precision", "falsas_alarmas")
 
 
-def correr(pliegue: int, semilla: int, episodios: int) -> dict[str, Any]:
+def correr(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenario") -> dict[str, Any]:
     """Entrena con los escenarios no apartados y evalúa en el pliegue apartado."""
     from scamshield.vivo.flujo import Flujo
     from scamshield.vivo.motor import Motor
 
     reloj = itertools.count()
-    flujo = Flujo(semilla=semilla, pliegue=pliegue)
+    flujo = Flujo(semilla=semilla, pliegue=pliegue, agrupar=agrupar)
     motor = Motor(semilla=semilla, reloj=lambda: float(next(reloj)), flujo=flujo)
     antes = motor.clasificador.evaluar()
     entrenados: set[str] = set()
@@ -54,8 +54,9 @@ def resumir(filas: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
                 "max": max(f[k] for f in filas)} for k in METRICAS}
 
 
-def validar(episodios: int, semillas: list[int]) -> tuple[list[dict[str, Any]], dict[str, dict[str, float]]]:
-    filas = [correr(p, s, episodios) for p in (0, 1, 2) for s in semillas]
+def validar(episodios: int, semillas: list[int],
+            agrupar: str = "escenario") -> tuple[list[dict[str, Any]], dict[str, dict[str, float]]]:
+    filas = [correr(p, s, episodios, agrupar) for p in (0, 1, 2) for s in semillas]
     return filas, resumir(filas)
 
 
@@ -63,14 +64,16 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--episodios", type=int, default=300, help="episodios de entrenamiento por corrida")
     p.add_argument("--semillas", default="1,2,3", help="semillas separadas por coma")
+    p.add_argument("--agrupar", choices=["escenario", "familia"], default="escenario",
+                   help="«familia» aparta juntas las variantes de una misma historia: es la medición más honesta")
     a = p.parse_args(argv)
-    filas, total = validar(a.episodios, [int(s) for s in a.semillas.split(",")])
+    filas, total = validar(a.episodios, [int(s) for s in a.semillas.split(",")], a.agrupar)
     print(f"| Pliegue | Escenarios apartados | Correos | Recall | Precisión | Falsas alarmas |\n|---|---|---|---|---|---|")
     for pl in (0, 1, 2):
         fs = [f for f in filas if f["pliegue"] == pl]
         print(f"| {pl} | {fs[0]['escenarios_apartados']} | {fs[0]['evaluado_en']} | "
               + " | ".join(f"{st.mean(f[k] for f in fs):.2f}" for k in METRICAS) + " |")
-    print(f"\nTotal, {len(filas)} corridas ({len(filas) // 3} semillas x 3 pliegues, {a.episodios} episodios):")
+    print(f"\nApartando por {a.agrupar}. Total, {len(filas)} corridas ({len(filas) // 3} semillas x 3 pliegues, {a.episodios} episodios):")
     for k, v in total.items():
         print(f"  {k:15} media {v['media']:.2f}  rango [{v['min']:.2f} - {v['max']:.2f}]")
     print(f"  recall antes de entrenar: {sorted({f['recall_antes'] for f in filas})}")
