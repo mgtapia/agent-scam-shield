@@ -39,6 +39,29 @@ inspect eval scamshield/evals/task.py --model <proveedor/modelo> -T defense=none
 inspect eval scamshield/evals/task.py --model <proveedor/modelo> -T defense=layer2
 ```
 
+## Correr con proveedores gratis
+La primera tabla se corre con Gemini y Groq, que tienen capa gratis. Claude y GPT se suman después, cuando lleguen los créditos.
+
+```bash
+pip install -e ".[dev,proveedores]"   # agrega google-genai y groq, que Inspect necesita
+# En .env: GOOGLE_API_KEY, GROQ_API_KEY y/o HF_TOKEN (ver .env.example)
+inspect eval scamshield/evals/task.py --model google/gemini-3.8-flash -T defense=layer2
+inspect eval scamshield/evals/task.py --model groq/llama-3.3-70b-versatile -T defense=layer2
+inspect eval scamshield/evals/task.py --model hf-inference-providers/meta-llama/Llama-3.3-70B-Instruct -T defense=layer2
+```
+
+Para Hugging Face se usa `hf-inference-providers/`, que llama a la API de Inference Providers con `HF_TOKEN` y no necesita GPU. El proveedor `hf/` de Inspect, en cambio, corre el modelo en tu máquina con torch y transformers.
+
+`scripts/correr_matriz.py` recorre las 4 configuraciones de defensa por cada modelo y cada idioma. Usa solo los proveedores con llave en `.env` y nunca imprime los valores. Los modelos por defecto de cada llave están en `MODELOS_POR_LLAVE`, al comienzo del archivo.
+
+```bash
+python scripts/correr_matriz.py --dry-run                        # muestra la matriz sin correr nada
+python scripts/correr_matriz.py --defensas none,layer2 --idiomas es --limit 5
+python scripts/correr_matriz.py --modelos groq/llama-3.3-70b-versatile --max-connections 1
+```
+
+Los logs quedan en `logs/` y se abren con `inspect view`. Si no hay ninguna llave y no se pasa `--modelos`, el script termina con un error que dice qué variables definir.
+
 ## Estructura prevista
 ```
 scamshield/
