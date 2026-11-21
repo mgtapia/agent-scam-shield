@@ -460,7 +460,7 @@ def atacante(carpeta: Path | None = None, elegida: Path | None = None) -> dict[s
 def armar(curva: Path | None = None) -> dict[str, Any]:
     return _limpio({
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "readme": "README.md#resultados",
+        "readme": "GUIA.md#resultados",
         "bench": bench(), "pipelock": PIPELOCK, "sonnet": sonnet(), "haiku": haiku(),
         "clasificador": clasificador(), "colados": colados(), "cobertura": cobertura(), "juez": juez(), "falsas_alarmas": falsas_alarmas(), "atacante": atacante(elegida=curva), "duelo": duelo(),
     })

@@ -18,6 +18,32 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 | | 3. **El atacante adaptativo reescribe la estafa ronda tras ronda.** **Honesto: la adaptación no hizo falta ni sirvió.** Con gpt-oss-20b de víctima y 5 estafas en español, sin defensa cayeron 4 de 5 ya en la ronda 0 (80 % [38-96], n=5) y ninguna más con 3 rondas de reescritura de Qwen 27B (80 % [38-96] en las rondas 0 a 3); la que resistió, aguantó las 3 rondas. Con la capa 2, el agente intentó pagar al estafador en 4 de 5 y la capa frenó los 4: 0 de 5 exitosas (0 % [0-43]) en todas las rondas con episodio puntuado (5 de 5 en las rondas 0 y 1, 2 de 5 en la 2 y 1 de 5 en la 3: la cuota diaria de Groq de la víctima cortó el resto). Con n=5 el intervalo es ancho: es un humo, no una curva; la garantía fuerte es la de las 150 estafas del bench y la prueba de propiedad. | Curva del atacante |
 | 2:30–3:00 | Todo es abierto: el primer dataset de estafas en español para agentes, la eval en Inspect y la capa que se suma a cualquier agente o firewall. Mírenlo en vivo: Operaciones y el Duelo. | Operaciones en vivo |
 
+## Cómo nos evalúan y qué decimos para cada criterio
+Una revisión del pitch (21-nov) mostró el punto débil: la demo se ve bien, pero nunca contábamos qué construimos. Se escuchaba «pusimos una regla», y eso suena trivial en el criterio que más pesa.
+
+| Criterio | Peso | Qué hacemos |
+|---|---|---|
+| Aspecto técnico | 25 | La lámina «Qué construimos en 36 horas» (abajo), con las piezas por su nombre. 40 segundos. |
+| Ejecución | 20 | No arriesgar la demo: el video muestra el pago saliendo sin Grifter y retenido con Grifter, como piden las bases del track. |
+| Ambición | 20 | Contarlo como sistema: «construimos el ataque, la defensa y la vara para medir las dos». |
+| Impacto | 20 | Un dato verificado al inicio y «a quién protege» al final: las personas mayores y cualquier plataforma que deje pagar a un agente. |
+| Originalidad | 15 | Decir la diferencia en el pitch, no solo si preguntan, y poner el benchmark en español chileno en primer plano. |
+
+**Reparto de los 3 minutos** (el video dura unos 85 s y corre solo): 0:00-0:20 gancho y problema medido (6 de 6, 4 de 42) · 0:20-1:45 video · 1:45-2:25 qué construimos · 2:25-2:45 resultados y la diferencia · 2:45-3:00 a quién protege y cierre («Tu agente puede creerle a cualquiera. Tu plata, no.»).
+
+## Qué construimos en 36 horas
+Lo difícil no es la regla, es todo lo que la hace posible. Se dice como arquitectura, con los nombres.
+
+1. **Seguimiento de origen de cada dato** (`scamshield/env/world.py`, `scamshield/defenses/layer2.py`, `scamshield/mcp/`). Grifter se pone entre el agente y sus herramientas; cada valor que el agente lee queda marcado con de dónde vino (dueño, correo, web, MCP, llamada) y esa marca lo acompaña hasta el pago. Es *taint tracking* aplicado a un agente. Funciona como proxy MCP delante de cualquier agente, o con tres líneas (`from grifter import escudo`).
+2. **Una regla que no se deja engañar por cómo está escrita la cuenta** (`_norm` en `layer2.py`). Normaliza antes de comparar: Unicode NFKC, dígitos de cualquier alfabeto, letras cirílicas o griegas que parecen latinas, dígitos escritos en palabras («dos siete cuatro cero» es 2740) y trozos en base64. Lo que aun así no reconoce, lo retiene. Pruebas de propiedad con semilla fija lo verifican.
+3. **Un atacante que aprende** (`grifter duelo`). Mutaciones (parafrasear, sacar la urgencia, deletrear o disfrazar la cuenta, homoglifos, repartir el pedido en dos correos) elegidas con Thompson sampling. 5.280 intentos, 0 cruzan la capa 2. No es un LLM: aprende por prueba y error.
+4. **Un banco de pruebas** (`grifter bench`). 212 escenarios: 150 estafas de 32 tipos y 62 controles legítimos, en español chileno y en inglés. Corre sin llaves de API en segundos y, con Inspect, contra modelos reales. Mapeado a OWASP y MITRE ATLAS.
+5. **Doble aprobación con código** (`docs/mcp.md`). Quórum de dos personas, TOTP de un solo uso atado al pago (id, monto y cuenta), un «no» cancela y cada voto queda en un registro encadenado. La alerta llega por WhatsApp o Telegram.
+
+**Dicho en 40 segundos:** «En 36 horas construimos cuatro cosas. Uno: un seguimiento del origen de cada dato a través de las herramientas del agente, para saber de dónde salió la cuenta. Dos: una regla que reconoce esa cuenta aunque venga disfrazada, en palabras o con letras de otro alfabeto. Tres: un atacante que aprende, y que la atacó 5.280 veces. Y cuatro: un banco de pruebas de 150 estafas en español chileno. Construimos el ataque, la defensa y la vara para medir las dos.»
+
+**No se dice** «es una lista blanca» ni «pusimos una regla» (es cierto, pero esconde el trabajo), ni «el primer benchmark en español» (no encontramos otro, pero no lo podemos asegurar: «un benchmark abierto de estafas contra agentes, en español chileno»).
+
 ## Por qué es distinto (si el jurado pregunta)
 - **SEA, AgentPhishing y FraudBench miden estafas contra agentes.** SEA (arXiv 2611.10037) ya compara otro idioma contra inglés: chino, con ataques exitosos entre 16,9 % y 84,3 %. Nosotros medimos **pagos** en español chileno contra inglés, con un atacante que se adapta. Hay que nombrar SEA antes que el jurado.
 - **Respaldo externo de la tesis:** APort Vault (arXiv 2609.22076) reprodujo 4.371 ataques humanos contra 14 modelos. Con un chequeo determinista antes de la acción hubo 0 transferencias no autorizadas en 69.297 intentos; sin él, 140 en 76.842.
@@ -100,6 +126,10 @@ flowchart LR
 **Lo que hace falta:** el proxy remoto (#105), el mandato y la tienda que cambia el monto (#103), y la doble autorización con código (#102). **El respaldo si algo falla en vivo:** la misma secuencia con Claude Desktop por stdio, que ya funciona, y un video grabado.
 
 ## Frases para usar (las vamos juntando)
+- «Tu agente puede creerle a cualquiera. Tu plata, no.» (el cierre del video)
+- «Construimos el ataque, la defensa y la vara para medir las dos.»
+- «Rastreamos el origen de cada dato a través de las herramientas del agente.»
+- «Otros escudos miran el monto o piden aprobación en el primer pago; nosotros rastreamos de dónde salió la cuenta, y lo medimos con un atacante que aprende.»
 - «El estafador puede robarse el teléfono, la voz y la identidad. No puede robarse la cuenta de destino: la plata tiene que llegar a una cuenta suya, y esa cuenta es nueva.»
 - «A Grifter no le importa quién manda el mensaje, sino de dónde salió el dato.»
 - «El estafador te habla por WhatsApp. Grifter también, pero para avisarte.»

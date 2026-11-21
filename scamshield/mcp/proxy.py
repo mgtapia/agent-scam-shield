@@ -58,6 +58,7 @@ from .aprobaciones import (APROBADA, PENDIENTE, Aprobaciones, Aprobador, Registr
 from ..defenses.dominios import HERRAMIENTAS_WEB, datos_llevados, hosts_en, revisar_web
 from .integridad import ENTORNO_CLAVE, Cambio, Integridad, IntegridadError, corta, politica_canonica
 from .integridad import huella as huella_politica
+from .ventana import leer_registro, motivo_ventana
 from .cliente_http import conectar_remoto
 
 log = logging.getLogger("grifter")
@@ -114,6 +115,9 @@ class Config:
     aprobadores: list[Aprobador] = field(default_factory=list)
     quorum: int = 1
     umbral_doble: int = 0            # 0 = los pagos no piden doble autorización
+    # Tope por cuenta no inscrita en una ventana de días, sumado desde el registro de eventos (#149). 0 = sin tope.
+    tope_ventana: int = 0
+    ventana_dias: int = 30
     semillas: Optional[Path] = None  # JSON {nombre: base32} fuera del repo; si no, GRIFTER_SEMILLAS
     registro_aprobaciones: Optional[Path] = None
     ruta: Optional[Path] = None      # el grifter.yaml del que salió, para vigilar que no cambie
@@ -177,6 +181,8 @@ def cargar_config(ruta: Union[str, Path]) -> Config:
     config.aprobadores = [Aprobador(str(a["nombre"]), str(a.get("canal", ""))) for a in (datos.get("aprobadores") or [])]
     config.quorum = int(datos.get("quorum") or (2 if len(config.aprobadores) >= 2 else 1))
     config.umbral_doble = int(datos.get("umbral_doble") or 0)
+    config.tope_ventana = int(datos.get("tope_ventana") or 0)
+    config.ventana_dias = int(datos.get("ventana_dias") or 30)
     for campo, clave in (("semillas", "semillas"), ("registro_aprobaciones", "registro_aprobaciones")):
         if datos.get(clave):
             ruta_ = Path(str(datos[clave]))
@@ -659,6 +665,8 @@ class Grifter:
                         alerta = self.guardia.revisar_web(original, args, servidor)
                 else:
                     self._registrar("capa2_apagada", herramienta=original, servidor=servidor, args=args)
+                if alerta is None and self.config.tope_ventana > 0 and _es_pago(original, args):
+                    alerta = self._alerta_de_ventana(original, servidor, args)   # lo ya pagado a esa cuenta (#149)
                 if self.quorum is not None and self.config.umbral_doble > 0 and _es_pago(original, args):
                     monto = _monto(args)
                     if monto > self.config.umbral_doble:
@@ -861,6 +869,7 @@ class Grifter:
                 self.config.semillas = config.semillas
                 self.config.registro_aprobaciones = config.registro_aprobaciones
                 self.config.estado = config.estado
+                self.config.tope_ventana, self.config.ventana_dias = config.tope_ventana, config.ventana_dias
                 # #103: un mandato o unas fijaciones nuevas valen desde que el dueño las aprueba. Las herramientas
                 # bloqueadas se vuelven a revisar contra las fijaciones nuevas en la próxima llamada.
                 self.config.mandato = dict(config.mandato)
@@ -922,6 +931,21 @@ class Grifter:
             await _resolver(self.latido(evento, datos))
         except Exception:   # un aviso caído no detiene al proxy, pero queda dicho
             log.exception("no se pudo mandar el latido de %s", evento)
+
+    def _alerta_de_ventana(self, herramienta: str, servidor: str, args: Mapping[str, Any]) -> Optional[Alerta]:
+        """El pago que, sumado a lo que el registro dice que ya se le pagó a esa cuenta en la ventana, pasa el tope (#149)."""
+        regla = self.config.sensibles.get(herramienta)
+        if regla is None or regla.dato is not None or regla.mensaje is not None:
+            return None
+        motivo = motivo_ventana(leer_registro(self.config.registro), args, regla.destino, self.config.tope_ventana,
+                                self.config.ventana_dias, self.config.cuentas_inscritas)
+        if motivo is None:
+            return None
+        accion = self.config.acciones.get(herramienta, f"la llamada a {herramienta}")
+        return Alerta(herramienta=herramienta, servidor=servidor, args=dict(args),
+                      valor=visible(args.get(regla.destino, ""), 80), motivo=motivo, fuentes=[],
+                      mensaje=f"Grifter retuvo {accion}: {visible(motivo, 400)} "
+                              "Confírmalo con el dueño por un canal conocido antes de reintentar.")
 
     def _inundado(self) -> bool:
         """Cuenta esta alerta y dice si ya se pasó el tope de la ventana (contra el cansancio)."""

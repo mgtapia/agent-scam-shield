@@ -83,6 +83,16 @@ python -m scamshield.mcp.aprobaciones codigo --nombre Sam --id 3fa91c07 --monto 
 
 La alerta muestra el avance («1 de 2 aprobaciones») y el pago sale con la segunda aprobación. **Límite honesto:** quien tenga a la vez los dos teléfonos y los dos digipass puede todo.
 
+### Tope por cuenta no inscrita en 30 días (#149)
+Una estafa de inversión no pide todo de una vez: pide $50.000, después $150.000, después $400.000. Cada pago parece chico. Con `tope_ventana`, el proxy suma lo que ya se le pagó a una cuenta que el dueño **no tiene inscrita** en los últimos `ventana_dias` días, leyendo su propio registro de eventos (`grifter_eventos.jsonl`: lo que dejó pasar y lo que el dueño aprobó; lo retenido no cuenta). Si con este pago se pasa del tope, lo retiene hasta que el dueño lo confirme:
+```yaml
+tope_ventana: 300000   # 0 o sin la clave = sin tope
+ventana_dias: 30
+```
+Una cuenta inscrita (el arriendo mensual) no pasa por el tope. Un monto que no se puede leer se retiene. El tope es política: cambiarlo pide la aprobación del dueño, igual que una capa.
+
+**Límite honesto:** el proxy suma por **cuenta**, no por RUT del titular, porque no tiene el banco; quien reparte el monto entre varias cuentas de la misma persona no se ve aquí (la capa 3, con el registro de titulares del banco, sí lo ve). Sin registro de eventos no hay historial, y el tope solo ve el pago de esta llamada.
+
 ## WhatsApp (Kapso) como canal del dueño (#116)
 Es lo mismo que Telegram con otro canal: la alerta del pago retenido llega con tres botones (pagar a la inscrita, no pagar, pagar igual con segunda confirmación), el latido avisa al arrancar y detenerse, y la doble autorización corre por WhatsApp: cada aprobador recibe la solicitud con «Aprobar» y «Rechazar», y para aprobar responde en el chat el código de su digipass.
 
