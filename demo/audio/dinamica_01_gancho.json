@@ -1,0 +1,19 @@
+{
+  "escenario": "demo_dinamica",
+  "paso": "1. Gancho",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "Uno de cada cuatro chilenos ya perdió plata en una estafa digital.",
+  "texto_enviado": "[warm] Uno de cada cuatro chilenos ya perdió plata en una estafa digital.",
+  "voz": "femenina",
+  "nombre_de_la_voz": "Catalina",
+  "voz_id": "5yNXxdAaHAkq8N8bGqwQ",
+  "clase_de_voz": "library",
+  "descripcion_de_la_voz": "Narradora chilena joven de la biblioteca de ElevenLabs: cálida, cercana y natural, sin tono de noticiero.",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "duracion_s": 4,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
+  "caracteres": 73
+}

@@ -52,6 +52,8 @@ ACTIVOS_PUBLICOS = frozenset({
     "index.html", "estilos.css", "favicon.svg", "app.js", "graficos.js", "duelo.js",
     "operaciones.js", "vivo_simulado.js", "resultados.js", "resultados_vista.js",
     "resultados.json", "instalar.js", "demo.html", "demo.css", "demo.js",
+    # La versión B del modo demo, más dinámica (sus mp3 dinamica_*.mp3 van por el montaje /audio).
+    "dinamica.html", "dinamica.css", "dinamica.js",
     # El retrato del nieto que demo.js pone en la llamada del acto 1 (los mp3 van por el montaje /audio).
     "img/nieto.svg", "img/nieto.jpg", "img/abuela.jpg", "img/abuela.svg",
 })

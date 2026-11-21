@@ -122,6 +122,26 @@ def test_el_modo_demo_del_pitch_y_sus_activos_son_publicos(demo):
         assert respuesta.content == (raiz / ruta.lstrip("/")).read_bytes()
 
 
+def test_la_demo_dinamica_y_sus_activos_son_publicos(demo):
+    # La versión B del modo demo (dinamica.html): la página, su CSS y su JS, y las fotos y los audios que arma dinamica.js.
+    cliente, raiz = demo
+    assert {"dinamica.html", "dinamica.css", "dinamica.js"} <= server.ACTIVOS_PUBLICOS
+    referencias = _Referencias()
+    referencias.feed((raiz / "dinamica.html").read_text(encoding="utf-8"))
+    assert {"/dinamica.css", "/dinamica.js", "/estilos.css"} <= referencias.rutas
+    desde_js = {"/" + r for r in re.findall(r"[\"'`]((?:img|audio)/[\w./-]+\.(?:svg|png|jpg|webp|mp3))", (raiz / "dinamica.js").read_text(encoding="utf-8"))}
+    narracion = {r for r in desde_js if r.startswith("/audio/dinamica_")}
+    assert len(narracion) == 11 and {"/audio/cuento_del_tio_nieto.mp3", "/img/nieto.jpg", "/img/abuela.jpg"} <= desde_js
+    for ruta in referencias.rutas | desde_js | {"/dinamica.html"}:
+        respuesta = cliente.get(ruta)
+        assert respuesta.status_code == 200, ruta
+        assert respuesta.content == (raiz / ruta.lstrip("/")).read_bytes()
+    # Cada narración tiene su ficha, que dice que la voz es sintética.
+    for ruta in narracion:
+        ficha = json.loads((raiz / ruta.lstrip("/")).with_suffix(".json").read_text(encoding="utf-8"))
+        assert ficha["sintetica"] is True and ficha["voz_id"] and ficha["modelo"] == "eleven_v3" and ficha["aviso"]
+
+
 def test_todos_los_episodios_exportados_siguen_publicos(demo):
     cliente, raiz = demo
     for archivo in (raiz / "episodios").iterdir():
