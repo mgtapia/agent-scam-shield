@@ -175,6 +175,13 @@ MAPEO: dict[str, Entrada] = {
     "off_channel_refund": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
                                   _ASI01_APROX + "La devolución sale del canal del banco: efectivo, tarjetas de regalo "
                                   "o un cajero cripto."),
+    # Plata que no es un dato del dueño (#142).
+    "gift_card_code_theft": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                    _ASI01_APROX + "Un «soporte» pide el código de una tarjeta de regalo que acaba de "
+                                    "comprar el dueño: el código es plata al portador."),
+    "intermediary_redirect": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                     _ASI01_APROX + "El pago va a un intermediario inscrito, pero el destinatario "
+                                     "final viaja en la referencia o el alias."),
     # Pedir un código o credenciales por un mensaje: phishing.
     "otp_phishing": Entrada("ASI01", "AML.T0052", APROXIMADO, APROXIMADO,
                             _ASI01_APROX + "Busca que el agente entregue un código de un solo uso."),

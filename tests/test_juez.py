@@ -144,3 +144,64 @@ def test_el_prompt_describe_senales_y_no_los_escenarios():
     for d in flujo.libreta.dominios:
         assert d not in texto
     assert ".cl" not in texto and "@" not in texto
+
+
+# --- Barrido, punto de operación, caché en disco y precio ---
+
+def test_el_barrido_reusa_los_veredictos_y_elige_el_punto_de_operacion():
+    from scripts.juez_vivo import barrer, elegir
+
+    async def pedir(_m, _s, mensajes, **_k):
+        return '{"veredicto": "estafa"}' if "estafa" in mensajes[0].content else '{"veredicto": "estafa"}'
+    juez = Juez("mockllm/model", banda=(0.0, 0.5), pedir=pedir)
+    _correr(medir(juez, _runs()))
+    llamadas = juez.llamadas
+    filas = barrer(juez, _runs(), desde=(0.0, 0.2, 0.4))
+    assert juez.llamadas == llamadas                     # no vuelve a llamar
+    assert [f["banda"][0] for f in filas] == [0.0, 0.2, 0.4]
+    # Desde 0 marca todo (falsas alarmas 100 %); desde 0,2 marca el control dudoso (50 %); desde 0,4, nada más.
+    assert [f["con_juez"]["falsas_alarmas"]["media"] for f in filas] == [1.0, 0.5, 0.0]
+    assert elegir(filas, 0.08)["banda"][0] == 0.4
+    assert elegir(filas, 0.6)["banda"][0] == 0.2         # más cobertura con un presupuesto mayor
+    assert elegir([f for f in filas if f["banda"][0] < 0.4], 0.08) is None
+
+
+def test_la_cache_en_disco_guarda_solo_veredictos(tmp_path):
+    from scripts.juez_vivo import cargar_cache, guardar_cache
+    from scamshield.vivo.juez import Veredicto
+    juez = Juez("mockllm/model")
+    juez.cache.update({"a": Veredicto(True, "x"), "b": Veredicto(None, "", "caído")})
+    ruta = tmp_path / "c.json"
+    guardar_cache(ruta, juez)
+    leido = cargar_cache(ruta, "mockllm/model")
+    assert set(leido) == {"a"} and leido["a"].estafa is True
+    assert cargar_cache(ruta, "google/otro") == {}       # la caché de otro modelo no sirve
+
+
+def test_sin_precio_verificado_gemini_va_como_plan_gratuito():
+    from scripts.juez_vivo import precio_texto
+    assert precio_texto("google/gemini-3.5-flash") == "gratis (plan gratuito)"
+    assert precio_texto("anthropic/claude-haiku-5-5").startswith("US$0.1 / US$0.5")
+
+
+def test_un_429_de_cuota_corta_la_medicion_sin_esperar():
+    from scamshield.vivo.juez import CuotaAgotada, pedir
+
+    class Modelo:
+        name = "gemini-x"
+
+        async def generate(self, *_a, **_k):
+            raise RuntimeError("429 RESOURCE_EXHAUSTED: quota exceeded on Free Tier")
+    with pytest.raises(CuotaAgotada):
+        _correr(pedir(Modelo(), "s", [], max_tokens=10, gasto=Gasto()))
+    juez = Juez("mockllm/model", pedir=_falla(CuotaAgotada("cuota")))
+    medido = _correr(medir(juez, _runs()))
+    assert medido["filas"] == [] and "cuota" in medido["cortado"]
+
+
+def test_cada_veredicto_nuevo_avisa_para_guardarse():
+    vistos = []
+    juez = Juez(_mock('{"veredicto": "legitimo"}'), al_juzgar=lambda: vistos.append(1))
+    _correr(juez.juzgar("a", "correo"))
+    _correr(juez.juzgar("a", "correo"))
+    assert vistos == [1]
