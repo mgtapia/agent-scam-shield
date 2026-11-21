@@ -38,6 +38,7 @@ class Config:
     reintentos: int = 2                   # reintentos de una reescritura rechazada, dentro de la ronda
     max_episodios: int | None = None      # tope de episodios de la víctima en toda la corrida
     cache: bool = True
+    retry_on_error: int | None = None     # reintentos de una muestra de la víctima que falla (cuota, red)
     log_dir: str = "logs/atacante"
     salida: Path | None = None            # JSONL con una fila por ronda
     nombre_victima: str = ""
@@ -247,7 +248,8 @@ async def correr_atacante(cfg: Config, semillas: list[dict[str, Any]]) -> dict[s
             a_correr.setdefault(f.defensa, []).append(aplicar(f.semilla, p.variante))
         episodios += sum(len(v) for v in a_correr.values())
 
-        eps, usados = await correr(a_correr, cfg.victima, cfg.log_dir, cache=cfg.cache)
+        eps, usados = await correr(a_correr, cfg.victima, cfg.log_dir, cache=cfg.cache,
+                                   retry_on_error=cfg.retry_on_error)
         for m, n in usados.items():
             tokens[m] = tokens.get(m, 0) + n
 
