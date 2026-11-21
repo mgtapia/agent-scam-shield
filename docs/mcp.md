@@ -109,11 +109,15 @@ ChatGPT y Claude.ai solo se conectan a servidores MCP **remotos** por HTTPS. Par
 export GRIFTER_MCP_TOKEN=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
 python -m scamshield.mcp.proxy --config grifter.yaml --http --puerto 8766   # http://127.0.0.1:8766/mcp
 ```
-En la demo de Render, `demo/server.py` monta `/mcp` en el mismo servicio solo si `GRIFTER_MCP_TOKEN` está definido (en el panel de Render, no en `render.yaml`). Por defecto pone detrás la tienda ficticia con el checkout desviado (`scamshield/mcp/grifter.tienda.yaml`); `GRIFTER_MCP_CONFIG` apunta a otra configuración. Sin el token, `/mcp` responde 404 y la demo sigue igual.
+En la demo, `demo/server.py` monta `/mcp` en el mismo servicio de dos maneras:
+- con token, si `GRIFTER_MCP_TOKEN` está definido (en el panel de Render, no en `render.yaml`);
+- en **modo público**, sin token, con `GRIFTER_MCP_PUBLICO=1` (ver abajo). Es el que queda en Render.
+
+Por defecto pone detrás la tienda ficticia con el checkout desviado (`scamshield/mcp/grifter.tienda.yaml`); `GRIFTER_MCP_CONFIG` apunta a otra configuración. Sin ninguna de las dos variables, `/mcp` responde 404 y la demo sigue igual. En los dos modos, la demo arma los ganchos de la CLI que no necesitan Telegram: la integridad de la política (#102) y su latido en el registro.
 
 **Autenticación:**
 - Para la demo, un token de portador: `Authorization: Bearer <GRIFTER_MCP_TOKEN>`, de al menos 16 caracteres. Sin el token correcto, Grifter responde 401 antes de tocar nada. Sin el token configurado, el endpoint no se abre.
-- En producción va **OAuth 2.1**, como pide la especificación de autorización de MCP: Grifter como servidor de recursos y un servidor de autorización que emita tokens por usuario.
+- En producción va **OAuth 2.1**, como pide la especificación de autorización de MCP. Grifter es el servidor de recursos y un servidor de autorización emite tokens por usuario. El SDK `mcp` ya trae las piezas en `mcp.server.auth`: `AuthSettings` con `TokenVerifier` para validar los tokens y el middleware de portador. Eso cambiaría el token fijo y el modo público.
 
 **Con token de portador.** Se conectan los clientes que permiten poner una cabecera:
 ```bash
@@ -122,7 +126,21 @@ claude mcp add --transport http grifter https://grifter.onrender.com/mcp \
 ```
 También sirven las APIs de Anthropic y de OpenAI, que dejan pasar el token al declarar el servidor MCP, y el MCP Inspector.
 
-**ChatGPT (modo desarrollador).** En ChatGPT web: Settings, Apps (antes Connectors), Advanced settings, Developer mode. Después se agrega un servidor MCP propio con su nombre y la URL `https://grifter.onrender.com/mcp`. Hoy ChatGPT ofrece solo **OAuth** o **sin autenticación** y no deja poner un token de portador fijo. Contra el `/mcp` protegido con token, ChatGPT recibe 401. Para que ChatGPT se conecte falta OAuth. Esto queda pendiente, porque abrir `/mcp` sin autenticación expondría el endpoint a cualquiera. **Claude.ai** (conectores personalizados), por lo que vimos, tiene la misma restricción: OAuth o nada.
+**ChatGPT (modo desarrollador), sin autenticación.** ChatGPT ofrece solo **OAuth** o **sin autenticación** y no deja poner un token de portador fijo. Para la demo, Render corre `/mcp` en modo público (`GRIFTER_MCP_PUBLICO=1` en `render.yaml`). Para conectarlo:
+1. En ChatGPT web: Settings, Apps (antes Connectors), Advanced settings y se prende **Developer mode**.
+2. Se agrega un servidor MCP propio: un nombre (Grifter), la URL `https://grifter.onrender.com/mcp` y, en autenticación, **No authentication**. Se acepta el aviso de riesgo.
+3. En una conversación nueva, se elige el conector en el modo desarrollador y se pide, por ejemplo: «Compra 10 microprocesadores SA-3NM en la tienda de Silicio Austral y paga el checkout».
+4. La tienda arma la orden con una «cuenta de recaudación nueva» y ChatGPT llama a `pagar_checkout`. Grifter lo retiene y ChatGPT muestra el aviso.
+
+En el plan gratis, Render duerme el servicio: la primera llamada puede tardar mientras despierta.
+
+**Qué acota el modo público:**
+- **Solo la tienda ficticia.** Si la configuración trae otra cosa (un banco, un MCP remoto, `env` o `headers`), la demo no arranca. La tienda corre como subproceso con el entorno mínimo del SDK, así que no ve `STRIPE_TEST_KEY` ni otras credenciales del servicio.
+- **Tope por IP**, como «Intenta estafarlo»: 60 pedidos por minuto y 600 por hora, más un tope global de 6.000 por hora. Detrás de Render se lee la IP de `X-Forwarded-For` con `GRIFTER_PROXY_CONFIABLE=1`. Cada mensaje JSON-RPC es un pedido, y ChatGPT llama desde servidores de OpenAI, así que sus usuarios comparten IP.
+- **Cuerpo chico:** un POST a `/mcp` de más de 16 KB, o sin `Content-Length`, recibe 413. Eso acota también el tamaño de los argumentos.
+- La guardia y el registro son de todo el proceso: todos los que se conectan comparten la misma tienda de juguete.
+
+**Claude.ai** (conectores personalizados), por lo que vimos, tiene la misma restricción: OAuth o nada. Con el modo público se agrega igual, sin autenticación.
 
 **Los MCP del comercio, por URL.** En `grifter.yaml`:
 ```yaml
