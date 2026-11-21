@@ -1,0 +1,166 @@
+/* Grifter, modo demo (demo.html): un escenario fijo de 1920×1080 que se escala a la ventana (--md-k).
+   Usa los tokens de estilos.css. Los tamaños grandes son propios de este modo, que se proyecta o se graba:
+   están pensados para leerse desde el fondo de una sala. La única excepción a «radio 0» es el celular dibujado,
+   que es un objeto y no un control de la interfaz. */
+
+body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--fondo); }
+.md-marco { position: fixed; inset: 0; overflow: hidden; }
+.md-escenario {
+  position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px;
+  transform: translate(-50%, -50%) scale(var(--md-k, 1)); transform-origin: center;
+  font-size: var(--t-4); line-height: var(--l-4);
+}
+
+/* Íconos en SVG, del mismo grosor y familia que Material Symbols Sharp */
+.md-ic { width: 32px; height: 32px; fill: currentColor; flex: none; }
+.md-ic.chico { width: 24px; height: 24px; vertical-align: middle; }
+.md-ic.grande { width: 64px; height: 64px; }
+
+/* Aparecer: cada pieza entra con un fundido corto cuando la línea de tiempo llega a su segundo */
+[data-v], [data-h] { opacity: 0; transition: opacity 320ms ease-out, transform 320ms ease-out; }
+[data-v]:not(.ve), [data-h]:not(.ve) { pointer-events: none; }
+[data-v].ve, [data-h].ve { opacity: 1; }
+.md-cuadro [data-v], .md-cuadro [data-h] { transition: none; }
+
+.md-acto { position: absolute; inset: 0; padding: 72px 96px 64px; display: none; flex-direction: column; gap: 40px; }
+.md-acto.activo { display: flex; }
+
+/* La frase grande de cada acto: la primera se reemplaza por la segunda en el mismo lugar */
+.md-frase { display: grid; margin: 0; min-height: 72px; font-size: 64px; line-height: 72px; font-weight: var(--p-fuerte); letter-spacing: -0.02em; }
+.md-frase > span { grid-area: 1 / 1; max-width: 1640px; }
+.md-frase-2 { color: var(--texto); }
+
+.md-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 64px; align-items: start; }
+.md-consola { display: grid; gap: 24px; min-width: 0; }
+.md-rot { margin: 0; color: var(--texto-2); font-size: var(--t-3); line-height: var(--l-3); display: flex; align-items: center; gap: var(--e-1); }
+.md-encargo { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 16px; padding: 24px; font-size: 28px; line-height: 36px; border: var(--linea); background: var(--superficie); }
+.md-encargo p { margin: 0; }
+.md-encargo .md-ic { color: var(--texto-2); }
+
+/* Rótulo neutro sobre la frase del acto */
+.md-rotulo { margin: 0 0 -24px; color: var(--texto-2); font-size: 32px; line-height: 40px; }
+/* Subtítulos de la llamada: una frase a la vez, en el mismo lugar */
+.md-subtitulos:not(.ve) { display: none; }
+.md-subtitulos { position: relative; min-height: 200px; padding: 24px; border: var(--linea); background: var(--superficie); }
+.md-sub { position: absolute; inset: 24px; margin: 0; font-size: 36px; line-height: 48px; }
+.md-sub .md-quien { display: block; margin-bottom: 8px; font-size: 22px; line-height: 28px; }
+.md-sub-dueno { color: var(--texto-2); }
+.md-cuenta { white-space: nowrap; background: transparent; color: var(--ambar); font-family: var(--mono); text-decoration: underline; text-decoration-color: var(--ambar); text-underline-offset: 6px; }
+.md-contacto { margin: 0; display: flex; align-items: center; gap: 12px; font-weight: var(--p-fuerte); }
+.md-contacto .md-ic { color: var(--ambar); }
+
+/* Los pasos del agente: quién actuó, qué hizo y la etiqueta del origen */
+.md-pasos { display: grid; gap: 0; border: var(--linea); background: var(--superficie); }
+.md-pasos:not(:has(.ve)) { border-color: transparent; background: transparent; }
+.md-pasos li { display: grid; grid-template-columns: 32px 140px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 16px 24px; font-size: 28px; line-height: 36px; }
+.md-pasos li + li { border-top: var(--linea); }
+.md-pasos li .md-ic { color: var(--texto-2); }
+.md-quien { color: var(--texto-3); font-size: 22px; }
+.md-pasos .tag { font-size: var(--t-2); height: auto; padding: 2px 12px; }
+.md-retuvo .md-ic, .md-retuvo b, .md-retuvo .md-quien { color: var(--verde); }
+.md-retuvo b { font-weight: var(--p-fuerte); }
+.md-pago-ok .md-ic, .md-pago-ok .md-quien { color: var(--verde); }
+
+/* El celular dibujado: un Android actual a escala. Pantalla 9:19,5 (412×915 dp) de 388×840 px, es decir 0,92 px
+   por dp; los textos van a 1,1-1,3 veces su tamaño real en sp para leerse proyectados. En el acto 1 va fijo a la
+   derecha, de arriba abajo, y el texto de la izquierda le deja el espacio. */
+.md-a1 { padding-right: 600px; }
+.md-a1 .md-cols { grid-template-columns: minmax(0, 1fr); }
+.md-celular {
+  position: absolute; right: 96px; top: 108px; width: 412px; height: 864px; padding: 12px;
+  border-radius: 56px; background: #16171A; border: 2px solid var(--borde);
+  transform: translate(calc(48px + var(--md-vib, 0px)), 0) rotate(var(--md-vib-r, 0deg));
+}
+.md-celular.ve { transform: translate(var(--md-vib, 0px), 0) rotate(var(--md-vib-r, 0deg)); }
+.md-pantalla { position: relative; height: 100%; border-radius: 44px; background: var(--fondo); overflow: hidden; }
+.md-camara { position: absolute; z-index: 2; top: 14px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #000; box-shadow: inset 0 0 0 2px #24262B; }
+.md-estado { position: absolute; z-index: 1; left: 0; right: 0; top: 0; height: 44px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; color: var(--texto); font: var(--p-fuerte) 16px / 20px var(--sans); }
+.md-estado-ic { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.md-senal { width: 16px; height: 12px; background: var(--texto); clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+.md-bateria { width: 22px; height: 11px; border: 1.5px solid var(--texto); border-radius: 3px; position: relative; }
+.md-bateria::before { content: ""; position: absolute; inset: 1.5px; right: 5px; background: var(--texto); border-radius: 1px; }
+.md-bateria::after { content: ""; position: absolute; right: -4px; top: 3px; width: 2px; height: 4px; background: var(--texto); border-radius: 0 1px 1px 0; }
+.md-llamada, .md-alerta, .md-al-hecho { position: absolute; left: 16px; right: 16px; top: 64px; }
+.md-llamada { bottom: 0; display: grid; justify-items: center; align-content: start; gap: 20px; padding-top: 56px; text-align: center; }
+.md-ll-estado { position: relative; margin: 0; height: 24px; width: 100%; color: var(--texto-2); font-size: 18px; line-height: 24px; }
+.md-ll-estado > span { position: absolute; inset: 0; }
+/* La foto del nieto con dos ondas que se abren mientras suena. --md-p va de 0 a 1 y lo fija render() */
+.md-avatar { position: relative; width: 168px; height: 168px; margin: 32px 0 40px; transition: transform 480ms ease-out; }
+.md-avatar img { position: relative; width: 100%; height: 100%; border-radius: 50%; display: block; }
+.md-pulso { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--verde); opacity: calc((1 - var(--md-p, 0)) * 0.6); transform: scale(calc(1 + var(--md-p, 0) * 0.55)); }
+body:not(.md-suena) .md-pulso { opacity: 0; }
+body.md-contestada .md-avatar { transform: scale(0.82); }
+.md-ll-nombre { margin: 0; font-size: 34px; line-height: 40px; font-weight: var(--p-normal); }
+.md-ll-botones { position: absolute; left: 24px; right: 24px; bottom: 72px; display: flex; justify-content: space-around; }
+.md-ll-b { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; }
+.md-ll-b .md-ic { width: 36px; height: 36px; }
+.md-ll-b.contestar { background: var(--verde); color: var(--fondo); transform: translateY(calc(var(--md-latido, 0) * -10px)) scale(calc(1 + var(--md-latido, 0) * 0.08)); }
+.md-ll-b.colgar { background: var(--rojo); color: var(--fondo); }
+.md-alerta { display: flex; flex-direction: column; gap: 14px; padding: 18px; border: 1px solid var(--rojo); background: var(--superficie); }
+.md-al-titulo { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 22px; line-height: 28px; font-weight: var(--p-fuerte); }
+.md-al-titulo .md-ic { color: var(--verde); }
+.md-al-motivo { margin: 0; font-size: 17px; line-height: 24px; }
+.md-al-datos { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 16px; line-height: 22px; }
+.md-al-datos dd.dato, .md-al-datos b { white-space: nowrap; }
+.md-al-datos dt { color: var(--texto-2); }
+.md-al-datos dd { margin: 0; overflow-wrap: anywhere; }
+.md-al-botones { display: grid; gap: 12px; }
+.md-b { position: relative; height: 48px; border: var(--linea); background: transparent; color: var(--texto); font: var(--p-fuerte) 17px / 22px var(--sans); overflow: hidden; }
+.md-b.principal { background: var(--texto); color: var(--fondo); }
+.md-b.peligro { color: var(--rojo); border-color: transparent; }
+/* El toque: un círculo que se agranda y se desvanece sobre «Pagar a mi inscrita» */
+.md-toque { position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 50%; background: var(--fondo); }
+.md-toque.ve { animation: md-toque 700ms ease-out forwards; }
+@keyframes md-toque { from { transform: scale(0.4); opacity: 0.6; } to { transform: scale(14); opacity: 0; } }
+.md-al-hecho { top: 200px; display: grid; justify-items: center; gap: 12px; padding: 48px 24px; text-align: center; border: var(--linea); background: var(--superficie); }
+.md-al-hecho p { margin: 0; font-size: 28px; line-height: 36px; font-weight: var(--p-fuerte); }
+.md-al-hecho p.dato { color: var(--texto-2); font-size: 22px; font-weight: var(--p-normal); }
+.md-al-hecho .md-ic { color: var(--verde); }
+
+/* Acto 2: dos tarjetas rápidas con el mismo formato */
+.md-tarjetas { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-content: start; }
+.md-tarjeta { display: grid; align-content: start; gap: 32px; padding: 40px; border: var(--linea); background: var(--superficie); }
+.md-tarjeta dl { margin: 0; display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px 24px; align-items: baseline; }
+.md-tarjeta dt { color: var(--texto-3); font-size: var(--t-3); line-height: 32px; }
+.md-tarjeta dd { margin: 0; font-size: 32px; line-height: 44px; }
+.md-tarjeta dd.dato { font-size: 28px; }
+.md-tarjeta .md-contacto { font-size: 26px; line-height: 32px; }
+.md-tarjeta .tag { font-size: var(--t-2); height: auto; padding: 2px 12px; vertical-align: middle; }
+.md-ret { color: var(--verde); font-weight: var(--p-fuerte); }
+.md-ret .md-ic { vertical-align: middle; }
+
+/* Acto 3: las cifras que cuentan solas */
+.md-cifras { flex: 1; display: grid; align-content: center; gap: 72px; }
+.md-cifra { display: grid; gap: 16px; }
+.md-linea { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 32px; font-size: 48px; line-height: 56px; color: var(--texto-2); }
+.md-linea .md-ic { width: 56px; height: 56px; align-self: center; color: var(--texto-3); }
+.md-n { font-size: 160px; line-height: 160px; font-weight: var(--p-fuerte); color: var(--texto); font-variant-numeric: tabular-nums; }
+.md-n.c-verde { color: var(--verde); }
+.md-det { margin: 0; color: var(--texto-3); font: var(--p-normal) 24px / 32px var(--mono); }
+
+/* Intro y cierre */
+.md-intro, .md-cierre { justify-content: center; align-items: center; text-align: center; }
+.md-logo { display: flex; align-items: center; gap: 24px; font-size: 96px; line-height: 96px; font-weight: var(--p-fuerte); letter-spacing: -0.02em; }
+.md-logo .md-ic { width: 96px; height: 96px; }
+.md-lema { margin: 0; color: var(--texto-2); font-size: 40px; line-height: 48px; }
+.md-cierre .md-frase { min-height: 0; display: grid; gap: 16px; text-align: center; }
+.md-cierre .md-frase > span { grid-area: auto; max-width: none; }
+.md-cierre .md-frase-2 { color: var(--verde); }
+.md-url { margin: 0; color: var(--texto-2); font-size: var(--t-5); }
+
+/* El borde rojo de alerta de toda la ventana, el mismo de Episodios */
+body.md-alarma .md-escenario::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 3px var(--rojo), inset 0 0 32px 4px color-mix(in srgb, var(--rojo) 40%, transparent); animation: alarma 1.2s ease-in-out infinite alternate; }
+
+/* La barra de progreso y el botón para iniciar (se oculta mientras corre) */
+.md-progreso { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--borde); }
+.md-progreso i { display: block; height: 100%; width: 0; background: var(--texto-3); }
+.md-inicio { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); display: grid; grid-template-columns: auto auto; align-items: center; gap: 8px 16px; padding: 20px 32px; border: var(--linea); background: var(--texto); color: var(--fondo); font: var(--p-fuerte) 28px / 32px var(--sans); cursor: pointer; }
+.md-inicio .md-ic { color: var(--fondo); }
+.md-inicio small { grid-column: 1 / -1; font: var(--p-normal) var(--t-2) / var(--l-2) var(--mono); color: var(--texto-3); }
+body.md-corriendo .md-inicio, body.md-cuadro .md-inicio { display: none; }
+body.md-corriendo { cursor: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-v], [data-h], .md-avatar { transition: none; }
+  .md-toque.ve { animation: none; opacity: 0; }
+}

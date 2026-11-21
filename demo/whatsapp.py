@@ -223,8 +223,8 @@ class CanalWhatsApp:
         with self._candado:   # un botón apretado dos veces no registra dos etiquetas
             if self._alertas.pop(id_, None) is None:
                 return True
-        self.al_elegir({"ts": datetime.now(timezone.utc).isoformat(), "eleccion": eleccion, "canal": "whatsapp",
-                        **alerta})
+        self.al_elegir({**alerta, "ts": datetime.now(timezone.utc).isoformat(), "eleccion": eleccion,
+                       "canal": "whatsapp"})
         try:
             self.texto(numero, t["hecho_" + eleccion])
         except ErrorWhatsApp as e:

@@ -23,7 +23,7 @@ import hashlib
 import hmac
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional
@@ -51,20 +51,41 @@ def _cwd(config: Any, servidor: Any) -> str:
     return Path(servidor.cwd).as_posix()
 
 
+def _ruta_relativa(config: Any, ruta: Optional[Path]) -> str:
+    """Relativa al YAML, sin abrirla ni colapsar `..`, que puede cruzar enlaces simbólicos."""
+    if ruta is None:
+        return ""
+    normalizada = Path(ruta)
+    if config.ruta is not None:
+        base = Path(config.ruta).parent
+        if not normalizada.is_absolute():
+            normalizada = base / normalizada
+        try:
+            return normalizada.relative_to(base).as_posix()
+        except ValueError:
+            pass
+    return normalizada.as_posix()
+
+
 def politica_canonica(config: Any) -> dict[str, Any]:
     """Lo que decide qué retiene Grifter, en una forma estable y sin secretos en claro."""
     return {
         "cuentas_inscritas": {str(k): str(v) for k, v in sorted(config.cuentas_inscritas.items())},
         "datos_dueno": {str(k): _h(v) for k, v in sorted(config.datos_dueno.items())},
         "encargo": str(config.encargo or ""),
-        "sensibles": {str(k): {"destino": r.destino, "que": r.que} for k, r in sorted(config.sensibles.items())},
+        "sensibles": {str(k): asdict(r) for k, r in sorted(config.sensibles.items())},
+        "acciones": {str(k): str(v) for k, v in sorted(config.acciones.items())},
         "capas": {str(k): bool(v) for k, v in sorted(config.capas.items())},
         "dominios": {str(k): sorted(str(d) for d in v) for k, v in sorted(config.dominios.items())},
         "aprobadores": [{"nombre": a.nombre, "canal": a.canal} for a in config.aprobadores],
         "quorum": int(config.quorum),
         "umbral_doble": int(config.umbral_doble),
+        "semillas": _ruta_relativa(config, config.semillas),
         "servidores": {s.nombre: {"comando": s.comando, "args": list(s.args), "cwd": _cwd(config, s),
-                                  "env": {str(k): _h(v) for k, v in sorted(s.env.items())}}
+                                  "env": {str(k): _h(v) for k, v in sorted(s.env.items())},
+                                  # La URL también puede llevar credenciales, incluso en la ruta o el query.
+                                  "url": _h(s.url) if s.url else "",
+                                  "headers": {str(k): _h(v) for k, v in sorted(s.headers.items())}}
                        for s in sorted(config.servidores, key=lambda s: s.nombre)},
         # #103: el mandato y las herramientas fijadas también son política. Solo si están, para que la huella
         # de una política sin ellos no cambie.
@@ -112,6 +133,10 @@ def diferencias(antes: Mapping[str, Any], despues: Mapping[str, Any]) -> list[st
             d.append(f"- YA NO SE REVISA {k}")
         elif a[k] != b[k]:
             d.append(f"~ cambió cómo se revisa {k}")
+    a, b = antes.get("acciones", {}), despues.get("acciones", {})
+    for k in sorted(set(a) | set(b)):
+        if a.get(k) != b.get(k):
+            d.append(f"~ cambió el texto de aprobación de {k}")
     a, b = antes.get("capas", {}), despues.get("capas", {})
     for k in sorted(set(a) | set(b)):
         if a.get(k) != b.get(k):
@@ -134,17 +159,28 @@ def diferencias(antes: Mapping[str, Any], despues: Mapping[str, Any]) -> list[st
         d.append(f"~ quórum: {antes.get('quorum')} → {despues.get('quorum')}")
     if antes.get("umbral_doble") != despues.get("umbral_doble"):
         d.append(f"~ umbral de doble autorización: {antes.get('umbral_doble')} → {despues.get('umbral_doble')}")
+    if antes.get("semillas", "") != despues.get("semillas", ""):
+        d.append("~ cambió la ruta de las credenciales de aprobación")
     a, b = antes.get("servidores", {}), despues.get("servidores", {})
     for k in sorted(set(a) | set(b)):
         if k not in a:
-            d.append(f"+ servidor nuevo {k}: {b[k]['comando']} {' '.join(b[k]['args'])}".rstrip())
+            detalle = "HTTP" if b[k].get("url") else f"{b[k]['comando']} {' '.join(b[k]['args'])}".rstrip()
+            d.append(f"+ servidor nuevo {k}: {detalle}")
         elif k not in b:
             d.append(f"- servidor quitado {k}")
         elif a[k] != b[k]:
             que = [n for n in ("comando", "args", "cwd") if a[k][n] != b[k][n]]
             if a[k]["env"] != b[k]["env"]:
                 que.append("credenciales")
+            if a[k].get("url", "") != b[k].get("url", ""):
+                que.append("URL")
+            if a[k].get("headers", {}) != b[k].get("headers", {}):
+                que.append("cabeceras HTTP")
             d.append(f"~ servidor {k}: cambió " + ", ".join(que))
+    for campo, nombre in (("mandato", "el mandato del dueño"),
+                          ("herramientas_fijadas", "la fijación de herramientas")):
+        if antes.get(campo, {}) != despues.get(campo, {}):
+            d.append(f"~ cambió {nombre}")
     return d
 
 

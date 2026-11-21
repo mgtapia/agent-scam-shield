@@ -59,7 +59,8 @@ def test_el_encabezado_entre_corchetes_no_se_dice():
 def test_las_notas_de_voz_del_chat_solo_van_si_se_piden():
     con = g.reunir(ESCENARIOS, notas_de_voz=True)
     notas = [p for p in con if p.origen == "nota de voz"]
-    assert {p.escenario for p in notas} == {"chat_hijo_numero_nuevo", "chat_jefe_nota_de_voz",
+    assert {p.escenario for p in notas} == {"chat_hijo_numero_nuevo", "chat_jefe_nota_de_voz", "chat_contacto_secuestrado",
+                                            "chat_contacto_secuestrado_dictado",
                                             "control_chat_gerente_proveedor_inscrito"}
     assert all(p.texto.startswith(("Mamá", "Daniela", "Dani")) for p in notas)   # sin el «[Nota de voz, …]»
     assert not [p for p in g.reunir(ESCENARIOS) if p.origen == "nota de voz"]

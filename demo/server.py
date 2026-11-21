@@ -32,19 +32,47 @@ from types import SimpleNamespace
 from typing import Any, Literal
 
 from fastapi import Body, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from demo import telegram, whatsapp
-from demo.limite import LimitePorIP, ip_cliente
+from demo.limite import LimitePorIP, ip_cliente, limite_de, modo_evento
 from demo.notificar import notificar
 
 DEMO = Path(__file__).resolve().parent
 ETIQUETAS = DEMO / "etiquetas.jsonl"
 ELECCIONES = {"pagar_inscrita", "no_pagar", "pagar_igual"}
+ACTIVOS_PUBLICOS = frozenset({
+    "index.html", "estilos.css", "favicon.svg", "app.js", "graficos.js", "duelo.js",
+    "operaciones.js", "vivo_simulado.js", "resultados.js", "resultados_vista.js",
+    "resultados.json", "instalar.js", "demo.html", "demo.css", "demo.js",
+    # El retrato del nieto que demo.js pone en la llamada del acto 1 (los mp3 van por el montaje /audio).
+    "img/nieto.svg",
+})
+
+
+class _ActivosPublicos(StaticFiles):
+    """Solo los activos de la página; el historial y el código de la demo son privados."""
+
+    def lookup_path(self, path: str) -> tuple[str, os.stat_result | None]:
+        archivo, estado = super().lookup_path(path)
+        if estado is None:
+            return archivo, estado
+        # Un nombre público no hace público su destino si es un enlace a un archivo privado.
+        relativo = Path(archivo).relative_to(Path(self.directory).resolve()).as_posix()
+        if relativo != "." and relativo not in ACTIVOS_PUBLICOS:
+            return "", None
+        return archivo, estado
+
+    async def get_response(self, path: str, scope: dict[str, Any]) -> Response:
+        # Starlette arma la ruta con el separador del sistema: en Windows «img\nieto.svg». Se compara en posix.
+        path = path.replace(os.sep, "/")
+        if path != "." and path not in ACTIVOS_PUBLICOS:
+            raise HTTPException(404, "Not Found")
+        return await super().get_response(path, scope)
 
 # Grifter como conector MCP remoto en /mcp (#105). Sin GRIFTER_MCP_TOKEN la ruta responde 404 y la demo
 # sigue como siempre. La configuración por defecto pone detrás la tienda ficticia con el checkout desviado.
@@ -53,7 +81,7 @@ CONFIG_MCP_POR_DEFECTO = DEMO.parent / "scamshield" / "mcp" / "grifter.tienda.ya
 # ofrece OAuth o nada. Acotado: solo la tienda ficticia detrás, tope por IP y cuerpo chico.
 MODULO_TIENDA = "scamshield.mcp.servidor_tienda"
 MAX_BYTES_MCP = 16_384
-limite_mcp = LimitePorIP(por_minuto=60, por_hora=600, global_por_hora=6000)
+limite_mcp = limite_de("mcp")   # con GRIFTER_EVENTO=1 sube el tope por IP, no el global
 
 
 def mcp_publico(entorno=None) -> bool:
@@ -160,7 +188,7 @@ _candado = threading.Lock()
 @app.get("/api/salud")
 def salud() -> dict[str, Any]:
     episodios = sorted(p.name for p in (DEMO / "episodios").glob("*.json") if p.name != "indice.json")
-    return {"ok": True, "episodios": len(episodios)}
+    return {"ok": True, "episodios": len(episodios), "evento": modo_evento()}
 
 
 def registrar_etiqueta(etiqueta: dict[str, Any]) -> None:
@@ -249,7 +277,7 @@ def vivo_estado() -> dict[str, Any]:
 # --- «Intenta estafarlo» (#21) --------------------------------------------------------------------
 # Un juez escribe su estafa y ve qué capa la frena. Sin API: el agente es guionado y las capas son las reales.
 MAX_BYTES_PROBAR = 16_384
-limite_probar = LimitePorIP()
+limite_probar = limite_de("probar")
 
 
 class CorreoJuez(BaseModel):
@@ -286,8 +314,12 @@ def probar_estafa(correo: CorreoJuez, request: Request) -> dict[str, Any]:
 
 app.add_route("/mcp", ruta_mcp, methods=["GET", "POST", "DELETE"])
 
-# El montaje estático va al final: en «/» captura todo lo que no sea /api.
-app.mount("/", StaticFiles(directory=DEMO, html=True), name="demo")
+# Los episodios exportados son públicos y tienen su propia raíz para impedir salir de esa carpeta.
+app.mount("/episodios", StaticFiles(directory=DEMO / "episodios"), name="episodios")
+if (DEMO / "audio").is_dir():
+    app.mount("/audio", StaticFiles(directory=DEMO / "audio"), name="audio")
+# El montaje raíz va al final y solo permite los activos de la interfaz.
+app.mount("/", _ActivosPublicos(directory=DEMO, html=True), name="demo")
 
 
 def main() -> None:

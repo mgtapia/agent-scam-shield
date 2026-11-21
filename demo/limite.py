@@ -7,6 +7,11 @@ acotado: nunca recuerda más de `max_ips` direcciones, así que mandar pedidos d
 La IP real viene de la conexión. Detrás de un proxy de confianza (Render), `GRIFTER_PROXY_CONFIABLE=1` toma la última
 dirección de `X-Forwarded-For`, la que agregó el proxy y no el cliente; sin esa variable el encabezado se ignora, porque
 cualquiera puede escribirlo.
+
+Modo evento (`GRIFTER_EVENTO=1`): en un pitch o una feria, el jurado comparte el wifi y por lo tanto la IP, así que 30 personas
+con 3 intentos cada una en 2 minutos son 45 pedidos por minuto desde una sola dirección. El modo evento sube **solo el tope por
+IP** (por minuto y por hora) y deja el **tope global** igual: un ataque repartido entre muchas IP sigue topado, y una sola IP que
+comparte medio auditorio también. Es una variable de entorno, no un parámetro del pedido: nadie de afuera puede prenderla.
 """
 from __future__ import annotations
 
@@ -17,6 +22,11 @@ from collections import OrderedDict, deque
 from typing import Any, Callable, Mapping
 
 PROXY_CONFIABLE = "GRIFTER_PROXY_CONFIABLE"
+EVENTO = "GRIFTER_EVENTO"
+
+# Los topes de cada ruta abierta: (por minuto, por hora, global por hora). El modo evento solo cambia los dos primeros.
+TOPES = {"probar": (6, 60, 600), "mcp": (60, 600, 6000)}
+TOPES_EVENTO_POR_IP = {"probar": (120, 1200), "mcp": (240, 2400)}
 
 
 class LimitePorIP:
@@ -56,6 +66,19 @@ class LimitePorIP:
             cola.append(ahora)
             self._global.append(ahora)
             return True, 0
+
+
+def modo_evento(entorno: Mapping[str, str] | None = None) -> bool:
+    """True si el proceso arrancó con `GRIFTER_EVENTO=1` (el jurado comparte la IP)."""
+    return (os.environ if entorno is None else entorno).get(EVENTO, "").strip() == "1"
+
+
+def limite_de(ruta: str, entorno: Mapping[str, str] | None = None) -> LimitePorIP:
+    """El tope de una ruta abierta (`probar` o `mcp`), con el tope por IP más alto en modo evento y el global intacto."""
+    por_minuto, por_hora, global_por_hora = TOPES[ruta]
+    if modo_evento(entorno):
+        por_minuto, por_hora = TOPES_EVENTO_POR_IP[ruta]
+    return LimitePorIP(por_minuto=por_minuto, por_hora=por_hora, global_por_hora=global_por_hora)
 
 
 def ip_cliente(cliente: Any, encabezados: Mapping[str, str], entorno: Mapping[str, str] | None = None) -> str:
