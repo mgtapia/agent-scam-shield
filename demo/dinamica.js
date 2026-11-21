@@ -4,6 +4,8 @@
 //
 //   Espacio o «Iniciar»  arranca, pausa y sigue. Esa pulsación del presentador habilita el audio.
 //   R  reinicia      1-7  salta al paso de la historia      M  silencia
+//   ← →  mueve 1 s (con Mayús, 0,1 s) y deja la demo en pausa en ese cuadro
+//   ?revisar=1  modo revisión: el segundo actual arriba a la derecha y la barra de progreso clicable
 //   ?t=30  dibuja el segundo 30 en pausa y sin audio (para capturas)
 //
 // render(t) es una función pura del tiempo: no hay transiciones ni animaciones CSS con reloj propio. Cada
@@ -553,6 +555,7 @@
     document.body.classList.toggle("dn-alarma", alarma);
     document.body.style.setProperty("--alarma", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.cos(((tt - ALARMA[0]) * 2 * Math.PI) / 1.2))).toFixed(3));
     $("#dn-barra").style.width = `${(Math.min(tt, DURACION) / DURACION) * 100}%`;
+    if (revisor) revisor.firstChild.textContent = `t = ${tt.toFixed(1)} s`;
   }
 
   // --- Audio: las voces de la llamada (versión A) y la narración. Suenan solo después de que el presentador
@@ -628,6 +631,7 @@
   }
   function irA(s, seguir) {
     callar();
+    document.body.classList.remove("dn-en-portada");
     tiempo = s;
     corriendo = false;
     document.body.classList.remove("dn-corriendo");
@@ -639,6 +643,12 @@
     else if (e.key === "r" || e.key === "R") irA(0, true);
     else if (e.key === "m" || e.key === "M") { mudo = !mudo; if (mudo) callar(); else if (corriendo) reanudar(tiempo); }
     else if (/^[1-7]$/.test(e.key)) irA(PASOS[+e.key - 1], true);
+    // Revisión: las flechas mueven 1 s (con Mayús, 0,1 s) y dejan la demo en pausa en ese cuadro.
+    else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      const paso = (e.shiftKey ? 0.1 : 1) * (e.key === "ArrowRight" ? 1 : -1);
+      irA(Math.max(0, Math.min(DURACION, Math.round((tiempo + paso) * 10) / 10)), false);
+    }
   });
 
   // --- Escala: el escenario es de 1920×1080 y se ajusta a la ventana sin cambiar de forma ---
@@ -647,6 +657,20 @@
   escalar();
   construir();
   preparar();
+  // --- Modo revisión (?revisar=1): el segundo actual, para decir «en t = 48,7 cambia esto». No sale en el pitch. ---
+  let revisor = null;
+  if (params.get("revisar") === "1") {
+    revisor = document.createElement("div");
+    revisor.className = "dn-revisor";
+    revisor.append("t = 0.0 s", document.createElement("small"));
+    revisor.lastChild.textContent = "Espacio pausa · ← → 1 s · Mayús 0,1 s · clic en la barra salta";
+    document.body.append(revisor);
+    document.body.classList.add("dn-revisando");
+    $(".dn-progreso").addEventListener("click", (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      irA(Math.round(((e.clientX - r.left) / r.width) * DURACION * 10) / 10, false);
+    });
+  }
   prepararAudio();
   if (params.has("t")) {   // un cuadro fijo para capturas: sin audio hasta que el presentador pulse Espacio
     tiempo = Math.min(DURACION, Math.max(0, Number(params.get("t")) || 0));
