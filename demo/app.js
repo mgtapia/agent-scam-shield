@@ -44,13 +44,16 @@ const T = {
     a_hecho_pagar_inscrita: "Pagado a la inscrita", a_hecho_no_pagar: "No se pagó", a_hecho_pagar_igual: "Pagado a la cuenta nueva",
     c_de: "De", c_dominio: "Dominio", c_cuenta: "Cuenta",
     k_estafas: "Estafas exitosas", k_utilidad: "Utilidad", k_falsas: "Falsas alarmas", k_brecha: "Brecha ES / EN",
-    ayuda_k_estafas: "Estafas en que el agente cayó con el escudo; el delta es contra sin defensa",
-    ayuda_k_utilidad: "Tareas legítimas cumplidas con el escudo; el delta es contra sin defensa",
-    ayuda_k_falsas: "Controles legítimos en que el escudo bloqueó algo; el delta es contra sin defensa",
-    ayuda_k_brecha: "Diferencia de estafas exitosas entre español e inglés, sin defensa",
-    vs: "vs sin defensa", sin_datos: "Sin datos", prueba: "Datos de prueba", fuente: "Inspect · {m} modelos · {n} muestras",
+    ayuda_k_estafas: "Estafas en que el agente cayó con el escudo; el delta es contra sin defensa y solo se pinta si los intervalos no se tocan",
+    ayuda_k_utilidad: "Tareas legítimas cumplidas con el escudo; el delta es contra sin defensa y solo se pinta si los intervalos no se tocan",
+    ayuda_k_falsas: "Controles legítimos en que el escudo bloqueó algo; el delta es contra sin defensa y solo se pinta si los intervalos no se tocan",
+    ayuda_k_brecha: "Diferencia de estafas exitosas entre español e inglés, sin defensa. Con intervalo en cada idioma",
+    modelo: "Modelo", n_bajo: "n bajo", validas: "válidas",
+    ayuda_nbajo: "Menos de 5 escenarios: el intervalo es muy ancho y la celda se atenúa",
+    ayuda_n: "Entre corchetes, el intervalo al 95 % remuestreando escenarios; las repeticiones de un escenario cuentan una vez. n: escenarios. Válidas: muestras con puntaje sobre el total, las con error no cuentan",
+    vs: "vs sin defensa", sin_datos: "Sin datos", prueba: "Datos de prueba", fuente: "Inspect · {m} modelos · {n} muestras válidas",
     sin_resultados: "Sin resultados", sin_episodio: "Sin episodio exportado", abrir: "Clic: abrir en vivo",
-    t_exito: "éxito de la estafa", modelo_nota: "Sin defensa",
+    t_exito: "éxito de la estafa", t_modelo: "sin defensa",
     p_titulo: "Intenta estafarlo", p_de: "De", p_asunto: "Asunto", p_cuerpo: "Cuerpo", p_enviar: "Enviar al agente",
     p_pronto: "Próximamente", p_de_ph: "cobranza@dominio.cl", p_asunto_ph: "Actualización de datos de pago",
     locale: "es-CL",
@@ -80,13 +83,16 @@ const T = {
     a_hecho_pagar_inscrita: "Paid to registered", a_hecho_no_pagar: "Not paid", a_hecho_pagar_igual: "Paid to the new account",
     c_de: "From", c_dominio: "Domain", c_cuenta: "Account",
     k_estafas: "Successful scams", k_utilidad: "Utility", k_falsas: "False alarms", k_brecha: "ES / EN gap",
-    ayuda_k_estafas: "Scams the agent fell for with the shield; delta against no defense",
-    ayuda_k_utilidad: "Legitimate tasks completed with the shield; delta against no defense",
-    ayuda_k_falsas: "Legitimate controls where the shield blocked something; delta against no defense",
-    ayuda_k_brecha: "Difference in successful scams between Spanish and English, no defense",
-    vs: "vs no defense", sin_datos: "No data", prueba: "Test data", fuente: "Inspect · {m} models · {n} samples",
+    ayuda_k_estafas: "Scams the agent fell for with the shield; the delta is against no defense and is colored only if the intervals do not overlap",
+    ayuda_k_utilidad: "Legitimate tasks completed with the shield; the delta is against no defense and is colored only if the intervals do not overlap",
+    ayuda_k_falsas: "Legitimate controls where the shield blocked something; the delta is against no defense and is colored only if the intervals do not overlap",
+    ayuda_k_brecha: "Difference in successful scams between Spanish and English, no defense. Interval per language",
+    modelo: "Model", n_bajo: "low n", validas: "valid",
+    ayuda_nbajo: "Fewer than 5 scenarios: the interval is very wide and the cell is dimmed",
+    ayuda_n: "In brackets, the 95 % interval from resampling scenarios; repeats of a scenario count once. n: scenarios. Valid: scored samples out of the total, errored ones don't count",
+    vs: "vs no defense", sin_datos: "No data", prueba: "Test data", fuente: "Inspect · {m} models · {n} valid samples",
     sin_resultados: "No results", sin_episodio: "No exported episode", abrir: "Click: open live",
-    t_exito: "scam success", modelo_nota: "No defense",
+    t_exito: "scam success", t_modelo: "no defense",
     p_titulo: "Try to scam it", p_de: "From", p_asunto: "Subject", p_cuerpo: "Body", p_enviar: "Send to the agent",
     p_pronto: "Coming soon", p_de_ph: "billing@domain.com", p_asunto_ph: "Payment details update",
     locale: "en-US",
@@ -105,6 +111,7 @@ const estado = {
   confirmando: false,
   correo: null,
   resultados: null,
+  modelo: null,
   analisisPintado: false,
 };
 
@@ -603,50 +610,94 @@ async function cargarResultados() {
 }
 
 const DEFENSAS_EJE = ["none", "layer1", "layer2"];
-const escudoDe = (filas) => (filas.some((f) => f.defensa === "layer2") ? "layer2" : "both");
-const de = (filas, cond) => filas.filter((f) => Object.entries(cond).every(([k, v]) => (k === "tactica" ? f.tacticas.includes(v) : f[k] === v)));
 const modeloCorto = (m) => m.split("/").pop();
+const G = Graficos;
 
-// Número en blanco; el delta en gris con flecha, y color solo si es bueno o malo.
-function htmlKpi(clave, valor, delta, pie, menosEsMejor = true) {
+// La página no agrega nada: dibuja `agregados` de resultados.json (scripts/exportar_resultados.py, que usa
+// resumen_resultados.agregar). Solo entra la configuración base, que es la que miden los KPI.
+const esBase = (a) => a.lista_cuentas && !a.aviso_escudo && !a.dueno_simulado;
+const agregados = (R) => (R?.agregados || []).filter(esBase);
+const modelosDe = (R) => [...new Set(agregados(R).map((a) => a.modelo))].sort();
+const agregado = (R, modelo, defensa, idioma = "todos") =>
+  agregados(R).find((a) => a.modelo === modelo && a.defensa === defensa && a.idioma === idioma) || null;
+// La columna «Escudo» es layer2 o, si no hay, both.
+const escudoDe = (R, modelo) => (agregado(R, modelo, "layer2") ? "layer2" : "both");
+const defensaDe = (R, modelo, d) => (d === "layer2" ? escudoDe(R, modelo) : d);
+
+// n y muestras válidas de un conjunto de métricas: «n 21 · 63/63 válidas».
+function resumenN(metricas) {
+  const con = metricas.filter(Boolean);
+  const ns = con.map((m) => m.escenarios).filter((n) => n > 0);
+  if (!ns.length) return t("sin_datos");
+  const mn = Math.min(...ns), mx = Math.max(...ns);
+  const v = con.reduce((a, m) => a + m.repeticiones, 0), tot = con.reduce((a, m) => a + m.repeticiones_totales, 0);
+  return `n ${mn === mx ? mx : `${mn}-${mx}`} · ${v}/${tot} ${t("validas")}`;
+}
+
+// Tasa grande en blanco con su intervalo al lado; el delta en gris con flecha, y color solo si es bueno o
+// malo y los intervalos no se tocan.
+function htmlKpi(clave, m, delta, pie, menosEsMejor = true) {
   let d = "";
-  if (delta !== null && delta !== undefined) {
-    const r = Math.round(delta);
-    const clase = r === 0 ? "" : (r < 0) === menosEsMejor ? "c-verde" : "c-rojo";
+  if (delta) {
+    const r = delta.pp;
+    const clase = !delta.real || r === 0 ? "" : (r < 0) === menosEsMejor ? "c-verde" : "c-rojo";
     d = `<span class="delta ${clase}">${ms(r > 0 ? "arrow_upward" : r < 0 ? "arrow_downward" : "arrow_forward")}${r > 0 ? "+" : ""}${r} pp <span class="c-2">${esc(t("vs"))}</span></span>`;
   }
-  return `<div class="kpi" data-ayuda="${esc(t(`ayuda_${clave}`))}">
+  const hay = G.hayTasa(m);
+  return `<div class="kpi" data-ayuda="${esc(`${t(`ayuda_${clave}`)}\n${t("ayuda_n")}`)}">
     <span class="etiqueta">${esc(t(clave))}</span>
-    <span class="valor ${valor === null ? "sin" : ""}">${esc(valor === null ? "—" : valor)}</span>
+    <span class="valor ${hay ? "" : "sin"}">${esc(hay ? G.pct(m) : "—")}${hay ? `<span class="intervalo">${esc(G.intervalo(m))}</span>` : ""}</span>
     ${d}<span class="pie">${pie}</span></div>`;
 }
 
 function pintarKpis(R) {
   const caja = $("#kpis");
-  if (!R) { caja.innerHTML = `<div class="kpi"><span class="etiqueta">${esc(t("sin_resultados"))}</span></div>`; return; }
-  const f = R.filas;
-  const esc2 = escudoDe(f);
-  const par = (campo, filtro = {}) => [Graficos.tasa(de(f, { defensa: "none", ...filtro }), campo), Graficos.tasa(de(f, { defensa: esc2, ...filtro }), campo)];
-  const kpi = (clave, [sin, con], menosEsMejor) => htmlKpi(clave, con.v === null ? null : Graficos.pct(con.v),
-    con.v === null || sin.v === null ? null : con.v - sin.v,
-    `${esc(t(`d_${esc2}`))} n ${con.n} · ${esc(t("d_none"))} ${Graficos.pct(sin.v)}`, menosEsMejor);
-  const es = Graficos.tasa(de(f, { defensa: "none", tipo: "estafa", idioma: "es" }), "seguridad");
-  const en = Graficos.tasa(de(f, { defensa: "none", tipo: "estafa", idioma: "en" }), "seguridad");
-  const brecha = es.v === null || en.v === null ? null : Math.round(es.v - en.v);
-  caja.innerHTML = kpi("k_estafas", par("seguridad", { tipo: "estafa" }), true)
-    + kpi("k_utilidad", par("utilidad"), false)
-    + kpi("k_falsas", par("falsa_alarma", { tipo: "control" }), true)
-    + htmlKpi("k_brecha", brecha === null ? null : `${brecha > 0 ? "+" : ""}${brecha} pp`, null,
-      `ES ${Graficos.pct(es.v)} · EN ${Graficos.pct(en.v)} · ${esc(t("d_none"))}`);
+  const modelo = estado.modelo;
+  if (!R || !modelo) { caja.innerHTML = `<div class="kpi"><span class="etiqueta">${esc(t("sin_resultados"))}</span></div>`; return; }
+  const esc2 = escudoDe(R, modelo);
+  const sin = agregado(R, modelo, "none"), con = agregado(R, modelo, esc2);
+  const kpi = (clave, metrica, menosEsMejor) => {
+    const a = con?.[metrica], b = sin?.[metrica];
+    const delta = G.hayTasa(a) && G.hayTasa(b) ? { pp: G.pp(a.tasa) - G.pp(b.tasa), real: G.separados(a, b) } : null;
+    const pie = `${esc(t(`d_${esc2}`))} · ${esc(resumenN([a]))}<br>${esc(t("d_none"))} · ${esc(G.hayTasa(b) ? G.tasaIntervalo(b) : t("sin_datos"))}`;
+    return htmlKpi(clave, a, delta, pie, menosEsMejor);
+  };
+  const es = agregado(R, modelo, "none", "es")?.estafas_exitosas, en = agregado(R, modelo, "none", "en")?.estafas_exitosas;
+  const hayBrecha = G.hayTasa(es) && G.hayTasa(en);
+  const brecha = hayBrecha ? G.pp(es.tasa) - G.pp(en.tasa) : null;
+  const lado = (rotulo, m) => `${rotulo} ${G.hayTasa(m) ? G.tasaIntervalo(m) : t("sin_datos").toLowerCase()}`;
+  caja.innerHTML = kpi("k_estafas", "estafas_exitosas", true)
+    + kpi("k_utilidad", "utilidad", false)
+    + kpi("k_falsas", "falsas_alarmas", true)
+    + `<div class="kpi" data-ayuda="${esc(`${t("ayuda_k_brecha")}\n${t("ayuda_n")}`)}">
+    <span class="etiqueta">${esc(t("k_brecha"))}</span>
+    <span class="valor ${hayBrecha ? "" : "sin"}">${esc(hayBrecha ? `${brecha > 0 ? "+" : ""}${brecha} pp` : "—")}</span>
+    <span class="pie">${esc(lado("ES", es))} · ${esc(resumenN([es]))}<br>${esc(lado("EN", en))} · ${esc(resumenN([en]))}</span></div>`;
 }
 
 function pintarFuente(R) {
   const el = $("#fuente");
   if (!R) { el.textContent = ""; return; }
   el.classList.toggle("prueba", !!R.prueba);
-  el.textContent = R.prueba ? t("prueba") : t("fuente", { m: new Set(R.filas.map((x) => x.modelo)).size, n: R.filas.length });
+  const validas = R.filas.filter((x) => x.valida).length;
+  el.textContent = R.prueba ? t("prueba") : t("fuente", { m: new Set(R.filas.map((x) => x.modelo)).size, n: `${validas}/${R.filas.length}` });
   el.dataset.ayuda = [R.generado, ...R.registros.map((r) => `${modeloCorto(r.modelo)} · ${r.defensa}`),
     ...R.omitidos.map((o) => `${modeloCorto(o.modelo)} · ${o.defensa}: ${o.motivo}`)].join("\n");
+}
+
+// El selector de modelo se llena con los modelos de los agregados.
+function llenarModelos(R) {
+  const modelos = modelosDe(R);
+  if (!modelos.includes(estado.modelo)) estado.modelo = modelos[0] || null;
+  const sel = $("#sel-modelo");
+  sel.innerHTML = modelos.map((m) => `<option value="${esc(m)}">${esc(modeloCorto(m))}</option>`).join("");
+  sel.value = estado.modelo || "";
+}
+
+// Línea de tooltip: «Urgencia  8 % [0-21]  n 12 · n bajo». Sin escenarios, «sin datos».
+function lineaMetrica(rotulo, m) {
+  if (!G.hayTasa(m)) return `${esc(rotulo)}  ${esc(t("sin_datos"))}`;
+  return `${esc(rotulo)}  ${esc(G.tasaIntervalo(m))}  n ${m.escenarios}${G.nBajo(m) ? ` · ${esc(t("n_bajo"))}` : ""}`;
 }
 
 function pintarRadares(R) {
@@ -654,10 +705,12 @@ function pintarRadares(R) {
   if (!R) return;
   const ejes = R.tacticas.map((x) => x[estado.idioma] || x.es);
   for (const d of DEFENSAS_EJE) {
-    const filas = de(R.filas, { defensa: d === "layer2" ? escudoDe(R.filas) : d, tipo: "estafa" });
-    const valores = R.tacticas.map((x) => Graficos.tasa(de(filas, { tactica: x.clave }), "seguridad"));
-    $(`#nota-radar-${d}`).textContent = filas.length ? `n ${filas.length}` : "";
-    Graficos.radar($(`#radar-${d}`), ejes, valores, filas.length ? null : t("sin_datos"));
+    const a = estado.modelo ? agregado(R, estado.modelo, defensaDe(R, estado.modelo, d)) : null;
+    const total = a?.estafas_exitosas;
+    const hay = G.hayTasa(total);
+    const metricas = R.tacticas.map((x) => a?.tacticas?.[x.clave] || null);
+    $(`#nota-radar-${d}`).textContent = hay ? resumenN([total]) : "";
+    G.radar($(`#radar-${d}`), ejes, metricas, hay ? null : t("sin_datos"), lineaMetrica);
   }
 }
 
@@ -679,30 +732,35 @@ function abrirEnVivo(escenario, idioma) {
 
 function pintarCalor(R) {
   if (!R) return;
+  const modelo = estado.modelo;
   const filasT = R.tacticas.map((x) => x[estado.idioma] || x.es);
+  const agregadoDe = (d) => (modelo ? agregado(R, modelo, defensaDe(R, modelo, d)) : null);
   const celdasT = [];
   R.tacticas.forEach((x, y) => DEFENSAS_EJE.forEach((d, xi) => {
-    const r = Graficos.tasa(de(R.filas, { defensa: d === "layer2" ? escudoDe(R.filas) : d, tipo: "estafa", tactica: x.clave }), "seguridad");
-    celdasT.push({ x: xi, y, v: r.v, n: r.n, defensa: d, escenario: escenarioPara(R, x.clave) });
+    const m = agregadoDe(d)?.tacticas?.[x.clave] || null;
+    celdasT.push({ x: xi, y, v: G.hayTasa(m) ? G.pp(m.tasa) : null, texto: G.tasaIntervalo(m), bajo: G.nBajo(m), m, defensa: d, escenario: escenarioPara(R, x.clave) });
   }));
   const pie = (c) => (c.escenario ? `${t("abrir")}: ${c.escenario}` : t("sin_episodio"));
-  Graficos.calor($("#calor-tactica"), {
+  const detalle = (m) => (G.hayTasa(m) ? `${esc(G.tasaIntervalo(m))} ${esc(t("t_exito"))}<br>${esc(resumenN([m]))}${G.nBajo(m) ? ` · ${esc(t("n_bajo"))}` : ""}` : esc(t("sin_datos")));
+  $("#nota-calor-tactica").textContent = `${t("t_exito")} · ${resumenN(DEFENSAS_EJE.map((d) => agregadoDe(d)?.estafas_exitosas))}`;
+  G.calor($("#calor-tactica"), {
     columnas: DEFENSAS_EJE.map((d) => t(`d_${d}`)), filas: filasT, celdas: celdasT,
-    tooltip: (c) => `${esc(filasT[c.y])} · ${esc(t(`d_${c.defensa}`))}<br>${c.v === null ? esc(t("sin_datos")) : `${Graficos.pct(c.v)} ${esc(t("t_exito"))} · n ${c.n}`}<br>${esc(pie(c))}`,
+    tooltip: (c) => `${esc(filasT[c.y])} · ${esc(t(`d_${c.defensa}`))}<br>${detalle(c.m)}<br>${esc(pie(c))}`,
     alClic: (c) => c.escenario && abrirEnVivo(c.escenario),
   });
 
-  const modelos = [...new Set(R.filas.map((f) => f.modelo))].sort();
+  const modelos = modelosDe(R);
   const idiomas = ["es", "en"];
   const celdasM = [];
-  modelos.forEach((m, y) => idiomas.forEach((i, x) => {
-    const r = Graficos.tasa(de(R.filas, { defensa: "none", tipo: "estafa", modelo: m, idioma: i }), "seguridad");
+  modelos.forEach((mo, y) => idiomas.forEach((i, x) => {
+    const m = agregado(R, mo, "none", i)?.estafas_exitosas || null;
     const escenario = CARRILES.some((c) => episodioDe(estado.escenario, i, c.defensas)) ? estado.escenario : null;
-    celdasM.push({ x, y, v: r.v, n: r.n, modelo: m, idioma: i, escenario });
+    celdasM.push({ x, y, v: G.hayTasa(m) ? G.pp(m.tasa) : null, texto: G.tasaIntervalo(m), bajo: G.nBajo(m), m, modelo: mo, idioma: i, escenario });
   }));
-  Graficos.calor($("#calor-modelo"), {
+  $("#nota-calor-modelo").textContent = `${t("t_modelo")} · ${resumenN(celdasM.map((c) => c.m))}`;
+  G.calor($("#calor-modelo"), {
     columnas: idiomas.map((i) => i.toUpperCase()), filas: modelos.map(modeloCorto), celdas: celdasM,
-    tooltip: (c) => `${esc(modeloCorto(c.modelo))} · ${c.idioma.toUpperCase()}<br>${c.v === null ? esc(t("sin_datos")) : `${Graficos.pct(c.v)} ${esc(t("t_exito"))} · n ${c.n}`}<br>${esc(pie(c))}`,
+    tooltip: (c) => `${esc(modeloCorto(c.modelo))} · ${c.idioma.toUpperCase()}<br>${detalle(c.m)}<br>${esc(pie(c))}`,
     alClic: (c) => c.escenario && abrirEnVivo(c.escenario, c.idioma),
   });
 }
@@ -758,5 +816,6 @@ if (params.get("escenario")) estado.escenario = params.get("escenario");
 llenarEscenarios();
 irA(location.hash.slice(1) || "vivo");
 cargarEscenario();
-cargarResultados().then((R) => { estado.resultados = R; pintarAnalisis(); });
+$("#sel-modelo").addEventListener("change", (e) => { estado.modelo = e.target.value; pintarAnalisis(); });
+cargarResultados().then((R) => { estado.resultados = R; llenarModelos(R); pintarAnalisis(); });
 if (params.has("auto")) reproducir();
