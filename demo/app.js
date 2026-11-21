@@ -531,8 +531,8 @@ function pintarAlerta() {
       <button type="button" class="boton icono texto" data-accion="cerrar" aria-label="${esc(t("cerrar"))}">${ms("close")}</button></div>
     <div class="monto"><span class="dato">${plata(a.monto)}</span><span class="a">${esc(t("a_a", { d: a.destinatario }))}</span></div>
     <div class="comparar">
-      <span class="rotulo">${esc(t("a_agente"))}</span><span class="dato">${esc(a.cuenta)}</span><span class="tag externo" data-ayuda="${esc(a.dominio)}">${esc(t("externo"))}</span>
-      <span class="rotulo">${esc(t("a_inscrita"))}</span><span class="dato">${esc(a.cuenta_inscrita_numero || a.cuenta_inscrita)}</span><span class="tag">${esc(t("inscrita"))}</span>
+      <span class="rotulo">${esc(t("a_agente"))}</span><span class="valor"><span class="dato">${esc(a.cuenta)}</span><span class="tag externo" data-ayuda="${esc(a.dominio)}">${esc(t("externo"))}</span></span>
+      <span class="rotulo">${esc(t("a_inscrita"))}</span><span class="valor"><span class="dato">${esc(a.cuenta_inscrita_numero || a.cuenta_inscrita)}</span><span class="tag">${esc(t("inscrita"))}</span></span>
     </div>
     ${acciones}`;
 }
