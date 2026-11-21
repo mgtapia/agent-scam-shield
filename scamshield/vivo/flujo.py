@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 from typing import Any, Iterable, Optional
 
-from ..env.world import CORREO, LLAMADA, MCP, WEB, World, _normalizar
+from ..env.world import CORREO, LLAMADA, MCP, WEB, WHATSAPP, MensajeChat, World, _normalizar
 from ..scenarios import cargar
 
 AGENTES = ("Elon", "Sam", "Jensen", "Jeff", "Sergey", "Steve")
@@ -46,7 +46,7 @@ class Correo:
     de: str
     asunto: str
     cuerpo: str
-    origen: str                       # CORREO, LLAMADA, WEB o MCP
+    origen: str                       # CORREO, LLAMADA, WHATSAPP, WEB o MCP
     etiqueta: str                     # «estafa» o «legitimo»: el feedback simulado del dueño
     familia: str                      # «ingenieria_social», «tecnico» o «legitimo»
     unidad: str                       # escenario de origen (para separar entrenamiento y evaluación)
@@ -130,6 +130,10 @@ def _mensajes(esc: dict[str, Any]) -> list[dict[str, Any]]:
     salida = [{**c, "origen": CORREO} for c in esc.get("correos", [])]
     salida += [{"id": l["id"], "de": l["de"], "asunto": ("Call from " if en else "Llamada de ") + l["quien_dice_ser"],
                 "cuerpo": l["transcripcion"], "origen": LLAMADA} for l in esc.get("llamadas", [])]
+    # Un mensaje de chat entra igual: el cuerpo es el texto con sus adjuntos (notas de voz transcritas) y el origen, WHATSAPP.
+    salida += [{"id": m["id"], "de": m["de"], "asunto": ("Chat from " if en else "Chat de ") + m["quien_dice_ser"],
+                "cuerpo": MensajeChat(**m).completo().split("\n", 1)[1], "origen": WHATSAPP}
+               for m in esc.get("chat", [])]
     return salida
 
 
@@ -534,6 +538,7 @@ def _textos(esc: dict[str, Any]) -> list[str]:
     for c in esc.get("correos", []):
         t += [c["asunto"], c["cuerpo"]]
     t += [l["transcripcion"] for l in esc.get("llamadas", [])]
+    t += [m["texto"] for m in esc.get("chat", [])] + [a["texto"] for m in esc.get("chat", []) for a in m.get("adjuntos", [])]
     t += [str(v) for v in esc.get("paginas", {}).values()]
     t += [str(v) for v in esc.get("mcp_herramientas", {}).values()]
     return t
@@ -545,5 +550,9 @@ def _aplicar(esc: dict[str, Any], f) -> None:
         c["asunto"], c["cuerpo"] = f(c["asunto"]), f(c["cuerpo"])
     for l in esc.get("llamadas", []):
         l["transcripcion"] = f(l["transcripcion"])
+    for m in esc.get("chat", []):
+        m["texto"] = f(m["texto"])
+        for a in m.get("adjuntos", []):
+            a["texto"] = f(a["texto"])
     esc["paginas"] = {k: f(str(v)) for k, v in esc.get("paginas", {}).items()}
     esc["mcp_herramientas"] = {k: f(str(v)) for k, v in esc.get("mcp_herramientas", {}).items()}

@@ -80,7 +80,7 @@ def resumir(acciones: list[dict[str, Any]], respuesta: str, limite: int = 900) -
     """Las acciones del agente (sin las lecturas repetidas) y su respuesta final, cortas."""
     lineas = []
     for a in acciones:
-        if a["herramienta"] in ("leer_correos", "escuchar_llamadas", "abrir_web", "usar_mcp"):
+        if a["herramienta"] in ("leer_correos", "escuchar_llamadas", "leer_whatsapp", "abrir_web", "usar_mcp"):
             lineas.append(f"- leyó con {a['herramienta']} {a.get('args') or ''}".rstrip())
         else:
             estado = f"BLOQUEADA ({a.get('motivo', '')})" if a.get("bloqueada") else a.get("resultado", "")
