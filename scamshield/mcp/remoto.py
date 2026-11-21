@@ -76,8 +76,11 @@ class ConectorMCP:
     """
 
     def __init__(self, config: Config, token: Optional[str], escalar: Escalar = escalar_por_defecto,
-                 grifter: Optional[Grifter] = None):
-        self._token = validar_token(token).encode("utf-8")
+                 grifter: Optional[Grifter] = None, publico: bool = False):
+        # `publico`: sin token, para ChatGPT en modo desarrollador (OAuth o nada). Quien lo prende responde por lo
+        # que va detrás: la demo lo permite solo con la tienda ficticia, con tope por IP y cuerpo chico.
+        self.publico = publico
+        self._token = b"" if publico else validar_token(token).encode("utf-8")
         self.grifter = grifter if grifter is not None else Grifter(config, escalar)
         self._gestor: Optional[StreamableHTTPSessionManager] = None
         self._pila: Optional[AsyncExitStack] = None
@@ -103,6 +106,8 @@ class ConectorMCP:
             await pila.aclose()
 
     def _autorizado(self, scope: Scope) -> bool:
+        if self.publico:
+            return True
         return hmac.compare_digest(_token_del_pedido(scope).encode("utf-8"), self._token)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:

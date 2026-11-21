@@ -280,6 +280,7 @@ def test_la_demo_sin_token_no_abre_mcp(monkeypatch):
     import demo.server as servidor
 
     monkeypatch.delenv("GRIFTER_MCP_TOKEN", raising=False)
+    monkeypatch.delenv("GRIFTER_MCP_PUBLICO", raising=False)
     with TestClient(servidor.app) as cliente:
         assert cliente.post("/mcp", json=INICIO, headers=CABECERAS_MCP).status_code == 404
         assert cliente.get("/api/salud").json()["ok"] is True
@@ -289,6 +290,7 @@ def test_la_demo_sirve_mcp_y_retiene_el_checkout_desviado_de_la_tienda(tmp_path,
     import demo.server as servidor
 
     monkeypatch.setenv("GRIFTER_MCP_TOKEN", TOKEN)
+    monkeypatch.delenv("GRIFTER_MCP_PUBLICO", raising=False)
     monkeypatch.setenv("GRIFTER_MCP_CONFIG", str(_config_tienda(tmp_path)))
 
     async def correr() -> dict:

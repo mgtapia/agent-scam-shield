@@ -15,8 +15,8 @@ Rutas:
     GET  /api/vivo              Server-Sent Events del modo «Centro de operaciones» (scamshield/vivo)
     POST /api/vivo/control      {"accion": "pausa" | "seguir" | "velocidad" | "idioma", "valor": 1|2|4 | "es"|"en"|"ambos"}
     GET  /api/vivo/estado       foto completa: bóveda, modelo, agentes y últimos 50 correos
-    POST /mcp                   Grifter como conector MCP remoto (#105), solo si hay GRIFTER_MCP_TOKEN;
-                                detrás va la tienda ficticia (GRIFTER_MCP_CONFIG cambia la configuración)
+    POST /mcp                   Grifter como conector MCP remoto (#105), con GRIFTER_MCP_TOKEN o, sin token,
+                                con GRIFTER_MCP_PUBLICO=1 (solo la tienda ficticia, tope por IP y cuerpo chico)
 """
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ import threading
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Literal
 
 from fastapi import Body, FastAPI, HTTPException, Request
@@ -48,19 +49,59 @@ ELECCIONES = {"pagar_inscrita", "no_pagar", "pagar_igual"}
 # Grifter como conector MCP remoto en /mcp (#105). Sin GRIFTER_MCP_TOKEN la ruta responde 404 y la demo
 # sigue como siempre. La configuración por defecto pone detrás la tienda ficticia con el checkout desviado.
 CONFIG_MCP_POR_DEFECTO = DEMO.parent / "scamshield" / "mcp" / "grifter.tienda.yaml"
+# Modo público (GRIFTER_MCP_PUBLICO=1): /mcp sin token, para conectar ChatGPT en modo desarrollador, que solo
+# ofrece OAuth o nada. Acotado: solo la tienda ficticia detrás, tope por IP y cuerpo chico.
+MODULO_TIENDA = "scamshield.mcp.servidor_tienda"
+MAX_BYTES_MCP = 16_384
+limite_mcp = LimitePorIP(por_minuto=60, por_hora=600, global_por_hora=6000)
+
+
+def mcp_publico(entorno=None) -> bool:
+    return (os.environ if entorno is None else entorno).get("GRIFTER_MCP_PUBLICO", "").strip() == "1"
+
+
+def validar_config_publica(config) -> None:
+    """En modo público, detrás de Grifter solo puede ir la tienda ficticia: ni banco, ni Stripe, ni MCP remotos,
+    ni credenciales. Lanza ValueError si la configuración trae otra cosa."""
+    if not config.servidores:
+        raise ValueError("el modo público necesita la tienda ficticia detrás de Grifter")
+    for s in config.servidores:
+        if s.url or s.headers or s.env:
+            raise ValueError(f"modo público: {s.nombre} trae url, headers o env; solo se admite la tienda ficticia")
+        if s.comando not in ("python", "python3") or s.args[:2] != ["-m", MODULO_TIENDA]:
+            raise ValueError(f"modo público: {s.nombre} no es la tienda ficticia ({MODULO_TIENDA})")
+
+
+async def _responder_json(scope, receive, send, estado: int, cuerpo: dict, cabeceras: dict | None = None) -> None:
+    await JSONResponse(cuerpo, status_code=estado, headers=cabeceras)(scope, receive, send)
 
 
 class _RutaMCP:
-    """La ruta /mcp: delega en el conector de Grifter si está prendido; si no, 404."""
+    """La ruta /mcp: delega en el conector de Grifter si está prendido; si no, 404.
+    En modo público, antes de delegar aplica el tope por IP y el tamaño máximo del cuerpo."""
 
     def __init__(self) -> None:
         self.conector = None
+        self.publico = False
 
     async def __call__(self, scope, receive, send) -> None:
         if self.conector is None:
-            await JSONResponse({"detail": "Grifter MCP no está activo en este servidor"}, status_code=404)(
-                scope, receive, send)
+            await _responder_json(scope, receive, send, 404, {"detail": "Grifter MCP no está activo en este servidor"})
             return
+        if self.publico:
+            encabezados = {k.decode("latin-1").lower(): v.decode("latin-1") for k, v in scope.get("headers", [])}
+            if scope.get("method") == "POST":
+                largo = encabezados.get("content-length", "")
+                if not largo.isdigit() or int(largo) > MAX_BYTES_MCP:
+                    await _responder_json(scope, receive, send, 413, {"detail": "el pedido es demasiado grande"})
+                    return
+            cliente = scope.get("client")
+            ip = ip_cliente(SimpleNamespace(host=cliente[0] if cliente else None), encabezados)
+            ok, espera = limite_mcp.permitir(ip)
+            if not ok:
+                await _responder_json(scope, receive, send, 429, {"detail": "demasiados pedidos seguidos: espera un momento"},
+                                      {"Retry-After": str(espera)})
+                return
         await self.conector(scope, receive, send)
 
 
@@ -69,20 +110,30 @@ ruta_mcp = _RutaMCP()
 
 @asynccontextmanager
 async def _conector_mcp():
+    """Conecta a Grifter para /mcp: con GRIFTER_MCP_TOKEN (token de portador) o en modo público (sin token, solo
+    la tienda). Arma los ganchos de la CLI que tienen sentido sin Telegram: la integridad de la política (#102)."""
+    publico = mcp_publico()
     token = os.environ.get("GRIFTER_MCP_TOKEN", "").strip()
-    if not token:
+    if not token and not publico:
         yield
         return
-    from scamshield.mcp.proxy import cargar_config
+    from scamshield.mcp.integridad import ENTORNO_CLAVE, Integridad
+    from scamshield.mcp.proxy import Grifter, cargar_config
     from scamshield.mcp.remoto import ConectorMCP
 
     config = cargar_config(os.environ.get("GRIFTER_MCP_CONFIG") or CONFIG_MCP_POR_DEFECTO)
-    async with ConectorMCP(config, token) as conector:
-        ruta_mcp.conector = conector
+    if publico:
+        validar_config_publica(config)
+    integridad = None
+    if config.ruta is not None:
+        integridad = Integridad(config.ruta, config.estado, clave=os.environ.get(ENTORNO_CLAVE) or None)
+    grifter = Grifter(config, integridad=integridad)
+    async with ConectorMCP(config, token or None, grifter=grifter, publico=publico) as conector:
+        ruta_mcp.conector, ruta_mcp.publico = conector, publico
         try:
             yield
         finally:
-            ruta_mcp.conector = None
+            ruta_mcp.conector, ruta_mcp.publico = None, False
 
 
 @asynccontextmanager
