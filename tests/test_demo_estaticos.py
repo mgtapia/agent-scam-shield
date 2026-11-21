@@ -103,6 +103,20 @@ def test_la_pagina_y_todos_sus_activos_siguen_accesibles(demo):
         assert cabecera.status_code == 200 and cabecera.content == b""
 
 
+def test_el_modo_demo_del_pitch_y_sus_activos_son_publicos(demo):
+    # /#demo redirige a demo.html (la secuencia automática del video): sus activos no pueden quedar en 404.
+    cliente, raiz = demo
+    assert {"demo.html", "demo.css", "demo.js"} <= server.ACTIVOS_PUBLICOS
+    if not (raiz / "demo.html").is_file():
+        pytest.skip("demo.html todavía no está en esta rama")
+    referencias = _Referencias()
+    referencias.feed((raiz / "demo.html").read_text(encoding="utf-8"))
+    for ruta in referencias.rutas | {"/demo.html"}:
+        respuesta = cliente.get(ruta)
+        assert respuesta.status_code == 200, ruta
+        assert respuesta.content == (raiz / ruta.lstrip("/")).read_bytes()
+
+
 def test_todos_los_episodios_exportados_siguen_publicos(demo):
     cliente, raiz = demo
     for archivo in (raiz / "episodios").iterdir():

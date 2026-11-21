@@ -48,7 +48,7 @@ ELECCIONES = {"pagar_inscrita", "no_pagar", "pagar_igual"}
 ACTIVOS_PUBLICOS = frozenset({
     "index.html", "estilos.css", "favicon.svg", "app.js", "graficos.js", "duelo.js",
     "operaciones.js", "vivo_simulado.js", "resultados.js", "resultados_vista.js",
-    "resultados.json", "instalar.js",
+    "resultados.json", "instalar.js", "demo.html", "demo.css", "demo.js",
 })
 
 
