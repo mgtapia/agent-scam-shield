@@ -285,7 +285,7 @@ const Operaciones = (() => {
     vista.innerHTML = `
       <div class="lec-meta">
         <span class="rotulo">${esc(t("c_de"))}</span><span class="dato lec-de">${htmlDe(c, tr)}</span>
-        <span class="lec-quien">${c.juez ? tagJuez() : `${ms("smart_toy")}${esc(c.agente || "")}`}<span class="dato c-2">${esc(c.id)} · ${esc(hora(c.ts))}</span></span>
+        <span class="lec-quien">${c.juez ? tagJuez() : `${ms("smart_toy")}${esc(c.agente || "")}`}<span class="dato c-2">${esc(c.id)} · ${esc(hora(c.ts))}</span>${c.escenario && window.hayEpisodioDe?.(c.escenario) ? `<button type="button" class="lec-ep" data-episodio="${esc(c.escenario)}" data-ayuda="${esc(t("ayuda_ver_episodio"))}">${ms("replay")}${esc(t("ver_episodio"))}</button>` : ""}</span>
         <span class="rotulo">${esc(t("p_asunto"))}</span><span class="lec-asunto">${esc(c.asunto || "")}</span>
       </div>
       <div class="lec-cuerpo">${cuerpo.html}</div>
@@ -933,3 +933,9 @@ const Operaciones = (() => {
 window.Operaciones = Operaciones;
 Operaciones.alCambiarVista(estado.vista);
 Operaciones.iniciar();
+
+// El enlace «Ver el episodio» del panel Lectura abre ese escenario en Episodios.
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".lec-ep[data-episodio]");
+  if (b) window.abrirEpisodio?.(b.dataset.episodio);
+});
