@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 import os
 import threading
 from contextlib import asynccontextmanager
@@ -39,11 +40,12 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from demo import telegram, whatsapp
+from demo import en_vivo, telegram, whatsapp
 from demo.limite import LimitePorIP, ip_cliente, limite_de, modo_evento
 from demo.notificar import notificar
 
 DEMO = Path(__file__).resolve().parent
+log = logging.getLogger("scamshield.demo.server")
 ETIQUETAS = DEMO / "etiquetas.jsonl"
 ELECCIONES = {"pagar_inscrita", "no_pagar", "pagar_igual"}
 ACTIVOS_PUBLICOS = frozenset({
@@ -171,6 +173,8 @@ async def _vida(_app: FastAPI):
     Con GRIFTER_MCP_TOKEN o GRIFTER_MCP_PUBLICO=1, también conecta a Grifter con sus MCP de abajo para servir /mcp."""
     canal = telegram.iniciar_desde_entorno(registrar_etiqueta)
     _app.state.whatsapp = whatsapp.iniciar_desde_entorno(registrar_etiqueta)   # #116: el webhook de Kapso entra por /api/whatsapp/webhook
+    if en_vivo.activa():   # el «Rechazar» de Pablo vuelve por el mismo canal y el mismo webhook
+        demo_en_vivo.usar_canal(_app.state.whatsapp)
     try:
         async with _conector_mcp():
             yield
@@ -377,6 +381,57 @@ def probar_estafa(correo: CorreoJuez, request: Request) -> dict[str, Any]:
         raise HTTPException(422, str(e)) from e
 
 
+# --- Demo en vivo: el pedido de aprobación de Pablo llega de verdad por WhatsApp (demo/en_vivo.py) ------------
+# Solo con GRIFTER_DEMO_WHATSAPP=1 (en Render nunca está), con la clave de un solo uso del arranque, tope a las claves
+# malas y un envío cada 30 s (que se devuelve si Kapso falla).
+demo_en_vivo = en_vivo.EnVivo()
+
+
+class PedidoEnVivo(BaseModel):
+    clave: str = Field(default="", max_length=200)
+    idioma: Literal["es", "en"] = "es"
+
+
+@app.post("/api/demo/alerta-en-vivo")
+def alerta_en_vivo(pedido: PedidoEnVivo) -> dict[str, Any]:
+    if not en_vivo.activa():
+        raise HTTPException(404, "Not Found")
+    _clave_o_error(pedido.clave)
+    ok, espera = demo_en_vivo.permitir()
+    if not ok:
+        raise HTTPException(429, "un envío cada 30 s", headers={"Retry-After": str(espera)})
+    try:
+        return demo_en_vivo.enviar(pedido.idioma)
+    except LookupError as e:
+        demo_en_vivo.devolver_cupo()
+        raise HTTPException(503, str(e)) from None
+    except whatsapp.ErrorWhatsApp as e:   # el mensaje dice el estado de Kapso, nunca la URL ni la llave
+        demo_en_vivo.devolver_cupo()
+        log.warning("demo en vivo: %s", e)
+        raise HTTPException(502, "Kapso no aceptó el envío") from None
+
+
+def _clave_o_error(dada: str) -> None:
+    """429 si ya hubo demasiadas claves malas en el último minuto; 403 si esta es mala."""
+    espera = demo_en_vivo.bloqueada()
+    if espera:
+        raise HTTPException(429, "demasiadas claves inválidas", headers={"Retry-After": str(espera)})
+    if not demo_en_vivo.clave_valida(dada):
+        raise HTTPException(403, "clave inválida")
+
+
+@app.get("/api/demo/alerta-en-vivo/estado")
+def estado_en_vivo(id: str, request: Request) -> dict[str, Any]:
+    """Si Pablo ya respondió desde su WhatsApp. La clave va en la cabecera, no en la URL."""
+    if not en_vivo.activa():
+        raise HTTPException(404, "Not Found")
+    _clave_o_error(request.headers.get("x-grifter-demo-clave", ""))
+    e = demo_en_vivo.estado(id)
+    if e is None:
+        raise HTTPException(404, "no existe ese pedido")
+    return e
+
+
 app.add_route("/mcp", ruta_mcp, methods=["GET", "POST", "DELETE"])
 
 # Los episodios exportados son públicos y tienen su propia raíz para impedir salir de esa carpeta.
@@ -387,12 +442,28 @@ if (DEMO / "audio").is_dir():
 app.mount("/", _ActivosPublicos(directory=DEMO, html=True), name="demo")
 
 
+def _env_del_repo_principal(load_dotenv: Any) -> None:
+    """Desde un worktree, el .env está en la raíz del repo principal. Se carga sin pisar lo ya definido."""
+    import subprocess
+
+    try:
+        comun = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=DEMO,
+                               capture_output=True, text=True, timeout=5).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return
+    if comun and (Path(comun).parent / ".env").is_file():
+        load_dotenv(Path(comun).parent / ".env", override=False)
+
+
 def main() -> None:
     import uvicorn
 
     from dotenv import load_dotenv
 
     load_dotenv(DEMO.parent / ".env")   # el token de Telegram, si lo hay; el .env nunca entra al repo
+    _env_del_repo_principal(load_dotenv)
+    if en_vivo.activa():
+        en_vivo.anunciar_clave(demo_en_vivo)
     p = argparse.ArgumentParser(description="Servidor de la demo de agent-scam-shield")
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--puerto", type=int, default=8765)
