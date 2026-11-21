@@ -104,10 +104,12 @@ flowchart LR
 - «A Grifter no le importa quién manda el mensaje, sino de dónde salió el dato.»
 - «El estafador te habla por WhatsApp. Grifter también, pero para avisarte.»
 - «Si la abuela ya cayó, su hijo tiene que aprobar con su código.»
+- «Grifter no lee tu vida, solo revisa el pago.»
 - «La biometría confirma que eres tú. Grifter confirma que lo que apruebas es lo que pediste.»
 
 ## Preguntas probables
 - **¿Y si el mensaje viene del número real del hijo, porque le robaron el teléfono o la cuenta de WhatsApp?** Da lo mismo: Grifter confía solo en lo que ordena el dueño. Todo lo que entra por WhatsApp, correo o web es externo, aunque venga de un contacto conocido, y una cuenta que salió de ahí se retiene. Si el dueño ya cayó y dicta él la cuenta, entra la capa 3: la cuenta es nueva, se ve a nombre de quién está y el primer pago tiene tope. El escenario medido está en #117; hasta tenerlo, esto se dice como diseño, no como resultado.
+- **¿Qué pasa con la privacidad de mis datos?** Grifter no lee tu vida, solo revisa el pago. Ve únicamente lo que el agente lee y hace con sus herramientas, para marcar de dónde salió cada dato. Corre donde lo instala el dueño, el banco o el comercio, y es código abierto. La regla que frena los pagos no llama a ningún modelo, y el clasificador que da la alarma corre localmente (numpy): ninguno manda datos a una IA externa. Lo único que sale es la alerta al dueño (monto, cuenta y porqué) por el canal que él eligió. El código del digipass nunca se guarda, y la regla impide que el código del banco salga sin tu confirmación. Límite: WhatsApp o Telegram, como canal de la alerta, tienen sus propias políticas de datos.
 - **¿Grifter lee mi WhatsApp?** No. Se para entre el agente y sus herramientas (proxy o MCP): ve solo lo que el agente lee y marca de dónde vino. No va en tu teléfono.
 - **¿Y si el estafador escribe la cuenta en palabras, con espacios o con letras de otro alfabeto?** La regla es una lista blanca, no una lista negra: un destino que no aparece completo en el encargo ni en las cuentas inscritas se retiene siempre. Disfrazar la cuenta solo hace que se retenga.
 - **¿Y si el modelo más capaz se niega a hacer de atacante?** Eso también es un hallazgo: los modelos abiertos sí atacan, y el estafador usa esos (#131).
