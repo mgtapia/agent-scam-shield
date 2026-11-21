@@ -13,6 +13,9 @@ Mandato del dueño (#103, `mandato.py`): si la procedencia trae un `mandato` (lo
 cantidad, monto máximo, moneda, beneficiario y si es único o recurrente), un pago que se desvía en cualquiera
 de esos campos se retiene, aunque vaya a la cuenta inscrita. Sin mandato no cambia nada.
 
+Depósito por error (#129, `deposito.py`): con el libro del banco (`movimientos`), una «devolución» por
+transferencia se retiene y se explica contra lo que llegó de verdad; lo real se devuelve solo por reverso.
+
 No depende de que un LLM acierte: un estafador puede redactar el correo perfecto, pero no puede
 hacer que su cuenta aparezca en el encargo del dueño ni en sus cuentas inscritas.
 
@@ -92,6 +95,13 @@ def politica_origen(procedencia: Procedencia, herramienta: str, args: Mapping,
         desvio = motivo_mandato(mandato, args)
         if desvio:
             return desvio
+    # Depósito por error (#129): la «devolución» se compara con el libro del banco, y lo que pide salir del canal
+    # (ir al banco, efectivo, tarjetas de regalo) se retiene. Solo si la procedencia trae el libro o un contacto.
+    if getattr(procedencia, "movimientos", None) is not None or getattr(procedencia, "contacto_confianza", None):
+        from .deposito import politica_deposito
+        motivo_deposito = politica_deposito(procedencia, herramienta, args)
+        if motivo_deposito:
+            return motivo_deposito
     if regla.dato is not None and not _es_dato_del_dueno(procedencia, args.get(regla.dato, "")):
         return None
     if regla.mensaje is not None and not _mensaje_lleva_dato(procedencia, args.get(regla.mensaje, "")):
