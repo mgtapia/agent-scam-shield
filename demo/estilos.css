@@ -144,7 +144,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
 body[data-vista="vivo"] .solo-resultados, body:not([data-vista="vivo"]) .solo-vivo { display: none; }
 body[data-vista="probar"] .solo-resultados { display: none; }
 .fuente { color: var(--texto-2); font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); white-space: nowrap; margin-right: var(--e-1); }
-.fuente.prueba { color: var(--ambar); }
+.fuente.prueba { color: var(--texto); }
 
 .campo { display: flex; align-items: center; height: 40px; border: var(--linea); min-width: 0; }
 .campo select {
@@ -246,7 +246,7 @@ body[data-vista="probar"] .solo-resultados { display: none; }
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 528px;
+  height: 480px;
   border: var(--linea);
   background: var(--superficie);
   min-width: 0;
@@ -256,7 +256,7 @@ body[data-vista="probar"] .solo-resultados { display: none; }
 .carril-cab .ms { color: var(--texto-2); }
 .carril-cab .riesgo { margin-left: auto; font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); color: var(--texto-2); }
 
-.monitor { height: 112px; border-bottom: var(--linea); position: relative; }
+.monitor { height: 96px; border-bottom: var(--linea); position: relative; }
 .monitor canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 .pasos { flex: 1; overflow-y: auto; min-height: 0; }
@@ -279,6 +279,7 @@ body[data-vista="probar"] .solo-resultados { display: none; }
 .paso.texto { color: var(--texto-2); font-family: var(--sans); font-size: var(--t-2); line-height: var(--l-2); }
 .paso.dueno { font-family: var(--sans); font-size: var(--t-2); line-height: var(--l-2); }
 .paso.dueno .ms { color: var(--texto); }
+.paso .tag { flex: none; }
 .paso .estado { margin-left: auto; font-weight: var(--p-fuerte); white-space: nowrap; }
 .paso.bloqueada .ms, .paso.bloqueada .estado { color: var(--verde); }
 .paso.pago-malo .ms, .paso.pago-malo .estado { color: var(--rojo); }
@@ -309,7 +310,7 @@ body[data-vista="probar"] .solo-resultados { display: none; }
 .alerta {
   position: absolute;
   z-index: 2;
-  inset: 160px 0 0 0;
+  inset: 144px 0 0 0;
   border-top: var(--linea);
   display: flex;
   flex-direction: column;
@@ -328,7 +329,7 @@ body[data-vista="probar"] .solo-resultados { display: none; }
 .alerta .comparar .rotulo { color: var(--texto-2); }
 .alerta .comparar .valor { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 var(--e-1); }
 .alerta .comparar .dato { white-space: nowrap; }
-.alerta .acciones { display: flex; flex-wrap: wrap; gap: var(--e-1); justify-content: flex-end; border-bottom: 0; margin-top: auto; }
+.alerta .acciones { display: flex; flex-wrap: wrap; gap: var(--e-1); justify-content: flex-end; border-bottom: 0; }
 .alerta .acciones .boton.principal { flex: 1 1 100%; }
 .alerta .pregunta { flex: 1 1 100%; }
 .alerta .hecho { display: flex; align-items: center; gap: var(--e-1); font-size: var(--t-4); line-height: var(--l-4); font-weight: var(--p-fuerte); border-bottom: 0; }
@@ -338,7 +339,7 @@ body[data-vista="probar"] .solo-resultados { display: none; }
 .tabla > li + li { border-top: var(--linea); }
 .fila-correo {
   display: grid;
-  grid-template-columns: 20px minmax(0, 3fr) minmax(0, 6fr) auto auto 20px;
+  grid-template-columns: 20px minmax(0, 3fr) minmax(0, 6fr) 128px 88px 20px;
   align-items: center;
   gap: var(--e-2);
   width: 100%;
@@ -438,8 +439,8 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 }
 
 /* --- Responsive --- */
-@media (max-width: 1279px) {
-  .carril { height: 592px; }
+@media (max-width: 1199px) {
+  .carril { height: 528px; }
 }
 @media (max-width: 1099px) {
   .barra { grid-template-columns: auto minmax(0, 1fr); height: auto; padding: var(--e-1) var(--e-2); row-gap: var(--e-1); }
@@ -456,6 +457,7 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
   .franja .celda-inscrita { grid-column: 1 / -1; border-left: 0; border-top: var(--linea); }
   .fila-correo { grid-template-columns: 20px minmax(0, 1fr) auto 20px; }
   .fila-correo .asunto, .fila-correo .cuenta { display: none; }
+  .fila-correo { grid-template-columns: 20px minmax(0, 1fr) 88px 20px; }
   .controles { flex-wrap: wrap; }
 }
 @media (max-width: 479px) {

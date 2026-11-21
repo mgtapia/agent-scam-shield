@@ -259,9 +259,9 @@ $("#correos").addEventListener("click", (e) => {
 $("#panel-correo").addEventListener("click", (e) => { if (e.target.closest("[data-accion='cerrar-correo']")) cerrarCorreo(); });
 
 // --- Cuenta con su origen: texto normal y una etiqueta ---
-function cuentaO(cuenta, origen) {
+function tagOrigen(origen) {
   const externo = origen && origen.tipo !== "inscrita";
-  return `<span class="dato">${esc(cuenta)}</span> <span class="tag${externo ? " externo" : ""}">${esc(t(externo ? "externo" : "inscrita"))}</span>`;
+  return `<span class="tag${externo ? " externo" : ""}">${esc(t(externo ? "externo" : "inscrita"))}</span>`;
 }
 
 // --- Carriles ---
@@ -312,7 +312,7 @@ function htmlPaso(p) {
     const estadoTxt = bloqueada ? t("bloqueada") : ejecutada ? t("ejecutada") : (r.includes("insuf") ? t("saldo_insuf") : "");
     const detalle = [a.destinatario, a.concepto || a.motivo || "", r].filter(Boolean).join("\n");
     return li(`herramienta pago ${clase}`, icono,
-      `<span class="resumen"><span class="nombre">${esc(p.herramienta)}</span> ${plata(a.monto)} ${cuentaO(a.cuenta, p.origen_cuenta)}</span>`
+      `<span class="resumen"><span class="nombre">${esc(p.herramienta)}</span> ${plata(a.monto)} <span class="dato">${esc(a.cuenta)}</span></span>${tagOrigen(p.origen_cuenta)}`
       + `<span class="estado">${esc(estadoTxt)}</span>`, detalle);
   }
   const args = Object.entries(p.args || {}).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(", ");
@@ -522,13 +522,12 @@ function pintarAlerta() {
       <button type="button" class="boton peligro" data-decision="pagar_igual">${esc(t("a_si"))}</button></div>`;
   } else {
     acciones = `<div class="acciones">
+      <button type="button" class="boton principal" data-decision="pagar_inscrita">${esc(t("a_pagar_inscrita"))}</button>
       <button type="button" class="boton texto peligro" data-accion="confirmar">${esc(t("a_pagar_igual"))}</button>
-      <button type="button" class="boton" data-decision="no_pagar">${esc(t("a_no_pagar"))}</button>
-      <button type="button" class="boton principal" data-decision="pagar_inscrita">${esc(t("a_pagar_inscrita"))}</button></div>`;
+      <button type="button" class="boton" data-decision="no_pagar">${esc(t("a_no_pagar"))}</button></div>`;
   }
   caja.innerHTML = `
-    <div class="cab" data-ayuda="${esc(t("ayuda_alerta"))}">${ms("gpp_bad", true)}<h3 id="alerta-titulo">${esc(t("a_titulo"))}</h3>
-      <button type="button" class="boton icono texto" data-accion="cerrar" aria-label="${esc(t("cerrar"))}">${ms("close")}</button></div>
+    <div class="cab" data-ayuda="${esc(t("ayuda_alerta"))}">${ms("gpp_bad", true)}<h3 id="alerta-titulo">${esc(t("a_titulo"))}</h3></div>
     <div class="monto"><span class="dato">${plata(a.monto)}</span><span class="a">${esc(t("a_a", { d: a.destinatario }))}</span></div>
     <div class="comparar">
       <span class="rotulo">${esc(t("a_agente"))}</span><span class="valor"><span class="dato">${esc(a.cuenta)}</span><span class="tag externo" data-ayuda="${esc(a.dominio)}">${esc(t("externo"))}</span></span>
@@ -542,12 +541,11 @@ function clicAlerta(e) {
   if (!b) return;
   if (b.dataset.accion === "confirmar") { estado.confirmando = true; pintarAlerta(); return $("#alerta [data-accion='cancelar']")?.focus(); }
   if (b.dataset.accion === "cancelar") { estado.confirmando = false; pintarAlerta(); return; }
-  if (b.dataset.accion === "cerrar") return cerrarAlerta();
   if (b.dataset.decision) decidir(b.dataset.decision);
 }
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
-  if (estado.correo) cerrarCorreo(); else if ($("#alerta")) cerrarAlerta();
+  if (estado.correo) cerrarCorreo();
 });
 
 // La respuesta del dueño decide el pago en el carril del escudo y deja una etiqueta para el clasificador.
