@@ -1,6 +1,6 @@
 // Generado por scripts/resultados_demo.py. No editar a mano.
 window.RESULTADOS = {
- "generado": "2026-11-21T07:55:19+00:00",
+ "generado": "2026-11-21T08:25:23+00:00",
  "readme": "README.md#resultados",
  "bench": {
   "agente": "guionado",
@@ -195,7 +195,7 @@ window.RESULTADOS = {
  },
  "clasificador": {
   "recall": {
-   "media": 0.8742222222222222,
+   "media": 0.9037777777777778,
    "min": 0.8,
    "max": 1.0
   },
