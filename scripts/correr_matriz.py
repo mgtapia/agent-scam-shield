@@ -118,6 +118,25 @@ def _resumen(log) -> str:
     return " ".join(partes)
 
 
+# Límites de los planes gratis. Groq permite 8.000 tokens por minuto: con más de una llamada a la vez
+# llega un 429, Inspect marca error y las demás muestras de la corrida se pierden. Con una conexión y
+# reintentos de las muestras que fallan, la corrida termina limpia (más lenta).
+LIMITES_POR_PROVEEDOR: dict[str, dict[str, int]] = {
+    "groq/": {"max_connections": 1, "retry_on_error": 4},
+}
+
+
+def opciones_de_proveedor(modelo: str, max_connections: int | None) -> dict[str, int | None]:
+    """Las opciones de `inspect_ai.eval` para un modelo, aplicando los límites de su proveedor."""
+    opciones: dict[str, int | None] = {"max_connections": max_connections}
+    for prefijo, limites in LIMITES_POR_PROVEEDOR.items():
+        if modelo.startswith(prefijo):
+            tope = limites["max_connections"]
+            opciones["max_connections"] = tope if max_connections is None else min(max_connections, tope)
+            opciones["retry_on_error"] = limites["retry_on_error"]
+    return opciones
+
+
 def correr(
     celdas: list[tuple[str, str, str]],
     log_dir: str,
@@ -137,8 +156,8 @@ def correr(
             model=modelo,
             log_dir=log_dir,
             limit=limit,
-            max_connections=max_connections,
             display=display,
+            **opciones_de_proveedor(modelo, max_connections),
         )
         for log in logs:
             print(_resumen(log))
