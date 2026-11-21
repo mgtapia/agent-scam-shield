@@ -31,9 +31,9 @@
     shopping_cart: "M236.58-118.12q-20.42-20.42-20.42-49.57 0-29.16 20.42-49.58 20.42-20.42 49.57-20.42 29.16 0 49.58 20.42 20.42 20.42 20.42 49.58 0 29.15-20.42 49.57-20.42 20.43-49.58 20.43-29.15 0-49.57-20.43Zm387.69 0q-20.42-20.42-20.42-49.57 0-29.16 20.42-49.58 20.42-20.42 49.58-20.42 29.15 0 49.57 20.42t20.42 49.58q0 29.15-20.42 49.57Q703-97.69 673.85-97.69q-29.16 0-49.58-20.43ZM240.61-730 342-517.69h280L738.54-730H240.61Zm-28.76-60h628.46L657.46-457.69H324l-54.77 100h474.61v60H167.31l114.38-206L136.16-810H60v-60h113.85l38 80ZM342-517.69h280-280Z",
     play_arrow: "M320-200v-560l440 280-440 280Z",
   };
-  // La marca de Grifter: el escudo en un solo trazo y un check en ámbar adentro. En la portada se dibuja sola al cargar
-  // (stroke-dashoffset, con pathLength 1); con ?t= o movimiento reducido aparece ya dibujada.
-  const marca = (cls = "") => `<svg class="md-marca ${cls}" viewBox="0 0 120 140" aria-hidden="true"><path class="md-marca-escudo" pathLength="1" d="M60 8 L108 26 V68 C108 100 88 122 60 132 C32 122 12 100 12 68 V26 Z"/><path class="md-marca-check" pathLength="1" d="M38 70 L54 86 L84 54"/></svg>`;
+  // La marca de Grifter (diseño de MR): el escudo partido, mitad blanca y mitad verde, con la G adentro. En la portada
+  // entra con un fundido y una leve escala; con ?t= o movimiento reducido aparece ya puesta.
+  const marca = (cls = "") => `<img class="md-marca ${cls}" src="img/marca.png" alt="" width="370" height="452">`;
   // El agente: la misma constelación de la versión dinámica (puntos en una esfera de Fibonacci, en proyección y con
   // los de atrás más chicos y tenues), quieta y del tamaño de los demás íconos.
   const AGENTE = '<circle cx="14.2" cy="20.9" r="1.15" opacity="0.77"/><circle cx="11.0" cy="17.7" r="1.29" opacity="0.93"/><circle cx="9.3" cy="21.0" r="1.04" opacity="0.64"/><circle cx="18.2" cy="17.4" r="1.22" opacity="0.84"/><circle cx="5.5" cy="16.3" r="1.23" opacity="0.86"/><circle cx="15.1" cy="20.0" r="0.96" opacity="0.54"/><circle cx="14.7" cy="12.9" r="1.34" opacity="0.98"/><circle cx="4.4" cy="17.4" r="1.02" opacity="0.61"/><circle cx="20.6" cy="15.9" r="1.06" opacity="0.66"/><circle cx="7.0" cy="11.0" r="1.31" opacity="0.95"/><circle cx="10.5" cy="17.6" r="0.86" opacity="0.42"/><circle cx="19.4" cy="10.4" r="1.24" opacity="0.87"/><circle cx="2.5" cy="12.0" r="1.10" opacity="0.70"/><circle cx="18.5" cy="14.7" r="0.89" opacity="0.46"/><circle cx="11.9" cy="6.9" r="1.31" opacity="0.95"/><circle cx="5.8" cy="13.4" r="0.87" opacity="0.43"/><circle cx="21.1" cy="9.3" r="1.07" opacity="0.67"/><circle cx="4.9" cy="6.7" r="1.17" opacity="0.79"/><circle cx="13.6" cy="12.1" r="0.80" opacity="0.35"/><circle cx="16.3" cy="4.7" r="1.20" opacity="0.82"/><circle cx="4.5" cy="8.0" r="0.95" opacity="0.53"/><circle cx="18.4" cy="7.8" r="0.91" opacity="0.48"/><circle cx="9.7" cy="3.1" r="1.15" opacity="0.76"/><circle cx="9.9" cy="7.4" r="0.84" opacity="0.40"/><circle cx="16.0" cy="3.6" r="1.02" opacity="0.61"/><circle cx="9.5" cy="3.4" r="0.98" opacity="0.56"/>';
@@ -289,7 +289,7 @@
     $("#md-escenario").innerHTML = `
       <section class="md-acto md-intro" data-desde="0" data-hasta="${A1}">
         <p class="md-evento dato md-entra e0">${esc(t("evento"))}</p>
-        <div class="md-logo md-logo-portada">${marca("dibuja")}<span class="md-entra e1">Grifter</span></div>
+        <div class="md-logo md-logo-portada">${marca("aparece")}<span class="md-entra e1">Grifter</span></div>
         <p class="md-lema md-entra e2">${esc(t("lema"))}</p>
         <p class="md-gancho"><span class="md-entra e3">${esc(t("gancho1"))}</span><span class="md-entra e4">${esc(t("gancho2"))}</span></p>
         <p class="md-fuente dato md-entra e5">${esc(t("fuente"))}</p>

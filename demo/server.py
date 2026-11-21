@@ -55,6 +55,7 @@ ACTIVOS_PUBLICOS = frozenset({
     # Los retratos que demo.js pone en el acto 1: el nieto y la abuela en la llamada y Pablo en su teléfono (los mp3 van
     # por el montaje /audio).
     "img/nieto.svg", "img/nieto.jpg", "img/abuela.jpg", "img/abuela.svg", "img/pablo.jpg",
+    "img/marca.png",   # la marca de Grifter (de MR), en la portada y el cierre
 })
 
 

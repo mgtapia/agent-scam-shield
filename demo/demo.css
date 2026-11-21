@@ -265,12 +265,10 @@ body.md-narra .md-narrador-barras i { opacity: 1; }
 .md-logo { display: flex; align-items: center; gap: 24px; font-size: 96px; line-height: 96px; font-weight: var(--p-fuerte); letter-spacing: -0.02em; }
 .md-logo .md-ic { width: 96px; height: 96px; }
 .md-lema { margin: 0; color: var(--texto-2); font-size: 40px; line-height: 48px; }
-/* La marca: escudo de un trazo (--texto) con el check en ámbar. Bordes rectos, como el resto de la interfaz */
-.md-marca { width: 84px; height: 98px; flex: none; fill: none; stroke-linejoin: miter; stroke-linecap: square; }
-.md-marca-escudo { stroke: var(--texto); stroke-width: 7; }
-.md-marca-check { stroke: var(--ambar); stroke-width: 9; }
+/* La marca (img/marca.png, de MR): el escudo partido blanco y verde con la G. Proporción 370×452 */
+.md-marca { width: 80px; height: auto; flex: none; display: block; }
 
-/* Portada: la marca se dibuja, el nombre entra después y el gancho en dos líneas, una tras otra. Todo es CSS que corre
+/* Portada: la marca aparece, el nombre entra después y el gancho en dos líneas, una tras otra. Todo es CSS que corre
    una vez al cargar; con ?t= (md-cuadro) o movimiento reducido se ve el estado final. */
 .md-intro.activo { gap: 0; }
 .md-intro > * { position: relative; z-index: 1; }
@@ -281,22 +279,24 @@ body.md-narra .md-narrador-barras i { opacity: 1; }
 @keyframes md-grilla { to { background-position: 80px 80px, 80px 80px; } }
 .md-evento { position: absolute !important; top: 56px; left: 0; right: 0; margin: 0; color: var(--texto-3); font-size: 20px; line-height: 28px; letter-spacing: 0.04em; }
 .md-logo-portada { gap: 32px; }
-.md-logo-portada .md-marca { width: 104px; height: 121px; }
+.md-logo-portada .md-marca { width: 100px; }
 .md-intro .md-lema { margin-top: 20px; color: var(--texto-3); font-size: 24px; line-height: 32px; letter-spacing: 0.08em; text-transform: uppercase; }
 .md-gancho { margin: 72px 0 0; display: grid; gap: 8px; font-size: 44px; line-height: 56px; font-weight: var(--p-fuerte); letter-spacing: -0.01em; }
 .md-gancho > span:last-child { color: var(--ambar); }
 .md-fuente { margin: 20px 0 0; color: var(--texto-3); font-size: 18px; line-height: 24px; }
-.dibuja path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: md-trazo 900ms cubic-bezier(.6, 0, .2, 1) 200ms forwards; }
-.dibuja .md-marca-check { animation-duration: 380ms; animation-delay: 1000ms; }
-@keyframes md-trazo { to { stroke-dashoffset: 0; } }
+.aparece { opacity: 0; animation: md-aparece 450ms cubic-bezier(.2, .7, .2, 1) 150ms forwards; }
+@keyframes md-aparece { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
 .md-entra { opacity: 0; animation: md-entra 520ms ease-out forwards; }
-.md-entra.e0 { animation-delay: 100ms; } .md-entra.e1 { animation-delay: 1150ms; } .md-entra.e2 { animation-delay: 1450ms; }
-.md-entra.e3 { animation-delay: 1950ms; } .md-entra.e4 { animation-delay: 2650ms; } .md-entra.e5 { animation-delay: 3100ms; }
+.md-entra.e0 { animation-delay: 100ms; } .md-entra.e1 { animation-delay: 550ms; } .md-entra.e2 { animation-delay: 850ms; }
+.md-entra.e3 { animation-delay: 1350ms; } .md-entra.e4 { animation-delay: 2050ms; } .md-entra.e5 { animation-delay: 2500ms; }
 .md-gancho > .md-entra, .md-logo-portada > .md-entra { display: inline-block; }
 @keyframes md-entra { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-.md-cuadro .dibuja path, .md-cuadro .md-entra, .md-cuadro .md-intro::before { animation: none; opacity: 1; stroke-dashoffset: 0; }
+.md-cuadro .aparece, .md-cuadro .md-entra, .md-cuadro .md-intro::before { animation: none; opacity: 1; }
 .md-cuadro .md-intro::before { opacity: 0.45; }
 .md-cierre .md-frase { min-height: 0; display: grid; gap: 16px; text-align: center; }
+/* En el cierre la marca entra con el fundido de data-v y una leve escala */
+.md-cierre .md-logo { transform: scale(0.92); }
+.md-cierre .md-logo.ve { transform: none; }
 .md-cierre .md-frase > span { grid-area: auto; max-width: none; }
 .md-cierre .md-frase-2 { color: var(--verde); }
 .md-url { margin: 0; color: var(--texto-2); font-size: var(--t-5); }
@@ -317,7 +317,8 @@ body.md-corriendo .md-inicio, body.md-cuadro .md-inicio { display: none; }
 body.md-corriendo { cursor: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .dibuja path, .md-entra, .md-intro::before { animation: none; opacity: 1; stroke-dashoffset: 0; }
+  .aparece, .md-entra, .md-intro::before { animation: none; opacity: 1; }
+  .md-cierre .md-logo { transform: none; }
   .md-intro::before { opacity: 0.45; }
   [data-v], [data-h], .md-avatar { transition: none; }
   .md-b, .md-wa-b, .md-subraya, .md-n, .md-narrador .md-ic { transition: none; }
