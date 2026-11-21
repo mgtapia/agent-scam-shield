@@ -40,6 +40,19 @@ URL_POR_DEFECTO = "http://127.0.0.1:9090"
 VERSION_PROBADA = "3.8.0"
 
 
+# Lo que un proceso hijo necesita para arrancar. Las llaves de API no están, a propósito: Pipelock es un
+# binario de terceros y no tiene por qué ver las de los proveedores que el ejecutor cargó desde `.env`.
+_VARIABLES_BASE = ("PATH", "PATHEXT", "SYSTEMROOT", "WINDIR", "COMSPEC", "TEMP", "TMP", "TMPDIR",
+                   "HOME", "USERPROFILE", "LANG", "LC_ALL")
+
+
+def entorno_minimo(extra: Optional[dict[str, str]] = None) -> dict[str, str]:
+    """El entorno con el que se lanza Pipelock: lo básico del sistema, más lo que se pida."""
+    entorno = {k: os.environ[k] for k in _VARIABLES_BASE if k in os.environ}
+    entorno.update(extra or {})
+    return entorno
+
+
 class PipelockNoDisponible(RuntimeError):
     """El firewall no respondió. Nunca se cae en silencio a «sin defensa»: se corta con este error."""
 
@@ -68,7 +81,8 @@ class EscanerMcpCli:
             {"name": nombre, "description": descripcion, "inputSchema": {"type": "object"}}]}}
         try:
             r = subprocess.run([self.binario, "mcp", "scan", "--json"], input=json.dumps(pedido),
-                               capture_output=True, text=True, encoding="utf-8", timeout=self.timeout)
+                               capture_output=True, text=True, encoding="utf-8", timeout=self.timeout,
+                               env=entorno_minimo())
         except (OSError, subprocess.TimeoutExpired) as e:
             raise PipelockNoDisponible(f"no se pudo correr {self.binario} mcp scan: {e}") from e
         return parsear_mcp_scan(r.stdout)
@@ -201,7 +215,7 @@ class ServidorPipelock:
         cfg.write_text(self.config(), encoding="utf-8")
         self._proc = subprocess.Popen(
             [self.binario, "run", "--config", str(cfg)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            env={**os.environ, "PIPELOCK_HOME": self._dir})
+            env=entorno_minimo({"PIPELOCK_HOME": self._dir}))
         limite = time.monotonic() + espera
         cliente = ClientePipelock(self.url, self.token, timeout=2.0)
         while time.monotonic() < limite:

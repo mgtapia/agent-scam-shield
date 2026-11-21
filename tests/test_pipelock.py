@@ -220,3 +220,40 @@ def test_pipelock_real_bloquea_la_inyeccion_y_el_mcp_envenenado_pero_no_la_estaf
         url = next(iter(por_id["inyeccion_web"]["paginas"]))
         assert "Pipelock bloqueó" in corre("inyeccion_web", ("abrir_web", url))
         assert corre("boleta_cambio_cuenta", ("leer_correos",)) is None
+
+
+
+def test_pipelock_no_hereda_las_llaves_de_api(monkeypatch):
+    """El binario de terceros se lanza con un entorno mínimo: sin las llaves que el ejecutor cargó."""
+    from types import SimpleNamespace
+
+    from scamshield.defenses import pipelock
+
+    for llave in ("ANTHROPIC_API_KEY", "GROQ_API_KEY", "GOOGLE_API_KEY", "HF_TOKEN", "OPENAI_API_KEY"):
+        monkeypatch.setenv(llave, "valor-que-no-debe-salir")
+    monkeypatch.setenv("PATH", "/usr/bin")
+    assert set(pipelock.entorno_minimo()) <= set(pipelock._VARIABLES_BASE)
+    assert "valor-que-no-debe-salir" not in pipelock.entorno_minimo({"PIPELOCK_HOME": "/tmp/x"}).values()
+    assert pipelock.entorno_minimo({"PIPELOCK_HOME": "/tmp/x"})["PIPELOCK_HOME"] == "/tmp/x"
+
+    capturado = {}
+
+    def falso_run(*a, **kw):
+        capturado["run"] = kw["env"]
+        return SimpleNamespace(stdout='{"clean": true}')
+
+    class FalsoPopen:
+        def __init__(self, *a, **kw):
+            capturado["popen"] = kw["env"]
+            raise OSError("corte de la prueba")
+
+    monkeypatch.setattr(pipelock.subprocess, "run", falso_run)
+    monkeypatch.setattr(pipelock.subprocess, "Popen", FalsoPopen)
+    pipelock.EscanerMcpCli("pipelock")("herramienta", "descripcion")
+    servidor = pipelock.ServidorPipelock("pipelock")
+    with pytest.raises(OSError):
+        servidor.iniciar()
+    servidor.detener()
+    for entorno in capturado.values():
+        assert not any("valor-que-no-debe-salir" in v for v in entorno.values())
+        assert not any(k.endswith("_KEY") or k.endswith("_TOKEN") for k in entorno)
