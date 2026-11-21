@@ -204,7 +204,7 @@ class Motor:
             self.agentes[ev["agente"]] = {k: ev[k] for k in ("agente", "estado", "tarea", "ts")}
         elif tipo == "correo_nuevo":
             fila = {k: ev[k] for k in ("id", "agente", "de", "asunto", "cuerpo", "ts")}
-            fila.update({"tramos": [], "veredicto": None, "accion": None})
+            fila.update({"tramos": [], "veredicto": None, "accion": None, "juez": bool(ev.get("juez"))})
             self.correos.append(fila)
             self._por_id[ev["id"]] = fila
             vivos = {f["id"] for f in self.correos}
