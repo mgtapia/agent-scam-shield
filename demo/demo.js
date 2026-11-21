@@ -43,11 +43,11 @@
       entrante: "Llamada entrante", privado: "Número privado", en_llamada: "En llamada",
       abuela: "¿Aló? ¿Quién habla?",
       nieto: [
-        "Abuelita, soy yo, tu nieto. No le digas a nadie, por favor.",
+        "Abuelita, soy yo po, tu nieto. No le digai a nadie, por favor.",
         "Choqué el auto y me tienen detenido.",
-        "El carabinero dice que si pago la fianza ahora me sueltan, son $650.000.",
+        "El carabinero dice que si pago la fianza ahora me sueltan altiro. Son $650.000, abuelita.",
         "Anota la cuenta del abogado: Banco Austral, cuenta vista 48-2210-7735.",
-        "Hazlo rápido, abuelita, por favor, no me cortes.",
+        "Hazlo rápido, por favor, no me cortí.",
       ],
       escucho: "escuchó", intento: "intentó", grifter: "Grifter", eligio: "eligió",
       escucho_v: "llamada de número privado · 25 s", llamada: "llamada",
@@ -119,7 +119,7 @@
   const DURACION = 72;
   const LLAMADA = { suena: 5, contesta: 7, abuela: 7.3, nieto: 9.3, cuelga: 34.6 };
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
-  const FRASES = [0, 4.2, 6.8, 13.5, 21.8];
+  const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
   const TOQUE = 41.5;                      // el dedo toca «No pagar»
 
   const params = new URLSearchParams(location.search);
