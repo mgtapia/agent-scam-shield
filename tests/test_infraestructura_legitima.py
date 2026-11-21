@@ -211,7 +211,7 @@ def test_la_boveda_no_guarda_el_dominio_de_la_infraestructura_de_una_estafa_conf
     motor = _motor()   # uno propio: confirmar cambia la bóveda
     c = _estafa(motor, "infra_cobro_con_nota")
     assert motor.libreta.dominio_conocido(dominio_de(c.de))
-    nuevos = motor.boveda.confirmar(c, 1.0)
-    tipos = {(i.tipo, i.valor) for i in nuevos}
-    assert ("dominio", dominio_de(c.de)) not in tipos
-    assert any(t == "cuenta" for t, _ in tipos)
+    motor.boveda.confirmar(c, 1.0)
+    guardados = {(i["tipo"], i["valor"]) for i in motor.boveda.lista()}   # los nuevos y los que ya estaban
+    assert ("dominio", dominio_de(c.de)) not in guardados
+    assert any(tipo == "cuenta" for tipo, _ in guardados)

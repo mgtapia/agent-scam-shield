@@ -1,0 +1,13 @@
+{
+  "escenario": "control_chat_gerente_proveedor_inscrito",
+  "idioma": "es",
+  "origen": "nota de voz",
+  "texto": "Dani, lo mismo que te escribí: la factura de Áridos, a la cuenta que ya tienen. Gracias.",
+  "voz": "masculina",
+  "voz_id": "pNInz6obpgDQGcFmaJgB",
+  "clase_de_voz": "premade",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 88
+}

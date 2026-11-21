@@ -11,6 +11,7 @@ import logging
 import threading
 import time
 import urllib.request
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
@@ -109,8 +110,8 @@ def _entregar(canal, datos, secreto=SECRETO, clave=None, evento="whatsapp.messag
     return canal.atender_webhook(cuerpo, cab)
 
 
-def _enviar(canal, kapso):
-    canal(ALERTA)
+def _enviar(canal, kapso, alerta=ALERTA):
+    canal(alerta)
     cuerpo = kapso.a(DUENO)[-1]
     id_ = cuerpo["interactive"]["action"]["buttons"][0]["reply"]["id"].split(":")[0]
     return cuerpo, id_
@@ -147,6 +148,32 @@ def test_el_boton_deja_la_etiqueta_con_la_alerta_y_confirma_por_whatsapp(canal, 
     assert len(etiquetas) == 1 and etiquetas[0]["eleccion"] == eleccion and etiquetas[0]["canal"] == "whatsapp"
     assert etiquetas[0]["cuenta"] == "90-1188-4417"
     assert "Elegiste" in kapso.a(DUENO)[-1]["text"]["body"]
+
+
+@pytest.mark.parametrize("acciones,eleccion", [
+    (["np"], "no_pagar"), (["pi"], "pagar_inscrita"), (["pg", "pgc"], "pagar_igual"),
+])
+def test_la_alerta_no_sobrescribe_la_eleccion_el_canal_ni_la_hora(canal, kapso, etiquetas, monkeypatch,
+                                                              acciones, eleccion):
+    instante = datetime(2026, 11, 21, 15, 30, tzinfo=timezone.utc)
+
+    class Reloj:
+        @staticmethod
+        def now(zona):
+            assert zona is timezone.utc
+            return instante
+
+    monkeypatch.setattr(whatsapp, "datetime", Reloj)
+    alerta = {**ALERTA, "eleccion": "no_pagar" if eleccion == "pagar_igual" else "pagar_igual",
+              "canal": "otro_canal", "ts": "2000-01-01T00:00:00+00:00", "contexto": {"factura": "F-42"}}
+    _, id_ = _enviar(canal, kapso, alerta)
+    for accion in acciones:
+        assert _entregar(canal, _boton(DUENO, f"{id_}:{accion}")) == (200, "ok")
+        if accion == "pg":
+            assert etiquetas == []
+    assert etiquetas == [{**alerta, "eleccion": eleccion, "canal": "whatsapp", "ts": instante.isoformat()}]
+    assert alerta["canal"] == "otro_canal" and alerta["ts"] == "2000-01-01T00:00:00+00:00"
+    assert kapso.a(DUENO)[-1]["text"]["body"] == whatsapp.TEXTOS["es"]["hecho_" + eleccion]
 
 
 def test_pagar_igual_pide_una_segunda_confirmacion_y_no_etiqueta_todavia(canal, kapso, etiquetas):

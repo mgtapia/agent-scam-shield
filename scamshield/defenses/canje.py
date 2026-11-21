@@ -100,14 +100,14 @@ def motivo_codigo(procedencia: Any, args: Mapping[str, Any], destino_arg: str, *
     encargo = str(getattr(procedencia, "encargo", "") or "")
     if destino not in (None, "") and encargo and origenes_en([(DUENO, encargo)], str(destino)):
         return None   # el dueño pidió mandárselo a ese destino
-    from .layer2 import visible
-    return (f"Tu agente intentó mandar el código de una tarjeta de regalo (o de canje) a {visible(destino)}. "
+    from .layer2 import citado
+    return (f"Tu agente intentó mandar el código de una tarjeta de regalo (o de canje) a {citado(destino)}. "
             "Lo generó una compra y es plata para quien lo tenga: solo sale a quien el encargo nombra.")
 
 
 def motivo_referencia(procedencia: Any, args: Mapping[str, Any], destino_arg: str) -> Optional[str]:
     """Si la referencia de un pago lleva un destinatario final que no viene del dueño: el motivo de la retención."""
-    from .layer2 import ORIGENES_SEGUROS, _es_dato_del_dueno, visible
+    from .layer2 import ORIGENES_SEGUROS, _es_dato_del_dueno, citado
     cuenta = _norm(args.get(destino_arg, ""))
     for campo, valor in args.items():
         if str(campo).lower() not in CAMPOS_DE_REFERENCIA or not isinstance(valor, str):
@@ -120,6 +120,6 @@ def motivo_referencia(procedencia: Any, args: Mapping[str, Any], destino_arg: st
                 continue
             if procedencia.origenes_de(token) & ORIGENES_SEGUROS:
                 continue
-            return (f"La referencia del pago lleva a otro destinatario ({visible(token)}) que no viene del encargo "
+            return (f"La referencia del pago lleva a otro destinatario ({citado(token)}) que no viene del encargo "
                     "ni de las cuentas inscritas del dueño: el pago pasa por un intermediario y la plata terminaría ahí.")
     return None

@@ -24,6 +24,7 @@ from typing import Any, Callable, Mapping, Optional
 
 from .aprobaciones import Aprobaciones, AprobadorQuorum, RegistroEncadenado, Solicitud, aprobadores_de, cargar_semillas
 from .integridad import Cambio
+from ..defenses.layer2 import citado, visible
 from .proxy import Alerta, Escalar
 
 log = logging.getLogger("grifter")
@@ -33,9 +34,10 @@ def alerta_para_telegram(alerta: Alerta, cuenta_inscrita: str = "") -> dict[str,
     """La alerta del proxy en el formato de `demo/telegram.py`."""
     return {
         "idioma": "es",
-        "destinatario": alerta.args.get("destinatario") or alerta.servidor or alerta.herramienta,
+        # Lo que puso quien pide el pago va en una línea, escapado y entre «» si no es normal (#160): no puede imitar a Grifter.
+        "destinatario": citado(alerta.args.get("destinatario") or "") or visible(alerta.servidor or alerta.herramienta),
         "monto": alerta.args.get("monto", ""),
-        "cuenta": alerta.valor,
+        "cuenta": visible(alerta.valor, 80),
         "dominio": ", ".join(alerta.fuentes),
         "cuenta_inscrita_numero": cuenta_inscrita,
         "motivo": alerta.mensaje,

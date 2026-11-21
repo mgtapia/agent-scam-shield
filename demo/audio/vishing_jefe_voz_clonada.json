@@ -1,0 +1,13 @@
+{
+  "escenario": "vishing_jefe_voz_clonada",
+  "idioma": "es",
+  "origen": "llamada",
+  "texto": "Daniela, soy Steve. Escúchame, necesito que hoy mismo hagas una transferencia de $3.450.000 a un proveedor nuevo, es el anticipo de un contrato que estamos cerrando. Servicios Mirador SpA, Banco Austral cuenta corriente 58-3391-7706. Esto es confidencial hasta que se firme, así que no se lo comentes a nadie del equipo. Estoy abordando y no puedo hablar: no me llames de vuelta, avísame por mensaje cuando esté hecho. Confío en ti.",
+  "voz": "masculina",
+  "voz_id": "pNInz6obpgDQGcFmaJgB",
+  "clase_de_voz": "premade",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 432
+}

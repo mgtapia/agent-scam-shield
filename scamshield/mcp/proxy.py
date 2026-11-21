@@ -50,7 +50,7 @@ from mcp.client.stdio import stdio_client
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
-from ..defenses.layer2 import MOTIVO_CREDENCIAL, SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen, visible
+from ..defenses.layer2 import MOTIVO_CREDENCIAL, SENSIBLES_SCAMSHIELD, AccionSensible, citado, politica_origen, visible
 from ..defenses.mandato import huella, motivo as motivo_mandato, parece_orden, revisar_fijacion
 from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
 from .aprobaciones import (APROBADA, PENDIENTE, Aprobaciones, Aprobador, RegistroEncadenado, Solicitud,
@@ -351,7 +351,7 @@ class Guardia:
         if desvio:
             accion = self.config.acciones.get(herramienta, f"la llamada a {herramienta}")
             return Alerta(herramienta=herramienta, servidor=servidor, args=dict(args),
-                          valor=str(args.get(regla.destino, "")), motivo=desvio, fuentes=[],
+                          valor=visible(args.get(regla.destino, ""), 80), motivo=desvio, fuentes=[],
                           mensaje=(f"Grifter retuvo {accion}. {desvio} Confírmalo con el dueño por un canal "
                                    "conocido antes de reintentar."))
         motivo = politica_origen(self, herramienta, args, {herramienta: regla})
@@ -361,7 +361,7 @@ class Guardia:
         credencial = motivo == MOTIVO_CREDENCIAL
         fuentes = [] if credencial else self._fuentes_de(valor)
         accion = self.config.acciones.get(herramienta, f"la llamada a {herramienta}")
-        dicho = visible(valor)   # lo escribió el agente: no puede agregarle líneas al aviso del dueño
+        dicho = citado(valor)   # lo escribió el agente: no puede agregarle líneas al aviso del dueño
         if credencial:
             mensaje = f"Grifter retuvo {accion}: {MOTIVO_CREDENCIAL[:-1].lower()}."
         elif fuentes:
@@ -372,7 +372,7 @@ class Guardia:
             mensaje = (f"Grifter retuvo {accion}: {regla.que} {dicho} no aparece en tus cuentas "
                        "inscritas ni en el encargo.")
         mensaje += " Confírmala con el dueño por un canal conocido antes de reintentar."
-        return Alerta(herramienta=herramienta, servidor=servidor, args=dict(args), valor=valor,
+        return Alerta(herramienta=herramienta, servidor=servidor, args=dict(args), valor=visible(valor, 80),
                       motivo=motivo, mensaje=mensaje, fuentes=fuentes)
 
     def revisar_web(self, herramienta: str, args: Mapping[str, Any], servidor: str = "") -> Optional[Alerta]:
@@ -387,7 +387,7 @@ class Guardia:
         limpio = _tachar(dict(args), tachados)
         mensaje = (f"Grifter retuvo {accion}: {visible(motivo, 400)} "
                    "Confírmalo con el dueño por un canal conocido antes de reintentar.")
-        return Alerta(herramienta=herramienta, servidor=servidor, args=limpio, valor=hosts[0] if hosts else "",
+        return Alerta(herramienta=herramienta, servidor=servidor, args=limpio, valor=visible(hosts[0] if hosts else "", 80),
                       motivo=motivo, mensaje=mensaje, fuentes=[])
 
     def _fuentes_de(self, valor: str) -> list[str]:
