@@ -28,17 +28,17 @@ def demo(tmp_path, monkeypatch):
         ruta.parent.mkdir(exist_ok=True)
         ruta.write_text("informacion-interna-de-la-demo", encoding="utf-8")
     monkeypatch.setattr(server, "ETIQUETAS", tmp_path / "etiquetas.jsonl")
+    monkeypatch.setattr(server, "limite_etiquetas", server.limite_de("etiquetas", {}))   # una etiqueta por prueba: que el tope no se acumule
     for ruta in server.app.routes:
         if ruta.name in ("demo", "episodios", "audio"):
             directorio = tmp_path if ruta.name == "demo" else tmp_path / ruta.name
             monkeypatch.setattr(ruta.app, "directory", directorio)
             monkeypatch.setattr(ruta.app, "all_directories", [directorio])
     cliente = TestClient(server.app)
-    etiqueta = {"eleccion": "no_pagar", "alerta": {"cuenta": "cuenta-privada-del-dueno",
-                                                  "mensaje": "alerta-privada-del-dueno"}}
+    etiqueta = {"eleccion": "no_pagar", "cuenta": "cuenta-privada-del-dueno", "destinatario": "alerta-privada-del-dueno"}
     assert cliente.post("/api/etiquetas", json=etiqueta).json() == {"ok": True}
     guardada = json.loads((tmp_path / "etiquetas.jsonl").read_text(encoding="utf-8"))
-    assert guardada["alerta"] == etiqueta["alerta"] and guardada["recibida"]
+    assert guardada["cuenta"] == etiqueta["cuenta"] and guardada["destinatario"] == etiqueta["destinatario"] and guardada["recibida"]
     return cliente, tmp_path
 
 

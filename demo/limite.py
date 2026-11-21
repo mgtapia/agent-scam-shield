@@ -25,8 +25,10 @@ PROXY_CONFIABLE = "GRIFTER_PROXY_CONFIABLE"
 EVENTO = "GRIFTER_EVENTO"
 
 # Los topes de cada ruta abierta: (por minuto, por hora, global por hora). El modo evento solo cambia los dos primeros.
-TOPES = {"probar": (6, 60, 600), "mcp": (60, 600, 6000)}
-TOPES_EVENTO_POR_IP = {"probar": (120, 1200), "mcp": (240, 2400)}
+TOPES = {"probar": (6, 60, 600), "mcp": (60, 600, 6000), "alertas": (6, 60, 200), "etiquetas": (30, 300, 3000),
+         "control": (30, 300, 3000)}
+TOPES_EVENTO_POR_IP = {"probar": (120, 1200), "mcp": (240, 2400), "alertas": (12, 120), "etiquetas": (120, 1200),
+                       "control": (120, 1200)}
 
 
 class LimitePorIP:
@@ -74,7 +76,7 @@ def modo_evento(entorno: Mapping[str, str] | None = None) -> bool:
 
 
 def limite_de(ruta: str, entorno: Mapping[str, str] | None = None) -> LimitePorIP:
-    """El tope de una ruta abierta (`probar` o `mcp`), con el tope por IP más alto en modo evento y el global intacto."""
+    """El tope de una ruta abierta (`probar`, `mcp`, `alertas`, `etiquetas` o `control`), con el tope por IP más alto en modo evento y el global intacto."""
     por_minuto, por_hora, global_por_hora = TOPES[ruta]
     if modo_evento(entorno):
         por_minuto, por_hora = TOPES_EVENTO_POR_IP[ruta]
