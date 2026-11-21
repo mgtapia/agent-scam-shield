@@ -691,6 +691,7 @@ const Operaciones = (() => {
         pintarIndicador(o.boveda.get(i.valor), true);
         break;
       }
+      case "duelo": window.Duelo?.aplicar(e); break;
       case "modelo": {
         o.modelo = e;
         if (!o.historial.some((m) => m.version === e.version)) o.historial.push(e);
@@ -734,6 +735,7 @@ const Operaciones = (() => {
     // Los contadores del motor cubren también lo anterior a los últimos 50 correos.
     const b = f.bloqueos_por_capa;
     if (b && typeof b === "object") for (const k of CAPAS) if (typeof b[k] === "number") o.capas[k] = Math.max(o.capas[k] || 0, b[k]);
+    window.Duelo?.cargar(f.historial_duelo);
     if (typeof f.pausa === "boolean") o.pausa = f.pausa;
     if ([1, 2, 4].includes(Number(f.velocidad))) { o.velocidad = Number(f.velocidad); estado.velocidad = o.velocidad; }
     pintarTodo();
@@ -771,6 +773,7 @@ const Operaciones = (() => {
     const sello = $("#ops-sello");
     sello.textContent = o.pausa ? `${t(`o_sello_${o.sello}`)} · ${t("o_en_pausa")}` : t(`o_sello_${o.sello}`);
     sello.dataset.estado = o.sello;
+    window.Duelo?.pintarVivo();   // la celda «En vivo» del Duelo dice de dónde salen sus números
     sello.dataset.pausa = String(o.pausa);
     const b = $("#ops-pausa");
     b.setAttribute("aria-pressed", String(o.pausa));

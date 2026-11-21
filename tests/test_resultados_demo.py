@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.resultados_demo import armar, atacante, escribir
+from scripts.resultados_demo import armar, atacante, duelo, escribir
 
 
 def _curva(ruta: Path, rondas: int, n: int, exitos: list[int], errores: int = 0) -> Path:
@@ -17,7 +17,7 @@ def _curva(ruta: Path, rondas: int, n: int, exitos: list[int], errores: int = 0)
 
 def test_arma_todos_los_bloques_sin_nan(tmp_path):
     datos = armar()
-    assert {"bench", "pipelock", "sonnet", "haiku", "clasificador", "atacante"} <= set(datos)
+    assert {"bench", "pipelock", "sonnet", "haiku", "clasificador", "atacante", "duelo"} <= set(datos)
     # Lo que no tiene archivo de origen lo dice.
     assert datos["pipelock"]["sin_archivo"] and datos["pipelock"]["fuente"]
     # Sin NaN: el JSON de la demo tiene que poder leerlo el navegador.
@@ -75,3 +75,25 @@ def test_atacante_lee_el_resumen_y_marca_rondas_incompletas(tmp_path):
 def test_atacante_con_demasiados_errores(tmp_path):
     _curva(tmp_path / "sucia_curvas.json", 3, 5, [0, 1, 1, 2], errores=6)
     assert atacante(tmp_path)["estado"] == "con_errores"
+
+
+def test_duelo_capa2_en_cero_y_el_escudo_que_aprende_termina_en_cero():
+    d = duelo()
+    assert d["estado"] == "ok" and d["exitosas_capa2"] == 0
+    for modo in ("congelado", "aprende"):
+        m = d[modo]
+        assert [x["semilla"] for x in m["semillas"]] == [0, 1, 2]
+        assert m["exitosas_capa2"] == 0 and m["candidatos"] == sum(x["candidatos"] for x in m["semillas"])
+        for x in m["semillas"]:
+            assert len(x["evasion"]) == x["generaciones"] == 20
+            assert x["fuente"] == f"results/duelo/{modo}_s{x['semilla']}.json"
+    # Congelado, el hacker termina arriba de donde empezó; contra el que aprende termina en 0, y la guardia de
+    # deriva revirtió versiones en el camino.
+    assert all(x["final"] > x["inicio"] for x in d["congelado"]["semillas"])
+    assert all(x["final"] == 0 and x["revertidas"] > 0 for x in d["aprende"]["semillas"])
+    assert d["congelado"]["sin_capa2"] > d["aprende"]["sin_capa2"]
+
+
+def test_duelo_sin_archivos(tmp_path):
+    d = duelo(tmp_path)
+    assert d["estado"] == "sin_archivo" and d["congelado"]["semillas"] == []

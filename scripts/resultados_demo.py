@@ -14,6 +14,8 @@ Origen de cada número:
   `results/atacante/*_curvas.json`: `python scripts/graficar_atacante.py <jsonl>`. Con `--atacante` se elige
   el archivo; si no, el que tenga más rondas y estafas entre los que tienen a lo sumo un 10 % de muestras
   con error. No se usa la fecha del archivo, que cambia con cada clon.
+- `results/duelo/{congelado,aprende}_s{0,1,2}.json`: `grifter duelo --generaciones 20 --semilla N [--sin-entrenar]
+  --json <archivo>`, determinista: el atacante por mutaciones contra el clasificador congelado o que aprende.
 - Pipelock (4 de 42): no hay archivo de origen en el repo; se corrió con `scripts/capa1_cobertura.py` y el
   binario real de Pipelock, que no está en este entorno. Va con su fuente escrita (`docs/pitch.md`).
 
@@ -127,6 +129,58 @@ def clasificador() -> dict[str, Any]:
     }
 
 
+SEMILLAS_DUELO = (0, 1, 2)
+MODOS_DUELO = {"congelado": "--sin-entrenar", "aprende": ""}
+
+
+def duelo(carpeta: Path | None = None) -> dict[str, Any]:
+    """El duelo con y sin entrenar, por semilla: la evasión del hacker contra el clasificador en cada generación.
+
+    `sin_capa2` suma, generación a generación, los correos mutados que el clasificador dejó pasar: los que habrían
+    cobrado sin la capa 2. Es un conteo de intentos (la misma cepa vuelve en varias generaciones), no de estafas
+    distintas. `exitosas_capa2` son los pagos que sí salieron con la capa 2.
+    """
+    carpeta = carpeta or RESULTS / "duelo"
+    modos: dict[str, Any] = {}
+    for modo, bandera in MODOS_DUELO.items():
+        semillas = []
+        for s in SEMILLAS_DUELO:
+            ruta = carpeta / f"{modo}_s{s}.json"
+            if not ruta.exists():
+                continue
+            gens = sorted(_leer(ruta), key=lambda e: e["generacion"])
+            evasion = [g["evasion"] for g in gens]
+            semillas.append({
+                "semilla": s, "generaciones": len(gens), "candidatos": sum(g["candidatos"] for g in gens),
+                "evasion": evasion, "inicio": evasion[0], "pico": max(evasion), "final": evasion[-1],
+                "sin_capa2": sum(g["sin_capa2"] for g in gens),
+                "capa2": [g["exitosas_capa2"] for g in gens],
+                "exitosas_capa2": sum(g["exitosas_capa2"] for g in gens),
+                # La guardia de deriva del clasificador: versiones descartadas hasta la última generación.
+                "revertidas": gens[-1].get("revertidas"),
+                "version_inicial": gens[0].get("version_modelo"), "version_final": gens[-1].get("version_modelo"),
+                "fuente": _rel(ruta) if ruta.is_relative_to(RAIZ) else str(ruta),
+                "comando": " ".join(filter(None, ["grifter duelo --generaciones", str(len(gens)), f"--semilla {s}", bandera,
+                                                  f"--json results/duelo/{modo}_s{s}.json"])),
+            })
+        modos[modo] = {
+            "semillas": semillas,
+            "candidatos": sum(x["candidatos"] for x in semillas),
+            "sin_capa2": sum(x["sin_capa2"] for x in semillas),
+            "exitosas_capa2": sum(x["exitosas_capa2"] for x in semillas),
+        }
+    todas = [x for m in modos.values() for x in m["semillas"]]
+    return {
+        "estado": "ok" if todas else "sin_archivo",
+        **modos,
+        "generaciones": sum(x["generaciones"] for x in todas),
+        "candidatos": sum(x["candidatos"] for x in todas),
+        "exitosas_capa2": sum(x["exitosas_capa2"] for x in todas),
+        "fuente": "results/duelo/{congelado,aprende}_s{0,1,2}.json",
+        "comando": "grifter duelo --generaciones 20 --semilla N [--sin-entrenar] --json results/duelo/<modo>_sN.json",
+    }
+
+
 MAX_ERRORES = 0.10   # una curva con más muestras con error que esto no se presenta como la curva del atacante
 
 
@@ -194,7 +248,7 @@ def armar(curva: Path | None = None) -> dict[str, Any]:
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "readme": "README.md#resultados",
         "bench": bench(), "pipelock": PIPELOCK, "sonnet": sonnet(), "haiku": haiku(),
-        "clasificador": clasificador(), "atacante": atacante(elegida=curva),
+        "clasificador": clasificador(), "atacante": atacante(elegida=curva), "duelo": duelo(),
     })
 
 

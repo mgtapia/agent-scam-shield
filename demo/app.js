@@ -13,14 +13,14 @@ const CARRILES = [
   { clave: "layer1", defensas: ["layer1"], icono: "shield" },
   { clave: "layer2", defensas: ["layer2", "both"], icono: "shield", escudo: true },
 ];
-const VISTAS = ["operaciones", "vivo", "resultados"];
+const VISTAS = ["operaciones", "vivo", "resultados", "duelo"];
 const HERRAMIENTAS_PAGO = ["pagar", "transferir"];
 const HERRAMIENTAS_LECTURA = ["leer_correos", "abrir_web", "usar_mcp"];
 const RE_BLOQUEO = /^(ACCIÓN BLOQUEADA|ACTION BLOCKED)/i;
 
 const T = {
   es: {
-    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "Episodios exportados de Inspect. «Datos de prueba» marca los carriles corridos con mockllm", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados",
+    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "Episodios exportados de Inspect. «Datos de prueba» marca los carriles corridos con mockllm", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados", v_duelo: "Duelo", ayuda_v_duelo: "Un hacker que aprende de cómo lo bloqueamos, contra el escudo congelado y contra el que aprende de él",
     escenario: "Escenario", reproducir: "Reproducir", reproduciendo: "Reproduciendo", reiniciar: "Reiniciar",
     correos: "Correos", calor_tactica: "Táctica × defensa", calor_modelo: "Modelo × idioma",
     d_none: "Sin defensa", d_layer1: "Firewall", d_layer2: "Escudo", d_both: "Firewall + escudo", d_layer2_approver: "Escudo (approver)",
@@ -58,7 +58,7 @@ const T = {
     locale: "es-CL",
   },
   en: {
-    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "Episodes exported from Inspect. «Test data» marks the lanes run with mockllm", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results",
+    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "Episodes exported from Inspect. «Test data» marks the lanes run with mockllm", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results", v_duelo: "Duel", ayuda_v_duelo: "A hacker that learns from how we block it, against the frozen shield and against the one that learns from it",
     escenario: "Scenario", reproducir: "Play", reproduciendo: "Playing", reiniciar: "Reset",
     correos: "Emails", calor_tactica: "Tactic × defense", calor_modelo: "Model × language",
     d_none: "No defense", d_layer1: "Firewall", d_layer2: "Shield", d_both: "Firewall + shield", d_layer2_approver: "Shield (approver)",
@@ -170,6 +170,7 @@ function irA(vista) {
   document.querySelectorAll("[role=tab]").forEach((a) => a.setAttribute("aria-selected", String(a.dataset.vista === vista)));
   if (vista !== "vivo") cerrarCorreo();
   window.Operaciones?.alCambiarVista(vista);
+  window.Duelo?.alCambiarVista(vista);
   // El borde de alerta es de la vista que la levantó: en Resultados no se ve; al volver a Episodios
   // reaparece si la alerta del escudo sigue sin respuesta.
   if (vista === "vivo") bordeAlerta(!!(estado.alerta && !estado.carriles.layer2?.decision));
@@ -682,5 +683,5 @@ if (params.get("escenario")) estado.escenario = params.get("escenario");
 llenarEscenarios();
 irA(location.hash.slice(1) || "operaciones");
 cargarEscenario();
-cargarResultados().then((R) => { estado.resultados = R; pintarAnalisis(); });
+cargarResultados().then((R) => { estado.resultados = R; pintarAnalisis(); window.Duelo?.pintar(true); });
 if (params.has("auto")) reproducir();
