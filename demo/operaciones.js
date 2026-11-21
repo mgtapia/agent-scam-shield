@@ -27,6 +27,9 @@ const Operaciones = (() => {
     ayuda_precision: "De lo que marcó como estafa, cuánto lo era. Evaluado en un conjunto apartado que nunca se usa para entrenar",
     ayuda_recall: "Cobertura (recall): de las estafas, cuántas marcó",
     ayuda_falsas: "Correos legítimos marcados como estafa",
+    o_de: "{f}/{l}",
+    ayuda_falsas_n: "Correos legítimos marcados como estafa: {f} de {l} en el conjunto apartado del motor (un tercio de los escenarios, fijo, que nunca entrena). Cada legítimo pesa {pp} puntos y cada escenario trae 3 variantes, así que un solo escenario mueve la cifra de a {ep} puntos.{marcados}{cv}",
+    o_marcados: " Marcados ahora: {lista}.", o_cv_falsas: " Con validación cruzada por familia (9 corridas): {m} % [{a}-{b}].",
     o_colados: "Se colaron", o_colados_ninguna: "Ninguna",
     ayuda_colados: "Estafas del conjunto apartado (un tercio de los escenarios, que nunca entrena) que el modelo dejó bajo 0,5: son las que bajan la cobertura. Cuentan correos, por tipo de estafa. No se pagan solas: la capa 1 y la capa 2 corren igual. La validación cruzada por familia está en Resultados",
     ayuda_colado: "{e} · {c} · {n} de {d} · probabilidad media {p}",
@@ -63,6 +66,9 @@ const Operaciones = (() => {
     ayuda_precision: "Of what it flagged as a scam, how much was. Evaluated on a held-out set never used for training",
     ayuda_recall: "Of the scams, how many it flagged",
     ayuda_falsas: "Legitimate emails flagged as scams",
+    o_de: "{f}/{l}",
+    ayuda_falsas_n: "Legitimate emails flagged as scams: {f} of {l} in the engine's held-out set (a fixed third of the scenarios, never trained on). Each legitimate email weighs {pp} points and each scenario brings 3 variants, so a single scenario moves the figure by {ep} points.{marcados}{cv}",
+    o_marcados: " Flagged now: {lista}.", o_cv_falsas: " With cross-validation by family (9 runs): {m} % [{a}-{b}].",
     o_colados: "Slipped through", o_colados_ninguna: "None",
     ayuda_colados: "Held-out scams (a third of the scenarios, never trained on) the model left below 0.5: they are what lowers recall. Counted in emails, by scam type. They are not paid on their own: layers 1 and 2 still run. The cross-validation by family is in Results",
     ayuda_colado: "{e} · {c} · {n} of {d} · mean probability {p}",
@@ -590,14 +596,26 @@ const Operaciones = (() => {
     $("#n-modelo").textContent = m ? t("o_ejemplos", { n: m.ejemplos }) : t("o_sin_modelo");
     if (animar) reanimar($("#ops-version"), "golpe");
     const ant = o.historial.at(-2);
+    // Falsas alarmas: el conteo detrás del porcentaje (con pocos legítimos apartados, cada uno pesa varios puntos).
+    const conteo = m && Number.isFinite(m.legitimos) && m.legitimos > 0;
+    const ayudaFalsas = () => {
+      if (!conteo) return t("ayuda_falsas");
+      const cv = window.RESULTADOS?.clasificador?.falsas_alarmas || estado.resultados?.clasificador?.falsas_alarmas;
+      const marcados = (m.marcados || []).map((x) => `${x.escenario} (${x.n})`).join(", ");
+      return t("ayuda_falsas_n", { f: m.falsas, l: m.legitimos, pp: (100 / m.legitimos).toFixed(1), ep: (300 / m.legitimos).toFixed(1),
+        marcados: marcados ? t("o_marcados", { lista: marcados }) : "",
+        cv: cv ? t("o_cv_falsas", { m: Math.round(cv.media * 100), a: Math.round(cv.min * 100), b: Math.round(cv.max * 100) }) : "" });
+    };
     const met = (clave, campo, linea, menosEsMejor) => {
       const v = m?.[campo];
       const d = ant && v !== undefined ? Math.round((v - ant[campo]) * 1000) / 10 : 0;
       const dcls = !d ? "" : (d < 0) === menosEsMejor ? "c-verde" : "c-rojo";
-      return `<div class="metrica" data-ayuda="${esc(t(`ayuda_${clave === "o_falsas" ? "falsas" : clave.slice(2)}`))}">
+      const falsas = clave === "o_falsas";
+      const n = falsas && conteo ? `<span class="m-n">${esc(t("o_de", { f: m.falsas, l: m.legitimos }))}</span>` : "";
+      return `<div class="metrica" data-ayuda="${esc(falsas ? ayudaFalsas() : t(`ayuda_${clave.slice(2)}`))}">
         <span class="m-et"><span class="linea ${linea}"></span>${esc(t(clave))}</span>
         <span class="m-val dato">${v === undefined ? "—" : pct(v)}</span>
-        <span class="m-delta dato ${dcls}">${d ? `${d > 0 ? "+" : ""}${d.toFixed(1)}` : ""}</span></div>`;
+        <span class="m-delta dato ${dcls}">${n}${d ? `${d > 0 ? "+" : ""}${d.toFixed(1)}` : ""}</span></div>`;
     };
     $("#ops-metricas").innerHTML = met("o_precision", "precision", "l-1") + met("o_recall", "recall", "l-2") + met("o_falsas", "falsas_alarmas", "l-3", true);
     if (animar) $("#ops-metricas").querySelectorAll(".m-val").forEach((el) => reanimar(el, "golpe"));

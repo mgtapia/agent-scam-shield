@@ -9,6 +9,8 @@ Origen de cada número:
 - `results/sonnet_jefe.json`: `python scripts/resumen_resultados.py logs/jefe --json results/sonnet_jefe.json`.
 - `results/haiku_dueno.json`: `python scripts/resumen_resultados.py logs/dueno --idioma es --json results/haiku_dueno.json`.
 - `results/clasificador.json`: `python scripts/validacion_cruzada_vivo.py --agrupar familia --json results/clasificador.json`.
+- `results/falsas_alarmas.json`: `python scripts/falsas_alarmas_vivo.py --json results/falsas_alarmas.json` (las opciones
+  para bajar las falsas alarmas del clasificador; bloque `falsas_alarmas`).
 - `results/juez_gemini.json`: `python scripts/juez_vivo.py --modelo gemini-lite --banda 0.2,0.5 --barrido --pausa 7 --concurrencia 1
   --json results/juez_gemini.json` (el juez LLM de los casos dudosos, #131; bloque `juez`).
 - `colados` (qué se cuela por capa y por familia): `por_escenario` de `results/bench.json` y `colados_por_familia` de
@@ -284,6 +286,27 @@ def cobertura(col: dict[str, Any] | None = None, duelo_: dict[str, Any] | None =
     }
 
 
+FALSAS = RESULTS / "falsas_alarmas.json"
+COMANDO_FALSAS = "python scripts/falsas_alarmas_vivo.py --json results/falsas_alarmas.json"
+
+
+def falsas_alarmas(ruta: Path | None = None) -> dict[str, Any]:
+    """Las opciones para bajar las falsas alarmas del clasificador: cobertura y falsas alarmas de cada regla de decisión
+    y de cada umbral fijo, con la misma validación cruzada por familia. Ninguna regla cambia lo que marca la capa 2."""
+    ruta = ruta or FALSAS
+    if not ruta.exists():
+        return {"estado": "sin_archivo", "fuente": None, "comando": COMANDO_FALSAS}
+    d = _leer(ruta)
+    return {
+        "estado": "ok", "corridas": d["corridas"], "agrupar": d.get("agrupar"),
+        "reglas": [{"clave": k, **{m: v[m] for m in ("recall", "precision", "falsas_alarmas")}} for k, v in d["total"].items()],
+        "curva_umbral": d.get("curva_umbral", []),
+        "umbral_calibrado": sorted({f["umbral_calibrado"] for f in d["filas"]}),
+        "escenarios_con_falsa_alarma": sorted({e for f in d["filas"] for e in f.get("falsas_alarmas_fijo", [])}),
+        "fuente": _rel(ruta) if ruta.is_relative_to(RAIZ) else str(ruta), "comando": COMANDO_FALSAS,
+    }
+
+
 JUEZ = RESULTS / "juez_gemini.json"
 COMANDO_JUEZ = ("python scripts/juez_vivo.py --modelo gemini-lite --banda 0.2,0.5 --barrido --pausa 7 --concurrencia 1 "
                 "--json results/juez_gemini.json")
@@ -439,7 +462,7 @@ def armar(curva: Path | None = None) -> dict[str, Any]:
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "readme": "README.md#resultados",
         "bench": bench(), "pipelock": PIPELOCK, "sonnet": sonnet(), "haiku": haiku(),
-        "clasificador": clasificador(), "colados": colados(), "cobertura": cobertura(), "juez": juez(), "atacante": atacante(elegida=curva), "duelo": duelo(),
+        "clasificador": clasificador(), "colados": colados(), "cobertura": cobertura(), "juez": juez(), "falsas_alarmas": falsas_alarmas(), "atacante": atacante(elegida=curva), "duelo": duelo(),
     })
 
 

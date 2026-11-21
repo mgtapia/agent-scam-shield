@@ -2,866 +2,903 @@
   {
     "tipo": "duelo",
     "generacion": 1,
-    "candidatos": 30,
-    "evasion": 0.067,
-    "recall": 0.867,
-    "recall_mutaciones": 0.933,
+    "candidatos": 44,
+    "evasion": 0.136,
+    "recall": 0.45,
+    "recall_mutaciones": 0.409,
     "falsas_alarmas": 0.0,
     "exitosas_capa2": 0,
-    "sin_capa2": 2,
-    "mutacion_top": "cuenta_con_letras",
+    "sin_capa2": 6,
+    "mutacion_top": "deletrear_cuenta",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 4,
-        "intentos": 4,
-        "contra": "cuenta_nueva"
-      },
-      {
         "mutacion": "deletrear_cuenta",
-        "exitos": 3,
-        "intentos": 3,
+        "exitos": 6,
+        "intentos": 8,
         "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
+        "mutacion": "cambiar_autoridad",
+        "exitos": 2,
+        "intentos": 2,
+        "contra": "cuenta_nueva"
+      },
+      {
+        "mutacion": "sacar_urgencia",
         "exitos": 1,
         "intentos": 1,
-        "contra": "boveda_dominio"
+        "contra": "boveda_plantilla"
       }
     ],
     "motivo_bloqueo": "cuenta_nueva",
     "motivos": {
-      "boveda_plantilla": 5,
-      "cuenta_nueva": 14,
-      "primer_contacto": 5,
-      "boveda_dominio": 4
+      "boveda_plantilla": 3,
+      "cuenta_nueva": 24,
+      "primer_contacto": 10,
+      "boveda_dominio": 1
     },
-    "version_modelo": "1.0.15",
-    "revertidas": 0
-  },
-  {
-    "tipo": "duelo",
-    "generacion": 2,
-    "candidatos": 30,
-    "evasion": 0.033,
-    "recall": 0.867,
-    "recall_mutaciones": 0.733,
-    "falsas_alarmas": 0.0,
-    "exitosas_capa2": 0,
-    "sin_capa2": 1,
-    "mutacion_top": "cuenta_con_letras",
-    "top_mutaciones": [
-      {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
-        "mutacion": "remitente_conocido",
-        "exitos": 6,
-        "intentos": 8,
-        "contra": "primer_contacto"
-      },
-      {
-        "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 4,
-        "contra": "boveda_plantilla"
-      }
-    ],
-    "motivo_bloqueo": "boveda_dominio",
-    "motivos": {
-      "cambio_cuenta": 3,
-      "boveda_dominio": 13,
-      "primer_contacto": 4,
-      "boveda_plantilla": 1,
-      "clasificador": 2,
-      "cuenta_nueva": 1,
-      "urgencia": 5
-    },
-    "version_modelo": "1.0.26",
-    "revertidas": 0
-  },
-  {
-    "tipo": "duelo",
-    "generacion": 3,
-    "candidatos": 30,
-    "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
-    "exitosas_capa2": 0,
-    "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
-    "top_mutaciones": [
-      {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 17,
-        "contra": "primer_contacto"
-      },
-      {
-        "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 4,
-        "contra": "boveda_plantilla"
-      }
-    ],
-    "motivo_bloqueo": "boveda_plantilla",
-    "motivos": {
-      "cambio_cuenta": 3,
-      "boveda_plantilla": 13,
-      "cuenta_nueva": 1,
-      "boveda_dominio": 8,
-      "clasificador": 2,
-      "urgencia": 2,
-      "secreto": 1
-    },
-    "version_modelo": "1.0.33",
-    "revertidas": 5
-  },
-  {
-    "tipo": "duelo",
-    "generacion": 4,
-    "candidatos": 30,
-    "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
-    "exitosas_capa2": 0,
-    "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
-    "top_mutaciones": [
-      {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 24,
-        "contra": "primer_contacto"
-      },
-      {
-        "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 4,
-        "contra": "boveda_plantilla"
-      }
-    ],
-    "motivo_bloqueo": "boveda_plantilla",
-    "motivos": {
-      "clasificador": 4,
-      "primer_contacto": 3,
-      "boveda_plantilla": 9,
-      "cambio_cuenta": 3,
-      "cuenta_nueva": 1,
-      "boveda_dominio": 6,
-      "urgencia": 4
-    },
-    "version_modelo": "1.0.33",
+    "version_modelo": "1.0.3",
     "revertidas": 17
   },
   {
     "tipo": "duelo",
-    "generacion": 5,
-    "candidatos": 30,
-    "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
+    "generacion": 2,
+    "candidatos": 44,
+    "evasion": 0.477,
+    "recall": 0.45,
+    "recall_mutaciones": 0.045,
     "falsas_alarmas": 0.0,
     "exitosas_capa2": 0,
-    "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "sin_capa2": 21,
+    "mutacion_top": "homoglifo_dominio",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 11,
+        "intentos": 13,
+        "contra": "ninguna"
+      },
+      {
+        "mutacion": "deletrear_cuenta",
+        "exitos": 10,
+        "intentos": 12,
         "contra": "cuenta_nueva"
       },
       {
         "mutacion": "remitente_conocido",
         "exitos": 7,
-        "intentos": 31,
+        "intentos": 10,
         "contra": "primer_contacto"
+      }
+    ],
+    "motivo_bloqueo": "cuenta_nueva",
+    "motivos": {
+      "boveda_plantilla": 3,
+      "cuenta_nueva": 9,
+      "boveda_dominio": 9,
+      "primer_contacto": 2
+    },
+    "version_modelo": "1.0.3",
+    "revertidas": 32
+  },
+  {
+    "tipo": "duelo",
+    "generacion": 3,
+    "candidatos": 44,
+    "evasion": 0.705,
+    "recall": 0.6,
+    "recall_mutaciones": 0.045,
+    "falsas_alarmas": 0.0,
+    "exitosas_capa2": 0,
+    "sin_capa2": 31,
+    "mutacion_top": "remitente_conocido",
+    "top_mutaciones": [
+      {
+        "mutacion": "remitente_conocido",
+        "exitos": 22,
+        "intentos": 27,
+        "contra": "ninguna"
+      },
+      {
+        "mutacion": "homoglifo_dominio",
+        "exitos": 21,
+        "intentos": 28,
+        "contra": "ninguna"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 4,
-        "contra": "boveda_plantilla"
+        "exitos": 15,
+        "intentos": 18,
+        "contra": "cuenta_nueva"
+      }
+    ],
+    "motivo_bloqueo": "boveda_dominio",
+    "motivos": {
+      "boveda_plantilla": 5,
+      "boveda_dominio": 7,
+      "primer_contacto": 1
+    },
+    "version_modelo": "1.0.6",
+    "revertidas": 44
+  },
+  {
+    "tipo": "duelo",
+    "generacion": 4,
+    "candidatos": 44,
+    "evasion": 0.614,
+    "recall": 0.75,
+    "recall_mutaciones": 0.136,
+    "falsas_alarmas": 0.083,
+    "exitosas_capa2": 0,
+    "sin_capa2": 27,
+    "mutacion_top": "remitente_conocido",
+    "top_mutaciones": [
+      {
+        "mutacion": "remitente_conocido",
+        "exitos": 43,
+        "intentos": 54,
+        "contra": "ninguna"
+      },
+      {
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 32,
+        "contra": "ninguna"
+      },
+      {
+        "mutacion": "deletrear_cuenta",
+        "exitos": 15,
+        "intentos": 18,
+        "contra": "cuenta_nueva"
       }
     ],
     "motivo_bloqueo": "boveda_plantilla",
     "motivos": {
-      "clasificador": 1,
-      "cambio_cuenta": 4,
-      "primer_contacto": 3,
-      "boveda_plantilla": 10,
-      "boveda_dominio": 8,
-      "urgencia": 4
+      "boveda_plantilla": 5,
+      "primer_contacto": 5,
+      "cuenta_nueva": 2,
+      "boveda_dominio": 5
     },
-    "version_modelo": "1.0.33",
-    "revertidas": 29
+    "version_modelo": "1.0.15",
+    "revertidas": 51
+  },
+  {
+    "tipo": "duelo",
+    "generacion": 5,
+    "candidatos": 44,
+    "evasion": 0.045,
+    "recall": 0.833,
+    "recall_mutaciones": 0.909,
+    "falsas_alarmas": 0.111,
+    "exitosas_capa2": 0,
+    "sin_capa2": 2,
+    "mutacion_top": "remitente_conocido",
+    "top_mutaciones": [
+      {
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 77,
+        "contra": "boveda_plantilla"
+      },
+      {
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 39,
+        "contra": "ninguna"
+      },
+      {
+        "mutacion": "deletrear_cuenta",
+        "exitos": 15,
+        "intentos": 18,
+        "contra": "cuenta_nueva"
+      }
+    ],
+    "motivo_bloqueo": "clasificador",
+    "motivos": {
+      "primer_contacto": 5,
+      "cambio_cuenta": 7,
+      "boveda_plantilla": 3,
+      "boveda_dominio": 6,
+      "clasificador": 12,
+      "cuenta_nueva": 2,
+      "monto_inusual": 2,
+      "enlace": 2,
+      "secreto": 1,
+      "urgencia": 2
+    },
+    "version_modelo": "1.0.22",
+    "revertidas": 59
   },
   {
     "tipo": "duelo",
     "generacion": 6,
-    "candidatos": 30,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.977,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 92,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 38,
-        "contra": "primer_contacto"
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 51,
+        "contra": "ninguna"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 5,
+        "exitos": 15,
+        "intentos": 18,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "clasificador",
     "motivos": {
-      "cambio_cuenta": 2,
-      "primer_contacto": 1,
-      "boveda_dominio": 7,
-      "boveda_plantilla": 11,
-      "clasificador": 6,
+      "cambio_cuenta": 11,
+      "primer_contacto": 4,
+      "clasificador": 12,
+      "boveda_plantilla": 5,
       "cuenta_nueva": 1,
-      "urgencia": 2
+      "dominio_parecido": 2,
+      "monto_inusual": 3,
+      "boveda_dominio": 4,
+      "enlace": 2
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 40
+    "version_modelo": "1.0.25",
+    "revertidas": 72
   },
   {
     "tipo": "duelo",
     "generacion": 7,
-    "candidatos": 30,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.955,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 109,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 41,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 65,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 5,
+        "exitos": 15,
+        "intentos": 18,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "clasificador",
     "motivos": {
-      "cambio_cuenta": 2,
-      "boveda_plantilla": 10,
-      "boveda_dominio": 10,
-      "primer_contacto": 1,
-      "clasificador": 1,
-      "urgencia": 6
+      "cambio_cuenta": 9,
+      "clasificador": 10,
+      "boveda_plantilla": 5,
+      "primer_contacto": 6,
+      "cuenta_nueva": 2,
+      "dominio_parecido": 4,
+      "monto_inusual": 2,
+      "boveda_dominio": 5,
+      "enlace": 1
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 52
-  },
-  {
-    "tipo": "duelo",
-    "generacion": 8,
-    "candidatos": 30,
-    "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
-    "exitosas_capa2": 0,
-    "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
-    "top_mutaciones": [
-      {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 51,
-        "contra": "primer_contacto"
-      },
-      {
-        "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
-        "contra": "cuenta_nueva"
-      }
-    ],
-    "motivo_bloqueo": "boveda_plantilla",
-    "motivos": {
-      "cambio_cuenta": 1,
-      "clasificador": 5,
-      "boveda_dominio": 7,
-      "boveda_plantilla": 11,
-      "primer_contacto": 1,
-      "cuenta_nueva": 1,
-      "urgencia": 4
-    },
-    "version_modelo": "1.0.34",
-    "revertidas": 64
-  },
-  {
-    "tipo": "duelo",
-    "generacion": 9,
-    "candidatos": 30,
-    "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
-    "exitosas_capa2": 0,
-    "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
-    "top_mutaciones": [
-      {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 58,
-        "contra": "primer_contacto"
-      },
-      {
-        "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
-        "contra": "cuenta_nueva"
-      }
-    ],
-    "motivo_bloqueo": "boveda_plantilla",
-    "motivos": {
-      "clasificador": 7,
-      "primer_contacto": 1,
-      "boveda_plantilla": 13,
-      "boveda_dominio": 6,
-      "urgencia": 2,
-      "cambio_cuenta": 1
-    },
-    "version_modelo": "1.0.34",
-    "revertidas": 76
-  },
-  {
-    "tipo": "duelo",
-    "generacion": 10,
-    "candidatos": 30,
-    "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
-    "exitosas_capa2": 0,
-    "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
-    "top_mutaciones": [
-      {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 61,
-        "contra": "primer_contacto"
-      },
-      {
-        "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
-        "contra": "cuenta_nueva"
-      }
-    ],
-    "motivo_bloqueo": "boveda_plantilla",
-    "motivos": {
-      "cambio_cuenta": 3,
-      "boveda_plantilla": 11,
-      "primer_contacto": 1,
-      "clasificador": 3,
-      "cuenta_nueva": 1,
-      "boveda_dominio": 8,
-      "urgencia": 3
-    },
-    "version_modelo": "1.0.34",
+    "version_modelo": "1.0.25",
     "revertidas": 88
   },
   {
     "tipo": "duelo",
-    "generacion": 11,
-    "candidatos": 30,
+    "generacion": 8,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.955,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 126,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 68,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 77,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
+        "exitos": 15,
+        "intentos": 18,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "cambio_cuenta",
     "motivos": {
-      "cambio_cuenta": 2,
-      "boveda_dominio": 10,
-      "boveda_plantilla": 11,
-      "clasificador": 2,
-      "urgencia": 4,
+      "cambio_cuenta": 10,
+      "boveda_plantilla": 2,
+      "primer_contacto": 7,
+      "clasificador": 8,
+      "cuenta_nueva": 2,
+      "dominio_parecido": 2,
+      "monto_inusual": 3,
+      "boveda_dominio": 7,
+      "enlace": 2,
       "secreto": 1
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 100
+    "version_modelo": "1.0.25",
+    "revertidas": 104
   },
   {
     "tipo": "duelo",
-    "generacion": 12,
-    "candidatos": 30,
+    "generacion": 9,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
+    "recall": 0.85,
     "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 146,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 73,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 83,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
+        "exitos": 15,
+        "intentos": 18,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "clasificador",
     "motivos": {
-      "cambio_cuenta": 2,
-      "boveda_dominio": 8,
-      "boveda_plantilla": 13,
-      "cuenta_nueva": 1,
-      "clasificador": 2,
+      "cambio_cuenta": 10,
+      "boveda_plantilla": 7,
+      "clasificador": 13,
+      "monto_inusual": 4,
+      "boveda_dominio": 5,
+      "enlace": 2,
       "primer_contacto": 1,
-      "urgencia": 3
+      "secreto": 1,
+      "dominio_parecido": 1
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 112
+    "version_modelo": "1.0.25",
+    "revertidas": 120
   },
   {
     "tipo": "duelo",
-    "generacion": 13,
-    "candidatos": 30,
+    "generacion": 10,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.977,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
         "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 81,
-        "contra": "primer_contacto"
+        "exitos": 44,
+        "intentos": 167,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
-        "contra": "cuenta_nueva"
-      }
-    ],
-    "motivo_bloqueo": "boveda_plantilla",
-    "motivos": {
-      "cambio_cuenta": 2,
-      "boveda_plantilla": 14,
-      "clasificador": 3,
-      "boveda_dominio": 8,
-      "urgencia": 3
-    },
-    "version_modelo": "1.0.34",
-    "revertidas": 123
-  },
-  {
-    "tipo": "duelo",
-    "generacion": 14,
-    "candidatos": 30,
-    "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
-    "exitosas_capa2": 0,
-    "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
-    "top_mutaciones": [
-      {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 87,
-        "contra": "primer_contacto"
-      },
-      {
-        "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
-        "contra": "cuenta_nueva"
-      }
-    ],
-    "motivo_bloqueo": "boveda_plantilla",
-    "motivos": {
-      "cambio_cuenta": 2,
-      "clasificador": 4,
-      "boveda_dominio": 9,
-      "boveda_plantilla": 12,
-      "cuenta_nueva": 1,
-      "primer_contacto": 1,
-      "urgencia": 1
-    },
-    "version_modelo": "1.0.34",
-    "revertidas": 135
-  },
-  {
-    "tipo": "duelo",
-    "generacion": 15,
-    "candidatos": 30,
-    "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
-    "exitosas_capa2": 0,
-    "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
-    "top_mutaciones": [
-      {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
-      },
-      {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
         "intentos": 93,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
+        "exitos": 15,
+        "intentos": 18,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "clasificador",
     "motivos": {
-      "boveda_dominio": 8,
+      "cambio_cuenta": 10,
+      "boveda_plantilla": 5,
       "primer_contacto": 4,
-      "boveda_plantilla": 15,
-      "clasificador": 2,
-      "urgencia": 1
+      "clasificador": 12,
+      "cuenta_nueva": 1,
+      "monto_inusual": 3,
+      "boveda_dominio": 5,
+      "enlace": 2,
+      "secreto": 1,
+      "dominio_parecido": 1
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 147
+    "version_modelo": "1.0.25",
+    "revertidas": 136
+  },
+  {
+    "tipo": "duelo",
+    "generacion": 11,
+    "candidatos": 44,
+    "evasion": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.955,
+    "falsas_alarmas": 0.111,
+    "exitosas_capa2": 0,
+    "sin_capa2": 0,
+    "mutacion_top": "remitente_conocido",
+    "top_mutaciones": [
+      {
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 184,
+        "contra": "boveda_plantilla"
+      },
+      {
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 104,
+        "contra": "primer_contacto"
+      },
+      {
+        "mutacion": "deletrear_cuenta",
+        "exitos": 15,
+        "intentos": 19,
+        "contra": "cuenta_nueva"
+      }
+    ],
+    "motivo_bloqueo": "clasificador",
+    "motivos": {
+      "cambio_cuenta": 8,
+      "boveda_plantilla": 2,
+      "clasificador": 15,
+      "primer_contacto": 4,
+      "cuenta_nueva": 2,
+      "monto_inusual": 3,
+      "boveda_dominio": 6,
+      "enlace": 2,
+      "secreto": 2
+    },
+    "version_modelo": "1.0.25",
+    "revertidas": 151
+  },
+  {
+    "tipo": "duelo",
+    "generacion": 12,
+    "candidatos": 44,
+    "evasion": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.977,
+    "falsas_alarmas": 0.111,
+    "exitosas_capa2": 0,
+    "sin_capa2": 0,
+    "mutacion_top": "remitente_conocido",
+    "top_mutaciones": [
+      {
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 203,
+        "contra": "boveda_plantilla"
+      },
+      {
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 116,
+        "contra": "primer_contacto"
+      },
+      {
+        "mutacion": "deletrear_cuenta",
+        "exitos": 15,
+        "intentos": 19,
+        "contra": "cuenta_nueva"
+      }
+    ],
+    "motivo_bloqueo": "clasificador",
+    "motivos": {
+      "cambio_cuenta": 9,
+      "boveda_plantilla": 5,
+      "primer_contacto": 5,
+      "clasificador": 11,
+      "cuenta_nueva": 1,
+      "dominio_parecido": 3,
+      "monto_inusual": 3,
+      "boveda_dominio": 7
+    },
+    "version_modelo": "1.0.25",
+    "revertidas": 167
+  },
+  {
+    "tipo": "duelo",
+    "generacion": 13,
+    "candidatos": 44,
+    "evasion": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.977,
+    "falsas_alarmas": 0.111,
+    "exitosas_capa2": 0,
+    "sin_capa2": 0,
+    "mutacion_top": "remitente_conocido",
+    "top_mutaciones": [
+      {
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 225,
+        "contra": "boveda_plantilla"
+      },
+      {
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 125,
+        "contra": "primer_contacto"
+      },
+      {
+        "mutacion": "deletrear_cuenta",
+        "exitos": 15,
+        "intentos": 19,
+        "contra": "cuenta_nueva"
+      }
+    ],
+    "motivo_bloqueo": "cambio_cuenta",
+    "motivos": {
+      "cambio_cuenta": 12,
+      "boveda_plantilla": 6,
+      "clasificador": 6,
+      "primer_contacto": 5,
+      "cuenta_nueva": 1,
+      "dominio_parecido": 3,
+      "monto_inusual": 3,
+      "boveda_dominio": 6,
+      "enlace": 2
+    },
+    "version_modelo": "1.0.25",
+    "revertidas": 183
+  },
+  {
+    "tipo": "duelo",
+    "generacion": 14,
+    "candidatos": 44,
+    "evasion": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.955,
+    "falsas_alarmas": 0.111,
+    "exitosas_capa2": 0,
+    "sin_capa2": 0,
+    "mutacion_top": "remitente_conocido",
+    "top_mutaciones": [
+      {
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 245,
+        "contra": "boveda_plantilla"
+      },
+      {
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 137,
+        "contra": "primer_contacto"
+      },
+      {
+        "mutacion": "deletrear_cuenta",
+        "exitos": 15,
+        "intentos": 19,
+        "contra": "cuenta_nueva"
+      }
+    ],
+    "motivo_bloqueo": "cambio_cuenta",
+    "motivos": {
+      "cambio_cuenta": 10,
+      "boveda_plantilla": 4,
+      "primer_contacto": 7,
+      "clasificador": 9,
+      "cuenta_nueva": 2,
+      "dominio_parecido": 2,
+      "monto_inusual": 2,
+      "boveda_dominio": 7,
+      "enlace": 1
+    },
+    "version_modelo": "1.0.25",
+    "revertidas": 199
+  },
+  {
+    "tipo": "duelo",
+    "generacion": 15,
+    "candidatos": 44,
+    "evasion": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.955,
+    "falsas_alarmas": 0.111,
+    "exitosas_capa2": 0,
+    "sin_capa2": 0,
+    "mutacion_top": "remitente_conocido",
+    "top_mutaciones": [
+      {
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 267,
+        "contra": "boveda_plantilla"
+      },
+      {
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 145,
+        "contra": "primer_contacto"
+      },
+      {
+        "mutacion": "deletrear_cuenta",
+        "exitos": 15,
+        "intentos": 19,
+        "contra": "cuenta_nueva"
+      }
+    ],
+    "motivo_bloqueo": "cambio_cuenta",
+    "motivos": {
+      "cambio_cuenta": 11,
+      "boveda_plantilla": 5,
+      "primer_contacto": 5,
+      "clasificador": 11,
+      "cuenta_nueva": 2,
+      "monto_inusual": 4,
+      "boveda_dominio": 4,
+      "enlace": 2
+    },
+    "version_modelo": "1.0.26",
+    "revertidas": 213
   },
   {
     "tipo": "duelo",
     "generacion": 16,
-    "candidatos": 30,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.955,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 281,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 100,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 157,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
+        "exitos": 15,
+        "intentos": 19,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_dominio",
+    "motivo_bloqueo": "cambio_cuenta",
     "motivos": {
-      "cambio_cuenta": 3,
-      "boveda_dominio": 11,
-      "boveda_plantilla": 10,
-      "clasificador": 3,
-      "urgencia": 2,
+      "cambio_cuenta": 11,
+      "boveda_plantilla": 5,
+      "boveda_dominio": 7,
+      "clasificador": 7,
+      "primer_contacto": 3,
+      "cuenta_nueva": 2,
+      "dominio_parecido": 1,
+      "monto_inusual": 4,
+      "autoridad": 1,
+      "enlace": 2,
       "secreto": 1
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 158
+    "version_modelo": "1.0.26",
+    "revertidas": 229
   },
   {
     "tipo": "duelo",
     "generacion": 17,
-    "candidatos": 30,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.977,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 296,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 108,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 170,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
+        "exitos": 15,
+        "intentos": 19,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "cambio_cuenta",
     "motivos": {
-      "primer_contacto": 1,
-      "boveda_plantilla": 15,
-      "boveda_dominio": 9,
+      "cambio_cuenta": 12,
+      "boveda_plantilla": 4,
+      "primer_contacto": 8,
+      "clasificador": 8,
       "cuenta_nueva": 1,
-      "clasificador": 2,
-      "cambio_cuenta": 2
+      "monto_inusual": 4,
+      "boveda_dominio": 5,
+      "secreto": 1,
+      "dominio_parecido": 1
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 170
+    "version_modelo": "1.0.26",
+    "revertidas": 245
   },
   {
     "tipo": "duelo",
     "generacion": 18,
-    "candidatos": 30,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.977,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 315,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 111,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 176,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
+        "exitos": 15,
+        "intentos": 19,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "clasificador",
     "motivos": {
-      "primer_contacto": 1,
-      "cambio_cuenta": 2,
-      "boveda_dominio": 10,
-      "boveda_plantilla": 12,
-      "clasificador": 2,
-      "urgencia": 3
+      "clasificador": 13,
+      "cambio_cuenta": 10,
+      "boveda_plantilla": 6,
+      "boveda_dominio": 5,
+      "primer_contacto": 4,
+      "cuenta_nueva": 1,
+      "monto_inusual": 3,
+      "enlace": 1,
+      "dominio_parecido": 1
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 182
+    "version_modelo": "1.0.26",
+    "revertidas": 261
   },
   {
     "tipo": "duelo",
     "generacion": 19,
-    "candidatos": 30,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.977,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 336,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 119,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 187,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
+        "exitos": 15,
+        "intentos": 19,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "cambio_cuenta",
     "motivos": {
-      "cambio_cuenta": 2,
-      "clasificador": 4,
-      "boveda_plantilla": 13,
+      "cambio_cuenta": 10,
+      "clasificador": 8,
+      "boveda_plantilla": 5,
+      "primer_contacto": 4,
       "cuenta_nueva": 1,
-      "boveda_dominio": 6,
-      "primer_contacto": 2,
-      "urgencia": 2
+      "dominio_parecido": 3,
+      "monto_inusual": 4,
+      "boveda_dominio": 7,
+      "enlace": 2
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 193
+    "version_modelo": "1.0.26",
+    "revertidas": 277
   },
   {
     "tipo": "duelo",
     "generacion": 20,
-    "candidatos": 30,
+    "candidatos": 44,
     "evasion": 0.0,
-    "recall": 0.867,
-    "recall_mutaciones": 1.0,
-    "falsas_alarmas": 0.0,
+    "recall": 0.85,
+    "recall_mutaciones": 0.955,
+    "falsas_alarmas": 0.111,
     "exitosas_capa2": 0,
     "sin_capa2": 0,
-    "mutacion_top": "cuenta_con_letras",
+    "mutacion_top": "remitente_conocido",
     "top_mutaciones": [
       {
-        "mutacion": "cuenta_con_letras",
-        "exitos": 7,
-        "intentos": 8,
-        "contra": "cuenta_nueva"
+        "mutacion": "remitente_conocido",
+        "exitos": 44,
+        "intentos": 356,
+        "contra": "boveda_plantilla"
       },
       {
-        "mutacion": "remitente_conocido",
-        "exitos": 7,
-        "intentos": 131,
+        "mutacion": "homoglifo_dominio",
+        "exitos": 22,
+        "intentos": 199,
         "contra": "primer_contacto"
       },
       {
         "mutacion": "deletrear_cuenta",
-        "exitos": 4,
-        "intentos": 6,
+        "exitos": 15,
+        "intentos": 19,
         "contra": "cuenta_nueva"
       }
     ],
-    "motivo_bloqueo": "boveda_plantilla",
+    "motivo_bloqueo": "cambio_cuenta",
     "motivos": {
-      "cambio_cuenta": 3,
-      "clasificador": 3,
-      "boveda_plantilla": 13,
-      "primer_contacto": 2,
-      "boveda_dominio": 7,
-      "urgencia": 2
+      "cambio_cuenta": 12,
+      "boveda_plantilla": 5,
+      "clasificador": 8,
+      "primer_contacto": 5,
+      "cuenta_nueva": 2,
+      "monto_inusual": 3,
+      "boveda_dominio": 5,
+      "enlace": 2,
+      "dominio_parecido": 2
     },
-    "version_modelo": "1.0.34",
-    "revertidas": 205
+    "version_modelo": "1.0.26",
+    "revertidas": 293
   }
 ]

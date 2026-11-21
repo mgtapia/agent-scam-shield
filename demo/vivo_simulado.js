@@ -278,7 +278,7 @@ const VivoSimulado = (() => {
         }
         const m = metricas(s.etiquetas);
         const ev = { tipo: "modelo", version: ver(), ejemplos: s.etiquetas, precision: +m.precision.toFixed(3), recall: +m.recall.toFixed(3),
-          falsas_alarmas: +m.falsas_alarmas.toFixed(3), evaluado_en: 120, cambios, pesos: { ...s.pesos },
+          falsas_alarmas: +(Math.round(m.falsas_alarmas * 36) / 36).toFixed(3), falsas: Math.round(m.falsas_alarmas * 36), legitimos: 36, evaluado_en: 120, cambios, pesos: { ...s.pesos },
           colados: COLADOS_SIM.slice(0, Math.round((1 - m.recall) * 9)).map(([escenario, familia, canal]) => ({ escenario, familia, canal, n: 3, de: 3, probabilidad: +entre(0.05, 0.45).toFixed(3) })) };
         s.historial.push(ev);
         fuera.push(ev);

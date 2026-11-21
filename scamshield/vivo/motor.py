@@ -177,7 +177,7 @@ class Motor:
             decision, fuente, capa, confianza = "estafa", "clasificador", None, p
         elif s["cuenta_nueva"]:
             decision, fuente, capa, confianza = "sospechoso", "origen", "2", max(p, 0.6)
-        elif p >= 0.45:
+        elif p > self.clasificador.UMBRAL:   # el mismo umbral que mide la tarjeta: antes era 0,45 y escalaba más legítimos
             decision, fuente, capa, confianza = "sospechoso", "clasificador", None, p
         else:
             decision, fuente, capa, confianza = "seguro", "clasificador", None, 1 - p
