@@ -435,8 +435,8 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .ops .titulo { flex: none; }
 .ops .titulo .version { color: var(--texto); font-size: var(--t-2); }
 .ops .vacio { padding: var(--e-2); color: var(--texto-3); }
-.barra-fina, .ops .barra { display: inline-block; flex: none; width: 48px; height: 4px; background: var(--borde); }
-.ops .barra > span { display: block; height: 100%; background: var(--texto-2); transition: width var(--dur-dato) ease-out; }
+.medidor { display: inline-block; flex: none; width: 48px; height: 4px; background: var(--borde); }
+.medidor > span { display: block; height: 100%; background: var(--texto-2); transition: width var(--dur-dato) ease-out; }
 
 /* Agentes: una fila, una celda por agente. El que está en Lectura se subraya como la pestaña activa */
 .ops-agentes { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); gap: 1px; background: var(--borde); border: var(--linea); }
@@ -514,7 +514,7 @@ mark.tramo { background: transparent; color: inherit; }
 .h-nota { color: var(--texto-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .h-riesgo { display: flex; align-items: center; gap: var(--e-1); justify-content: flex-end; }
 .hallazgo.r-alto .tag, .hallazgo.r-alto .h-texto { color: var(--rojo); }
-.hallazgo.r-alto .barra > span { background: var(--rojo); }
+.hallazgo.r-alto .medidor > span { background: var(--rojo); }
 .hallazgo.r-bajo .h-texto { color: var(--texto-2); }
 
 .lec-veredicto { flex: none; min-height: 128px; padding: var(--e-2); border-top: var(--linea); display: grid; align-content: start; gap: var(--e-1); }
@@ -525,13 +525,13 @@ mark.tramo { background: transparent; color: inherit; }
 .lec-veredicto[data-decision="seguro"] .ver-l1 > .ms { color: var(--texto-2); }
 .ver-conf { display: flex; align-items: center; gap: var(--e-1); font-size: var(--t-1); line-height: var(--l-1); }
 .ver-conf .dato { font-size: var(--t-2); font-weight: var(--p-fuerte); }
-.ver-conf .barra { width: 96px; }
-.ver-conf .barra > span { background: var(--texto); }
-.lec-veredicto[data-decision="estafa"] .ver-conf .barra > span { background: var(--rojo); }
+.ver-conf .medidor { width: 96px; }
+.ver-conf .medidor > span { background: var(--texto); }
+.lec-veredicto[data-decision="estafa"] .ver-conf .medidor > span { background: var(--rojo); }
 .ver-fuente { display: flex; align-items: center; gap: var(--e-1); margin-left: auto; font-size: var(--t-1); line-height: var(--l-1); }
 .ver-senales { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--e-3); }
 .ver-senales li { display: grid; grid-template-columns: minmax(0, 1fr) 64px 40px; align-items: center; gap: var(--e-1); font-size: var(--t-1); line-height: var(--l-2); color: var(--texto-2); }
-.ver-senales .barra { width: 64px; }
+.ver-senales .medidor { width: 64px; }
 .ver-senales .dato { text-align: right; color: var(--texto); }
 .ver-accion:not(:empty) { display: flex; align-items: center; flex-wrap: wrap; gap: var(--e-1); padding-top: var(--e-1); border-top: var(--linea); font-size: var(--t-1); line-height: var(--l-1); }
 .ver-accion .ms { color: var(--texto-2); }
@@ -546,7 +546,7 @@ mark.tramo { background: transparent; color: inherit; }
 .registro li { display: grid; grid-template-columns: 8ch 9ch minmax(0, 1fr); gap: 0 var(--e-1); padding: 0 var(--e-2); color: var(--texto-2); animation: entra var(--dur) ease-out; }
 .registro time, .registro .r-tipo { color: var(--texto-3); }
 .registro .r-txt { overflow-wrap: anywhere; }
-.registro .r-baja .r-txt { color: var(--texto-3); }
+.registro .r-baja .r-txt { color: var(--texto-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .registro .r-rojo .r-txt { color: var(--rojo); }
 .registro .r-verde .r-txt { color: var(--verde); }
 
@@ -593,9 +593,9 @@ mark.tramo { background: transparent; color: inherit; }
 .pesos { min-height: 0; overflow-y: auto; padding: var(--e-1) 0; }
 .pesos li { display: grid; grid-template-columns: minmax(0, 1fr) 56px 40px 40px; align-items: center; gap: var(--e-1); padding: 0 var(--e-2); font-size: var(--t-1); line-height: var(--l-2); }
 .pesos .p-nombre { color: var(--texto-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pesos .barra { width: 56px; }
-.pesos .barra > span { background: var(--texto); }
-.pesos .negativo .barra > span { background: var(--texto-3); }
+.pesos .medidor { width: 56px; }
+.pesos .medidor > span { background: var(--texto); }
+.pesos .negativo .medidor > span { background: var(--texto-3); }
 .pesos .dato { text-align: right; }
 .pesos .p-delta { color: var(--texto-2); }
 .pesos li.golpe { animation: golpe var(--dur-dato) ease-out; }
@@ -629,6 +629,15 @@ mark.tramo { background: transparent; color: inherit; }
 /* --- Responsive --- */
 @media (max-width: 1199px) {
   .carril { height: 528px; }
+}
+@media (max-width: 1599px) {
+  .vista.ops { height: auto; min-height: 0; grid-template-rows: auto 512px 352px 304px; }
+  .ops-cola { grid-column: 1 / span 4; }
+  .ops-lectura { grid-column: 5 / span 8; }
+  .ops-capas { grid-column: 1 / span 4; }
+  .ops-boveda { grid-column: 5 / span 4; }
+  .ops-registro { grid-column: 9 / span 4; grid-row: 3; }
+  .ops-modelo { grid-column: 1 / -1; }
 }
 @media (max-width: 1099px) {
   .barra { grid-template-columns: auto minmax(0, 1fr); height: auto; padding: var(--e-1) var(--e-2); row-gap: var(--e-1); }

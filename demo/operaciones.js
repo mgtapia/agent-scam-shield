@@ -32,7 +32,7 @@ const Operaciones = (() => {
     s_dominio_parecido: "dominio parecido", s_cambio_cuenta: "cambio de cuenta", s_pide_codigo: "pide código", s_pide_secreto: "pide secreto",
     s_inyeccion: "instrucción inyectada", s_cuenta_nueva: "cuenta nueva", s_urgencia: "urgencia", s_monto_inusual: "monto inusual",
     s_primer_contacto: "primer contacto", s_proveedor_inscrito: "proveedor inscrito", s_firma_conocida: "firma conocida",
-    s_secreto: "pide secreto", s_enlace: "enlace", s_autoridad: "autoridad",
+    s_secreto: "pide secreto", s_enlace: "enlace", s_autoridad: "autoridad", s_instruccion_oculta: "instrucción oculta",
     tr_cuenta: "cuenta", tr_dominio: "dominio", tr_urgencia: "urgencia", tr_codigo: "código", tr_monto: "monto", tr_autoridad: "autoridad",
     tr_inyeccion: "inyección", tr_secreto: "secreto",
   });
@@ -64,7 +64,7 @@ const Operaciones = (() => {
     s_dominio_parecido: "lookalike domain", s_cambio_cuenta: "account change", s_pide_codigo: "asks for code", s_pide_secreto: "asks for secret",
     s_inyeccion: "injected instruction", s_cuenta_nueva: "new account", s_urgencia: "urgency", s_monto_inusual: "unusual amount",
     s_primer_contacto: "first contact", s_proveedor_inscrito: "registered vendor", s_firma_conocida: "known signature",
-    s_secreto: "asks for secret", s_enlace: "link", s_autoridad: "authority",
+    s_secreto: "asks for secret", s_enlace: "link", s_autoridad: "authority", s_instruccion_oculta: "hidden instruction",
     tr_cuenta: "account", tr_dominio: "domain", tr_urgencia: "urgency", tr_codigo: "code", tr_monto: "amount", tr_autoridad: "authority",
     tr_inyeccion: "injection", tr_secreto: "secret",
   });
@@ -208,7 +208,7 @@ const Operaciones = (() => {
   function htmlHallazgo(x) {
     return `<li class="hallazgo r-${riesgoClase(x.riesgo)}" data-k="${x.k}">
       <span class="tag">${esc(clase(x.clase))}</span><span class="h-texto">${esc(x.texto)}</span>
-      <span class="h-nota">${esc(x.nota || "")}</span><span class="h-riesgo"><span class="barra"><span style="width:${Math.round(x.riesgo * 100)}%"></span></span><span class="dato">${x.riesgo.toFixed(2)}</span></span></li>`;
+      <span class="h-nota">${esc(x.nota || "")}</span><span class="h-riesgo"><span class="medidor"><span style="width:${Math.round(x.riesgo * 100)}%"></span></span><span class="dato">${x.riesgo.toFixed(2)}</span></span></li>`;
   }
 
   function abrirLectura(id) {
@@ -311,10 +311,10 @@ const Operaciones = (() => {
     caja.innerHTML = `
       <div class="ver-l1">
         ${ms(ICONO_DEC[v.decision] || "check", true)}<span class="ver-dec">${esc(t(`o_dec_${v.decision}`))}</span>
-        <span class="ver-conf"><span class="dato">${pct(v.confianza)}</span><span class="barra"><span style="width:${pct(v.confianza)}"></span></span><span class="c-2">${esc(t("o_confianza"))}</span></span>
+        <span class="ver-conf"><span class="dato">${pct(v.confianza)}</span><span class="medidor"><span style="width:${pct(v.confianza)}"></span></span><span class="c-2">${esc(t("o_confianza"))}</span></span>
         <span class="ver-fuente">${v.decision !== "seguro" ? tagCapa(v.capa) : ""}<span class="${v.fuente === "boveda" ? "" : "c-2"}">${esc(fuente)}</span></span>
       </div>
-      ${(v.senales || []).length ? `<ol class="ver-senales">${v.senales.map((s) => `<li><span>${esc(senal(s.nombre))}</span><span class="barra"><span style="width:${Math.round((Math.abs(s.peso) / maxPeso) * 100)}%"></span></span><span class="dato">${s.peso.toFixed(2)}</span></li>`).join("")}</ol>` : ""}
+      ${(v.senales || []).length ? `<ol class="ver-senales">${v.senales.map((s) => `<li><span>${esc(senal(s.nombre))}</span><span class="medidor"><span style="width:${Math.round((Math.abs(s.peso) / maxPeso) * 100)}%"></span></span><span class="dato">${s.peso.toFixed(2)}</span></li>`).join("")}</ol>` : ""}
       <div class="ver-accion"></div>`;
     if (nuevo) reanimar(caja, "entra");
     pintarAccion(c);
@@ -449,16 +449,16 @@ const Operaciones = (() => {
     ol.innerHTML = filas.map(([n, p]) => {
       const c = o.cambios[n];
       return `<li data-senal="${esc(n)}" class="${p < 0 ? "negativo" : ""}"><span class="p-nombre">${esc(senal(n))}</span>
-        <span class="barra"><span style="width:${Math.round((Math.abs(p) / max) * 100)}%"></span></span>
+        <span class="medidor"><span style="width:${Math.round((Math.abs(p) / max) * 100)}%"></span></span>
         <span class="dato">${p.toFixed(2)}</span><span class="dato p-delta">${c ? `${c > 0 ? "+" : ""}${c.toFixed(2)}` : ""}</span></li>`;
     }).join("");
     // La barra crece desde su ancho anterior: el cambio de peso se ve.
     for (const li of ol.querySelectorAll("li")) {
       const prev = previos.get(li.dataset.senal);
-      const barra = li.querySelector(".barra > span");
+      const barra = li.querySelector(".medidor > span");
       if (prev && barra && !quieto()) {
         const w = barra.style.width;
-        barra.style.width = prev.querySelector(".barra > span")?.style.width || w;
+        barra.style.width = prev.querySelector(".medidor > span")?.style.width || w;
         requestAnimationFrame(() => requestAnimationFrame(() => { barra.style.width = w; }));
       }
       if (o.cambios[li.dataset.senal]) reanimar(li, "golpe");
