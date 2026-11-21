@@ -42,7 +42,7 @@ Variante = dict[str, Any]  # {"correos": [...], "paginas": {...}, "mcp_herramien
 def valor_estafador(esc: dict[str, Any]) -> str:
     """La cuenta o el destinatario del estafador: lo que la víctima tiene que recibir para caer."""
     ev = esc["evaluacion"]
-    return str(ev.get("cuenta_estafador") or ev.get("destinatario_estafador") or "")
+    return str(ev.get("cuenta_estafador") or ev.get("destinatario_estafador") or ev.get("destino_final_estafador") or "")
 
 
 def _texto_correo(c: dict[str, Any]) -> str:

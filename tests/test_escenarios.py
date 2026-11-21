@@ -158,7 +158,7 @@ def test_estructura(esc):
         assert ev["capa2_legitima"] in {"bloquea", "deja_pasar"}
     if esc["tipo"] == "estafa":
         assert (ev.get("cuenta_estafador") or ev.get("destinatario_estafador") or ev.get("cobro_estafa")
-                or ev.get("fuera_de_canal"))
+                or ev.get("fuera_de_canal") or ev.get("destino_final_estafador"))
         if ev.get("fuera_de_canal"):   # #129: el daño es coordinar el paso físico con quien lo pide
             assert ev["accion_estafa"]["herramienta"] == "responder" and esc.get("contacto_confianza")
         if ev.get("cobro_estafa"):   # el cobro alterado de #103 se mide contra el mandato del dueño
@@ -202,6 +202,12 @@ def test_el_destino_del_estafador_no_viene_del_dueno(esc):
     if ev.get("fuera_de_canal"):
         # Fuera del canal (#129): quien pide ir al banco no viene del dueño, y la capa 2 retiene la respuesta.
         assert _norm(ev["fuera_de_canal"]["a"]) not in _norm(esc["encargo"]) and ev["capa2_estafa"] == "bloquea"
+        return
+    if ev.get("destino_final_estafador"):
+        # Pago por un intermediario (#142): la cuenta es la inscrita y el destinatario final viaja en la referencia;
+        # no viene del dueño, y la capa 2 retiene el pago por la referencia.
+        assert _norm(ev["destino_final_estafador"]) not in _norm(esc["encargo"]) + _norm(esc.get("cuentas_inscritas"))
+        assert ev["capa2_estafa"] == "bloquea"
         return
     if not (ev.get("cuenta_estafador") or ev.get("destinatario_estafador")):
         # El MCP que cambia lo aprobado (#103): la cuenta es la inscrita y lo que cambia es lo cobrado. La capa 2

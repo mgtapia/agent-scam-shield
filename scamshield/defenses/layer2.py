@@ -95,6 +95,16 @@ def politica_origen(procedencia: Procedencia, herramienta: str, args: Mapping,
         return None
     if _sale_una_credencial(procedencia, args, regla):
         return MOTIVO_CREDENCIAL
+    # Plata que no es un dato del dueño (#142): el código de una tarjeta de regalo y el destinatario final en la referencia.
+    from . import canje
+    if regla.dato is None and regla.mensaje is None:
+        desvio_ref = canje.motivo_referencia(procedencia, args, regla.destino)
+        if desvio_ref:
+            return desvio_ref
+    else:
+        codigo = canje.motivo_codigo(procedencia, args, regla.destino, regla.dato, regla.mensaje)
+        if codigo:
+            return codigo
     mandato = getattr(procedencia, "mandato", None)
     if mandato and regla.dato is None and regla.mensaje is None:
         # Un pago con mandato del dueño (#103): lo que se cobra tiene que calzar con lo que aprobó.
