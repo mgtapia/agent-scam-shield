@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -49,11 +50,24 @@ CUENTA = re.compile(r"\d{2}-\d{4}-\d{4}")
 META_SEGUNDOS = 5.0   # desde que llega la nota hasta que Kapso acepta la alerta
 
 
+def _rutas_env() -> list[Path]:
+    """Dónde puede estar `.env`: la raíz, su carpeta madre y la raíz del repo principal (si esto es un worktree)."""
+    rutas = [RAIZ / ".env", RAIZ.parent / ".env"]
+    try:
+        comun = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=RAIZ, capture_output=True,
+                               text=True, timeout=5).stdout.strip()
+        if comun:
+            rutas.append(Path(comun).parent / ".env")
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return rutas
+
+
 def _cargar_env() -> None:
     """Deja las llaves de `.env` en el entorno, sin pisar lo ya definido y sin imprimirlas."""
     from dotenv import load_dotenv
 
-    for ruta in (RAIZ / ".env", RAIZ.parent / ".env"):
+    for ruta in _rutas_env():
         if ruta.is_file():
             load_dotenv(ruta, override=False)
             return
