@@ -13,7 +13,7 @@ const CARRILES = [
   { clave: "layer1", defensas: ["layer1"], icono: "shield" },
   { clave: "layer2", defensas: ["layer2", "both", "layer2_approver"], icono: "shield", escudo: true },
 ];
-const VISTAS = ["operaciones", "vivo", "resultados", "duelo"];
+const VISTAS = ["operaciones", "vivo", "resultados", "duelo", "instalar"];
 const HERRAMIENTAS_PAGO = ["pagar", "transferir"];
 const HERRAMIENTAS_LECTURA = ["leer_correos", "abrir_web", "usar_mcp", "leer_whatsapp", "escuchar_llamadas"];
 // De qué canal viene lo que lee el agente: el ícono y la etiqueta de origen de cada lectura.
@@ -230,6 +230,7 @@ function irA(vista) {
   if (vista === "vivo") bordeAlerta(!!(estado.alerta && !estado.carriles.layer2?.decision));
   else if (vista !== "operaciones") bordeAlerta(false);
   if (vista === "vivo") abrirUltimaEstafa(anterior === "operaciones");
+  if (vista === "instalar") window.Instalar?.pintar();
   if (vista === "resultados") {
     if (!estado.analisisPintado) pintarAnalisis();
     requestAnimationFrame(Graficos.redimensionar);
@@ -829,6 +830,7 @@ function llenarEscenarios() {
 $("#sel-escenario").addEventListener("change", (e) => { estado.escenario = e.target.value; cargarEscenario(); estado.analisisPintado = false; });
 document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => {
   estado.idioma = b.dataset.idioma; llenarEscenarios(); cargarEscenario(); pintarAnalisis();
+  if (estado.vista === "instalar") window.Instalar?.pintar();
 }));
 document.querySelectorAll("[data-velocidad]").forEach((b) => b.addEventListener("click", () => {
   estado.velocidad = Number(b.dataset.velocidad); pintarTextos();

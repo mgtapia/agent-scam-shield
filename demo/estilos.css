@@ -145,7 +145,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
 .pestanas a[aria-selected="true"] { color: var(--texto); box-shadow: inset 0 -1px 0 var(--texto); }
 .controles { display: flex; align-items: center; justify-content: flex-end; gap: var(--e-1); min-width: 0; }
 body[data-vista="vivo"] .solo-resultados, body:not([data-vista="vivo"]) .solo-vivo { display: none; }
-body[data-vista="operaciones"] .solo-resultados, body[data-vista="duelo"] .solo-resultados { display: none; }
+body[data-vista="operaciones"] .solo-resultados, body[data-vista="duelo"] .solo-resultados, body[data-vista="instalar"] .solo-resultados { display: none; }
 body:not([data-vista="operaciones"]) .solo-ops { display: none; }
 body:not([data-vista="operaciones"]):not([data-vista="vivo"]) .solo-flujo { display: none; }
 .tag.sello { height: 24px; margin-right: var(--e-1); }
@@ -315,6 +315,25 @@ body:not([data-vista="operaciones"]):not([data-vista="vivo"]) .solo-flujo { disp
 #vista-vivo[data-carriles="2"] .carril { grid-column: span 6; }
 #vista-vivo[data-carriles="1"] .carril { grid-column: 1 / -1; }
 .franja .celda-nota { flex-wrap: wrap; }
+/* --- Instalar: seis caminos, uno por tipo de usuario, en la grilla de 12 columnas --- */
+.in-nota { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--e-1); margin: 0; color: var(--texto-2); }
+.in-nota .ms { color: var(--texto-2); }
+.in-nota a { margin-left: auto; color: var(--texto); white-space: nowrap; text-decoration: underline; text-decoration-color: var(--borde); text-underline-offset: 4px; }
+.in-camino { grid-column: span 4; align-self: stretch; min-width: 0; display: flex; flex-direction: column; border: var(--linea); background: var(--superficie); }
+.in-camino .titulo h2 { font-size: var(--t-3); line-height: var(--l-3); font-weight: var(--p-fuerte); }
+.in-hace { margin: 0; padding: var(--e-1) var(--e-2); color: var(--texto-2); border-bottom: var(--linea); }
+.in-pasos { counter-reset: paso; padding: var(--e-1) 0; }
+.in-pasos > li { counter-increment: paso; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: var(--e-1) var(--e-1); padding: var(--e-1) var(--e-2); }
+.in-pasos > li::before { content: counter(paso); font: var(--p-fuerte) var(--t-1) / var(--l-2) var(--mono); color: var(--texto-2); }
+.in-texto { min-width: 0; overflow-wrap: anywhere; }
+.in-texto code, .in-codigo code { font-family: var(--mono); font-size: var(--t-1); }
+.in-texto code { padding: 0 var(--e-1); background: var(--borde); }
+.in-texto a { color: var(--texto); text-decoration: underline; text-decoration-color: var(--texto-2); text-underline-offset: 4px; }
+.in-codigo { grid-column: 2; position: relative; min-width: 0; border: var(--linea); background: var(--fondo); }
+.in-codigo pre { margin: 0; padding: var(--e-1) var(--e-6) var(--e-1) var(--e-1); white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--l-1); }
+.in-codigo .boton { position: absolute; top: 0; right: 0; width: 40px; height: 40px; color: var(--texto-2); }
+@media (max-width: 1279px) { .in-camino { grid-column: span 6; } }
+@media (max-width: 899px) { .in-camino { grid-column: 1 / -1; } .in-nota { flex-wrap: wrap; } .in-nota a { margin-left: 0; } }
 /* Sin episodio en el escenario elegido: la lista de los que sí tienen */
 .ep-lista { grid-column: 1 / -1; border: var(--linea); background: var(--superficie); }
 .ep-lista .titulo { flex-wrap: wrap; }
