@@ -1,0 +1,25 @@
+[project]
+name = "agent-scam-shield"
+version = "0.1.0"
+description = "Benchmark y monitor contra estafas de ingeniería social a agentes de IA que pagan, en español y en inglés."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+  "inspect-ai",
+  "anthropic",
+  "openai",
+  "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["scamshield*"]
+
+[tool.setuptools.package-data]
+scamshield = ["scenarios/*/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
