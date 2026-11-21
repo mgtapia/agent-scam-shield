@@ -9,8 +9,9 @@ Rutas:
     GET  /                      la página de los tres carriles
     GET  /episodios/...         los JSON de episodios (indice.json, <id>.json, episodios.js)
     POST /api/etiquetas         guarda la respuesta del dueño en demo/etiquetas.jsonl
-    POST /api/alertas           pasa la alerta a notificar() (punto de enchufe para Telegram)
+    POST /api/alertas           pasa la alerta a notificar() (la web y, si hay token, Telegram)
     GET  /api/salud             para comprobar que está arriba
+    POST /api/probar            «Intenta estafarlo»: el correo del juez contra las tres capas (con tope por IP)
     GET  /api/vivo              Server-Sent Events del modo «Centro de operaciones» (scamshield/vivo)
     POST /api/vivo/control      {"accion": "pausa" | "seguir" | "velocidad" | "idioma", "valor": 1|2|4 | "es"|"en"|"ambos"}
     GET  /api/vivo/estado       foto completa: bóveda, modelo, agentes y últimos 50 correos
@@ -21,22 +22,38 @@ import argparse
 import asyncio
 import json
 import threading
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
+from demo import telegram
+from demo.limite import LimitePorIP, ip_cliente
 from demo.notificar import notificar
 
 DEMO = Path(__file__).resolve().parent
 ETIQUETAS = DEMO / "etiquetas.jsonl"
 ELECCIONES = {"pagar_inscrita", "no_pagar", "pagar_igual"}
 
-app = FastAPI(title="agent-scam-shield demo")
+@asynccontextmanager
+async def _vida(_app: FastAPI):
+    """Arranca el canal de Telegram si hay token y chat en el entorno (#20); si no, todo sigue como antes."""
+    canal = telegram.iniciar_desde_entorno(registrar_etiqueta)
+    try:
+        yield
+    finally:
+        if canal:
+            canal.detener()
+
+
+app = FastAPI(title="agent-scam-shield demo", lifespan=_vida)
 # La interfaz puede correr en otro puerto local (por ejemplo, en su propio worktree): solo localhost.
 app.add_middleware(CORSMiddleware, allow_origin_regex=r"https?://(127\.0\.0\.1|localhost)(:\d+)?",
                    allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
@@ -49,14 +66,21 @@ def salud() -> dict[str, Any]:
     return {"ok": True, "episodios": len(episodios)}
 
 
-@app.post("/api/etiquetas")
-def guardar_etiqueta(etiqueta: dict[str, Any] = Body(...)) -> dict[str, Any]:
-    """Una línea por respuesta del dueño, para entrenar el clasificador (#7)."""
+def registrar_etiqueta(etiqueta: dict[str, Any]) -> None:
+    """Una línea por respuesta del dueño, para entrenar el clasificador (#7). La usan la página y Telegram."""
     if etiqueta.get("eleccion") not in ELECCIONES:
-        raise HTTPException(422, f"eleccion debe ser una de {sorted(ELECCIONES)}")
+        raise ValueError(f"eleccion debe ser una de {sorted(ELECCIONES)}")
     fila = {**etiqueta, "recibida": datetime.now(timezone.utc).isoformat()}
     with _candado, ETIQUETAS.open("a", encoding="utf-8") as f:
         f.write(json.dumps(fila, ensure_ascii=False) + "\n")
+
+
+@app.post("/api/etiquetas")
+def guardar_etiqueta(etiqueta: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    try:
+        registrar_etiqueta(etiqueta)
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
     return {"ok": True}
 
 
@@ -115,6 +139,44 @@ def vivo_estado() -> dict[str, Any]:
     return motor_global().foto()
 
 
+# --- «Intenta estafarlo» (#21) --------------------------------------------------------------------
+# Un juez escribe su estafa y ve qué capa la frena. Sin API: el agente es guionado y las capas son las reales.
+MAX_BYTES_PROBAR = 16_384
+limite_probar = LimitePorIP()
+
+
+class CorreoJuez(BaseModel):
+    de: str = Field(default="", max_length=200)
+    asunto: str = Field(default="", max_length=300)
+    cuerpo: str = Field(max_length=4000)
+    idioma: Literal["es", "en"] = "es"
+
+
+@app.middleware("http")
+async def _tope_de_cuerpo(request: Request, llamada_siguiente):
+    """Rechaza el cuerpo enorme de /api/probar antes de leerlo."""
+    if request.url.path == "/api/probar":
+        largo = request.headers.get("content-length", "")
+        if not largo.isdigit() or int(largo) > MAX_BYTES_PROBAR:
+            return JSONResponse({"detail": "el pedido es demasiado grande"}, status_code=413)
+    return await llamada_siguiente(request)
+
+
+@app.post("/api/probar")
+def probar_estafa(correo: CorreoJuez, request: Request) -> dict[str, Any]:
+    """Evalúa el correo del juez con las tres capas. No entrena nada: solo se evalúa y se muestra en vivo."""
+    ok, espera = limite_probar.permitir(ip_cliente(request.client, request.headers))
+    if not ok:
+        raise HTTPException(429, "demasiados intentos seguidos: espera un momento", headers={"Retry-After": str(espera)})
+    from scamshield.vivo.motor import motor_global
+    from scamshield.vivo.probar import probar
+
+    try:
+        return probar(correo.de, correo.asunto, correo.cuerpo, correo.idioma, motor_global())
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+
+
 # El montaje estático va al final: en «/» captura todo lo que no sea /api.
 app.mount("/", StaticFiles(directory=DEMO, html=True), name="demo")
 
@@ -122,6 +184,9 @@ app.mount("/", StaticFiles(directory=DEMO, html=True), name="demo")
 def main() -> None:
     import uvicorn
 
+    from dotenv import load_dotenv
+
+    load_dotenv(DEMO.parent / ".env")   # el token de Telegram, si lo hay; el .env nunca entra al repo
     p = argparse.ArgumentParser(description="Servidor de la demo de agent-scam-shield")
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--puerto", type=int, default=8765)

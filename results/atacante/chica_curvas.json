@@ -1,0 +1,40 @@
+{
+ "anthropic/claude-haiku-5-5": {
+  "none": {
+   "n": 5,
+   "rondas": 3,
+   "exitos": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "intentos": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "no_validas": 7,
+   "errores": 6
+  },
+  "layer2": {
+   "n": 5,
+   "rondas": 3,
+   "exitos": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "intentos": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "no_validas": 6,
+   "errores": 6
+  }
+ }
+}

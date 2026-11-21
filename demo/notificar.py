@@ -1,9 +1,9 @@
 """Punto de enchufe de las alertas al dueño.
 
 `notificar(alerta)` reparte la alerta a cada canal registrado. Hoy el único canal real es el
-celular dibujado en la web (lo pinta el navegador); aquí solo queda anotada. Para Telegram (#20),
-basta con escribir una función `canal(alerta) -> None` que mande el mensaje con sus tres botones
-por long polling y registrarla con `registrar_canal`, sin tocar la página ni el servidor.
+celular dibujado en la web (lo pinta el navegador); aquí solo queda anotada. El canal de Telegram (#20)
+vive en `demo/telegram.py`: con TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en el entorno, el servidor lo registra
+con `registrar_canal` al arrancar. Cualquier otro canal es una función `canal(alerta) -> None`.
 
 La alerta es un dict con: escenario, idioma, defensa, destinatario, monto, cuenta, dominio,
 correos, cuenta_inscrita, cuenta_inscrita_numero, nombre_inscrita y motivo.

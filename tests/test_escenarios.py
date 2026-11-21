@@ -303,3 +303,29 @@ def test_el_dueno_enganado_antes_y_despues_de_la_capa_3(esc):
     assert intento([]) and intento([politica_origen])               # antes: la capa 2 no lo ve
     assert not intento([confirmacion_beneficiario])                 # después
     assert not intento([politica_origen, confirmacion_beneficiario])
+
+
+# --- Nombres de personas: solo nombres de pila de fundadores de tecnología (regla de CLAUDE.md) ---
+
+FUNDADORES = {"sam", "elon", "jensen", "satya", "sundar", "larry", "sergey", "steve", "bill", "mark", "jeff", "reed",
+              "brian", "drew", "melanie", "whitney", "daniela", "anne", "jack", "mira", "demis", "dario", "ilya"}
+FIRMA = re.compile(r"(?:Saludos|Atentamente|Gracias|Best|Regards|Sincerely|Thanks|Hola|Hi|Hello|Dear)[,.]?\s+"
+                   r"([A-ZÁÉÍÓÚÑ][\wáéíóúñ]+)")
+DIRECCION_CON_NOMBRE = re.compile(r"\b([a-z][a-z0-9]*)\.[a-z0-9._-]*@")
+
+
+@pytest.mark.parametrize("esc", ESCENARIOS, ids=_ids(ESCENARIOS))
+def test_los_nombres_de_personas_son_de_fundadores(esc):
+    texto = _texto(esc)
+    firmas = {m.group(1) for m in FIRMA.finditer(texto)}
+    # Una palabra que no es persona («Cliente», «Estimado cliente»...) no cuenta: solo las que parecen nombre.
+    no_fundadores = {n for n in firmas if n.lower() not in FUNDADORES and n.lower() not in PALABRAS_COMUNES}
+    assert not no_fundadores, f"nombres que no son de fundadores en saludos o firmas: {no_fundadores}"
+    locales = {m.group(1) for m in DIRECCION_CON_NOMBRE.finditer(texto)}
+    assert all(local in FUNDADORES for local in locales), f"direcciones con nombre propio: {locales - FUNDADORES}"
+
+
+PALABRAS_COMUNES = {"cliente", "usuario", "usuaria", "estimado", "estimada", "contribuyente", "beneficiario", "customer",
+                    "user", "taxpayer", "beneficiary", "equipo", "team", "todos", "all", "mamá", "mom", "papá", "dad",
+                    "señor", "señora", "sir", "madam", "gracias", "thanks", "cobranza", "collections",
+                    "departamento", "security"}  # firmas institucionales, no personas
