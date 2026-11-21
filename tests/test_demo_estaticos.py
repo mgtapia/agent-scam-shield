@@ -19,6 +19,7 @@ def demo(tmp_path, monkeypatch):
         if origen.is_file():
             shutil.copyfile(origen, tmp_path / nombre)
     shutil.copytree(server.DEMO / "episodios", tmp_path / "episodios")
+    shutil.copytree(server.DEMO / "audio", tmp_path / "audio")
     for nombre in ("server.py", "telegram.py", "whatsapp.py", "__init__.py", "DESIGN.md",
                    ".env", "privado.js", "privado.json", "__pycache__/server.cpython-311.pyc"):
         ruta = tmp_path / nombre
@@ -26,8 +27,8 @@ def demo(tmp_path, monkeypatch):
         ruta.write_text("informacion-interna-de-la-demo", encoding="utf-8")
     monkeypatch.setattr(server, "ETIQUETAS", tmp_path / "etiquetas.jsonl")
     for ruta in server.app.routes:
-        if ruta.name in ("demo", "episodios"):
-            directorio = tmp_path if ruta.name == "demo" else tmp_path / "episodios"
+        if ruta.name in ("demo", "episodios", "audio"):
+            directorio = tmp_path if ruta.name == "demo" else tmp_path / ruta.name
             monkeypatch.setattr(ruta.app, "directory", directorio)
             monkeypatch.setattr(ruta.app, "all_directories", [directorio])
     cliente = TestClient(server.app)
@@ -117,3 +118,30 @@ def test_los_episodios_no_permiten_enlaces_a_archivos_fuera_de_su_carpeta(demo):
     (raiz / "episodios" / "fuga.json").symlink_to(raiz / "etiquetas.jsonl")
     for metodo in ("GET", "HEAD"):
         assert cliente.request(metodo, "/episodios/fuga.json").status_code == 404
+
+
+def test_los_audios_y_sus_fichas_siguen_publicos(demo):
+    cliente, raiz = demo
+    archivos = list((raiz / "audio").iterdir())
+    assert any(a.suffix == ".mp3" for a in archivos) and any(a.suffix == ".json" for a in archivos)
+    for archivo in archivos:
+        if archivo.is_file():
+            ruta = "/audio/" + archivo.name
+            respuesta = cliente.get(ruta)
+            assert respuesta.status_code == 200 and respuesta.content == archivo.read_bytes(), ruta
+            assert cliente.head(ruta).status_code == 200, ruta
+
+
+def test_los_audios_no_permiten_atravesar_a_las_etiquetas(demo):
+    cliente, _ = demo
+    for ruta in ("/audio/../etiquetas.jsonl", "/audio/%2e%2e/etiquetas.jsonl",
+                 "/audio/%2e%2e%2fetiquetas.jsonl?download=1"):
+        for metodo in ("GET", "HEAD"):
+            assert cliente.request(metodo, ruta).status_code == 404
+
+
+def test_los_audios_no_permiten_enlaces_fuera_de_su_carpeta(demo):
+    cliente, raiz = demo
+    (raiz / "audio" / "fuga.mp3").symlink_to(raiz / "etiquetas.jsonl")
+    for metodo in ("GET", "HEAD"):
+        assert cliente.request(metodo, "/audio/fuga.mp3").status_code == 404

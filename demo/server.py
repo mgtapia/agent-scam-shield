@@ -312,6 +312,8 @@ app.add_route("/mcp", ruta_mcp, methods=["GET", "POST", "DELETE"])
 
 # Los episodios exportados son públicos y tienen su propia raíz para impedir salir de esa carpeta.
 app.mount("/episodios", StaticFiles(directory=DEMO / "episodios"), name="episodios")
+if (DEMO / "audio").is_dir():
+    app.mount("/audio", StaticFiles(directory=DEMO / "audio"), name="audio")
 # El montaje raíz va al final y solo permite los activos de la interfaz.
 app.mount("/", _ActivosPublicos(directory=DEMO, html=True), name="demo")
 
