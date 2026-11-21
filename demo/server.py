@@ -38,7 +38,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from demo import telegram
+from demo import telegram, whatsapp
 from demo.limite import LimitePorIP, ip_cliente
 from demo.notificar import notificar
 
@@ -141,6 +141,7 @@ async def _vida(_app: FastAPI):
     """Arranca el canal de Telegram si hay token y chat en el entorno (#20); si no, todo sigue como antes.
     Con GRIFTER_MCP_TOKEN, también conecta a Grifter con sus MCP de abajo para servir /mcp."""
     canal = telegram.iniciar_desde_entorno(registrar_etiqueta)
+    _app.state.whatsapp = whatsapp.iniciar_desde_entorno(registrar_etiqueta)   # #116: el webhook de Kapso entra por /api/whatsapp/webhook
     try:
         async with _conector_mcp():
             yield
@@ -169,6 +170,16 @@ def registrar_etiqueta(etiqueta: dict[str, Any]) -> None:
     fila = {**etiqueta, "recibida": datetime.now(timezone.utc).isoformat()}
     with _candado, ETIQUETAS.open("a", encoding="utf-8") as f:
         f.write(json.dumps(fila, ensure_ascii=False) + "\n")
+
+
+@app.post("/api/whatsapp/webhook")
+async def webhook_whatsapp(request: Request) -> JSONResponse:
+    """El webhook de Kapso: los botones que aprieta el dueño por WhatsApp. Falla cerrada: sin canal o con mala firma, no cuenta."""
+    canal = getattr(request.app.state, "whatsapp", None)
+    if canal is None:
+        raise HTTPException(404, "WhatsApp no está configurado")
+    estado, motivo = canal.atender_webhook(await request.body(), dict(request.headers))
+    return JSONResponse({"ok": estado == 200, "motivo": motivo}, status_code=estado)
 
 
 @app.post("/api/etiquetas")
