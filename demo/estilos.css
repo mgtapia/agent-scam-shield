@@ -669,6 +669,20 @@ mark.tramo { background: transparent; color: inherit; }
   .modelo-curvas { border-right: 0; border-bottom: var(--linea); }
   .hallazgo { grid-template-columns: 88px minmax(0, 1fr) 96px; }
   .hallazgo .h-nota { display: none; }
+  .pestanas { justify-self: stretch; overflow-x: auto; }
+  .pestanas a { flex: none; white-space: nowrap; }
+  .lec-meta { grid-template-columns: auto minmax(0, 1fr); }
+  .lec-quien { grid-column: 1 / -1; }
+  .ops-lectura, .ops-registro { grid-row: auto; }
+}
+@media (max-width: 599px) {
+  .ops-agentes { grid-template-columns: minmax(0, 1fr); }
+  .m-et { white-space: normal; }
+  .ops-lectura { height: auto; }
+  .lec-cuerpo { flex: none; }
+  .ver-senales { grid-template-columns: minmax(0, 1fr); }
+  .pestanas a { padding: 0 var(--e-1); }
+  .pestanas a .ms { display: none; }
 }
 @media (max-width: 479px) {
   .kpi { grid-column: 1 / -1; }
