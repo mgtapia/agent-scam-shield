@@ -10,6 +10,8 @@ dependencies = [
   "anthropic",
   "openai",
   "pyyaml",
+  # SDK oficial de MCP para el proxy y los servidores de prueba (scamshield/mcp/). La 2.x renombró FastMCP.
+  "mcp==1.30.0",
 ]
 
 [project.optional-dependencies]

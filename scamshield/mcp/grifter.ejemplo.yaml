@@ -1,0 +1,30 @@
+# Configuración del dueño para Grifter como proxy MCP. Cópiala como grifter.yaml y ajústala.
+# Las rutas relativas (y el cwd de cada servidor) se resuelven contra la carpeta de este archivo.
+
+# Servidores MCP que Grifter pone detrás de sí. `comando: python` usa el mismo Python del proxy.
+servidores:
+  silicio-austral:
+    comando: python
+    args: ["-m", "scamshield.mcp.servidor_proveedor", "--envenenado"]
+  banco:
+    comando: python
+    args: ["-m", "scamshield.mcp.servidor_banco", "--registro", "banco_sandbox.jsonl"]
+
+# Lo confiable: las cuentas que el dueño inscribió y sus datos (para no compartirlos con extraños).
+cuentas_inscritas:
+  Silicio Austral: "Banco Litoral cta. cte. 33-7741-0092"
+datos_dueno:
+  rut_empresa: "77.120.458-6"
+
+# Opcional: el encargo del dueño. Los clientes MCP no le pasan el mensaje del usuario al servidor,
+# así que sin esto solo vale como confiable lo inscrito.
+# encargo: "Paga la factura 8812 de Silicio Austral."
+
+# JSONL con cada llamada sensible: permitida, retenida o aprobada por el dueño.
+registro: grifter_eventos.jsonl
+
+# Opcional: qué herramientas revisa y qué argumento es el destino. Por defecto: pagar,
+# transferir, compartir_dato y responder.
+# sensibles:
+#   pagar: {destino: cuenta, que: la cuenta, accion: el pago}
+#   enviar_dinero: {destino: cuenta_destino, que: la cuenta, accion: la transferencia}
