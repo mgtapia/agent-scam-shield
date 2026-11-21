@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Agent Scam Shield</title>
+  <title>Grifter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
@@ -14,62 +14,71 @@
   <header class="barra">
     <div class="marca">
       <span class="ms grande" aria-hidden="true">shield</span>
-      <span class="nombre">Agent Scam Shield</span>
+      <span class="nombre">Grifter</span>
     </div>
-    <label class="campo">
-      <span class="ms" aria-hidden="true">mail</span>
-      <span class="oculto" data-t="escenario">Escenario</span>
-      <select id="sel-escenario"></select>
-    </label>
-    <div class="segmentado" role="group" aria-label="Idioma">
-      <button type="button" data-idioma="es" aria-pressed="true">ES</button>
-      <button type="button" data-idioma="en" aria-pressed="false">EN</button>
-    </div>
-    <div class="reproductor">
-      <button type="button" class="boton principal" id="btn-reproducir">
+    <nav class="pestanas" role="tablist" aria-label="Vistas">
+      <a role="tab" href="#vivo" data-vista="vivo" aria-selected="true"><span class="ms" aria-hidden="true">monitor_heart</span><span data-t="v_vivo">En vivo</span></a>
+      <a role="tab" href="#resultados" data-vista="resultados" aria-selected="false"><span class="ms" aria-hidden="true">grid_view</span><span data-t="v_resultados">Resultados</span></a>
+      <a role="tab" href="#probar" data-vista="probar" aria-selected="false"><span class="ms" aria-hidden="true">science</span><span data-t="v_probar">Pruébalo</span></a>
+    </nav>
+    <div class="controles">
+      <label class="campo solo-vivo">
+        <span class="oculto" data-t="escenario">Escenario</span>
+        <select id="sel-escenario"></select>
+      </label>
+      <button type="button" class="boton principal solo-vivo" id="btn-reproducir">
         <span class="ms" aria-hidden="true">play_arrow</span><span data-t="reproducir">Reproducir</span>
       </button>
-      <button type="button" class="boton icono" id="btn-reiniciar" data-ayuda-t="reiniciar" aria-label="Reiniciar">
+      <button type="button" class="boton icono solo-vivo" id="btn-reiniciar" data-ayuda-t="reiniciar" aria-label="Reiniciar">
         <span class="ms" aria-hidden="true">restart_alt</span>
       </button>
-      <div class="segmentado" role="group" aria-label="Velocidad">
+      <div class="segmentado solo-vivo" role="group" aria-label="Velocidad">
         <button type="button" data-velocidad="1" aria-pressed="true">1x</button>
         <button type="button" data-velocidad="2" aria-pressed="false">2x</button>
       </div>
+      <span class="fuente solo-resultados" id="fuente"></span>
+      <div class="segmentado" role="group" aria-label="Idioma">
+        <button type="button" data-idioma="es" aria-pressed="true">ES</button>
+        <button type="button" data-idioma="en" aria-pressed="false">EN</button>
+      </div>
     </div>
-    <span class="fuente" id="fuente"></span>
-    <button type="button" class="boton alerta-pastilla" id="btn-alerta" hidden>
-      <span class="ms" aria-hidden="true">gpp_bad</span><span data-t="alerta">Alerta</span>
-    </button>
   </header>
 
-  <section class="kpis" id="kpis" aria-label="KPI"></section>
-
-  <main class="reproduccion">
-    <section class="bandeja" aria-labelledby="t-bandeja">
-      <h2 class="titulo" id="t-bandeja"><span class="ms" aria-hidden="true">mail</span><span data-t="bandeja">Bandeja</span></h2>
-      <div id="encargo"></div>
-      <h3 class="titulo"><span class="ms" aria-hidden="true">account_balance</span><span data-t="inscritas">Inscritas</span></h3>
-      <ul class="filas" id="inscritas"></ul>
-      <h3 class="titulo"><span class="ms" aria-hidden="true">mail</span><span data-t="correos">Correos</span></h3>
-      <ul class="filas" id="correos"></ul>
+  <main>
+    <section class="vista" id="vista-vivo" data-vista="vivo" aria-label="En vivo">
+      <div class="franja" id="franja"></div>
+      <div class="carril-hueco" id="carriles" role="presentation"></div>
+      <section class="correos" aria-labelledby="t-correos">
+        <h2 class="titulo" id="t-correos"><span class="ms" aria-hidden="true">mail</span><span data-t="correos">Correos</span><span class="nota" id="n-correos"></span></h2>
+        <ul class="tabla" id="correos"></ul>
+      </section>
     </section>
-    <div class="carriles" id="carriles"></div>
+
+    <section class="vista" id="vista-resultados" data-vista="resultados" aria-label="Resultados" hidden>
+      <div class="kpis" id="kpis"></div>
+      <div class="radares" id="radares" role="presentation"></div>
+      <figure class="grafico calor">
+        <figcaption class="titulo"><span data-t="calor_tactica">Táctica × defensa</span><span class="nota" data-t="t_exito">éxito de la estafa</span></figcaption>
+        <div class="lienzo" id="calor-tactica"></div>
+      </figure>
+      <figure class="grafico calor">
+        <figcaption class="titulo"><span data-t="calor_modelo">Modelo × idioma</span><span class="nota" data-t="modelo_nota">Sin defensa</span></figcaption>
+        <div class="lienzo" id="calor-modelo"></div>
+      </figure>
+    </section>
+
+    <section class="vista" id="vista-probar" data-vista="probar" aria-label="Pruébalo" hidden>
+      <form class="probar" onsubmit="return false">
+        <h2 class="titulo"><span class="ms" aria-hidden="true">science</span><span data-t="p_titulo">Intenta estafarlo</span><span class="nota">#21</span></h2>
+        <label class="fila-campo"><span data-t="p_de">De</span><input type="text" disabled data-ph="p_de_ph"></label>
+        <label class="fila-campo"><span data-t="p_asunto">Asunto</span><input type="text" disabled data-ph="p_asunto_ph"></label>
+        <label class="fila-campo alto"><span data-t="p_cuerpo">Cuerpo</span><textarea disabled rows="6"></textarea></label>
+        <div class="fila-acciones"><span class="nota" data-t="p_pronto">Próximamente</span><button type="submit" class="boton principal" disabled><span class="ms" aria-hidden="true">send</span><span data-t="p_enviar">Enviar al agente</span></button></div>
+      </form>
+    </section>
   </main>
 
-  <section class="analisis" aria-label="Resultados">
-    <div class="radares" id="radares"></div>
-    <figure class="grafico calor">
-      <figcaption class="titulo"><span data-t="calor_tactica">Táctica × defensa</span></figcaption>
-      <div class="lienzo" id="calor-tactica"></div>
-    </figure>
-    <figure class="grafico calor">
-      <figcaption class="titulo"><span data-t="calor_modelo">Modelo × idioma</span></figcaption>
-      <div class="lienzo" id="calor-modelo"></div>
-    </figure>
-  </section>
-
-  <aside class="alerta" id="alerta" role="alertdialog" aria-modal="false" aria-labelledby="alerta-titulo" hidden></aside>
+  <aside class="panel-lateral" id="panel-correo" role="dialog" aria-modal="false" aria-labelledby="pc-asunto" hidden></aside>
   <div class="ayuda" id="ayuda" role="tooltip" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
