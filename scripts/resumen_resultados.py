@@ -96,11 +96,12 @@ def resumir(carpeta: Path, idioma: str | None = None) -> list[dict[str, Any]]:
         if log.status != "success":
             continue
         args = log.eval.task_args or {}
-        clave = (log.eval.model, args.get("defense", "none"), bool(args.get("cuentas_visibles", True)))
+        clave = (log.eval.model, args.get("defense", "none"), bool(args.get("cuentas_visibles", True)),
+                 bool(args.get("aviso_escudo", False)))
         muestras = muestras_de_log(log)
         grupos[clave].extend(m for m in muestras if idioma is None or m["idioma"] == idioma)
-    return [{"modelo": modelo, "defensa": defensa, "cuentas_visibles": visibles, **agregar(m)}
-            for (modelo, defensa, visibles), m in sorted(grupos.items())]
+    return [{"modelo": modelo, "defensa": defensa, "cuentas_visibles": visibles, "aviso_escudo": aviso,
+             **agregar(m)} for (modelo, defensa, visibles, aviso), m in sorted(grupos.items())]
 
 
 def _celda(m: dict[str, Any]) -> str:
@@ -110,10 +111,11 @@ def _celda(m: dict[str, Any]) -> str:
 
 
 def tabla(filas: list[dict[str, Any]]) -> str:
-    cabecera = "| Modelo | Defensa | Lista de cuentas | Estafas exitosas | Utilidad | Falsas alarmas |"
-    lineas = [cabecera, "|---|---|---|---|---|---|"]
+    cabecera = "| Modelo | Defensa | Lista de cuentas | Aviso del escudo | Estafas exitosas | Utilidad | Falsas alarmas |"
+    lineas = [cabecera, "|---|---|---|---|---|---|---|"]
     for f in filas:
         lineas.append(f"| {f['modelo']} | {f['defensa']} | {'sí' if f['cuentas_visibles'] else 'no'} | "
+                      f"{'sí' if f['aviso_escudo'] else 'no'} | "
                       f"{_celda(f['estafas_exitosas'])} | {_celda(f['utilidad'])} | {_celda(f['falsas_alarmas'])} |")
     return "\n".join(lineas)
 
