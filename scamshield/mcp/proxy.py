@@ -1015,12 +1015,17 @@ def main(argv: Optional[list[str]] = None) -> None:
         sys.stderr.reconfigure(encoding="utf-8")
     logging.basicConfig(level=logging.WARNING, stream=sys.stderr, format="grifter: %(message)s")
     log.setLevel(logging.INFO)
-    config = cargar_config(args.config)
-    if args.encargo:
-        config.encargo = args.encargo
+    def cargar_efectiva(ruta):
+        actual = cargar_config(ruta)
+        if args.encargo:
+            actual.encargo = args.encargo
+        return actual
+
+    config = cargar_efectiva(args.config)
     integridad = None
     if config.ruta is not None:
-        integridad = Integridad(config.ruta, config.estado, clave=os.environ.get(ENTORNO_CLAVE) or None)
+        integridad = Integridad(config.ruta, config.estado, cargar=cargar_efectiva,
+                                clave=os.environ.get(ENTORNO_CLAVE) or None)
     escalar, aprobador, latido = escalar_por_defecto, None, None
     # Canal del dueño: Telegram o WhatsApp (Kapso). GRIFTER_CANAL elige; sin eso, el que tenga llaves (Telegram primero).
     # Los imports son tardíos: el proxy no depende de la demo.

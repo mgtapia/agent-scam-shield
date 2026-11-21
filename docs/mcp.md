@@ -40,6 +40,8 @@ La capa 2 se puede apagar con `capas: {capa2: false}`, pero es un cambio de pol�
 
 **Conexiones aprobadas.** Antes de iniciar procesos stdio o enviar cabeceras HTTP, Grifter verifica también que toda la configuración efectiva en memoria coincida con el registro aprobado, incluida su firma HMAC si está configurada. Si arrancó con un YAML alterado y después restauras el aprobado, debes reiniciar el proxy: restaurar el archivo no autoriza la configuración anterior que quedó en memoria. Una primera aprobación permite reintentar con otro listado de herramientas; aprobar servidores distintos cuando ya existen conexiones exige reiniciar. Los dominios oficiales revocados se aplican desde la aprobación. La ruta de `registro_aprobaciones` forma parte de la huella y el quórum usa la ruta previamente aprobada mientras haya un cambio pendiente.
 
+El valor de `--encargo`, si lo usas, también forma parte de la política efectiva: un valor distinto del aprobado pide una nueva confirmación y se conserva después de aprobarlo.
+
 WhatsApp no tiene un aprobador de política individual; para inicializar una instalación que solo usa WhatsApp, o una demo sin canal del dueño, el dueño debe revisar el YAML y aprobarlo explícitamente desde una terminal de confianza. Usa el mismo entorno `GRIFTER_CLAVE_ESTADO` que tendrá el proxy y ajusta la ruta de configuración si corresponde:
 
 ```bash

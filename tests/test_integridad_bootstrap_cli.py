@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from contextlib import AsyncExitStack
 from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
@@ -344,3 +345,48 @@ def test_cli_entrega_dueno_y_factory_a_correr_sin_usar_quorum_no_aprobado(tmp_pa
     else:
         assert quorum is None and modulo.quorums == [] and factory() is None
         assert not integridad.ruta_estado.exists()
+
+
+@pytest.mark.parametrize("preaprobada", [False, True])
+def test_cli_encargo_necesita_aprobacion_y_se_conserva_al_verificar_las_conexiones(tmp_path, monkeypatch,
+                                                                              preaprobada):
+    ruta = tmp_path / "grifter.yaml"
+    config = _escribir(ruta, aprobadores=[], quorum=1, encargo="El encargo del YAML")
+    yaml_original = ruta.read_bytes()
+    clave = "clave-hmac-ficticia"
+    integridad_inicial = Integridad(ruta, clave=clave)
+    if preaprobada:
+        integridad_inicial.aprobar(politica_canonica(config), "dueño")
+    estado_original = integridad_inicial.ruta_estado.read_bytes() if preaprobada else None
+    encargo_cli = "Paga la factura que autorizó el dueño por CLI"
+    dueno, recibidos = Dueno(), []
+    monkeypatch.setenv("GRIFTER_CANAL", "telegram")
+    monkeypatch.setenv("GRIFTER_CLAVE_ESTADO", clave)
+    monkeypatch.setattr(alerta_telegram, "ganchos_desde_entorno", lambda entorno: SimpleNamespace(
+        escalar=lambda alerta: False, aprobador=dueno, latido=None, canal=object()))
+
+    async def correr(config, escalar, integridad, aprobador, latido, quorum, crear_quorum):
+        recibidos.append(config)
+        assert config.encargo == integridad.leer_actual()[0].encargo == encargo_cli
+        grifter = proxy.Grifter(config, escalar, integridad, aprobador, latido, quorum, crear_quorum)
+        async with AsyncExitStack() as pila:
+            await grifter.conectar(pila)
+            assert not grifter._conexion_iniciada and not grifter._reinicio_necesario
+            assert len(dueno.pedidos) == 1
+            assert "~ el encargo del dueño cambió" in dueno.pedidos[0].lineas
+            if preaprobada:
+                assert integridad.ruta_estado.read_bytes() == estado_original
+            else:
+                assert integridad.estado() is None
+
+            dueno.respuesta = True
+            await grifter.conectar(pila)
+            assert grifter._conexion_iniciada and not grifter._reinicio_necesario
+            assert await grifter._politica_pendiente(antes_de_conectar=True) == ""
+            assert grifter.config.encargo == grifter.guardia.encargo == encargo_cli
+            assert integridad.estado().politica["encargo"] == encargo_cli
+            assert integridad.cambio() is None and len(dueno.pedidos) == 1
+
+    monkeypatch.setattr(proxy, "correr", correr)
+    proxy.main(["--config", str(ruta), "--encargo", encargo_cli])
+    assert len(recibidos) == 1 and ruta.read_bytes() == yaml_original
