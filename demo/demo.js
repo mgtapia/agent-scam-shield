@@ -510,7 +510,7 @@
     BANDAS.forEach(([a, b], d) => {
       let s = 0;
       for (let k = a; k < b; k++) s += espectro[k];
-      const objetivo = Math.min(1, (s / (b - a) / 255) * 1.5);
+      const objetivo = Math.min(1, (s / (b - a) / 255) * 1.1);
       nivel[d] = nivel[d] * 0.6 + objetivo * 0.4;
     });
     return nivel;
