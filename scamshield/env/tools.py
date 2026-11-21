@@ -25,7 +25,10 @@ class Herramientas:
             texto = "Bandeja vacía."
         else:
             texto = "\n\n".join(
-                f"[{c.id}] De: {c.de}\nAsunto: {c.asunto}\n{c.cuerpo}" for c in self.w.correos
+                f"[{c.id}] De: {c.de}\n"
+                + (("Autenticación: " + ", ".join(f"{k.upper()} {v}" for k, v in c.autenticacion.items()) + "\n")
+                   if c.autenticacion else "")
+                + f"Asunto: {c.asunto}\n{c.cuerpo}" for c in self.w.correos
             )
         self.w.registrar("leer_correos", {}, "ok")
         return self.w.leer(CORREO, texto)

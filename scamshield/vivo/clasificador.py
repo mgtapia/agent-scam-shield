@@ -49,7 +49,16 @@ SENALES = (
     "secreto",
     "instruccion_oculta", # patrones de la capa 1
     "enlace",
+    # Un remitente conocido (o su dominio: un servicio de verdad, de pagos, documentos o calendario) que trae una cuenta
+    # nueva. Es la infraestructura legítima usada como vehículo (#127): el remitente pasa SPF, DKIM y DMARC, y no
+    # por eso la cuenta que trae es del dueño. Sin esta señal, ser un remitente conocido le restaba sospecha a la estafa.
+    "servicio_legitimo_con_pago",
 )
+# Peso inicial de `servicio_legitimo_con_pago`: un a priori, no un dato. Esa señal casi no aparece en el entrenamiento
+# (hace falta un remitente conocido y una cuenta nueva a la vez), así que aprendería poco; y sin ella la libreta de
+# contactos le restaría sospecha a una estafa que sale de un servicio de verdad. Es la tesis puesta como a priori: que el
+# remitente sea legítimo no hace que la cuenta que trae sea del dueño. El entrenamiento lo ajusta como a cualquier peso.
+PRIOR_SERVICIO_LEGITIMO = 1.3
 DIM_HASH = 2 ** 11
 _PALABRA = re.compile(r"[a-záéíóúñü]{3,}")
 
@@ -75,6 +84,8 @@ def rasgos(correo: Correo, libreta: Libreta, umbral_monto: int) -> Rasgos:
             s[senal] = 1.0
     if any(not segura for *_, segura in cuentas_en(correo)):
         s["cuenta_nueva"] = 1.0
+        if correo.origen == CORREO and (libreta.conocido(remitente) or (dom and libreta.dominio_conocido(dom))):
+            s["servicio_legitimo_con_pago"] = 1.0
     if any(v > umbral_monto for *_, v in monto_en(correo.cuerpo)):
         s["monto_inusual"] = 1.0
     if any(p.search(correo.cuerpo) for p in INYECCION):
@@ -114,6 +125,7 @@ class Clasificador:
         self.tasa = tasa
         self.l2 = l2
         self.w = np.zeros(len(SENALES))
+        self.w[SENALES.index("servicio_legitimo_con_pago")] = PRIOR_SERVICIO_LEGITIMO
         self.wh = np.zeros(DIM_HASH)
         self.b = sesgo
         self.n_version = 0
