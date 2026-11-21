@@ -122,3 +122,13 @@ def test_corrida_real_con_mockllm(entorno, tmp_path, capsys):
     salida = capsys.readouterr().out
     assert "layer2" in salida and "mockllm/model" in salida and "success" in salida
     assert list(tmp_path.glob("*.eval")), "la corrida no dejó logs en log_dir"
+
+
+def test_groq_corre_con_una_conexion_y_reintentos_por_su_limite_de_tokens():
+    from scripts.correr_matriz import opciones_de_proveedor
+
+    assert opciones_de_proveedor("groq/openai/gpt-oss-20b", 4) == {"max_connections": 1, "retry_on_error": 4}
+    assert opciones_de_proveedor("groq/openai/gpt-oss-20b", None)["max_connections"] == 1
+    # Los demás proveedores no cambian.
+    assert opciones_de_proveedor("anthropic/claude-haiku-5-5", 4) == {"max_connections": 4}
+    assert opciones_de_proveedor("google/gemini-3.5-flash", None) == {"max_connections": None}
