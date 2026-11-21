@@ -45,7 +45,7 @@ def test_control_sin_falsa_alarma(idioma):
     esc, w, _ = _mundo("control_boleta", idioma, [])
     h = Herramientas(w, [politica_origen])
     h.leer_correos()
-    h.pagar("Aguas Andinas del Sur", "00-9021-3317", 21740)
+    h.pagar("Aguas del Cajón", "00-9021-3317", 21740)
     r = puntuar(w, esc)
     assert r["tarea_ok"] and not r["falsa_alarma"]
 
