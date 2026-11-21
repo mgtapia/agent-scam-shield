@@ -28,6 +28,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Mapping, Optional
 
 from demo.notificar import Alerta, registrar_canal
+from scamshield.defenses.layer2 import visible
 
 log = logging.getLogger("scamshield.demo.telegram")
 
@@ -39,7 +40,8 @@ Etiquetar = Callable[[dict[str, Any]], Any]
 TEXTOS = {
     "es": {
         "titulo": "Grifter retuvo un pago",
-        "a": "A", "cuenta": "Cuenta", "inscrita": "Inscrita", "de": "Apareció en",
+        "a": "Dice llamarse", "cuenta": "Cuenta", "inscrita": "Inscrita", "de": "Apareció en",
+        "titular": "Titular según el banco",
         "pagar_inscrita": "Pagar a mi cuenta inscrita", "no_pagar": "No pagar", "pagar_igual": "Pagar igual",
         "sigue": "Pagar igual a la cuenta nueva", "cancelar": "Cancelar",
         "confirma": "¿Seguro? Es una cuenta que no está inscrita.",
@@ -48,7 +50,8 @@ TEXTOS = {
     },
     "en": {
         "titulo": "Grifter held a payment",
-        "a": "To", "cuenta": "Account", "inscrita": "Registered", "de": "Appeared in",
+        "a": "Says its name is", "cuenta": "Account", "inscrita": "Registered", "de": "Appeared in",
+        "titular": "Account holder per the bank",
         "pagar_inscrita": "Pay my registered account", "no_pagar": "Don't pay", "pagar_igual": "Pay anyway",
         "sigue": "Pay anyway to the new account", "cancelar": "Cancel",
         "confirma": "Sure? This account is not registered.",
@@ -72,16 +75,32 @@ def _pesos(monto: Any) -> str:
         return str(monto or "")
 
 
+LARGO_NOMBRE, LARGO_CUENTA, LARGO_ORIGEN, LARGO_MOTIVO = 60, 40, 60, 240
+
+
+def _ajeno(valor: Any, largo: int) -> str:
+    """Lo que escribió el estafador (nombre, cuenta, dónde apareció): una sola línea, sin caracteres de control ni
+    de dirección, cortada y entre comillas, para que no pueda abrir una línea que parezca de Grifter."""
+    limpio = visible(valor, largo).replace("«", "‹").replace("»", "›")   # sus propias comillas no pueden cerrar las nuestras
+    return f"«{limpio}»"
+
+
 def texto_de_alerta(alerta: Alerta) -> str:
+    """El aviso al dueño. Cada línea la escribe Grifter, salvo lo que va entre « » y después de «dice llamarse»: eso
+    es del estafador, va en una sola línea y limpio (`visible`). El motivo de la retención va primero y, si el banco dio
+    el titular de la cuenta, su nombre va aparte: es el dato que el dueño puede creerle a la alerta."""
     t = TEXTOS.get(alerta.get("idioma"), TEXTOS["es"])
-    lineas = [t["titulo"], f"{t['a']}: {alerta.get('destinatario', '')}  {_pesos(alerta.get('monto'))}",
-              f"{t['cuenta']}: {alerta.get('cuenta', '')}"]
-    if alerta.get("dominio"):
-        lineas.append(f"{t['de']}: {alerta['dominio']}")
-    if alerta.get("cuenta_inscrita_numero"):
-        lineas.append(f"{t['inscrita']}: {alerta['cuenta_inscrita_numero']}")
+    lineas = [t["titulo"]]
     if alerta.get("motivo"):
-        lineas.append(str(alerta["motivo"]))
+        lineas.append(visible(alerta["motivo"], LARGO_MOTIVO))
+    if alerta.get("titular"):
+        lineas.append(f"{t['titular']}: {visible(alerta['titular'], LARGO_NOMBRE)}")
+    lineas.append(f"{t['a']}: {_ajeno(alerta.get('destinatario', ''), LARGO_NOMBRE)}  {_pesos(alerta.get('monto'))}".rstrip())
+    lineas.append(f"{t['cuenta']}: {_ajeno(alerta.get('cuenta', ''), LARGO_CUENTA)}")
+    if alerta.get("dominio"):
+        lineas.append(f"{t['de']}: {_ajeno(alerta['dominio'], LARGO_ORIGEN)}")
+    if alerta.get("cuenta_inscrita_numero"):
+        lineas.append(f"{t['inscrita']}: {visible(alerta['cuenta_inscrita_numero'], LARGO_CUENTA)}")
     return "\n".join(lineas)
 
 
