@@ -9,6 +9,7 @@ Uso:
     python scripts/atacante_adaptativo.py --dry-run
     python scripts/atacante_adaptativo.py --victima google/gemini-3.5-flash --limit 2 --rondas 2
     python scripts/atacante_adaptativo.py --victima anthropic/claude-haiku-5-5 --rondas 3
+    python scripts/atacante_adaptativo.py --atacante anthropic/claude-fable-5-2 --dry-run   # costo estimado
 """
 from __future__ import annotations
 
@@ -52,6 +53,14 @@ def _cargar_env(ruta: str | None) -> None:
             return
 
 
+def _atacante_por_defecto(entorno: dict[str, str]) -> str:
+    """Para --dry-run: el atacante que se usaría, o el primero de la lista si no hay ninguna llave."""
+    try:
+        return elegir_atacante(entorno)
+    except SystemExit:
+        return ATACANTES[0][1]
+
+
 def elegir_atacante(entorno: dict[str, str]) -> str:
     for llave, modelo in ATACANTES:
         if (entorno.get(llave) or "").strip():
@@ -72,6 +81,13 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--realismo-min", type=int, default=5, help="Realismo mínimo (1 a 10). Por defecto %(default)s.")
     p.add_argument("--max-connections", type=int, default=2, help="Llamadas simultáneas. Por defecto %(default)s.")
     p.add_argument("--retry-on-error", type=int, help="Reintentos de un episodio de la víctima que falla (cuota, red).")
+    p.add_argument("--tope-usd", type=float, help="Corta al llegar a este gasto del atacante, el crítico y el juez, "
+                   "medido con el uso real de la API. Por defecto US$5 si el atacante cuesta; sin tope si es gratis.")
+    p.add_argument("--precio-entrada", type=float, help="USD por millón de tokens de entrada del atacante (por defecto, "
+                   "el de la tabla de scamshield/attacker/costo.py).")
+    p.add_argument("--precio-salida", type=float, help="USD por millón de tokens de salida del atacante.")
+    p.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"],
+                   help="Esfuerzo de razonamiento de un atacante Claude 5.x. Por defecto %(default)s.")
     p.add_argument("--sin-cache", action="store_true", help="No reusa respuestas guardadas en caché.")
     p.add_argument("--salida", help="JSONL de salida. Por defecto results/raw/atacante_<fecha>.jsonl.")
     p.add_argument("--log-dir", default=str(RAIZ / "logs" / "atacante"))
@@ -100,11 +116,27 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("No hay estafas atacables con esos filtros.")
 
     max_ep = len(estafas) * len(defensas) * (args.rondas + 1)
-    llamadas = len(estafas) * len(defensas) * args.rondas * 3
     print(f"Plan: {len(estafas)} estafas × {len(defensas)} defensas × {args.rondas + 1} rondas "
           f"(víctima: {args.victima}).")
     print(f"  Episodios de la víctima: hasta {max_ep} (una estafa que cae deja de atacarse).")
-    print(f"  Llamadas del atacante, crítico y juez: hasta ~{llamadas}.")
+    from scamshield.attacker.costo import TOPE_USD, estimar, piensa_siempre, precio_de
+
+    nombre_atacante = args.atacante or (elegir_atacante(os.environ) if not args.dry_run else _atacante_por_defecto(os.environ))
+    p_ent, p_sal = precio_de(nombre_atacante)
+    p_ent = p_ent if args.precio_entrada is None else args.precio_entrada
+    p_sal = p_sal if args.precio_salida is None else args.precio_salida
+    tope = args.tope_usd if args.tope_usd is not None else (TOPE_USD if p_sal > 0 else None)
+    est = estimar(len(estafas), len(defensas), args.rondas, p_ent, p_sal)
+    print(f"  Atacante: {nombre_atacante}" + (" (piensa siempre: sin temperature, effort " + args.effort + ")"
+                                              if piensa_siempre(nombre_atacante) else ""))
+    if p_sal > 0:
+        print(f"  Costo estimado del atacante (US${p_ent:g} / US${p_sal:g} por millón de tokens): "
+              f"~US${est['usd_tipico']:.2f} típico, hasta US${est['usd_peor_caso']:.2f} en el peor caso "
+              f"({est['llamadas']} llamadas, ~{est['tokens_entrada'] / 1e3:.0f}k tokens de entrada).")
+        print(f"  Tope: US${tope:.2f} " + ("(la corrida se corta sola al llegar)" if tope is not None else "") +
+              (f". OJO: el peor caso pasa el tope." if tope is not None and est["usd_peor_caso"] > tope else ""))
+    else:
+        print(f"  Costo del atacante: US$0 (capa gratis; el tope de gasto no aplica). Hasta ~{est['llamadas']} llamadas.")
     if args.dry_run:
         for e in estafas:
             print(f"  - {e['id']}__{e['idioma']}")
@@ -112,8 +144,8 @@ def main(argv: list[str] | None = None) -> int:
 
     from inspect_ai.model import GenerateConfig, get_model
     from scamshield.attacker.bucle import Config, correr_atacante
+    from scamshield.attacker.costo import Gasto
 
-    nombre_atacante = args.atacante or elegir_atacante(os.environ)
     salida = Path(args.salida) if args.salida else RAIZ / "results" / "raw" / (
         f"atacante_{datetime.now():%Y%m%d_%H%M%S}.jsonl")
     cfg = Config(
@@ -122,6 +154,7 @@ def main(argv: list[str] | None = None) -> int:
         defensas=defensas, rondas=args.rondas, realismo_min=args.realismo_min,
         max_episodios=args.max_episodios, cache=not args.sin_cache, retry_on_error=args.retry_on_error, log_dir=args.log_dir, salida=salida,
         nombre_victima=args.victima,
+        gasto=Gasto(tope_usd=tope, precio_entrada=p_ent, precio_salida=p_sal), effort=args.effort,
         al_terminar_ronda=lambda r, filas: print(
             f"Ronda {r}: {len(filas)} episodios, {sum(f['exito'] for f in filas)} estafas cayeron, "
             f"{sum(f['intento'] and not f['exito'] for f in filas)} intentadas y frenadas."),
@@ -130,6 +163,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\nFilas en {salida}")
     print(tabla_markdown(curvas(res["filas"])))
     print(f"Episodios: {res['episodios']}. Tokens de la víctima: {res['tokens']}")
+    g = res["gasto"]
+    print(f"Atacante: {g['llamadas']} llamadas, {g['tokens_entrada']} tokens de entrada y {g['tokens_salida']} de salida, "
+          f"gasto estimado US${g['gastado_usd']:.3f}" + (f" de un tope de US${g['tope_usd']:.2f}" if g["tope_usd"] else "")
+          + f". El atacante se negó {g['rechazos']} veces.")
     return 0
 
 

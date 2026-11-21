@@ -43,11 +43,12 @@ def tabla(c: dict) -> str:
                 lineas.append(f"| {modelo} | {NOMBRES.get(d, d)} | {v['n']} | {r} | "
                               f"{v['exitos'][r]}/{v['n']} = {_pct(v['ic_exitos'][r])} | "
                               f"{v['intentos'][r]}/{v['n']} = {_pct(v['ic_intentos'][r])} |")
-    lineas += ["", "| Modelo | Defensa | Reescrituras que llegaron a la víctima | Reescrituras perdidas (cuota, validación) |",
-               "|---|---|---|---|"]
+    lineas += ["", "| Modelo | Defensa | Reescrituras que llegaron a la víctima | Reescrituras perdidas (cuota, validación) "
+               "| El atacante se negó |", "|---|---|---|---|---|"]
     for modelo, por_def in c.items():
         for d, v in por_def.items():
-            lineas.append(f"| {modelo} | {NOMBRES.get(d, d)} | {v['reescrituras_validas']} | {v['reescrituras_perdidas']} |")
+            lineas.append(f"| {modelo} | {NOMBRES.get(d, d)} | {v['reescrituras_validas']} | {v['reescrituras_perdidas']} "
+                          f"| {v.get('rechazos_atacante', 0)} |")
     return "\n".join(lineas)
 
 
