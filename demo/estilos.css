@@ -240,7 +240,7 @@ body:not([data-vista="operaciones"]):not([data-vista="vivo"]) .solo-flujo { disp
 .franja {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
   border: var(--linea);
   background: var(--superficie);
 }
@@ -311,17 +311,25 @@ body:not([data-vista="operaciones"]):not([data-vista="vivo"]) .solo-flujo { disp
 /* Operaciones: el enlace al episodio real del correo que se está leyendo */
 .lec-ep { display: inline-flex; align-items: center; gap: var(--e-1); color: var(--texto); font-family: var(--sans); text-decoration: underline; text-decoration-color: var(--borde); text-underline-offset: 4px; background: none; border: 0; padding: 0; cursor: pointer; }
 .lec-ep .ms { color: var(--texto-2); }
+/* Un escenario sin corrida de su modelo en un carril: ese carril no se dibuja y los demás se ensanchan */
+#vista-vivo[data-carriles="2"] .carril { grid-column: span 6; }
+#vista-vivo[data-carriles="1"] .carril { grid-column: 1 / -1; }
+.franja .celda-nota { flex-wrap: wrap; }
 /* Sin episodio en el escenario elegido: la lista de los que sí tienen */
 .ep-lista { grid-column: 1 / -1; border: var(--linea); background: var(--superficie); }
 .ep-lista .titulo { flex-wrap: wrap; }
 .ep-lista li + li { border-top: var(--linea); }
-.ep-item { display: grid; grid-template-columns: 20px minmax(0, 3fr) minmax(0, 6fr) auto 20px; align-items: center; gap: var(--e-2);
+.ep-item { display: grid; grid-template-columns: 20px minmax(0, 7fr) minmax(0, 3fr) auto 20px; align-items: center; gap: var(--e-2);
   width: 100%; min-height: 48px; padding: 0 var(--e-2); border: 0; background: transparent; text-align: left; cursor: pointer;
   transition: background var(--dur) ease-out; }
 .ep-item:hover { background: var(--borde); }
 .ep-item .ms { color: var(--texto-2); }
 .ep-nombre { font-weight: var(--p-fuerte); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ep-desc { color: var(--texto-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 899px) {
+  #vista-vivo[data-carriles] .carril { grid-column: 1 / -1; }
+  .franja .celda-nota { grid-column: 1 / -1; border-left: 0; border-top: var(--linea); }
+}
 @media (max-width: 599px) {
   .ep-item { grid-template-columns: 20px minmax(0, 1fr) auto; }
   .ep-item .ep-desc, .ep-item > .ms:last-child { display: none; }

@@ -348,7 +348,7 @@ def generar_logs_mock(dir_logs: Path, defensas=("none", "layer1", "layer2"),
     return rutas
 
 
-# --- Episodios reales elegidos: uno por carril, el mismo modelo cuando se puede ---
+# --- Episodios reales elegidos: uno por carril, siempre del mismo modelo ---
 
 # Cada configuración va a un carril de la demo: «Sin defensa», «Firewall» o «Grifter».
 CARRIL = {"none": "none", "layer1": "layer1", "layer2": "layer2", "both": "layer2", "layer2_approver": "layer2"}
@@ -363,8 +363,8 @@ def _rango_modelo(modelo: str) -> int:
 def elegir(rutas: list[Path], escenarios: list[str]) -> list[dict[str, Any]]:
     """Un episodio real por carril para cada «escenario__idioma» pedido.
 
-    - Sin defensa: el modelo que cayó, si alguno cayó (es lo que el carril muestra), y si no el preferido.
-    - Grifter y Firewall: el mismo modelo que Sin defensa si tiene esa corrida; si no, el preferido.
+    - Un solo modelo por escenario, el mismo en todos los carriles: el que tiene corrida sin defensa y con Grifter,
+      y entre esos el que cayó sin defensa. Un carril sin corrida de ese modelo queda fuera, no se rellena con otro.
     - Dentro del modelo, la primera repetición que muestra el resultado (cayó, o bloqueó) y si no la primera.
     Cada episodio lleva `muestras`: cuántas repeticiones hay de ese modelo y esa defensa y en cuántas cayó, para
     que la página no presente un caso como si fuera la regla.
@@ -379,31 +379,34 @@ def elegir(rutas: list[Path], escenarios: list[str]) -> list[dict[str, Any]]:
             if clave not in pedidos or not sample.scores:
                 continue
             ep = episodio(log, sample)
-            carril = CARRIL.get(ep["defensa"])
-            if not carril:
+            if ep["defensa"] not in CARRIL:
                 continue
-            grupos.setdefault((esc["id"], esc["idioma"]), {}).setdefault((ep["modelo"], carril), []).append(ep)
+            grupos.setdefault((esc["id"], esc["idioma"]), {}).setdefault((ep["modelo"], ep["defensa"]), []).append(ep)
 
+    cayo = lambda e: e["veredicto"]["cayo"]  # noqa: E731
+    bloqueo = lambda e: e["veredicto"]["bloqueos"] > 0  # noqa: E731
     elegidos = []
     for (escenario, idioma), por in sorted(grupos.items()):
-        def mejor(carril: str, modelo: str | None, interesa) -> tuple[str, list[dict[str, Any]]] | None:
-            opciones = [(m, eps) for (m, c), eps in por.items() if c == carril]
-            if not opciones:
-                return None
-            igual = [o for o in opciones if o[0] == modelo]
-            if igual:
-                return igual[0]
-            return sorted(opciones, key=lambda o: (not any(interesa(e) for e in o[1]), _rango_modelo(o[0])))[0]
+        # Un solo modelo por escenario: comparar carriles de modelos distintos no prueba nada. Primero el que tiene
+        # corrida sin defensa y con Grifter; entre esos, el que cayó sin defensa; después, el más capaz.
+        modelos = {m for m, _ in por}
 
-        cayo = lambda e: e["veredicto"]["cayo"]  # noqa: E731
-        bloqueo = lambda e: e["veredicto"]["bloqueos"] > 0  # noqa: E731
-        base = mejor("none", None, cayo)
-        modelo = base[0] if base else None
+        def corrida(m: str, carril: str) -> list[dict[str, Any]] | None:
+            # Las repeticiones de una sola configuración: para Grifter, la capa 2 pura antes que con el dueño.
+            for d in [d for d, c in CARRIL.items() if c == carril]:
+                if por.get((m, d)):
+                    return por[(m, d)]
+            return None
+
+        def rango(m: str) -> tuple[bool, bool, int]:
+            par = bool(corrida(m, "none") and corrida(m, "layer2"))
+            cae = any(cayo(e) for e in por.get((m, "none"), []))
+            return (not par, not cae, _rango_modelo(m))
+        modelo = min(modelos, key=rango)
         for carril, interesa in (("none", cayo), ("layer1", bloqueo), ("layer2", bloqueo)):
-            o = base if carril == "none" else mejor(carril, modelo, interesa)
-            if not o:
+            eps = corrida(modelo, carril)
+            if not eps:
                 continue
-            eps = o[1]
             ep = next((e for e in eps if interesa(e)), eps[0])
             ep = {**ep, "id": f"{escenario}__{idioma}__{carril}",
                   "muestras": {"total": len(eps), "cayeron": sum(1 for e in eps if e["veredicto"]["cayo"])}}

@@ -132,6 +132,7 @@ Object.assign(T.es, {
   cn_sin_corrida: "Sin corrida con esta defensa", cn_elegir: "Este escenario no tiene episodio exportado. Estos sí:",
   cn_episodios: "Episodios con corrida real", cn_carriles: "{n} carriles",
   ver_episodio: "Ver el episodio", ayuda_ver_episodio: "Abre en Episodios el episodio real de este escenario",
+  cn_sin_corrida_con: "sin corrida con {d}", ayuda_sin_corrida_con: "En logs/ no hay una corrida de {m} con {d} para este escenario: el carril no se rellena con otro modelo",
 });
 Object.assign(T.en, {
   cn_pidio: "asked", cn_leyo: "read", cn_penso: "thought", cn_intento: "tried", cn_hizo: "did", cn_dueno: "owner",
@@ -144,6 +145,7 @@ Object.assign(T.en, {
   cn_sin_corrida: "No run with this defense", cn_elegir: "This scenario has no exported episode. These do:",
   cn_episodios: "Episodes with a real run", cn_carriles: "{n} lanes",
   ver_episodio: "See the episode", ayuda_ver_episodio: "Opens the real episode of this scenario in Episodes",
+  cn_sin_corrida_con: "no run with {d}", ayuda_sin_corrida_con: "logs/ has no run of {m} with {d} for this scenario: the lane is not filled with another model",
 });
 
 const estado = {
@@ -292,7 +294,15 @@ function pintarFranja() {
     <div><span class="rotulo">${esc(t("monto"))}</span><span class="grande">${monto === null ? "—" : plata(monto)}</span></div>
     <div class="celda-inscrita" data-cuenta="${norm(num)}">${ms("account_balance")}${nombre
       ? `<span class="c-2">${esc(nombre)}</span><span class="dato">${esc(num)}</span><span class="tag">${esc(t("inscrita"))}</span>`
-      : `<span class="c-2">${esc(t("sin_inscritas"))}</span>`}</div>`;
+      : `<span class="c-2">${esc(t("sin_inscritas"))}</span>`}</div>${notaSinCorrida(ep)}`;
+}
+
+function notaSinCorrida(ep) {
+  const faltan = CARRILES.filter((c) => !estado.carriles[c.clave]?.ep);
+  if (!faltan.length) return "";
+  const m = String(ep.modelo || "").split("/").pop();
+  const nombre = (c) => t(c.escudo ? "cn_carril_layer2" : `d_${c.clave}`);
+  return `<div class="celda-nota">${faltan.map((c) => `<span class="tag" data-ayuda="${esc(t("ayuda_sin_corrida_con", { m, d: nombre(c) }))}">${esc(t("cn_sin_corrida_con", { d: c.escudo ? nombre(c) : nombre(c).toLowerCase() }))}</span>`).join("")}</div>`;
 }
 
 // --- Correos: una línea por correo; el cuerpo, en el panel lateral ---
@@ -376,6 +386,14 @@ function etiquetaDeOrigen(ep) {
 }
 
 // Los escenarios con episodio en el idioma actual, para no dejar nunca la vista vacía.
+function tituloEscenario(id) {
+  const ep = Object.values(episodios()).find((e) => e.escenario === id && e.idioma === estado.idioma)
+    || Object.values(episodios()).find((e) => e.escenario === id);
+  const frase = String(ep?.descripcion || "").split(/(?<=[.:;])\s/)[0].replace(/[.:;]$/, "").trim();
+  if (!frase) return String(id).replace(/^demo_/, "").replaceAll("_", " ");
+  return frase.length > 72 ? `${frase.slice(0, 70).trimEnd()}…` : frase;
+}
+
 function escenariosConEpisodio() {
   const por = new Map();
   for (const ep of Object.values(episodios())) {
@@ -394,8 +412,8 @@ function pintarListaEpisodios() {
   $("#carriles").innerHTML = `<section class="ep-lista" aria-labelledby="t-ep-lista">
     <h2 class="titulo" id="t-ep-lista">${ms("replay")}<span>${esc(t("cn_episodios"))}</span><span class="nota">${esc(t("cn_elegir"))}</span></h2>
     <ol>${lista.map((x) => `<li><button type="button" class="ep-item" data-escenario="${esc(x.escenario)}">
-      ${ms(x.cayo ? "gpp_bad" : "shield")}<span class="ep-nombre">${esc(x.escenario.replace(/^demo_/, "").replaceAll("_", " "))}</span>
-      <span class="ep-desc">${esc(x.descripcion || "")}</span>
+      ${ms(x.cayo ? "gpp_bad" : "shield")}<span class="ep-nombre">${esc(tituloEscenario(x.escenario))}</span>
+      <span class="ep-desc dato">${esc(x.escenario)}</span>
       <span class="tag${x.real ? "" : " prueba"}">${esc(x.real ? t("cn_carriles", { n: x.carriles }) : t("cn_guionado"))}</span>${ms("chevron_right")}</button></li>`).join("")}</ol></section>`;
 }
 document.addEventListener("click", (e) => {
@@ -409,7 +427,9 @@ function pintarCarriles() {
   $("#franja").hidden = !hay;
   $("#vista-vivo .correos").hidden = !hay;
   if (!hay) return pintarListaEpisodios();
-  $("#carriles").innerHTML = CARRILES.map((c) => {
+  const visibles = CARRILES.filter((c) => estado.carriles[c.clave]?.ep);
+  $("#vista-vivo").dataset.carriles = String(visibles.length);
+  $("#carriles").innerHTML = visibles.map((c) => {
     const ep = estado.carriles[c.clave]?.ep;
     return `<article class="carril${c.escudo ? " escudo" : ""}" id="carril-${c.clave}">
       <header class="carril-cab" data-ayuda="${esc(t(`ayuda_${c.clave}`))}">${ms(c.icono)}<h2>${esc(t(c.escudo ? "cn_carril_layer2" : `d_${c.clave}`))}</h2>${etiquetaDeOrigen(ep)}
@@ -419,7 +439,7 @@ function pintarCarriles() {
       <div class="veredicto"></div>
     </article>`;
   }).join("");
-  for (const c of CARRILES) {
+  for (const c of visibles) {
     const carril = estado.carriles[c.clave];
     carril.monitor = Graficos.monitor($(`#monitor-${c.clave}`));
     if (!carril.ep) carril.monitor.apagar();
@@ -799,7 +819,7 @@ function llenarEscenarios() {
   const vistos = new Map();
   for (const ep of Object.values(episodios())) if (!vistos.has(ep.escenario) || ep.idioma === estado.idioma) vistos.set(ep.escenario, ep.descripcion || ep.escenario);
   const sel = $("#sel-escenario");
-  sel.innerHTML = [...vistos].map(([id, desc]) => `<option value="${esc(id)}" title="${esc(desc)}">${esc(id.replace(/^demo_/, "").replaceAll("_", " "))}</option>`).join("");
+  sel.innerHTML = [...vistos].map(([id, desc]) => `<option value="${esc(id)}" title="${esc(desc)}">${esc(tituloEscenario(id))}</option>`).join("");
   if (!estado.escenario || !vistos.has(estado.escenario)) {
     estado.escenario = vistos.has(ESCENARIO_POR_DEFECTO) ? ESCENARIO_POR_DEFECTO : vistos.keys().next().value || null;
   }
