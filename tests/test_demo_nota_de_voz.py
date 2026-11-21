@@ -86,7 +86,11 @@ def test_un_escenario_sin_nota_de_voz_o_sin_pago_se_rechaza():
         demo.elegir("vishing_familiar")
 
 
-def test_indica_donde_va_el_audio_o_como_generarlo(capsys):
+def test_indica_donde_va_el_audio_o_como_generarlo(capsys, monkeypatch):
+    # Con el mp3 en demo/audio/ se indica su ruta; sin él, cómo generarlo. Se prueban los dos casos.
+    demo.correr(imprimir=print)
+    assert "chat_hijo_numero_nuevo_nota.mp3" in capsys.readouterr().out
+    monkeypatch.setattr(demo, "audio_de", lambda esc: None)
     demo.correr(imprimir=print)
     assert "generar_audios_vishing.py --notas-de-voz --solo chat_hijo_numero_nuevo" in capsys.readouterr().out
 
