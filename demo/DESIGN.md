@@ -73,7 +73,8 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas al centro y
   - Al medio van Entrada (un correo por fila, el más nuevo arriba), Lectura (el correo activo, sus tramos y el veredicto con señales y acción) y Registro (todos los eventos en mono, el más nuevo abajo).
   - Abajo van Defensa en capas (contadores y una barra apilada por familia), Bóveda (los indicadores, como una cuarentena) y Modelo (versión, métricas, curva y pesos).
   - Defensa en capas cuenta una vez por correo, al terminar su lectura: la capa que retuvo la acción (Firewall o Escudo); Bóveda si la atajó la bóveda y ninguna capa retuvo la acción; o «ejecutada». Los contadores son la suma de las barras.
-  - Desde 1600 px todo cabe en una pantalla y cada bloque desplaza lo suyo. Bajo 1600 px, Registro baja a la fila de Bóveda y Modelo ocupa el ancho.
+  - Desde 1600 px de ancho y 900 de alto, todo cabe en una pantalla. Más bajo o más angosto, las filas pasan a alto fijo y la página se desplaza. Bajo 1600 px, Registro baja a la fila de Bóveda y Modelo ocupa el ancho.
+  - Cada bloque recorta su contenido y desplaza lo suyo. En Lectura, el cuerpo y la lista de tramos ceden alto y el veredicto con la acción queda siempre visible abajo. Del veredicto se muestran las tres señales de más peso y un «+n».
   - El sello de la barra dice «Simulación · motor real» con el motor, y «Simulación · emisor local» con el respaldo. Al lado van pausa y 1x/2x/4x.
 - **En vivo:**
   - una franja con el escenario: dueño, tarea en una línea, monto y cuenta inscrita;

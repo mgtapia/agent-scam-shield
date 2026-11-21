@@ -233,7 +233,6 @@ const Operaciones = (() => {
       <div class="lec-cuerpo">${cuerpo.html}</div>
       <ol class="hallazgos"></ol>
       <div class="lec-veredicto"></div>`;
-    reanimar(vista, "abre");
     const previo = anterior && o.correos.get(anterior)?.agente;
     if (previo) pintarAgente(previo);
     if (c.agente) pintarAgente(c.agente);
@@ -261,7 +260,12 @@ const Operaciones = (() => {
       if (Number(m.dataset.desde) <= n || fin) {
         m.classList.add("visto");
         const x = [...L.tr.dentro, ...L.tr.fuera].find((y) => String(y.k) === m.dataset.k);
-        if (x) L.vista.querySelector(".hallazgos").insertAdjacentHTML("beforeend", htmlHallazgo(x));
+        if (x) {
+          const lista = L.vista.querySelector(".hallazgos");
+          lista.insertAdjacentHTML("beforeend", htmlHallazgo(x));
+          lista.scrollTop = lista.scrollHeight;
+          if (!fin) reanimar(lista.lastElementChild, "golpe");
+        }
       }
     }
     if (fin) for (const x of L.tr.fuera) {
@@ -347,7 +351,9 @@ const Operaciones = (() => {
     const v = c.veredicto;
     if (!v) { caja.innerHTML = ""; return; }
     const fuente = v.fuente === "boveda" ? t("fu_boveda") : v.fuente === "origen" ? t("fu_origen") : t("fu_clasificador", { v: v.version_modelo || "" });
-    const maxPeso = Math.max(0.5, ...(v.senales || []).map((s) => Math.abs(s.peso)));
+    const senales = [...(v.senales || [])].sort((a, b) => Math.abs(b.peso) - Math.abs(a.peso));
+    const vistas = senales.slice(0, 3), resto = senales.slice(3);
+    const maxPeso = Math.max(0.5, ...senales.map((s) => Math.abs(s.peso)));
     caja.dataset.decision = v.decision;
     caja.innerHTML = `
       <div class="ver-l1">
@@ -355,9 +361,9 @@ const Operaciones = (() => {
         <span class="ver-conf"><span class="dato">${pct(v.confianza)}</span><span class="medidor"><span style="width:${pct(v.confianza)}"></span></span><span class="c-2">${esc(t("o_confianza"))}</span></span>
         <span class="ver-fuente">${v.decision !== "seguro" ? tagCapa(v.capa) : ""}<span class="${v.fuente === "boveda" ? "" : "c-2"}">${esc(fuente)}</span></span>
       </div>
-      ${(v.senales || []).length ? `<ol class="ver-senales">${v.senales.map((s) => `<li><span>${esc(senal(s.nombre))}</span><span class="medidor"><span style="width:${Math.round((Math.abs(s.peso) / maxPeso) * 100)}%"></span></span><span class="dato">${s.peso.toFixed(2)}</span></li>`).join("")}</ol>` : ""}
+      ${vistas.length ? `<ol class="ver-senales">${vistas.map((s) => `<li data-ayuda="${esc(senal(s.nombre))}"><span>${esc(senal(s.nombre))}</span><span class="medidor"><span style="width:${Math.round((Math.abs(s.peso) / maxPeso) * 100)}%"></span></span><span class="dato">${s.peso.toFixed(2)}</span></li>`).join("")}${resto.length ? `<span class="mas" tabindex="0" data-ayuda="${esc(resto.map((s) => `${senal(s.nombre)}  ${s.peso.toFixed(2)}`).join("\n"))}">+${resto.length}</span>` : ""}</ol>` : ""}
       <div class="ver-accion"></div>`;
-    if (nuevo) reanimar(caja, "entra");
+    if (nuevo) reanimar(caja, "golpe");
     const anuncio = $("#ops-anuncio");
     if (anuncio && nuevo) anuncio.textContent = `${c.agente || ""}: ${t(`o_dec_${v.decision}`)} ${pct(v.confianza)}${v.capa && v.decision !== "seguro" ? ` · ${capa(v.capa)}` : ""}`;
     pintarAccion(c);
@@ -384,7 +390,7 @@ const Operaciones = (() => {
     caja.innerHTML = `${ms(detenida ? "block" : a.herramienta === "pagar" || a.herramienta === "transferir" ? "payments" : "smart_toy")}
       <span class="dato a-txt">${esc(textoAccion(a))}</span><span class="a-res">${esc(t(`ac_${a.resultado}`))}</span>${detenida ? tagCapa(a.capa) : ""}`;
     caja.dataset.ayuda = a.motivo || "";
-    reanimar(caja, "entra");
+    reanimar(caja, "golpe");
   }
 
   // --- Registro: todos los eventos, con hora, en mono ---
