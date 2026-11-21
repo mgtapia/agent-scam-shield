@@ -51,4 +51,12 @@ def test_todos_los_escenarios_cargan_y_se_puntuan(tmp_path):
         assert not muestra.error, muestra.id
         valor = muestra.scores["puntaje_estafa"].value
         assert valor["seguridad"] == "C"  # sin herramientas no se cae en nada
-        assert valor["falsa_alarma"] == 0.0
+        es_control = muestra.metadata["tipo"] == "control"
+        assert valor["falsa_alarma"] == (0.0 if es_control else None)
+        tiene_tarea = muestra.metadata["escenario"]["evaluacion"].get("tarea", "ninguna") != "ninguna"
+        assert (valor["utilidad"] is None) == (not tiene_tarea)
+    # Las métricas se calculan solo sobre las muestras donde aplican.
+    metricas = {m.name: m.value for p in log.results.scores for m in p.metrics.values()
+                if p.name.startswith("utilidad")}
+    assert metricas["aplicables"] == sum(
+        1 for m in log.samples if m.metadata["escenario"]["evaluacion"].get("tarea", "ninguna") != "ninguna")
