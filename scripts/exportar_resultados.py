@@ -57,7 +57,18 @@ def tacticas_de(escenario: dict[str, Any]) -> list[str]:
             if sociales & set(t.get("tacticas", [])) or mecanismo in t.get("mecanismos", [])]
 
 
-def _fila(modelo: str, defensa: str, sample) -> dict[str, Any]:
+def configuracion_de(log) -> dict[str, bool]:
+    """Las opciones de la corrida que cambian lo que se mide, con sus valores por defecto si faltan."""
+    args = log.eval.task_args or {}
+    return {"lista_cuentas": bool(args.get("cuentas_visibles", True)),
+            "aviso_escudo": bool(args.get("aviso_escudo", False)),
+            "dueno_simulado": bool(args.get("dueno_simulado", False))}
+
+
+CONFIGURACION_BASE = {"lista_cuentas": True, "aviso_escudo": False, "dueno_simulado": False}
+
+
+def _fila(modelo: str, defensa: str, sample, config: dict[str, bool] | None = None) -> dict[str, Any]:
     esc = sample.metadata.get("escenario") or {}
     valor = dict(next(iter((sample.scores or {}).values())).value) if sample.scores else {}
     # Registros de una versión anterior del puntaje dan valor donde hoy va None: se aplican las
@@ -72,6 +83,8 @@ def _fila(modelo: str, defensa: str, sample) -> dict[str, Any]:
     return {
         "modelo": modelo,
         "defensa": defensa,
+        **(config or CONFIGURACION_BASE),
+        "epoch": getattr(sample, "epoch", 1),
         "idioma": esc.get("idioma"),
         "escenario": esc.get("id"),
         "tipo": esc.get("tipo"),
@@ -82,19 +95,31 @@ def _fila(modelo: str, defensa: str, sample) -> dict[str, Any]:
     }
 
 
-def exportar(rutas: list[Path], prueba: bool = False) -> dict[str, Any]:
-    """Junta las filas de los registros válidos, el más reciente por modelo y defensa."""
-    elegidos: dict[tuple[str, str], tuple[str, Any, Path]] = {}
+def exportar(rutas: list[Path], prueba: bool = False, todas: bool = False) -> dict[str, Any]:
+    """Junta las filas de los registros válidos, el más reciente por modelo, defensa y configuración.
+
+    La página de resultados asume la configuración base (con lista de cuentas, sin aviso del escudo y
+    sin dueño simulado). Mezclar otras configuraciones en las mismas tasas las falsearía, así que por
+    defecto quedan fuera, listadas en `omitidos`. Con `todas=True` entran, y cada fila dice cuál es su
+    configuración.
+    """
+    elegidos: dict[tuple, tuple[str, Any, Path]] = {}
     omitidos: list[dict[str, Any]] = []
     for ruta in rutas:
         log = read_eval_log(str(ruta))
         modelo = log.eval.model
         defensa = (log.eval.task_args or {}).get("defense", "none")
+        config = configuracion_de(log)
         if log.status != "success":
             omitidos.append({"archivo": ruta.name, "modelo": modelo, "defensa": defensa,
                              "motivo": f"estado {log.status}"})
             continue
-        clave = (modelo, defensa)
+        if not todas and config != CONFIGURACION_BASE:
+            omitidos.append({"archivo": ruta.name, "modelo": modelo, "defensa": defensa,
+                             "motivo": "configuración distinta de la base"})
+            continue
+        # Los idiomas también cuentan: correr_matriz.py hace una corrida por idioma y no deben pisarse.
+        clave = (modelo, defensa, *config.values(), (log.eval.task_args or {}).get("idiomas", "es,en"))
         creado = log.eval.created
         if clave in elegidos and elegidos[clave][0] >= creado:
             omitidos.append({"archivo": ruta.name, "modelo": modelo, "defensa": defensa, "motivo": "repetido"})
@@ -105,14 +130,16 @@ def exportar(rutas: list[Path], prueba: bool = False) -> dict[str, Any]:
         elegidos[clave] = (creado, log, ruta)
 
     filas: list[dict[str, Any]] = []
-    for (modelo, defensa), (_, log, _) in sorted(elegidos.items()):
-        filas += [_fila(modelo, defensa, s) for s in log.samples or []]
+    for (modelo, defensa, *_), (_, log, _) in sorted(elegidos.items()):
+        config = configuracion_de(log)
+        filas += [_fila(modelo, defensa, s, config) for s in log.samples or []]
 
     return {
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "fuente": "mockllm" if prueba else "inspect",
         "prueba": prueba,
-        "registros": [{"archivo": r.name, "modelo": m, "defensa": d} for (m, d), (_, _, r) in sorted(elegidos.items())],
+        "registros": [{"archivo": r.name, "modelo": m, "defensa": d, **configuracion_de(log)}
+                      for (m, d, *_), (_, log, r) in sorted(elegidos.items())],
         "omitidos": omitidos,
         "tacticas": [{k: t[k] for k in ("clave", "es", "en")} for t in TACTICAS],
         "filas": filas,
@@ -136,6 +163,9 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("logs", nargs="*", type=Path, help="archivos .eval de Inspect")
     p.add_argument("--salida", type=Path, default=SALIDA, help="carpeta donde van resultados.json y .js")
     p.add_argument("--mock", action="store_true", help="filas de mockllm, marcadas como datos de prueba")
+    p.add_argument("--todas", action="store_true",
+                   help="incluye corridas con otra configuración (sin lista de cuentas, con aviso o con dueño "
+                        "simulado); cada fila dice cuál es. La página de resultados asume la base")
     a = p.parse_args(argv)
     rutas = list(a.logs)
     if a.mock:
@@ -144,7 +174,7 @@ def main(argv: list[str] | None = None) -> None:
         rutas += generar_logs_mock(Path(tempfile.mkdtemp(prefix="scamshield-mock-")))
     if not rutas:
         p.error("pasa al menos un .eval o usa --mock")
-    datos = exportar(rutas, prueba=a.mock)
+    datos = exportar(rutas, prueba=a.mock, todas=a.todas)
     for r in escribir(datos, a.salida):
         print(r.relative_to(RAIZ) if r.is_relative_to(RAIZ) else r)
     print(f"{len(datos['filas'])} filas de {len(datos['registros'])} registros; {len(datos['omitidos'])} omitidos")
