@@ -264,6 +264,58 @@ const Graficos = (() => {
     });
   }
 
+  // Seguridad contra utilidad (vista Resultados): un punto por configuración, con su intervalo al 95 % en los dos
+  // ejes como barras de error. x = estafas exitosas, y = utilidad. Gris; en rojo solo la que deja pasar la mitad
+  // o más de las estafas. `puntos` trae { nombre, x: {tasa,bajo,alto}, y: {tasa,bajo,alto}, destacada }.
+  function dispersion(el, puntos, { eje_x, eje_y }) {
+    const g = iniciar(el);
+    if (!g) return;
+    const ok = puntos.filter((p) => hayTasa(p.x) && hayTasa(p.y));
+    const color = (p) => (p.x.tasa >= 0.5 ? C.rojo : p.destacada ? C.texto : C.texto2);
+    const bigote = {
+      type: "custom", silent: true, z: 1,
+      data: ok.map((p) => [pp(p.x.tasa), pp(p.y.tasa), pp(p.x.bajo), pp(p.x.alto), pp(p.y.bajo), pp(p.y.alto)]),
+      renderItem: (params, api) => {
+        const [x0, y0] = api.coord([api.value(2), api.value(1)]);
+        const [x1] = api.coord([api.value(3), api.value(1)]);
+        const [xm, ya] = api.coord([api.value(0), api.value(5)]);
+        const [, yb] = api.coord([api.value(0), api.value(4)]);
+        const style = { stroke: color(ok[params.dataIndex]), lineWidth: 1 };
+        return { type: "group", children: [
+          { type: "line", shape: { x1: x0, y1: y0, x2: x1, y2: y0 }, style },
+          { type: "line", shape: { x1: xm, y1: ya, x2: xm, y2: yb }, style },
+        ] };
+      },
+    };
+    // El eje de utilidad parte un poco bajo el intervalo más bajo: con todo entre 84 y 100, de 0 a 100 no se lee nada.
+    const yMin = Math.max(0, Math.floor((Math.min(...ok.map((p) => pp(p.y.bajo))) - 5) / 10) * 10);
+    // Etiquetas: a la derecha del punto (a la izquierda pasado el 60 %, para no salirse del gráfico). Si dos puntos
+    // caen muy cerca, una etiqueta sube y la otra baja.
+    const cerca = (p, q) => Math.abs(pp(q.x.tasa) - pp(p.x.tasa)) < 25 && Math.abs(pp(q.y.tasa) - pp(p.y.tasa)) < 4;
+    const lado = ok.map((p, i) => {
+      const antes = ok.some((q, j) => j < i && cerca(p, q));
+      const despues = ok.some((q, j) => j > i && cerca(p, q));
+      return { position: p.x.tasa > 0.6 ? "left" : "right", offset: [0, antes ? 10 : despues ? -10 : 0] };
+    });
+    g.setOption({
+      animation: false,
+      grid: { left: 48, right: 24, top: 24, bottom: 48 },
+      xAxis: { type: "value", min: 0, max: 100, interval: 25, name: eje_x, nameLocation: "middle", nameGap: 28,
+        nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, axisLabel: { formatter: "{value}%" } },
+      yAxis: { type: "value", min: yMin, max: 100, name: eje_y, nameLocation: "middle", nameGap: 36,
+        nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, axisLabel: { formatter: "{value}%" } },
+      tooltip: { trigger: "item", formatter: (p) => {
+        const x = ok[p.dataIndex];
+        return x ? `${x.nombre}<br>${eje_x} ${tasaIntervalo(x.x)}<br>${eje_y} ${tasaIntervalo(x.y)}` : "";
+      } },
+      series: [bigote, {
+        type: "scatter", z: 2, symbol: "rect", symbolSize: 8,
+        data: ok.map((p, i) => ({ value: [pp(p.x.tasa), pp(p.y.tasa)], itemStyle: { color: color(p) },
+          label: { show: true, formatter: p.nombre, ...lado[i], distance: 8, color: color(p), fontFamily: MONO, fontSize: T1 } })),
+      }],
+    });
+  }
+
   // Curvas del duelo (vista Duelo): la evasión del hacker contra el clasificador por generación, una línea por
   // semilla, distinta por trazo. Con el escudo congelado van en rojo (el riesgo sube); con el que aprende, en
   // grises. La capa 2 va en verde punteado: los pagos que salieron con ella, que se quedan en 0.
@@ -297,6 +349,6 @@ const Graficos = (() => {
     });
   }
 
-  return { C, hay, curvaDuelo, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, curvas, curvaAtacante, redimensionar, sinMovimiento };
+  return { C, hay, curvaDuelo, dispersion, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, curvas, curvaAtacante, redimensionar, sinMovimiento };
 })();
 window.Graficos = Graficos;

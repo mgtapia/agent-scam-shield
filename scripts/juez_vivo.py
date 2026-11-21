@@ -59,7 +59,7 @@ MODELOS = {
 TOPE_USD = 2.0
 CHARS_POR_TOKEN = 3.5            # para estimar la entrada sin llamar a nada
 SALIDA_TIPICA, SALIDA_PENSANDO = 60, 400   # tokens de salida típicos: una línea, o una línea más el pensamiento
-DESDE_BARRIDO = (0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4)
+DESDE_BARRIDO = (0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45)
 MAX_FALSAS = 0.08
 GRATIS = "gratis (plan gratuito)"
 

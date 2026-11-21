@@ -125,6 +125,35 @@ def test_colados_con_archivos_propios(tmp_path):
     assert c["clasificador"] is None and c["familias"][0]["clasificador"] is None
 
 
+def test_cobertura_por_tipo_de_ataque_esperada_contra_real(tmp_path):
+    from scripts.resultados_demo import cobertura, limites_conocidos, tabla_cobertura
+    c = cobertura()
+    t = c["totales"]
+    assert t["familias"] == len(c["familias"]) > 0
+    assert t["ataques_bench"] == sum(r["ataques"] for r in c["familias"])
+    for r in c["familias"]:
+        # La capa 2 sola promete todo menos lo que dicta el dueño; el escudo completo, todo.
+        assert r["capa2"]["esperada"] == r["ataques"] - r["dueno_dicta"]
+        assert r["completo"]["esperada"] == r["ataques"]
+        assert r["cumple"] == (r["completo"]["real"] >= r["ataques"] and r["capa2"]["real"] >= r["capa2"]["esperada"])
+    # Los límites conocidos salen solo de xfail(strict=True), con su razón.
+    prueba = tmp_path / "test_x.py"
+    prueba.write_text('import pytest\n@pytest.mark.xfail(strict=True, reason="Hueco: no lo vemos.")\n'
+                      'def test_hueco(): pass\n@pytest.mark.xfail(reason="no estricto")\ndef test_otro(): pass\n',
+                      encoding="utf-8")
+    assert [l["razon"] for l in limites_conocidos(tmp_path)] == ["Hueco: no lo vemos."]
+    assert "| **Total** |" in tabla_cobertura(c)
+
+
+def test_es_contra_en_trae_las_dos_tasas_por_configuracion():
+    e = armar()["bench"]["es_contra_en"]
+    assert {"none", "layer2", "layer23"} <= {c["clave"] for c in e["configuraciones"]}
+    for c in e["configuraciones"]:
+        for idioma in ("es", "en"):
+            m = c[idioma]["estafas_exitosas"]
+            assert 0 <= m["bajo"] <= m["tasa"] <= m["alto"] <= 1 and m["escenarios"] > 0
+    # Cada par es un escenario en los dos idiomas; los que difieren son un subconjunto de esos pares.
+    assert e["pares"] > 0 and len(e["difieren"]) <= e["pares"]
 # --- El juez LLM de los casos dudosos ---
 
 def test_juez_sin_archivo_y_con_archivo(tmp_path):

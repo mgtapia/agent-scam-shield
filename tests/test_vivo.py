@@ -210,9 +210,11 @@ def test_el_flujo_sale_en_espanol_por_defecto_y_el_ingles_se_pide():
 def test_el_precalentamiento_deja_modelo_boveda_e_historial():
     ahora = [1_000_000.0]
     m = Motor(semilla=11, reloj=lambda: ahora[0], flujo=Flujo(semilla=11))
-    vistos = m.precalentar(correos=40)
+    # El precalentamiento por defecto (45 correos). Con 40 justos, que alcance a cerrar el primer lote de aprendizaje
+    # dependía del orden en que salen las unidades del corpus, que cambia con cada escenario nuevo.
+    vistos = m.precalentar()
     foto = m.foto()
-    assert vistos >= 40 and foto["totales"]["correos"] == vistos
+    assert vistos >= 45 and foto["totales"]["correos"] == vistos
     assert foto["modelo"]["version"] != "1.0.0" and foto["modelo"]["ejemplos"] > 0
     assert len(foto["boveda"]) > 0
     assert foto["historial_modelo"][0]["version"] == "1.0.0"

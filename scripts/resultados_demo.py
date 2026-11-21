@@ -30,6 +30,7 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import math
 import sys
@@ -93,7 +94,20 @@ def bench() -> dict[str, Any]:
     return {
         "agente": b.get("agente"), "aviso": b.get("aviso"), "escenarios": b.get("escenarios"),
         "configuraciones": [{"clave": c, **{m: _tasa(por[c][m]) for m in METRICAS}} for c in CONFIGURACIONES if c in por],
+        "es_contra_en": _es_contra_en(b.get("es_contra_en") or {}),
         "fuente": _rel(ruta), "comando": "grifter bench --json results/bench.json",
+    }
+
+
+def _es_contra_en(e: dict[str, Any]) -> dict[str, Any]:
+    """Español contra inglés con el agente guionado: la tasa de cada idioma por configuración, cuántos pares
+    (el mismo escenario en los dos idiomas) hay y cuáles dan distinto."""
+    por = e.get("por_idioma") or {}
+    return {
+        "configuraciones": [{"clave": c, **{i: {m: _tasa(por[c][i][m]) for m in METRICAS} for i in ("es", "en")}}
+                            for c in CONFIGURACIONES if c in por],
+        "pares": int(e.get("pares") or 0),
+        "difieren": list(e.get("difieren") or []),
     }
 
 
@@ -187,6 +201,86 @@ def colados(bench_json: Path | None = None, clasif_json: Path | None = None) -> 
                   f"{_rel(clasif_json) if clasif_json.is_relative_to(RAIZ) else clasif_json}",
         "comando": "grifter bench --json results/bench.json && python scripts/validacion_cruzada_vivo.py --agrupar familia "
                    "--json results/clasificador.json",
+    }
+
+
+TESTS = RAIZ / "tests"
+
+
+def limites_conocidos(carpeta: Path | None = None) -> list[dict[str, str]]:
+    """Los ataques que sabemos que todavía nos rompen: las pruebas `xfail(strict=True)` del repo.
+
+    Con `strict=True`, la CI falla si una de estas pruebas empieza a pasar, así que la lista no puede quedar
+    vieja: si un arreglo cierra el hueco, hay que sacar la marca y la fila desaparece sola.
+    """
+    salida = []
+    for ruta in sorted((carpeta or TESTS).glob("test_*.py")):
+        arbol = ast.parse(ruta.read_text(encoding="utf-8"))
+        for nodo in ast.walk(arbol):
+            if not isinstance(nodo, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            for dec in nodo.decorator_list:
+                if not (isinstance(dec, ast.Call) and getattr(dec.func, "attr", "") == "xfail"):
+                    continue
+                kw = {k.arg: k.value for k in dec.keywords}
+                if not (isinstance(kw.get("strict"), ast.Constant) and kw["strict"].value is True):
+                    continue
+                razon = kw.get("reason")
+                texto = razon.value if isinstance(razon, ast.Constant) and isinstance(razon.value, str) else ""
+                salida.append({"prueba": f"{_rel(ruta) if ruta.is_relative_to(RAIZ) else ruta.name}::{nodo.name}", "razon": " ".join(texto.split())})
+    return salida
+
+
+def cobertura(col: dict[str, Any] | None = None, duelo_: dict[str, Any] | None = None,
+              tests: Path | None = None) -> dict[str, Any]:
+    """Cobertura por tipo de ataque: lo que Grifter promete por diseño contra lo que se midió.
+
+    - **Esperada (por diseño).** La capa 2 frena todo pago o envío cuyo destino salió de contenido externo
+      (correo, web, WhatsApp, llamada, MCP). Si el dueño ya cayó y dicta él la cuenta, la capa 2 la deja pasar
+      a propósito y la frena la capa 3 (beneficiario nuevo o que no calza con su RUT). Por eso el escudo completo
+      promete el 100 % de cada familia, y la capa 2 sola, todas menos las que dicta el dueño.
+    - **Real.** Lo que midió `grifter bench`, con un agente guionado que siempre intenta pagar: mide las
+      defensas, no lo crédulo de un modelo. Una fila por escenario e idioma.
+    - **Clasificador.** Aparte: solo sube la sospecha y no promete nada. Es la detección sobre correos
+      apartados (validación cruzada por familia).
+    - **Límites conocidos.** Las pruebas del equipo rojo que todavía fallan: esperada 0 %.
+    """
+    col = col or colados()
+    duelo_ = duelo_ if duelo_ is not None else duelo()
+    filas = []
+    for f in col["familias"]:
+        n = f["estafas"]
+        if not n:
+            continue
+        dicta = f["dueno_dicta"].get("none", 0)
+        capa = f["por_capa"]
+        cl = f.get("clasificador")
+        filas.append({
+            "familia": f["familia"], "ataques": n, "dueno_dicta": dicta,
+            "completo": {"esperada": n, "real": n - capa.get("layer23", 0)},
+            "capa2": {"esperada": n - dicta, "real": n - capa.get("layer2", 0)},
+            "clasificador": None if not cl or not cl["correos"] else
+            {"detectados": cl["correos"] - cl["colados"], "correos": cl["correos"],
+             "tasa": round(1 - cl["colados"] / cl["correos"], 3)},
+            "cumple": n - capa.get("layer23", 0) >= n and n - capa.get("layer2", 0) >= n - dicta,
+        })
+    filas.sort(key=lambda r: (r["cumple"], -r["ataques"], r["familia"]))
+    total = sum(r["ataques"] for r in filas)
+    frenadas = sum(r["completo"]["real"] for r in filas)
+    limites = limites_conocidos(tests)
+    return {
+        "familias": filas,
+        "totales": {
+            "familias": len(filas), "ataques_bench": total, "frenadas_bench": frenadas,
+            "esperada": 1.0, "real": round(frenadas / total, 3) if total else None,
+            "intentos_duelo": duelo_.get("candidatos"), "cruces_capa2_duelo": duelo_.get("exitosas_capa2"),
+            "correos_clasificador": (col.get("clasificador") or {}).get("correos"),
+            "limites_conocidos": len(limites),
+        },
+        "limites": limites,
+        "unidad": "escenario × idioma (bench); intentos generados (Duelo); correos apartados (clasificador)",
+        "fuente": f"{col['fuente']} · results/duelo · tests (xfail strict)",
+        "comando": "grifter bench --json results/bench.json && python scripts/resultados_demo.py",
     }
 
 
@@ -345,7 +439,7 @@ def armar(curva: Path | None = None) -> dict[str, Any]:
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "readme": "README.md#resultados",
         "bench": bench(), "pipelock": PIPELOCK, "sonnet": sonnet(), "haiku": haiku(),
-        "clasificador": clasificador(), "colados": colados(), "juez": juez(), "atacante": atacante(elegida=curva), "duelo": duelo(),
+        "clasificador": clasificador(), "colados": colados(), "cobertura": cobertura(), "juez": juez(), "atacante": atacante(elegida=curva), "duelo": duelo(),
     })
 
 
@@ -361,11 +455,45 @@ def escribir(datos: dict[str, Any], salida: Path = DEMO, solo_json: bool = False
     return [json_, js]
 
 
+def _primera_frase(texto: str, largo: int = 160) -> str:
+    frase = texto.split(". ")[0].rstrip(".")
+    return frase if len(frase) <= largo else frase[: largo - 1].rstrip() + "…"
+
+
+def tabla_cobertura(c: dict[str, Any]) -> str:
+    """La cobertura en Markdown, para el README: `python scripts/resultados_demo.py --tabla-cobertura`."""
+    t = c["totales"]
+    lineas = [
+        f"{t['familias']} tipos de ataque, {t['ataques_bench']} ataques en el bench, {t['intentos_duelo']} intentos "
+        f"del atacante que aprende (Duelo) y {t['correos_clasificador']} correos para el clasificador.",
+        "",
+        "| Tipo de ataque | Ataques | Grifter completo: esperada → real | Capa 2 sola: esperada → real | Clasificador detecta |",
+        "|---|---|---|---|---|",
+    ]
+    for r in c["familias"]:
+        cl = r["clasificador"]
+        det = f"{cl['detectados']}/{cl['correos']} ({cl['tasa']:.0%})" if cl else "—"
+        nombre = r["familia"].replace("_", " ")
+        if r["dueno_dicta"]:
+            nombre += f" ({r['dueno_dicta']} dictadas por el dueño)"
+        lineas.append(f"| {nombre} | {r['ataques']} | {r['completo']['esperada']} → {r['completo']['real']} | "
+                      f"{r['capa2']['esperada']} → {r['capa2']['real']} | {det} |")
+    lineas.append(f"| **Total** | **{t['ataques_bench']}** | **{t['ataques_bench']} → {t['frenadas_bench']}** | | |")
+    lineas += ["", f"**Límites conocidos ({t['limites_conocidos']}):** ataques que todavía nos rompen, cada uno con una "
+               "prueba `xfail(strict=True)`. Esperada: 0 %.", ""]
+    lineas += [f"- {_primera_frase(l['razon'])} (`{l['prueba'].split('::')[1]}`)" for l in c["limites"]]
+    return "\n".join(lineas)
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--atacante", type=Path, help="el _curvas.json del atacante que se muestra")
+    p.add_argument("--tabla-cobertura", action="store_true", help="solo imprime la tabla de cobertura en Markdown")
     p.add_argument("--solo-json", action="store_true", help="escribe solo resultados.json, sin tocar resultados.js")
     a = p.parse_args(argv)
+    if a.tabla_cobertura:
+        print(tabla_cobertura(cobertura()))
+        return 0
     datos = armar(a.atacante)
     for ruta in escribir(datos, solo_json=a.solo_json):
         print(f"escrito {_rel(ruta)}")

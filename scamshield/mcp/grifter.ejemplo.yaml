@@ -23,6 +23,11 @@ cuentas_inscritas:
 datos_dueno:
   rut_empresa: "77.120.458-6"
 
+# Dónde puede escribirse cada dato del dueño, como un gestor de contraseñas (#128). Una credencial solo sale a estos
+# hosts exactos (sin subdominios no declarados, homoglifos ni punycode); sin dominio declarado, no sale a ninguna página.
+# dominios_oficiales:
+#   clave_banca: [banca.bancolitoral.cl]
+
 # Opcional: el encargo del dueño. Los clientes MCP no le pasan el mensaje del usuario al servidor,
 # así que sin esto solo vale como confiable lo inscrito.
 # encargo: "Paga la factura 8812 de Silicio Austral."

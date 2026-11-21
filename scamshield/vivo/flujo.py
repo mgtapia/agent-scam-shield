@@ -137,6 +137,9 @@ def _mensajes(esc: dict[str, Any]) -> list[dict[str, Any]]:
     return salida
 
 
+_FORMULARIOS = {"escribir_formulario", "enviar_formulario"}
+
+
 def _destino(accion: dict[str, Any]) -> str:
     a = accion.get("args", {})
     return str(a.get("cuenta") or a.get("a") or a.get("destinatario") or "")
@@ -279,6 +282,8 @@ class Flujo:
         accion = ev.get("accion_estafa")
         if not accion or not _mensajes(esc):
             return None
+        if accion.get("herramienta") in _FORMULARIOS:
+            return None   # una página clonada (#128) la ve la regla web de la capa 2, no el clasificador de correos de pago
         destino = _destino(accion)
         if any(_lleva(c, destino) for c in _mensajes(esc)) or esc.get("paginas"):
             return "ingenieria_social"

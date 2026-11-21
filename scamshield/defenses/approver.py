@@ -29,6 +29,7 @@ from inspect_ai.tool import ToolCall, ToolCallView
 from inspect_ai.util import store
 
 from ..env.world import CORREO, DUENO, HERRAMIENTA, LLAMADA, MCP, WEB, WHATSAPP, origenes_en
+from .dominios import HERRAMIENTAS_WEB
 from .layer2 import SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen
 
 # Clave del store donde queda cada bloqueo de la capa 2 (lista de dicts).
@@ -73,6 +74,9 @@ class ProcedenciaHistorial:
     datos_dueno: Mapping[str, str] = field(default_factory=dict)
     # Lo que escribió el dueño (mensajes de usuario), sin el perfil del mensaje de sistema.
     encargo: str = ""
+    # Para la regla web (#128): dominios oficiales de cada dato y la última página que abrió el agente.
+    dominios: Mapping[str, Sequence[str]] = field(default_factory=dict)
+    pagina_actual: str = ""
 
     def origenes_de(self, valor: str) -> set[str]:
         return origenes_en(self.leidos, valor)
@@ -82,11 +86,17 @@ def procedencia_desde_historial(
     history: Sequence[ChatMessage],
     datos_dueno: Optional[Mapping[str, str]] = None,
     origen_por_herramienta: Optional[Mapping[str, str]] = None,
+    dominios: Optional[Mapping[str, Sequence[str]]] = None,
 ) -> ProcedenciaHistorial:
     origenes = ORIGEN_POR_HERRAMIENTA if origen_por_herramienta is None else origen_por_herramienta
     leidos: list[tuple[str, str]] = []
     encargo: list[str] = []
+    pagina = ""
     for m in history:
+        if m.role == "assistant":   # la última página que el agente abrió
+            for llamada in m.tool_calls or []:
+                if llamada.function == "abrir_web":
+                    pagina = str((llamada.arguments or {}).get("url", pagina))
         if m.role in ("system", "user"):
             leidos.append((DUENO, m.text))
             if m.role == "user":
@@ -94,7 +104,8 @@ def procedencia_desde_historial(
         elif m.role == "tool":
             leidos.append((origenes.get(m.function or "", HERRAMIENTA), m.text))
         # role == "assistant": no aporta procedencia.
-    return ProcedenciaHistorial(leidos=leidos, datos_dueno=dict(datos_dueno or {}), encargo="\n".join(encargo))
+    return ProcedenciaHistorial(leidos=leidos, datos_dueno=dict(datos_dueno or {}), encargo="\n".join(encargo),
+                                dominios=dict(dominios or {}), pagina_actual=pagina)
 
 
 def bloqueos_registrados() -> list[dict[str, Any]]:
@@ -116,6 +127,7 @@ def capa2_approver(
     datos_dueno: DatosDueno = None,
     modo: Modo = "eval",
     registrar: bool = True,
+    dominios: Union[Mapping[str, Sequence[str]], Callable[[], Mapping[str, Sequence[str]]], None] = None,
 ) -> Approver:
     """Approver de Inspect que aplica la política por origen de la capa 2.
 
@@ -136,12 +148,15 @@ def capa2_approver(
 
     async def aprobar(message: str, call: ToolCall, view: ToolCallView,
                       history: list[ChatMessage]) -> Approval:
-        if call.function not in reglas:
+        web = call.function in HERRAMIENTAS_WEB
+        if call.function not in reglas and not web:
             return Approval(decision="approve", explanation="Capa 2: herramienta no sensible.")
-        store().set(CLAVE_INTENTOS, store().get(CLAVE_INTENTOS, 0) + 1)
         datos = datos_dueno() if callable(datos_dueno) else datos_dueno
-        procedencia = procedencia_desde_historial(history, datos)
+        procedencia = procedencia_desde_historial(history, datos, dominios=dominios() if callable(dominios) else dominios)
         motivo = politica_origen(procedencia, call.function, call.arguments, reglas)
+        # Abrir una página no es una acción sensible: solo cuenta como intento si la regla web la retuvo o si manda un formulario.
+        if not web or motivo is not None or call.function != "abrir_web":
+            store().set(CLAVE_INTENTOS, store().get(CLAVE_INTENTOS, 0) + 1)
         if motivo is None:
             return Approval(decision="approve", explanation="Capa 2: el destino viene del dueño.")
 
@@ -166,6 +181,7 @@ def politicas_capa2(
     datos_dueno: DatosDueno = None,
     modo: Modo = "eval",
     escalar_a: Optional[Approver] = None,
+    dominios: Union[Mapping[str, Sequence[str]], Callable[[], Mapping[str, Sequence[str]]], None] = None,
 ) -> list[ApprovalPolicy]:
     """Políticas de aprobación listas para `Task(approval=...)` o `eval(approval=...)`.
 
@@ -175,7 +191,7 @@ def politicas_capa2(
     Punto de extensión del modo demo: `escalar_a` es el approver que decide lo que la capa 2
     escala (por ejemplo `human_approver()` de Inspect o un approver de Telegram).
     """
-    politicas = [ApprovalPolicy(capa2_approver(sensibles, datos_dueno, modo), tools="*")]
+    politicas = [ApprovalPolicy(capa2_approver(sensibles, datos_dueno, modo, dominios=dominios), tools="*")]
     if modo == "demo" and escalar_a is not None:
         politicas.append(ApprovalPolicy(escalar_a, tools="*"))
     return politicas

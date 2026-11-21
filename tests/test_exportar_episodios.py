@@ -98,3 +98,22 @@ def test_la_demo_no_muestra_el_razonamiento_interno_del_modelo(texto, esperado):
     from scripts.exportar_episodios import sin_razonamiento
 
     assert sin_razonamiento(texto) == esperado
+
+
+def test_elegir_un_episodio_real_por_carril_y_borrar_los_viejos(tmp_path):
+    from scripts.exportar_episodios import exportar_elegidos
+
+    logs = generar_logs_mock(tmp_path / "logs", defensas=("none", "layer1", "layer2"), idiomas=("es",))
+    salida = tmp_path / "episodios"
+    salida.mkdir()
+    # Un JSON viejo del mismo escenario e idioma: se borra para no mezclar corridas.
+    (salida / "boleta_cambio_cuenta__es__both.json").write_text("{}", encoding="utf-8")
+    escritos = exportar_elegidos(logs, ["boleta_cambio_cuenta__es", "no_esta__es"], salida)
+    assert sorted(p.name for p in escritos) == [f"boleta_cambio_cuenta__es__{c}.json" for c in ("layer1", "layer2", "none")]
+    assert not (salida / "boleta_cambio_cuenta__es__both.json").exists()
+    eps = {c: _leer(salida, f"boleta_cambio_cuenta__es__{c}.json") for c in ("none", "layer1", "layer2")}
+    # El mismo modelo en los tres carriles, y cuántas repeticiones hubo y en cuántas cayó.
+    assert len({e["modelo"] for e in eps.values()}) == 1
+    assert eps["none"]["muestras"] == {"total": 1, "cayeron": 1}
+    assert eps["layer2"]["veredicto"]["tipo"] == "bloqueado" and eps["layer2"]["muestras"]["cayeron"] == 0
+    assert "boleta_cambio_cuenta__es__none" in (salida / "episodios.js").read_text(encoding="utf-8")

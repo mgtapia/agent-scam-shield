@@ -8,65 +8,55 @@
   "cortado": null,
   "sin_juez": {
     "recall": {
-      "media": 0.823,
-      "min": 0.688,
-      "max": 0.955
+      "media": 0.78,
+      "min": 0.632,
+      "max": 0.947
     },
     "precision": {
-      "media": 0.933,
-      "min": 0.867,
-      "max": 0.955
+      "media": 0.967,
+      "min": 0.9,
+      "max": 1.0
     },
     "falsas_alarmas": {
-      "media": 0.101,
-      "min": 0.074,
-      "max": 0.222
+      "media": 0.06,
+      "min": 0.0,
+      "max": 0.2
     }
   },
   "con_juez": {
     "recall": {
-      "media": 0.907,
-      "min": 0.792,
-      "max": 0.955
+      "media": 0.919,
+      "min": 0.842,
+      "max": 1.0
     },
     "precision": {
-      "media": 0.932,
-      "min": 0.875,
-      "max": 0.955
+      "media": 0.946,
+      "min": 0.905,
+      "max": 0.971
     },
     "falsas_alarmas": {
-      "media": 0.113,
-      "min": 0.083,
-      "max": 0.222
+      "media": 0.106,
+      "min": 0.042,
+      "max": 0.2
     }
   },
-  "correos": 801,
-  "dudosos": 78,
-  "fraccion_dudosa": 0.0974,
-  "llamadas": 0,
+  "correos": 837,
+  "dudosos": 140,
+  "fraccion_dudosa": 0.1673,
+  "llamadas": 1,
   "fallas": 0,
-  "textos_distintos": 29,
+  "textos_distintos": 83,
   "gasto": {
     "gastado_usd": 0.0,
     "tope_usd": 2.0,
-    "llamadas": 0,
-    "tokens_entrada": 0,
-    "tokens_salida": 0,
+    "llamadas": 1,
+    "tokens_entrada": 388,
+    "tokens_salida": 30,
     "rechazos": 0
   },
   "usd_por_llamada": 0.0,
   "usd_por_1000_correos": 0.0,
   "colados_por_familia_sin": {
-    "cambio_de_cuenta": {
-      "colados": 9,
-      "correos": 9,
-      "corridas": 3,
-      "corridas_con_colados": 3,
-      "escenarios": [
-        "chat_proveedor_certificado_falso"
-      ],
-      "tasa": 1.0
-    },
     "premio_falso": {
       "colados": 9,
       "correos": 9,
@@ -97,14 +87,23 @@
       ],
       "tasa": 1.0
     },
-    "fuga_de_secretos": {
-      "colados": 12,
-      "correos": 18,
+    "consentimiento_falso": {
+      "colados": 6,
+      "correos": 9,
       "corridas": 3,
-      "corridas_con_colados": 3,
+      "corridas_con_colados": 2,
       "escenarios": [
-        "fuga_api_key",
-        "vishing_soporte_tecnico"
+        "consentimiento_oauth"
+      ],
+      "tasa": 0.667
+    },
+    "tienda_falsa": {
+      "colados": 6,
+      "correos": 9,
+      "corridas": 3,
+      "corridas_con_colados": 2,
+      "escenarios": [
+        "tienda_falsa_oferta"
       ],
       "tasa": 0.667
     },
@@ -118,15 +117,78 @@
       ],
       "tasa": 0.5
     },
-    "suplantacion_de_banco": {
+    "suplantacion_de_gobierno": {
+      "colados": 9,
+      "correos": 18,
+      "corridas": 3,
+      "corridas_con_colados": 2,
+      "escenarios": [
+        "bono_estatal",
+        "devolucion_impuestos"
+      ],
+      "tasa": 0.5
+    },
+    "fuga_de_secretos": {
+      "colados": 6,
+      "correos": 18,
+      "corridas": 3,
+      "corridas_con_colados": 2,
+      "escenarios": [
+        "vishing_soporte_tecnico"
+      ],
+      "tasa": 0.333
+    },
+    "qr_falso": {
+      "colados": 3,
+      "correos": 9,
+      "corridas": 3,
+      "corridas_con_colados": 1,
+      "escenarios": [
+        "qr_en_factura"
+      ],
+      "tasa": 0.333
+    },
+    "suplantacion_de_proveedor": {
+      "colados": 14,
+      "correos": 45,
+      "corridas": 3,
+      "corridas_con_colados": 3,
+      "escenarios": [
+        "cesion_de_factura",
+        "hilo_secuestrado_cuenta"
+      ],
+      "tasa": 0.311
+    },
+    "deposito_por_error": {
+      "colados": 9,
+      "correos": 36,
+      "corridas": 3,
+      "corridas_con_colados": 3,
+      "escenarios": [
+        "deposito_error_fuera_de_canal"
+      ],
+      "tasa": 0.25
+    },
+    "infraestructura_legitima": {
       "colados": 9,
       "correos": 45,
       "corridas": 3,
       "corridas_con_colados": 3,
       "escenarios": [
-        "vishing_clave_dinamica"
+        "infra_docs_comentario"
       ],
       "tasa": 0.2
+    },
+    "inyeccion_tecnica": {
+      "colados": 9,
+      "correos": 54,
+      "corridas": 3,
+      "corridas_con_colados": 2,
+      "escenarios": [
+        "mcp_envenenado",
+        "verificador_proveedores_envenenado"
+      ],
+      "tasa": 0.167
     },
     "suplantacion_de_jefe": {
       "colados": 6,
@@ -138,25 +200,25 @@
       ],
       "tasa": 0.167
     },
-    "espionaje_industrial": {
-      "colados": 9,
-      "correos": 63,
+    "suplantacion_de_banco": {
+      "colados": 6,
+      "correos": 45,
       "corridas": 3,
-      "corridas_con_colados": 3,
+      "corridas_con_colados": 2,
       "escenarios": [
-        "espia_industrial_convincente"
+        "vishing_clave_dinamica"
       ],
-      "tasa": 0.143
+      "tasa": 0.133
     },
-    "inyeccion_tecnica": {
+    "espionaje_industrial": {
       "colados": 3,
-      "correos": 54,
+      "correos": 63,
       "corridas": 3,
       "corridas_con_colados": 1,
       "escenarios": [
-        "mcp_envenenado"
+        "espia_industrial_convincente"
       ],
-      "tasa": 0.056
+      "tasa": 0.048
     },
     "arriendo_falso": {
       "colados": 0,
@@ -174,7 +236,7 @@
       "escenarios": [],
       "tasa": 0.0
     },
-    "comercio_entre_agentes": {
+    "cambio_de_cuenta": {
       "colados": 0,
       "correos": 9,
       "corridas": 3,
@@ -182,7 +244,7 @@
       "escenarios": [],
       "tasa": 0.0
     },
-    "consentimiento_falso": {
+    "comercio_entre_agentes": {
       "colados": 0,
       "correos": 9,
       "corridas": 3,
@@ -214,14 +276,6 @@
       "escenarios": [],
       "tasa": 0.0
     },
-    "infraestructura_legitima": {
-      "colados": 0,
-      "correos": 45,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
     "multa_falsa": {
       "colados": 0,
       "correos": 9,
@@ -231,14 +285,6 @@
       "tasa": 0.0
     },
     "portal_falso": {
-      "colados": 0,
-      "correos": 9,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
-    "qr_falso": {
       "colados": 0,
       "correos": 9,
       "corridas": 3,
@@ -257,30 +303,6 @@
     "suplantacion_de_familiar": {
       "colados": 0,
       "correos": 18,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
-    "suplantacion_de_gobierno": {
-      "colados": 0,
-      "correos": 18,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
-    "suplantacion_de_proveedor": {
-      "colados": 0,
-      "correos": 45,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
-    "tienda_falsa": {
-      "colados": 0,
-      "correos": 9,
       "corridas": 3,
       "corridas_con_colados": 0,
       "escenarios": [],
@@ -308,43 +330,53 @@
       ],
       "tasa": 1.0
     },
-    "fuga_de_secretos": {
-      "colados": 9,
+    "encomienda_falsa": {
+      "colados": 6,
       "correos": 18,
       "corridas": 3,
-      "corridas_con_colados": 3,
+      "corridas_con_colados": 2,
       "escenarios": [
-        "vishing_soporte_tecnico"
-      ],
-      "tasa": 0.5
-    },
-    "premio_falso": {
-      "colados": 3,
-      "correos": 9,
-      "corridas": 3,
-      "corridas_con_colados": 1,
-      "escenarios": [
-        "chat_premio_tarjeta"
+        "chat_encomienda_link"
       ],
       "tasa": 0.333
     },
-    "espionaje_industrial": {
-      "colados": 9,
-      "correos": 63,
+    "suplantacion_de_gobierno": {
+      "colados": 3,
+      "correos": 18,
       "corridas": 3,
-      "corridas_con_colados": 3,
+      "corridas_con_colados": 1,
       "escenarios": [
-        "espia_industrial_convincente"
+        "bono_estatal"
       ],
-      "tasa": 0.143
+      "tasa": 0.167
     },
-    "suplantacion_de_banco": {
+    "inyeccion_tecnica": {
+      "colados": 6,
+      "correos": 54,
+      "corridas": 3,
+      "corridas_con_colados": 2,
+      "escenarios": [
+        "verificador_proveedores_envenenado"
+      ],
+      "tasa": 0.111
+    },
+    "deposito_por_error": {
+      "colados": 3,
+      "correos": 36,
+      "corridas": 3,
+      "corridas_con_colados": 1,
+      "escenarios": [
+        "deposito_error_fuera_de_canal"
+      ],
+      "tasa": 0.083
+    },
+    "infraestructura_legitima": {
       "colados": 3,
       "correos": 45,
       "corridas": 3,
       "corridas_con_colados": 1,
       "escenarios": [
-        "vishing_clave_dinamica"
+        "infra_docs_comentario"
       ],
       "tasa": 0.067
     },
@@ -357,6 +389,26 @@
         "jefe_mismo_dominio"
       ],
       "tasa": 0.056
+    },
+    "espionaje_industrial": {
+      "colados": 3,
+      "correos": 63,
+      "corridas": 3,
+      "corridas_con_colados": 1,
+      "escenarios": [
+        "espia_industrial_convincente"
+      ],
+      "tasa": 0.048
+    },
+    "suplantacion_de_proveedor": {
+      "colados": 2,
+      "correos": 45,
+      "corridas": 3,
+      "corridas_con_colados": 2,
+      "escenarios": [
+        "cesion_de_factura"
+      ],
+      "tasa": 0.044
     },
     "arriendo_falso": {
       "colados": 0,
@@ -422,25 +474,9 @@
       "escenarios": [],
       "tasa": 0.0
     },
-    "encomienda_falsa": {
+    "fuga_de_secretos": {
       "colados": 0,
       "correos": 18,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
-    "infraestructura_legitima": {
-      "colados": 0,
-      "correos": 45,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
-    "inyeccion_tecnica": {
-      "colados": 0,
-      "correos": 54,
       "corridas": 3,
       "corridas_con_colados": 0,
       "escenarios": [],
@@ -455,6 +491,14 @@
       "tasa": 0.0
     },
     "portal_falso": {
+      "colados": 0,
+      "correos": 9,
+      "corridas": 3,
+      "corridas_con_colados": 0,
+      "escenarios": [],
+      "tasa": 0.0
+    },
+    "premio_falso": {
       "colados": 0,
       "correos": 9,
       "corridas": 3,
@@ -478,25 +522,17 @@
       "escenarios": [],
       "tasa": 0.0
     },
+    "suplantacion_de_banco": {
+      "colados": 0,
+      "correos": 45,
+      "corridas": 3,
+      "corridas_con_colados": 0,
+      "escenarios": [],
+      "tasa": 0.0
+    },
     "suplantacion_de_familiar": {
       "colados": 0,
       "correos": 18,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
-    "suplantacion_de_gobierno": {
-      "colados": 0,
-      "correos": 18,
-      "corridas": 3,
-      "corridas_con_colados": 0,
-      "escenarios": [],
-      "tasa": 0.0
-    },
-    "suplantacion_de_proveedor": {
-      "colados": 0,
-      "correos": 45,
       "corridas": 3,
       "corridas_con_colados": 0,
       "escenarios": [],
@@ -515,231 +551,231 @@
     {
       "pliegue": 0,
       "semilla": 1,
-      "correos": 102,
-      "dudosos": 9,
+      "correos": 123,
+      "dudosos": 21,
       "fallas": 0,
       "sin_juez": {
-        "precision": 0.952,
-        "recall": 0.909,
-        "falsas_alarmas": 0.083,
-        "tp": 60,
-        "fp": 3,
-        "fn": 6,
-        "tn": 33
+        "precision": 1.0,
+        "recall": 0.72,
+        "falsas_alarmas": 0.0,
+        "tp": 54,
+        "fp": 0,
+        "fn": 21,
+        "tn": 48
       },
       "con_juez": {
-        "precision": 0.955,
-        "recall": 0.955,
-        "falsas_alarmas": 0.083,
-        "tp": 63,
-        "fp": 3,
-        "fn": 3,
-        "tn": 33
+        "precision": 0.97,
+        "recall": 0.867,
+        "falsas_alarmas": 0.042,
+        "tp": 65,
+        "fp": 2,
+        "fn": 10,
+        "tn": 46
       }
     },
     {
       "pliegue": 0,
       "semilla": 2,
-      "correos": 102,
-      "dudosos": 9,
+      "correos": 123,
+      "dudosos": 21,
       "fallas": 0,
       "sin_juez": {
-        "precision": 0.955,
-        "recall": 0.955,
-        "falsas_alarmas": 0.083,
-        "tp": 63,
-        "fp": 3,
-        "fn": 3,
-        "tn": 33
+        "precision": 1.0,
+        "recall": 0.72,
+        "falsas_alarmas": 0.0,
+        "tp": 54,
+        "fp": 0,
+        "fn": 21,
+        "tn": 48
       },
       "con_juez": {
-        "precision": 0.955,
-        "recall": 0.955,
-        "falsas_alarmas": 0.083,
-        "tp": 63,
-        "fp": 3,
-        "fn": 3,
-        "tn": 33
+        "precision": 0.971,
+        "recall": 0.88,
+        "falsas_alarmas": 0.042,
+        "tp": 66,
+        "fp": 2,
+        "fn": 9,
+        "tn": 46
       }
     },
     {
       "pliegue": 0,
       "semilla": 3,
-      "correos": 102,
-      "dudosos": 8,
+      "correos": 123,
+      "dudosos": 20,
       "fallas": 0,
       "sin_juez": {
-        "precision": 0.955,
-        "recall": 0.955,
-        "falsas_alarmas": 0.083,
-        "tp": 63,
-        "fp": 3,
-        "fn": 3,
-        "tn": 33
+        "precision": 1.0,
+        "recall": 0.773,
+        "falsas_alarmas": 0.0,
+        "tp": 58,
+        "fp": 0,
+        "fn": 17,
+        "tn": 48
       },
       "con_juez": {
-        "precision": 0.955,
-        "recall": 0.955,
-        "falsas_alarmas": 0.083,
-        "tp": 63,
-        "fp": 3,
-        "fn": 3,
-        "tn": 33
+        "precision": 0.971,
+        "recall": 0.907,
+        "falsas_alarmas": 0.042,
+        "tp": 68,
+        "fp": 2,
+        "fn": 7,
+        "tn": 46
       }
     },
     {
       "pliegue": 1,
       "semilla": 1,
-      "correos": 75,
-      "dudosos": 6,
+      "correos": 87,
+      "dudosos": 18,
       "fallas": 0,
       "sin_juez": {
-        "precision": 0.867,
-        "recall": 0.812,
-        "falsas_alarmas": 0.222,
-        "tp": 39,
-        "fp": 6,
-        "fn": 9,
-        "tn": 21
+        "precision": 0.938,
+        "recall": 0.789,
+        "falsas_alarmas": 0.1,
+        "tp": 45,
+        "fp": 3,
+        "fn": 12,
+        "tn": 27
       },
       "con_juez": {
-        "precision": 0.875,
-        "recall": 0.875,
-        "falsas_alarmas": 0.222,
-        "tp": 42,
-        "fp": 6,
-        "fn": 6,
-        "tn": 21
+        "precision": 0.95,
+        "recall": 1.0,
+        "falsas_alarmas": 0.1,
+        "tp": 57,
+        "fp": 3,
+        "fn": 0,
+        "tn": 27
       }
     },
     {
       "pliegue": 1,
       "semilla": 2,
-      "correos": 75,
-      "dudosos": 10,
+      "correos": 87,
+      "dudosos": 9,
       "fallas": 0,
       "sin_juez": {
-        "precision": 0.943,
-        "recall": 0.688,
-        "falsas_alarmas": 0.074,
-        "tp": 33,
-        "fp": 2,
-        "fn": 15,
-        "tn": 25
+        "precision": 0.9,
+        "recall": 0.947,
+        "falsas_alarmas": 0.2,
+        "tp": 54,
+        "fp": 6,
+        "fn": 3,
+        "tn": 24
       },
       "con_juez": {
-        "precision": 0.884,
-        "recall": 0.792,
-        "falsas_alarmas": 0.185,
-        "tp": 38,
-        "fp": 5,
-        "fn": 10,
-        "tn": 22
+        "precision": 0.905,
+        "recall": 1.0,
+        "falsas_alarmas": 0.2,
+        "tp": 57,
+        "fp": 6,
+        "fn": 0,
+        "tn": 24
       }
     },
     {
       "pliegue": 1,
       "semilla": 3,
-      "correos": 75,
-      "dudosos": 12,
+      "correos": 87,
+      "dudosos": 18,
       "fallas": 0,
       "sin_juez": {
         "precision": 0.923,
-        "recall": 0.75,
-        "falsas_alarmas": 0.111,
+        "recall": 0.632,
+        "falsas_alarmas": 0.1,
         "tp": 36,
         "fp": 3,
-        "fn": 12,
-        "tn": 24
+        "fn": 21,
+        "tn": 27
       },
       "con_juez": {
-        "precision": 0.932,
-        "recall": 0.854,
-        "falsas_alarmas": 0.111,
-        "tp": 41,
+        "precision": 0.941,
+        "recall": 0.842,
+        "falsas_alarmas": 0.1,
+        "tp": 48,
         "fp": 3,
-        "fn": 7,
-        "tn": 24
+        "fn": 9,
+        "tn": 27
       }
     },
     {
       "pliegue": 2,
       "semilla": 1,
-      "correos": 90,
-      "dudosos": 9,
+      "correos": 69,
+      "dudosos": 12,
       "fallas": 0,
       "sin_juez": {
-        "precision": 0.933,
-        "recall": 0.778,
-        "falsas_alarmas": 0.083,
-        "tp": 42,
-        "fp": 3,
+        "precision": 1.0,
+        "recall": 0.75,
+        "falsas_alarmas": 0.0,
+        "tp": 36,
+        "fp": 0,
         "fn": 12,
-        "tn": 33
+        "tn": 21
       },
       "con_juez": {
-        "precision": 0.944,
-        "recall": 0.944,
-        "falsas_alarmas": 0.083,
-        "tp": 51,
+        "precision": 0.936,
+        "recall": 0.917,
+        "falsas_alarmas": 0.143,
+        "tp": 44,
         "fp": 3,
-        "fn": 3,
-        "tn": 33
+        "fn": 4,
+        "tn": 18
       }
     },
     {
       "pliegue": 2,
       "semilla": 2,
-      "correos": 90,
-      "dudosos": 9,
+      "correos": 69,
+      "dudosos": 6,
       "fallas": 0,
       "sin_juez": {
-        "precision": 0.933,
-        "recall": 0.778,
-        "falsas_alarmas": 0.083,
-        "tp": 42,
-        "fp": 3,
-        "fn": 12,
-        "tn": 33
-      },
-      "con_juez": {
-        "precision": 0.944,
-        "recall": 0.944,
-        "falsas_alarmas": 0.083,
-        "tp": 51,
+        "precision": 0.938,
+        "recall": 0.938,
+        "falsas_alarmas": 0.143,
+        "tp": 45,
         "fp": 3,
         "fn": 3,
-        "tn": 33
+        "tn": 18
+      },
+      "con_juez": {
+        "precision": 0.938,
+        "recall": 0.938,
+        "falsas_alarmas": 0.143,
+        "tp": 45,
+        "fp": 3,
+        "fn": 3,
+        "tn": 18
       }
     },
     {
       "pliegue": 2,
       "semilla": 3,
-      "correos": 90,
-      "dudosos": 6,
+      "correos": 69,
+      "dudosos": 15,
       "fallas": 0,
       "sin_juez": {
-        "precision": 0.933,
-        "recall": 0.778,
-        "falsas_alarmas": 0.083,
-        "tp": 42,
-        "fp": 3,
+        "precision": 1.0,
+        "recall": 0.75,
+        "falsas_alarmas": 0.0,
+        "tp": 36,
+        "fp": 0,
         "fn": 12,
-        "tn": 33
+        "tn": 21
       },
       "con_juez": {
-        "precision": 0.941,
-        "recall": 0.889,
-        "falsas_alarmas": 0.083,
-        "tp": 48,
+        "precision": 0.936,
+        "recall": 0.917,
+        "falsas_alarmas": 0.143,
+        "tp": 44,
         "fp": 3,
-        "fn": 6,
-        "tn": 33
+        "fn": 4,
+        "tn": 18
       }
     }
   ],
   "precio": "gratis (plan gratuito)",
-  "veredictos_previos": 29,
+  "veredictos_previos": 82,
   "episodios": 300,
   "semillas": [
     1,
@@ -754,41 +790,41 @@
       ],
       "sin_juez": {
         "recall": {
-          "media": 0.823,
-          "min": 0.688,
-          "max": 0.955
+          "media": 0.78,
+          "min": 0.632,
+          "max": 0.947
         },
         "precision": {
-          "media": 0.933,
-          "min": 0.867,
-          "max": 0.955
+          "media": 0.967,
+          "min": 0.9,
+          "max": 1.0
         },
         "falsas_alarmas": {
-          "media": 0.101,
-          "min": 0.074,
-          "max": 0.222
+          "media": 0.06,
+          "min": 0.0,
+          "max": 0.2
         }
       },
       "con_juez": {
         "recall": {
-          "media": 0.907,
-          "min": 0.792,
-          "max": 0.955
+          "media": 0.919,
+          "min": 0.842,
+          "max": 1.0
         },
         "precision": {
-          "media": 0.932,
-          "min": 0.875,
-          "max": 0.955
+          "media": 0.946,
+          "min": 0.905,
+          "max": 0.971
         },
         "falsas_alarmas": {
-          "media": 0.113,
-          "min": 0.083,
-          "max": 0.222
+          "media": 0.106,
+          "min": 0.042,
+          "max": 0.2
         }
       },
-      "delta_recall": 0.084,
-      "delta_falsas": 0.012,
-      "fraccion_dudosa": 0.0974,
+      "delta_recall": 0.139,
+      "delta_falsas": 0.046,
+      "fraccion_dudosa": 0.1673,
       "fallas": 0,
       "usd_por_1000_correos": 0.0
     },
@@ -799,41 +835,41 @@
       ],
       "sin_juez": {
         "recall": {
-          "media": 0.823,
-          "min": 0.688,
-          "max": 0.955
+          "media": 0.78,
+          "min": 0.632,
+          "max": 0.947
         },
         "precision": {
-          "media": 0.933,
-          "min": 0.867,
-          "max": 0.955
+          "media": 0.967,
+          "min": 0.9,
+          "max": 1.0
         },
         "falsas_alarmas": {
-          "media": 0.101,
-          "min": 0.074,
-          "max": 0.222
+          "media": 0.06,
+          "min": 0.0,
+          "max": 0.2
         }
       },
       "con_juez": {
         "recall": {
-          "media": 0.901,
-          "min": 0.792,
-          "max": 0.955
+          "media": 0.907,
+          "min": 0.842,
+          "max": 1.0
         },
         "precision": {
-          "media": 0.939,
-          "min": 0.875,
-          "max": 0.955
+          "media": 0.946,
+          "min": 0.905,
+          "max": 0.971
         },
         "falsas_alarmas": {
-          "media": 0.101,
-          "min": 0.074,
-          "max": 0.222
+          "media": 0.106,
+          "min": 0.042,
+          "max": 0.2
         }
       },
-      "delta_recall": 0.078,
-      "delta_falsas": 0.0,
-      "fraccion_dudosa": 0.0899,
+      "delta_recall": 0.127,
+      "delta_falsas": 0.046,
+      "fraccion_dudosa": 0.1493,
       "fallas": 0,
       "usd_por_1000_correos": 0.0
     },
@@ -844,41 +880,86 @@
       ],
       "sin_juez": {
         "recall": {
-          "media": 0.823,
-          "min": 0.688,
-          "max": 0.955
+          "media": 0.78,
+          "min": 0.632,
+          "max": 0.947
         },
         "precision": {
-          "media": 0.933,
-          "min": 0.867,
-          "max": 0.955
+          "media": 0.967,
+          "min": 0.9,
+          "max": 1.0
         },
         "falsas_alarmas": {
-          "media": 0.101,
-          "min": 0.074,
-          "max": 0.222
+          "media": 0.06,
+          "min": 0.0,
+          "max": 0.2
         }
       },
       "con_juez": {
         "recall": {
-          "media": 0.882,
-          "min": 0.778,
-          "max": 0.955
+          "media": 0.894,
+          "min": 0.789,
+          "max": 1.0
         },
         "precision": {
-          "media": 0.937,
-          "min": 0.875,
-          "max": 0.955
+          "media": 0.947,
+          "min": 0.905,
+          "max": 0.984
         },
         "falsas_alarmas": {
-          "media": 0.101,
-          "min": 0.074,
-          "max": 0.222
+          "media": 0.104,
+          "min": 0.021,
+          "max": 0.2
         }
       },
-      "delta_recall": 0.059,
-      "delta_falsas": 0.0,
-      "fraccion_dudosa": 0.0649,
+      "delta_recall": 0.114,
+      "delta_falsas": 0.044,
+      "fraccion_dudosa": 0.1326,
+      "fallas": 0,
+      "usd_por_1000_correos": 0.0
+    },
+    {
+      "banda": [
+        0.35,
+        0.5
+      ],
+      "sin_juez": {
+        "recall": {
+          "media": 0.78,
+          "min": 0.632,
+          "max": 0.947
+        },
+        "precision": {
+          "media": 0.967,
+          "min": 0.9,
+          "max": 1.0
+        },
+        "falsas_alarmas": {
+          "media": 0.06,
+          "min": 0.0,
+          "max": 0.2
+        }
+      },
+      "con_juez": {
+        "recall": {
+          "media": 0.852,
+          "min": 0.737,
+          "max": 1.0
+        },
+        "precision": {
+          "media": 0.954,
+          "min": 0.905,
+          "max": 1.0
+        },
+        "falsas_alarmas": {
+          "media": 0.086,
+          "min": 0.0,
+          "max": 0.2
+        }
+      },
+      "delta_recall": 0.072,
+      "delta_falsas": 0.026,
+      "fraccion_dudosa": 0.098,
       "fallas": 0,
       "usd_por_1000_correos": 0.0
     },
@@ -889,46 +970,134 @@
       ],
       "sin_juez": {
         "recall": {
-          "media": 0.823,
-          "min": 0.688,
-          "max": 0.955
+          "media": 0.78,
+          "min": 0.632,
+          "max": 0.947
         },
         "precision": {
-          "media": 0.933,
-          "min": 0.867,
-          "max": 0.955
+          "media": 0.967,
+          "min": 0.9,
+          "max": 1.0
         },
         "falsas_alarmas": {
-          "media": 0.101,
-          "min": 0.074,
-          "max": 0.222
+          "media": 0.06,
+          "min": 0.0,
+          "max": 0.2
         }
       },
       "con_juez": {
         "recall": {
-          "media": 0.859,
-          "min": 0.75,
-          "max": 0.955
+          "media": 0.805,
+          "min": 0.632,
+          "max": 1.0
         },
         "precision": {
-          "media": 0.936,
-          "min": 0.875,
-          "max": 0.955
+          "media": 0.965,
+          "min": 0.905,
+          "max": 1.0
         },
         "falsas_alarmas": {
-          "media": 0.101,
-          "min": 0.074,
-          "max": 0.222
+          "media": 0.063,
+          "min": 0.0,
+          "max": 0.2
         }
       },
-      "delta_recall": 0.036,
+      "delta_recall": 0.025,
+      "delta_falsas": 0.003,
+      "fraccion_dudosa": 0.0514,
+      "fallas": 0,
+      "usd_por_1000_correos": 0.0
+    },
+    {
+      "banda": [
+        0.45,
+        0.5
+      ],
+      "sin_juez": {
+        "recall": {
+          "media": 0.78,
+          "min": 0.632,
+          "max": 0.947
+        },
+        "precision": {
+          "media": 0.967,
+          "min": 0.9,
+          "max": 1.0
+        },
+        "falsas_alarmas": {
+          "media": 0.06,
+          "min": 0.0,
+          "max": 0.2
+        }
+      },
+      "con_juez": {
+        "recall": {
+          "media": 0.793,
+          "min": 0.632,
+          "max": 1.0
+        },
+        "precision": {
+          "media": 0.967,
+          "min": 0.905,
+          "max": 1.0
+        },
+        "falsas_alarmas": {
+          "media": 0.06,
+          "min": 0.0,
+          "max": 0.2
+        }
+      },
+      "delta_recall": 0.013,
       "delta_falsas": 0.0,
-      "fraccion_dudosa": 0.04,
+      "fraccion_dudosa": 0.0167,
       "fallas": 0,
       "usd_por_1000_correos": 0.0
     }
   ],
   "max_falsas": 0.08,
-  "punto_operacion": null,
-  "motivo": "El clasificador solo ya tiene 10% de falsas alarmas medias, sobre el máximo de 8%, y el juez solo puede subir la sospecha."
+  "punto_operacion": {
+    "banda": [
+      0.4,
+      0.5
+    ],
+    "sin_juez": {
+      "recall": {
+        "media": 0.78,
+        "min": 0.632,
+        "max": 0.947
+      },
+      "precision": {
+        "media": 0.967,
+        "min": 0.9,
+        "max": 1.0
+      },
+      "falsas_alarmas": {
+        "media": 0.06,
+        "min": 0.0,
+        "max": 0.2
+      }
+    },
+    "con_juez": {
+      "recall": {
+        "media": 0.805,
+        "min": 0.632,
+        "max": 1.0
+      },
+      "precision": {
+        "media": 0.965,
+        "min": 0.905,
+        "max": 1.0
+      },
+      "falsas_alarmas": {
+        "media": 0.063,
+        "min": 0.0,
+        "max": 0.2
+      }
+    },
+    "delta_recall": 0.025,
+    "delta_falsas": 0.003,
+    "fraccion_dudosa": 0.0514,
+    "fallas": 0,
+    "usd_por_1000_correos": 0.0
+  }
 }
