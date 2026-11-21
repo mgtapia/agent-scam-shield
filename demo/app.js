@@ -20,7 +20,7 @@ const RE_BLOQUEO = /^(ACCIÓN BLOQUEADA|ACTION BLOCKED)/i;
 
 const T = {
   es: {
-    v_operaciones: "Operaciones", v_vivo: "En vivo", v_resultados: "Resultados", v_probar: "Pruébalo",
+    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "Corridas reales de modelos con Inspect", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados", v_probar: "Pruébalo",
     escenario: "Escenario", reproducir: "Reproducir", reproduciendo: "Reproduciendo", reiniciar: "Reiniciar",
     correos: "Correos", calor_tactica: "Táctica × defensa", calor_modelo: "Modelo × idioma",
     d_none: "Sin defensa", d_layer1: "Firewall", d_layer2: "Escudo", d_both: "Firewall + escudo", d_layer2_approver: "Escudo (approver)",
@@ -52,14 +52,14 @@ const T = {
     ayuda_nbajo: "Menos de 5 escenarios: el intervalo es muy ancho y la celda se atenúa",
     ayuda_n: "Entre corchetes, el intervalo al 95 % remuestreando escenarios; las repeticiones de un escenario cuentan una vez. n: escenarios. Válidas: muestras con puntaje sobre el total, las con error no cuentan",
     vs: "vs sin defensa", sin_datos: "Sin datos", prueba: "Datos de prueba", fuente: "Inspect · {m} modelos · {n} muestras válidas",
-    sin_resultados: "Sin resultados", sin_episodio: "Sin episodio exportado", abrir: "Clic: abrir en vivo",
+    sin_resultados: "Sin resultados", sin_episodio: "Sin episodio exportado", abrir: "Clic: abrir en Episodios",
     t_exito: "éxito de la estafa", t_modelo: "sin defensa",
     p_titulo: "Intenta estafarlo", p_de: "De", p_asunto: "Asunto", p_cuerpo: "Cuerpo", p_enviar: "Enviar al agente",
     p_pronto: "Próximamente", p_de_ph: "cobranza@dominio.cl", p_asunto_ph: "Actualización de datos de pago",
     locale: "es-CL",
   },
   en: {
-    v_operaciones: "Operations", v_vivo: "Live", v_resultados: "Results", v_probar: "Try it",
+    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "Real model runs with Inspect", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results", v_probar: "Try it",
     escenario: "Scenario", reproducir: "Play", reproduciendo: "Playing", reiniciar: "Reset",
     correos: "Emails", calor_tactica: "Tactic × defense", calor_modelo: "Model × language",
     d_none: "No defense", d_layer1: "Firewall", d_layer2: "Shield", d_both: "Firewall + shield", d_layer2_approver: "Shield (approver)",
@@ -91,7 +91,7 @@ const T = {
     ayuda_nbajo: "Fewer than 5 scenarios: the interval is very wide and the cell is dimmed",
     ayuda_n: "In brackets, the 95 % interval from resampling scenarios; repeats of a scenario count once. n: scenarios. Valid: scored samples out of the total, errored ones don't count",
     vs: "vs no defense", sin_datos: "No data", prueba: "Test data", fuente: "Inspect · {m} models · {n} valid samples",
-    sin_resultados: "No results", sin_episodio: "No exported episode", abrir: "Click: open live",
+    sin_resultados: "No results", sin_episodio: "No exported episode", abrir: "Click: open in Episodes",
     t_exito: "scam success", t_modelo: "no defense",
     p_titulo: "Try to scam it", p_de: "From", p_asunto: "Subject", p_cuerpo: "Body", p_enviar: "Send to the agent",
     p_pronto: "Coming soon", p_de_ph: "billing@domain.com", p_asunto_ph: "Payment details update",
@@ -171,12 +171,28 @@ function irA(vista) {
   document.querySelectorAll("[role=tab]").forEach((a) => a.setAttribute("aria-selected", String(a.dataset.vista === vista)));
   if (vista !== "vivo") cerrarCorreo();
   window.Operaciones?.alCambiarVista(vista);
+  if (vista === "vivo") abrirUltimaEstafa();
   if (vista === "resultados") {
     if (!estado.analisisPintado) pintarAnalisis();
     requestAnimationFrame(Graficos.redimensionar);
   }
 }
 addEventListener("hashchange", () => irA(location.hash.slice(1)));
+
+// Episodios abre el escenario de la estafa más reciente que vio Operaciones y que tenga episodio exportado.
+const hayEpisodio = (escenario) => CARRILES.some((c) => episodioDe(escenario, estado.idioma, c.defensas));
+function abrirUltimaEstafa() {
+  const u = window.Operaciones?.ultimaEstafa(hayEpisodio);
+  if (!u || estado.reproduciendo) return;
+  const cambia = u.escenario !== estado.escenario;
+  estado.desdeOps = u;
+  if (cambia) {
+    estado.escenario = u.escenario;
+    $("#sel-escenario").value = u.escenario;
+    cargarEscenario();
+    estado.analisisPintado = false;
+  } else pintarFranja();
+}
 
 // --- Franja del escenario: tarea, monto y cuenta inscrita ---
 function montoDe(ep) {
@@ -195,7 +211,7 @@ function pintarFranja() {
   const num = valor ? (String(valor).match(RE_CUENTA) || [valor])[0] : "";
   const monto = montoDe(ep);
   $("#franja").innerHTML = `
-    <div class="quien">${ms("person")}${esc(ep.dueno || t("dueno"))}</div>
+    <div class="quien">${ms("person")}${esc(ep.dueno || t("dueno"))}${estado.desdeOps?.escenario === ep.escenario ? `<span class="tag" data-ayuda="${esc(t("ayuda_desde_ops", { id: estado.desdeOps.id }))}">${esc(t("desde_ops"))}</span>` : ""}</div>
     <div class="celda-tarea" data-ayuda="${esc(ep.encargo)}"><span class="tarea">${esc(ep.encargo)}</span></div>
     <div><span class="rotulo">${esc(t("monto"))}</span><span class="grande">${monto === null ? "—" : plata(monto)}</span></div>
     <div class="celda-inscrita" data-cuenta="${norm(num)}">${ms("account_balance")}${nombre
@@ -782,6 +798,7 @@ function pintarTextos() {
   document.documentElement.lang = estado.idioma;
   document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = t(el.dataset.t); });
   document.querySelectorAll("[data-ph]").forEach((el) => { el.placeholder = t(el.dataset.ph); });
+  document.querySelectorAll("[data-ayuda-solo]").forEach((el) => { el.dataset.ayuda = t(el.dataset.ayudaSolo); });
   document.querySelectorAll("[data-ayuda-t]").forEach((el) => { el.dataset.ayuda = t(el.dataset.ayudaT); el.setAttribute("aria-label", t(el.dataset.ayudaT)); });
   const btn = $("#btn-reproducir");
   btn.querySelector("[data-t]").textContent = estado.reproduciendo ? t("reproduciendo") : t("reproducir");

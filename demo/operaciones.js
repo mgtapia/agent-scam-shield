@@ -5,7 +5,7 @@
 
 const Operaciones = (() => {
   Object.assign(T.es, {
-    o_cola: "Entrada", o_lectura: "Lectura", o_registro: "Registro", o_capas: "Defensa en capas", o_boveda: "Bóveda", o_modelo: "Modelo",
+    o_juez: "Juez", ayuda_juez: "Correo escrito a mano en Pruébalo: solo se evalúa, no entrena ni entra a la bóveda", o_cola: "Entrada", o_lectura: "Lectura", o_registro: "Registro", o_capas: "Defensa en capas", o_boveda: "Bóveda", o_modelo: "Modelo",
     o_sello_real: "Simulación · motor real", o_sello_sim: "Simulación · emisor local", o_sello_conectando: "Conectando",
     o_sello_reconectando: "Reconectando", ayuda_sello: "Los agentes y los correos son simulados. La defensa (firewall, escudo, bóveda y clasificador) corre sobre cada evento",
     o_pausa: "Pausa", o_seguir: "Seguir",
@@ -13,9 +13,9 @@ const Operaciones = (() => {
     o_en_cola: "{n} en cola", o_cola_n: "{n}", o_estado_cola: "En cola", o_estado_leyendo: "Leyendo",
     o_dec_seguro: "Seguro", o_dec_sospechoso: "Sospechoso", o_dec_estafa: "Estafa",
     capa_1: "Firewall", capa_2: "Escudo", capa_boveda: "Bóveda",
-    ayuda_capa_1: "Capa 1: reglas contra lo técnico (instrucciones inyectadas, MCP envenenado, fuga de secretos)",
-    ayuda_capa_2: "Capa 2: revisa de dónde salió cada cuenta y dato antes de actuar",
-    ayuda_capa_boveda: "Indicador ya visto en una estafa confirmada: se detiene al tiro",
+    ayuda_capa_1: "Acciones retenidas por la capa 1: reglas contra lo técnico (instrucciones inyectadas, MCP envenenado, fuga de secretos)",
+    ayuda_capa_2: "Acciones retenidas por la capa 2: revisa de dónde salió cada cuenta y dato antes de actuar",
+    ayuda_capa_boveda: "Veredictos atajados por la bóveda: un indicador ya visto en una estafa confirmada",
     f_tecnico: "Técnico", f_ingenieria_social: "Ingeniería social", f_legitimo: "Legítimo",
     o_detenidas: "{a}/{n} detenidas", o_retenidas: "{a}/{n} retenidas",
     ayuda_familia: "Acciones de los agentes por familia. Cada tramo es la capa que detuvo la acción; rojo es una acción de ataque que pasó",
@@ -37,7 +37,7 @@ const Operaciones = (() => {
     tr_inyeccion: "inyección", tr_secreto: "secreto",
   });
   Object.assign(T.en, {
-    o_cola: "Inbox", o_lectura: "Reading", o_registro: "Log", o_capas: "Layered defense", o_boveda: "Vault", o_modelo: "Model",
+    o_juez: "Judge", ayuda_juez: "Email written by hand in Try it: only evaluated, never trained on or added to the vault", o_cola: "Inbox", o_lectura: "Reading", o_registro: "Log", o_capas: "Layered defense", o_boveda: "Vault", o_modelo: "Model",
     o_sello_real: "Simulation · real engine", o_sello_sim: "Simulation · local emitter", o_sello_conectando: "Connecting",
     o_sello_reconectando: "Reconnecting", ayuda_sello: "Agents and emails are simulated. The defense (firewall, shield, vault and classifier) runs on every event",
     o_pausa: "Pause", o_seguir: "Resume",
@@ -47,7 +47,7 @@ const Operaciones = (() => {
     capa_1: "Firewall", capa_2: "Shield", capa_boveda: "Vault",
     ayuda_capa_1: "Layer 1: rules against technical attacks (injected instructions, poisoned MCP, secret leaks)",
     ayuda_capa_2: "Layer 2: checks where every account and value came from before acting",
-    ayuda_capa_boveda: "Indicator already seen in a confirmed scam: stopped at once",
+    ayuda_capa_boveda: "Verdicts caught by the vault: an indicator already seen in a confirmed scam",
     f_tecnico: "Technical", f_ingenieria_social: "Social engineering", f_legitimo: "Legitimate",
     o_detenidas: "{a}/{n} stopped", o_retenidas: "{a}/{n} held",
     ayuda_familia: "Agent actions by family. Each segment is the layer that stopped the action; red is an attack action that went through",
@@ -83,7 +83,7 @@ const Operaciones = (() => {
     correos: new Map(), orden: [], filas: new Map(),
     lecturas: [], leyendo: null, mostrado: null, espera: null,
     boveda: new Map(), modelo: null, historial: [], pesos: {}, cambios: {},
-    bloqueos: {}, desenlace: new Map(), retomar: false,
+    bloqueos: {}, desenlace: new Map(), capas: {}, contadas: new Set(), retomar: false, estafas: [],
     alarma: null, curva: null, visible: false, iniciado: false,
   };
 
@@ -138,6 +138,14 @@ const Operaciones = (() => {
   }
 
   // --- Entrada: un correo por fila, el más nuevo arriba ---
+  // Las estafas que vio Operaciones, la más reciente al final, para que Episodios abra el mismo escenario.
+  function anotarEstafa(escenario, id) {
+    if (!escenario || escenario === "juez") return;
+    o.estafas = o.estafas.filter((x) => x.escenario !== escenario);
+    o.estafas.push({ escenario, id, ts: Date.now() / 1000 });
+    if (o.estafas.length > 40) o.estafas.shift();
+  }
+  const tagJuez = () => `<span class="tag juez" data-ayuda="${esc(t("ayuda_juez"))}">${esc(t("o_juez"))}</span>`;
   function htmlRemitente(de = "") {
     const i = de.lastIndexOf("@");
     if (i < 0) return `<span class="de-local">${esc(de)}</span>`;
@@ -150,7 +158,7 @@ const Operaciones = (() => {
     else if (v && c.fase === "leido") { icono = ICONO_DEC[v.decision] || "check"; etiqueta = t(`o_dec_${v.decision}`); cls = v.decision; }
     const a = c.accion;
     const capaFila = c.fase !== "leido" ? null : a && a.resultado !== "ejecutada" ? a.capa : v && v.decision !== "seguro" ? v.capa : null;
-    return `${ms(icono)}<span class="f-agente">${esc(c.agente || "")}</span><span class="f-de">${htmlRemitente(c.de)}</span>
+    return `${ms(icono)}<span class="f-agente">${c.juez ? tagJuez() : esc(c.agente || "")}</span><span class="f-de">${htmlRemitente(c.de)}</span>
       <span class="f-dec">${esc(etiqueta)}</span><span class="f-asunto">${esc(c.asunto || "")}</span><span class="f-capa">${tagCapa(capaFila)}</span>`;
   }
   function pintarFila(id, nueva) {
@@ -227,7 +235,7 @@ const Operaciones = (() => {
     vista.innerHTML = `
       <div class="lec-meta">
         <span class="rotulo">${esc(t("c_de"))}</span><span class="dato lec-de">${htmlDe(c, tr)}</span>
-        <span class="lec-quien">${ms("smart_toy")}${esc(c.agente || "")}<span class="dato c-2">${esc(c.id)} · ${esc(hora(c.ts))}</span></span>
+        <span class="lec-quien">${c.juez ? tagJuez() : `${ms("smart_toy")}${esc(c.agente || "")}`}<span class="dato c-2">${esc(c.id)} · ${esc(hora(c.ts))}</span></span>
         <span class="rotulo">${esc(t("p_asunto"))}</span><span class="lec-asunto">${esc(c.asunto || "")}</span>
       </div>
       <div class="lec-cuerpo">${cuerpo.html}</div>
@@ -303,13 +311,23 @@ const Operaciones = (() => {
     L.raf = requestAnimationFrame(paso);
   }
 
+  // Contadores por capa, como `bloqueos_por_capa` del motor: Firewall y Escudo cuentan acciones retenidas;
+  // Bóveda, veredictos atajados. Son números propios: no tienen por qué sumar lo mismo que las barras.
+  function contarCapa(id, k) {
+    const clave = `${id}:${k}`;
+    if (!k || o.contadas.has(clave)) return;
+    o.contadas.add(clave);
+    o.capas[k] = (o.capas[k] || 0) + 1;
+  }
   function desenlaceBoveda(c, animar) {
+    contarCapa(c.id, "boveda");
     contar(c.id, c.veredicto?.familia, "boveda", "retenida");
     pintarCapas(animar ? "boveda" : null);
   }
   function desenlaceAccion(c, animar) {
     const e = c.accion;
     contar(e.id, e.familia || c.veredicto?.familia, e.capa, e.resultado);
+    if (e.resultado === "retenida" && (e.capa === "1" || e.capa === "2")) contarCapa(e.id, e.capa);
     const detenida = e.resultado !== "ejecutada";
     pintarCapas(animar && detenida ? e.capa : null);
     pintarFila(e.id);
@@ -434,7 +452,7 @@ const Operaciones = (() => {
     b[k] = (b[k] || 0) + 1;
   }
   function pintarCapas(golpe) {
-    const tot = (k) => FAMILIAS.reduce((s, f) => s + (o.bloqueos[f]?.[k] || 0), 0);
+    const tot = (k) => o.capas[k] || 0;
     const filas = FAMILIAS.map((f) => {
       const b = o.bloqueos[f] || {};
       const n = CAPAS.reduce((s, k) => s + (b[k] || 0), 0) + (b.paso || 0);
@@ -546,7 +564,7 @@ const Operaciones = (() => {
       }
       case "correo_nuevo": {
         const c = correo(e.id);
-        Object.assign(c, { agente: e.agente, de: e.de, asunto: e.asunto, cuerpo: e.cuerpo, ts: e.ts });
+        Object.assign(c, { agente: e.agente, de: e.de, asunto: e.asunto, cuerpo: e.cuerpo, ts: e.ts, juez: !!e.juez || e.escenario === "juez", escenario: e.escenario || null });
         if (!o.orden.includes(e.id)) o.orden.push(e.id);
         if (o.orden.length > 200) { const v = o.orden.shift(); if (v !== o.mostrado) o.correos.delete(v); }
         pintarFila(e.id, true);
@@ -564,6 +582,7 @@ const Operaciones = (() => {
       case "veredicto": {
         const c = correo(e.id);
         c.veredicto = e;
+        if (e.decision === "estafa" && !c.juez) anotarEstafa(e.escenario || c.escenario, c.id);
         if (o.leyendo?.id === e.id && e.fuente === "boveda") terminarLectura();
         else if (c.fase === "leido") { pintarFila(e.id); pintarVeredicto(c); }
         if (!c.cuerpo) { c.fase = "leido"; pintarFila(e.id); }
@@ -612,18 +631,23 @@ const Operaciones = (() => {
     for (const c of lista(f.correos)) {
       if (!c?.id) continue;
       const x = correo(c.id);
-      Object.assign(x, { agente: c.agente, de: c.de, asunto: c.asunto, cuerpo: c.cuerpo, ts: c.ts, fase: "leido" });
+      Object.assign(x, { agente: c.agente, de: c.de, asunto: c.asunto, cuerpo: c.cuerpo, ts: c.ts, fase: "leido", juez: !!c.juez || c.escenario === "juez", escenario: c.escenario || null });
       x.lectura = c.lectura || (c.tramos ? { tramos: c.tramos } : null);
       x.veredicto = c.veredicto || (c.decision ? { decision: c.decision, confianza: c.confianza, senales: c.senales, fuente: c.fuente, capa: c.capa, version_modelo: c.version_modelo } : null);
       x.accion = c.accion || null;
       if (!x.veredicto) x.fase = "cola";
-      if (x.veredicto?.capa === "boveda") contar(c.id, x.veredicto.familia, "boveda", "retenida");
+      if (x.veredicto?.capa === "boveda") { contar(c.id, x.veredicto.familia, "boveda", "retenida"); contarCapa(c.id, "boveda"); }
       if (x.accion) contar(c.id, x.accion.familia || x.veredicto?.familia, x.accion.capa, x.accion.resultado);
+      if (x.accion?.resultado === "retenida" && (x.accion.capa === "1" || x.accion.capa === "2")) contarCapa(c.id, x.accion.capa);
+      if (x.veredicto?.decision === "estafa" && !x.juez) anotarEstafa(x.veredicto.escenario || x.escenario, c.id);
       if (!x.veredicto && (x.accion || x.lectura)) x.pendiente = !!x.accion;
       if (!o.orden.includes(c.id)) o.orden.push(c.id);
     }
+    // Los contadores del motor cubren también lo anterior a los últimos 50 correos.
+    const b = f.bloqueos_por_capa;
+    if (b && typeof b === "object") for (const k of CAPAS) if (typeof b[k] === "number") o.capas[k] = Math.max(o.capas[k] || 0, b[k]);
     if (typeof f.pausa === "boolean") o.pausa = f.pausa;
-    if ([1, 2, 4].includes(Number(f.velocidad))) o.velocidad = Number(f.velocidad);
+    if ([1, 2, 4].includes(Number(f.velocidad))) { o.velocidad = Number(f.velocidad); estado.velocidad = o.velocidad; }
     pintarTodo();
     // El último correo con veredicto queda abierto, sin animación, para que la vista arranque con contexto.
     const ultimo = [...o.orden].reverse().find((id) => o.correos.get(id)?.veredicto && o.correos.get(id)?.cuerpo);
@@ -671,7 +695,7 @@ const Operaciones = (() => {
   async function control(accion, valor) {
     if (accion === "pausa" || accion === "seguir") o.pausa = accion === "pausa";
     if (accion === "seguir" && o.retomar) { o.retomar = false; siguienteLectura(); }
-    if (accion === "velocidad") o.velocidad = valor;
+    if (accion === "velocidad") { o.velocidad = valor; estado.velocidad = valor; }
     pintarControles();
     try { await o.fuente?.control({ accion, ...(valor ? { valor } : {}) }); }
     catch (err) { console.warn("control del flujo falló", err); }
@@ -681,7 +705,7 @@ const Operaciones = (() => {
     if (o.leyendo) cancelAnimationFrame(o.leyendo.raf);
     clearTimeout(o.espera);
     Object.assign(o, { correos: new Map(), orden: [], filas: new Map(), lecturas: [], leyendo: null, mostrado: null, espera: null, retomar: false,
-      boveda: new Map(), historial: [], bloqueos: {}, desenlace: new Map() });
+      boveda: new Map(), historial: [], bloqueos: {}, desenlace: new Map(), capas: {}, contadas: new Set() });
   }
 
   function usarSimulado() {
@@ -758,7 +782,15 @@ const Operaciones = (() => {
     conectar();
   }
 
-  return { iniciar, alCambiarVista, aplicar, _o: o };
+  // Para Pruébalo: el texto con todos sus tramos marcados y la lista de tramos.
+  function resaltar(c) {
+    const tr = tramosDe(c);
+    const cuerpo = htmlCuerpo(c, tr).html.replaceAll('class="tk"', 'class="tk leido"').replaceAll('class="tramo ', 'class="tramo visto ');
+    const lista = [...tr.dentro, ...tr.fuera].map(htmlHallazgo).join("");
+    return { cuerpo, lista };
+  }
+
+  return { iniciar, alCambiarVista, aplicar, resaltar, textoAccion, ultimaEstafa: (sirve = () => true) => [...o.estafas].reverse().find((x) => sirve(x.escenario)) || null, _o: o };
 })();
 window.Operaciones = Operaciones;
 Operaciones.alCambiarVista(estado.vista);
