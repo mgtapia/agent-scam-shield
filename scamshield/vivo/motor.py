@@ -20,6 +20,7 @@ import time
 from collections import deque
 from typing import Any, Callable, Iterator, Optional
 
+from .. import estandares
 from ..defenses.layer1 import reglas_inyeccion
 from ..defenses.layer2 import politica_origen
 from ..env.world import LLAMADA, MCP, WEB, WHATSAPP
@@ -43,9 +44,9 @@ class Motor:
         self.libreta = self.flujo.libreta
         self.umbral_monto = self._umbral_monto()
         self.boveda = Boveda(self.libreta, self._cuentas_legitimas())
-        apartado = [(self._rasgos(c), int(c.etiqueta == "estafa"))
-                    for c in self.flujo.conjunto_apartado()]
-        self.clasificador = Clasificador(apartado, cada=cada)
+        evaluacion = self.flujo.conjunto_apartado()
+        apartado = [(self._rasgos(c), int(c.etiqueta == "estafa")) for c in evaluacion]
+        self.clasificador = Clasificador(apartado, cada=cada, meta=[ficha(c) for c in evaluacion])
         self.agentes: dict[str, dict[str, Any]] = {
             a: {"agente": a, "estado": "inactivo", "tarea": ""} for a in AGENTES}
         self.correos: deque[dict[str, Any]] = deque(maxlen=50)
@@ -369,6 +370,23 @@ class Motor:
                 self._despertar.clear()
                 restante -= tramo
             self.publicar(ev)
+
+
+def ficha(c: Correo) -> dict[str, Any]:
+    """Qué estafa es un correo, para decir qué se coló: escenario, familia, mecanismo, OWASP/ATLAS y canal.
+
+    `familia` es `anotaciones.familia` (la misma que usa `--agrupar familia`), no la clase del flujo
+    (`ingenieria_social` o `tecnico`), que va en `clase`. `canal` es por donde llegó: correo, llamada, web o mcp.
+    """
+    anot = c.escenario.get("anotaciones", {})
+    mecanismo = str(anot.get("fraud_mechanism") or "")
+    try:
+        e = estandares.clasificar(c.escenario)
+        owasp, atlas = e.owasp, e.atlas
+    except KeyError:
+        owasp = atlas = estandares.POR_CONFIRMAR
+    return {"escenario": c.unidad, "familia": str(anot.get("familia") or c.unidad), "mecanismo": mecanismo,
+            "clase": c.familia, "canal": c.origen, "owasp": owasp, "atlas": atlas}
 
 
 def _tarea_accion(c: Correo) -> str:

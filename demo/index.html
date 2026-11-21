@@ -101,7 +101,13 @@
             <div class="metricas" id="ops-metricas"></div>
             <div class="lienzo" id="ops-curva"></div>
           </div>
-          <ol class="pesos" id="ops-pesos" aria-label="Pesos de las señales"></ol>
+          <div class="modelo-lado">
+            <ol class="pesos" id="ops-pesos" aria-label="Pesos de las señales"></ol>
+            <section class="colados" aria-labelledby="t-colados">
+              <h3 class="co-titulo" id="t-colados" tabindex="0"><span data-t="o_colados">Se colaron</span><span class="dato" id="n-colados"></span></h3>
+              <ol class="co-lista" id="ops-colados"></ol>
+            </section>
+          </div>
         </div>
       </section>
     </section>
@@ -127,6 +133,10 @@
       <section class="res-bloque res-atacante" aria-labelledby="t-atacante">
         <h2 class="titulo" id="t-atacante"><span class="ms" aria-hidden="true">swords</span><span data-t="r_atacante">Atacante adaptativo</span><span class="nota" id="n-atacante"></span></h2>
         <div class="res-curva" id="res-atacante"></div>
+      </section>
+      <section class="res-bloque res-colados" aria-labelledby="t-colados-r">
+        <h2 class="titulo" id="t-colados-r"><span class="ms" aria-hidden="true">filter_alt_off</span><span data-t="r_colados">Qué se cuela, por capa y por tipo de estafa</span><span class="dato c-2 res-cmd" id="f-colados"></span><span class="nota" id="n-colados-r"></span></h2>
+        <div id="res-colados"></div>
       </section>
     </section>
 

@@ -27,6 +27,9 @@ const Operaciones = (() => {
     ayuda_precision: "De lo que marcó como estafa, cuánto lo era. Evaluado en un conjunto apartado que nunca se usa para entrenar",
     ayuda_recall: "Cobertura (recall): de las estafas, cuántas marcó",
     ayuda_falsas: "Correos legítimos marcados como estafa",
+    o_colados: "Se colaron", o_colados_ninguna: "Ninguna",
+    ayuda_colados: "Estafas del conjunto apartado (un tercio de los escenarios, que nunca entrena) que el modelo dejó bajo 0,5: son las que bajan la cobertura. Cuentan correos, por tipo de estafa. No se pagan solas: la capa 1 y la capa 2 corren igual. La validación cruzada por familia está en Resultados",
+    ayuda_colado: "{e} · {c} · {n} de {d} · probabilidad media {p}",
     o_sin_correo: "Sin correos", o_bv_vacia: "Sin indicadores", o_sin_modelo: "Sin versión",
     bv_cuenta: "cuenta", bv_dominio: "dominio", bv_plantilla: "plantilla", bv_origen: "origen {o} · primera vez {h}",
     o_pesos: "Pesos",
@@ -60,6 +63,9 @@ const Operaciones = (() => {
     ayuda_precision: "Of what it flagged as a scam, how much was. Evaluated on a held-out set never used for training",
     ayuda_recall: "Of the scams, how many it flagged",
     ayuda_falsas: "Legitimate emails flagged as scams",
+    o_colados: "Slipped through", o_colados_ninguna: "None",
+    ayuda_colados: "Held-out scams (a third of the scenarios, never trained on) the model left below 0.5: they are what lowers recall. Counted in emails, by scam type. They are not paid on their own: layers 1 and 2 still run. The cross-validation by family is in Results",
+    ayuda_colado: "{e} · {c} · {n} of {d} · mean probability {p}",
     o_sin_correo: "No emails", o_bv_vacia: "No indicators", o_sin_modelo: "No version",
     bv_cuenta: "account", bv_dominio: "domain", bv_plantilla: "template", bv_origen: "source {o} · first seen {h}",
     o_pesos: "Weights",
@@ -596,7 +602,26 @@ const Operaciones = (() => {
     $("#ops-metricas").innerHTML = met("o_precision", "precision", "l-1") + met("o_recall", "recall", "l-2") + met("o_falsas", "falsas_alarmas", "l-3", true);
     if (animar) $("#ops-metricas").querySelectorAll(".m-val").forEach((el) => reanimar(el, "golpe"));
     pintarPesos();
+    pintarColados();
     pintarCurva();
+  }
+  // Se colaron: las estafas apartadas que el modelo dejó como no-estafa (`colados` del evento `modelo`), por tipo.
+  function pintarColados() {
+    const lista = o.modelo?.colados;
+    const ol = $("#ops-colados");
+    $("#t-colados").dataset.ayuda = t("ayuda_colados");
+    if (!Array.isArray(lista)) { ol.innerHTML = ""; $("#n-colados").textContent = ""; return; }
+    const grupos = new Map();
+    for (const c of lista) {
+      const g = grupos.get(c.familia) || { familia: c.familia, n: 0, de: 0, detalle: [] };
+      g.n += c.n || 0; g.de += c.de || 0;
+      g.detalle.push(t("ayuda_colado", { e: c.escenario, c: nombreCanal(c.canal), n: c.n, d: c.de, p: Number(c.probabilidad).toFixed(2) }));
+      grupos.set(c.familia, g);
+    }
+    const filas = [...grupos.values()].sort((a, b) => b.n - a.n || b.n / b.de - a.n / a.de || String(a.familia).localeCompare(b.familia));
+    $("#n-colados").textContent = String(filas.reduce((x, g) => x + g.n, 0));
+    ol.innerHTML = filas.length ? filas.map((g) => `<li data-ayuda="${esc(g.detalle.join("\n"))}"><span class="co-nombre">${esc(nombreFamilia(g.familia))}</span><span class="dato">${g.n}/${g.de}</span></li>`).join("")
+      : `<li class="vacio">${esc(t("o_colados_ninguna"))}</li>`;
   }
   function pintarPesos() {
     const filas = Object.entries(o.pesos).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 8);

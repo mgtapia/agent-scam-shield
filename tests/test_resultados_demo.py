@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.resultados_demo import armar, atacante, duelo, escribir
+from scripts.resultados_demo import armar, atacante, colados, duelo, escribir
 
 
 def _curva(ruta: Path, rondas: int, n: int, exitos: list[int], errores: int = 0) -> Path:
@@ -97,3 +97,29 @@ def test_duelo_capa2_en_cero_y_el_escudo_que_aprende_termina_en_cero():
 def test_duelo_sin_archivos(tmp_path):
     d = duelo(tmp_path)
     assert d["estado"] == "sin_archivo" and d["congelado"]["semillas"] == []
+
+
+# --- Qué se cuela, por capa y por familia ---
+
+def test_con_las_capas_2_y_3_no_se_cuela_ninguna_y_la_capa_2_sola_deja_las_que_dicta_el_dueno():
+    c = colados()
+    assert c["totales"]["layer23"] == 0 and c["totales"]["none"] == c["estafas"]
+    assert 0 < c["totales"]["layer2"] == c["dueno_dicta"]["layer2"]   # todo lo que cruza la capa 2, lo dicta el dueño
+    assert c["dueno_dicta"]["layer3"] == 0                             # y la capa 3 lo frena
+    assert sum(f["por_capa"]["layer2"] for f in c["familias"]) == c["totales"]["layer2"]
+    # El clasificador: la suma por familia es el total, y viene de la validación cruzada.
+    assert c["clasificador"]["colados"] == sum((f["clasificador"] or {}).get("colados", 0) for f in c["familias"])
+    assert c["corridas"] == 9 and "results/clasificador.json" in c["fuente"]
+
+
+def test_colados_con_archivos_propios(tmp_path):
+    fila = lambda esc, fam, dicta, cae: {"escenario": esc, "tipo": "estafa", "familia": fam, "dueno_dicta": dicta,
+                                         "resultados": {k: {"cayo": k in cae} for k in ("none", "layer1", "layer2", "layer3", "layer23")}}
+    bench = {"por_escenario": [fila("a__es", "banco", True, {"none", "layer1", "layer2"}),
+                               fila("b__es", "jefe", False, {"none", "layer1", "layer3"}),
+                               {"escenario": "c__es", "tipo": "control", "resultados": {}}]}
+    (tmp_path / "b.json").write_text(json.dumps(bench), encoding="utf-8")
+    c = colados(tmp_path / "b.json", tmp_path / "no_existe.json")
+    assert c["estafas"] == 2 and c["totales"] == {"none": 2, "layer1": 2, "layer2": 1, "layer3": 1, "layer23": 0}
+    assert c["familias"][0]["familia"] == "banco" and c["familias"][0]["escenarios"]["layer2"] == ["a"]
+    assert c["clasificador"] is None and c["familias"][0]["clasificador"] is None
