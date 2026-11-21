@@ -89,6 +89,9 @@ def politica_canonica(config: Any) -> dict[str, Any]:
                                   "url": _h(s.url) if s.url else "",
                                   "headers": {str(k): _h(v) for k, v in sorted(s.headers.items())}}
                        for s in sorted(config.servidores, key=lambda s: s.nombre)},
+        # #149: el tope por ventana también es política; solo si está, para que la huella de una política sin él no cambie.
+        **({"tope_ventana": {"monto": int(config.tope_ventana), "dias": int(config.ventana_dias)}}
+           if getattr(config, "tope_ventana", 0) else {}),
         # #103: el mandato y las herramientas fijadas también son política. Solo si están, para que la huella
         # de una política sin ellos no cambie.
         **({"mandato": {str(k): v for k, v in sorted(getattr(config, "mandato", {}).items())}}
@@ -167,6 +170,10 @@ def diferencias(antes: Mapping[str, Any], despues: Mapping[str, Any]) -> list[st
         d.append("~ cambió la ruta del registro de la política aprobada")
     if antes.get("registro_aprobaciones") != despues.get("registro_aprobaciones"):
         d.append("~ cambió la ruta del registro de aprobaciones")
+    if antes.get("tope_ventana") != despues.get("tope_ventana"):
+        def _ventana(t):
+            return f"${t['monto']:,} en {t['dias']} días".replace(",", ".") if t else "sin tope"
+        d.append(f"~ tope por cuenta no inscrita: {_ventana(antes.get('tope_ventana'))} → {_ventana(despues.get('tope_ventana'))}")
     a, b = antes.get("servidores", {}), despues.get("servidores", {})
     for k in sorted(set(a) | set(b)):
         if k not in a:
