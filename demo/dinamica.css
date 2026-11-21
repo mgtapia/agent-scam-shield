@@ -328,3 +328,18 @@ body.dn-revisando .dn-marco { bottom: 48px; }
 
 /* Una frase corta del nieto que va entera en una línea */
 .dn-una-linea .dn-titular { font-size: 84px; line-height: 100px; white-space: nowrap; }
+
+/* El logo de MR (img/marca.png) en la portada y el cierre */
+.dn-marca-img { display: block; flex: none; height: 196px; width: auto; }
+.dn-logo-portada .dn-marca-img { height: 244px; opacity: 0; animation: dn-aparece 700ms ease-out 200ms forwards; }
+@media (prefers-reduced-motion: reduce) { .dn-logo-portada .dn-marca-img { animation: none; opacity: 1; } }
+
+/* El golpe «Sin Grifter / Con Grifter»: rótulos bien visibles, el pago que sale en rojo y el rebobinado */
+.dn-modo { display: inline-flex; align-items: center; padding: 8px 28px; border: 3px solid currentColor; font: var(--p-fuerte) 56px / 68px var(--titular, var(--sans)); white-space: nowrap; }
+.dn-modo.sin { color: var(--rojo); }
+.dn-modo.con { color: var(--verde); }
+.dn-rojo { color: var(--rojo); }
+.dn-rebobina { position: absolute; left: 0; right: 0; bottom: 96px; display: flex; justify-content: center; align-items: center; gap: 20px; color: var(--texto); font-size: 56px; line-height: 68px; font-weight: var(--p-fuerte); white-space: nowrap; }
+.dn-rebobina .dn-ic { font-size: 64px; color: var(--verde); }
+.dn-e-sin, .dn-e-frena { gap: 28px; }
+.dn-e-sin .dn-monto { font-size: 180px; line-height: 190px; }

@@ -59,18 +59,18 @@
     ["n1", 13.1, "der"], ["n2", 17.85, "golpe"], ["n3", 19.8, "izq"], ["fianza", 23.8, "zoom"],
     ["n4", 26.75, "der"], ["cuenta", 29.8, "zoom"], ["n5", 34.55, "abajo"],
     // 3. El agente va a pagar y Grifter retiene
-    ["paga", 38.1, "abajo"], ["frena", 40.4, "golpe"], ["motivo", 41.7, "zoom"],
+    ["paga", 38.1, "abajo"], ["sin", 40.2, "corte"], ["frena", 42.6, "golpe"], ["motivo", 43.9, "zoom"],
     // 4. Pagar igual: doble autorización, Marta aprueba con su código y Pablo rechaza
-    ["alerta", 45.3, "abajo"], ["codigo", 47.7, "der"], ["pablo", 50.5, "der"],
+    ["alerta", 47.5, "abajo"], ["codigo", 49.7, "der"], ["pablo", 52.3, "der"],
     // 5. Dos estafas más, de ~5 s cada una
-    ["banco", 54.6, "abajo"], ["responde", 57.0, "der"], ["clave", 58.75, "golpe"],
-    ["aprobaste", 61.2, "zoom"], ["cobra", 63.3, "golpe"], ["calza", 65.6, "zoom"],
+    ["banco", 56.1, "abajo"], ["responde", 58.5, "der"], ["clave", 60.25, "golpe"],
+    ["aprobaste", 62.7, "zoom"], ["cobra", 64.8, "golpe"], ["calza", 67.1, "zoom"],
     // 6. Cifras
-    ["estafas", 67.6, "zoom"], ["pasan", 69.7, "corte"], ["atacante", 71.4, "der"], ["cruzan", 75.9, "corte"],
+    ["estafas", 69.1, "zoom"], ["pasan", 71.2, "corte"], ["atacante", 72.9, "der"], ["cruzan", 77.4, "corte"],
     // 7. Cierre: la frase final y la marca que se arma
-    ["remate", 77.4, "zoom"], ["cierre", 81.2, "zoom"],
+    ["remate", 78.9, "zoom"], ["cierre", 82.7, "zoom"],
   ];
-  const DURACION = 85.3;
+  const DURACION = 86.5;
   const E = Object.fromEntries(ESCENAS.map(([id, desde]) => [id, desde]));   // el inicio de cada escena
   const PASOS = [0, E.encargo, E.paga, E.alerta, E.banco, E.estafas, E.remate];   // teclas 1 a 7
 
@@ -80,15 +80,15 @@
   const NARR = {
     gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,  dur: 4.08, pal: [0.07, 0.36, 0.53, 0.7, 1.01, 1.33, 1.95, 2.2, 2.71, 2.91, 3, 3.16, 3.59] },
     agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.6,  dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
-    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 40.5, dur: 4.64, pal: [0.13, 0.51, 0.64, 1.28, 1.82, 2.22, 2.51, 2.6, 2.77, 3.55, 3.81, 3.95, 4.06] },
-    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 54.8, dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
-    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 58.85, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
-    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 61.3, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
-    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 65.7, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
-    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 67.7, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
-    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 71.5, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
-    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 77.5, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
-    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 81.7, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
+    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 42.7, dur: 4.64, pal: [0.13, 0.51, 0.64, 1.28, 1.82, 2.22, 2.51, 2.6, 2.77, 3.55, 3.81, 3.95, 4.06] },
+    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 56.3, dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
+    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 60.35, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
+    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 62.8, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
+    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 67.2, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
+    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 69.2, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
+    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 73.0, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
+    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 79.0, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
+    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 83.2, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
   };
   // Cuándo empieza la palabra i de una narración, en segundos de la demo.
   const palabra = (n, i) => NARR[n].en + NARR[n].pal[i];
@@ -104,7 +104,7 @@
   // Cuándo «habla» el agente (su nube pulsa en ámbar) y cuándo suena cada voz de la llamada.
   const HABLA_AGENTE = [[E.encargo + 0.6, E.encargo + 1.7], [E.paga + 0.05, E.paga + 1.6], [E.responde + 0.05, E.responde + 1.5]];
   const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7]], nieto: [[LL.nieto, LL.cuelga]] };
-  const ALARMA = [E.frena, TOQUE_PABLO + 0.25];   // el borde rojo: desde que Grifter retiene hasta que Pablo rechaza
+  const ALARMA = [E.sin + 0.3, TOQUE_PABLO + 0.25];   // el borde rojo: desde que el pago sale (sin Grifter) hasta que Pablo rechaza
   // La frase final, en dos líneas (su voz es NARR.remate: si cambia el texto, hay que regenerar ese mp3).
   const FRASE_FINAL = ["Tu agente puede creerle a cualquiera.", "Tu plata, no."];
   const CODIGO = "482913";       // el código del correo de ejemplo: es un dibujo, no un código real
@@ -266,8 +266,18 @@
             </div>
           </div>
         </div>`);
+    // El golpe «Sin Grifter / Con Grifter» (≤ 3 s): sin el escudo el pago sale y la amenaza atraviesa la nube del
+    // agente; se rebobina y, con Grifter, la nube forma el escudo y el pago queda retenido.
+    const S5b = E.sin;
+    esc_("sin", `
+        <p class="dn-modo sin"${ap(S5b + 0.02, "cae")}>Sin Grifter</p>
+        <div class="dn-escudo-nube">${agente("medio")}</div>
+        <p class="dn-monto dn-rojo"${ap(S5b + 0.35, "pop", S5b + 1.9)}>$650.000</p>
+        <p class="dn-etiqueta"${ap(S5b + 0.7, "sube", S5b + 1.9)}>Pagado a J. Contreras V. · 48-2210-7735</p>
+        <p class="dn-rebobina"${ap(S5b + 1.9, "pop")}><svg class="dn-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 6v12L2.5 12 11 6Zm10.5 0v12L13 12l8.5-6Z"/></svg><span>Rebobinamos: con Grifter</span></p>`, "dn-centro");
     const S5 = E.frena;
     esc_("frena", `
+        <p class="dn-modo con"${ap(S5 + 0.02, "cae")}>Con Grifter</p>
         <div class="dn-escudo-nube">${agente("grande")}</div>
         <h1 class="dn-titular dn-enorme"${ap(S5 + 0.3, "sube")}>Pago retenido</h1>
         <p class="dn-tachado dato"${ap(S5 + 0.55, "sube")}><span>$650.000 → 48-2210-7735</span><i${ap(S5 + 0.8, "raya")}></i></p>`, "dn-centro");
@@ -393,7 +403,7 @@
         <h1 class="dn-titular dn-frase-final">${escribe(FRASE_FINAL[0], 0, desdePalabra("remate", 0))}<span class="dn-remate-2">${escribe(FRASE_FINAL[1], 0, desdePalabra("remate", FRASE_FINAL[0].split(" ").length))}</span></h1>`, "dn-centro");
     esc_("cierre", `
         <div class="dn-logo">
-          ${marca("dn-marca-cierre", 'data-ancla="logo"')}
+          <img class="dn-marca-img dn-marca-cierre" src="img/marca.png" alt="" width="160" height="196" data-ancla="logo">
           <span class="dn-logo-txt">${[..."Grifter"].map((c, i) => `<span${ap(palabra("cierre", 0) - 0.05 + i * 0.07, "cae")}>${c}</span>`).join("")}</span>
         </div>
         <p class="dn-lema">${escribe("Escudo para agentes que pagan", 0, desdePalabra("cierre", 1))}</p>
@@ -403,7 +413,7 @@
     h.push(`<div class="dn-progreso" aria-hidden="true"><i id="dn-barra"></i></div>
       <div class="dn-portada" aria-hidden="true">
         <p class="dn-evento dato">Platanus Hack 26 · AI Security · Equipo 40</p>
-        <div class="dn-logo dn-logo-portada">${marca("dibuja")}<span>Grifter</span></div>
+        <div class="dn-logo dn-logo-portada"><img class="dn-marca-img" src="img/marca.png" alt="" width="200" height="244"><span>Grifter</span></div>
       </div>
       <button type="button" class="dn-inicio" id="dn-inicio" aria-label="Iniciar o pausar la demo (Espacio)">${ic("play_arrow")}<span>Espacio</span></button>`);
     h.unshift(`<canvas id="dn-particulas" aria-hidden="true"></canvas>`);
@@ -532,20 +542,29 @@
     }
     return MUESTRAS.get(clave);
   }
-  // La marca (LOGO): puntos repartidos a lo largo de cada trazo, según su peso.
+  // La marca (img/marca.png, el logo de MR): puntos sacados del canal alfa del PNG, blancos donde el píxel es blanco y
+  // verdes donde es verde. Mientras la imagen no carga, el contorno del escudo simple.
+  let IMG_MARCA = null;
+  const imgMarca = new Image();
+  imgMarca.onload = () => { IMG_MARCA = imgMarca; MUESTRAS.clear(); if (typeof render === "function") render(tiempo); };
+  imgMarca.src = "img/marca.png";
   function puntosLogo(a, n) {
-    const clave = `l|${n}|${Math.round(a.x)}|${Math.round(a.w)}`;
+    const clave = `l|${n}|${Math.round(a.x)}|${Math.round(a.w)}|${IMG_MARCA ? 1 : 0}`;
     if (!MUESTRAS.has(clave)) {
-      const e = a.w / LOGO.caja[0], x0 = a.x - a.w / 2, y0 = a.y - (LOGO.caja[1] * e) / 2, pts = [];
-      let resto = n;
-      LOGO.trazos.forEach((tz, j) => {
-        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        p.setAttribute("d", tz.d);
-        const largo = p.getTotalLength(), m = j === LOGO.trazos.length - 1 ? resto : Math.round(n * tz.peso);
-        resto -= m;
-        for (let i = 0; i < m; i++) { const q = p.getPointAtLength((i / m) * largo); pts.push({ x: x0 + q.x * e, y: y0 + q.y * e, color: tz.color }); }
-      });
-      MUESTRAS.set(clave, pts);
+      if (!IMG_MARCA) {
+        MUESTRAS.set(clave, ESCUDO_M().map((q) => ({ x: a.x + q.x * a.w * 0.6, y: a.y + q.y * a.w * 0.6, color: "texto" })));
+      } else {
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(a.w)); c.height = Math.max(1, Math.round(a.h));
+        const g = c.getContext("2d");
+        g.drawImage(IMG_MARCA, 0, 0, c.width, c.height);
+        const d = g.getImageData(0, 0, c.width, c.height).data, pts = [];
+        for (let y = 0; y < c.height; y += 3) for (let x = 0; x < c.width; x += 3) {
+          const k = (y * c.width + x) * 4;
+          if (d[k + 3] > 140) pts.push({ x: a.x - a.w / 2 + x, y: a.y - a.h / 2 + y, color: d[k] > 160 ? "texto" : "verde" });
+        }
+        MUESTRAS.set(clave, pts.length ? elegir(pts, n, clave) : [{ x: a.x, y: a.y, color: "texto" }]);
+      }
     }
     return MUESTRAS.get(clave);
   }
@@ -603,6 +622,7 @@
     [E.encargo, figEsfera(nube("encargo"), { habla: true }), 0.8, 60],
     [E.suena, figEsfera(ESQUINA), 0.8, 60],
     [E.paga, figEsfera(nube("paga"), { habla: true }), 0.8, 60],
+    [E.sin, figEsfera(nube("sin")), 0.5, 40],
     [E.frena + 0.05, figEscudo(nube("frena")), 0.6, 40],
     [E.motivo, figEscudo(ARRIBA), 0.7, 40],
     [E.alerta, figEsfera(ESQUINA), 0.8, 40],   // en espera vuelve a ser esfera: un escudo de partículas no convive con otro
@@ -621,10 +641,12 @@
   ];
 
   // La amenaza: tramos en que el grupo rojo se acerca y segundos en que Grifter lo hace rebotar.
-  const ACECHO = [[LL.abuela, E.paga], [E.paga, E.frena + 0.05], [E.banco, E.responde], [E.responde, E.clave + 0.05], [E.cobra, E.calza + 0.05]];
+  const ACECHO = [[LL.abuela, E.paga], [E.paga, E.sin], [E.banco, E.responde], [E.responde, E.clave + 0.05], [E.cobra, E.calza + 0.05]];
   const REBOTES = [E.frena + 0.05, E.clave + 0.05, E.calza + 0.05];
   function amenaza(tt, centro) {
-    const tramo = ACECHO.find(([a, b]) => tt >= a && tt < b);
+    // Sin Grifter: la amenaza atraviesa la nube y se lleva el pago (sale por la derecha); al rebobinar vuelve a su órbita.
+    const cruza = tt >= E.sin && tt < E.frena + 0.05;
+    const tramo = cruza ? [E.paga, E.sin] : ACECHO.find(([a, b]) => tt >= a && tt < b);
     const rebote = REBOTES.find((r) => tt >= r && tt < r + 1.3);
     if (!tramo && !rebote) return null;
     const R = centro.R;
@@ -637,6 +659,11 @@
       } else {
         const [ini, fin] = tramo, cerca = ACECHO.some(([x, y]) => y === ini) ? 1 : clamp((tt - ini) / Math.max(1, fin - ini - 0.6));
         d = R * 1.5 * q.d + (1 - (quieto ? 1 : cerca * cerca)) * 1000 + (quieto ? 0 : 10 * Math.sin(tt * 3 + q.f));
+      }
+      if (cruza) {
+        const ida = salida(clamp((tt - E.sin - 0.3) / 1.2)), vuelta = vaiven(clamp((tt - E.sin - 1.9) / (E.frena + 0.05 - E.sin - 1.9)));
+        const p = quieto ? +(tt < E.sin + 1.9) : ida * (1 - vuelta);
+        return { x: centro.x + Math.cos(ang) * d * (1 - 0.7 * p) + 1150 * p * (0.75 + 0.25 * q.d), y: centro.y + Math.sin(ang) * d * (1 - 0.7 * p), c: RGB.rojo, a, s: 2.6 + 0.8 * p };
       }
       return { x: centro.x + Math.cos(ang) * d, y: centro.y + Math.sin(ang) * d, c: RGB.rojo, a, s: 2.6 };
     });
@@ -822,7 +849,6 @@
       s.relojes.forEach((r) => { r.textContent = `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, "0")}`; });
       s.pulsa.forEach((p) => p.style.setProperty("--pulso", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(tt * 2 * Math.PI * 0.9))).toFixed(3)));
       // La marca nítida del cierre reemplaza a la de partículas con un fundido cruzado de 0,2 s, cuando ya calzan.
-      s.marca.forEach((p) => { p.style.strokeDashoffset = 0; });
       if (s.marcaSvg) s.marcaSvg.style.opacity = (quieto ? +(tt >= MARCA_NITIDA) : clamp((tt - MARCA_NITIDA) / 0.2)).toFixed(3);
     }
     // El borde rojo de alerta, mientras el pago está retenido y nadie lo rechazó. Late en opacidad (fijo si reducido).
@@ -922,10 +948,10 @@
     render(tiempo);
     if (seguir) alternar();
   }
-  // Letra de los titulares, el logo y las cifras grandes: --titular. Por defecto IBM Plex Sans; con ?letra= se prueba otra.
+  // Letra de los titulares, el logo y las cifras grandes: --titular. Por defecto Outfit; con ?letra= se prueba otra.
   const LETRAS = {
-    plex: ["IBM Plex Sans (actual)", "", ""],
     outfit: ["Outfit", "Outfit:wght@600;700", "-0.02em"],
+    plex: ["IBM Plex Sans", "", ""],
     space: ["Space Grotesk", "Space+Grotesk:wght@500;700", "-0.03em"],
     sora: ["Sora", "Sora:wght@600;800", "-0.04em"],
     bricolage: ["Bricolage Grotesque", "Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800", "-0.03em"],
@@ -984,7 +1010,7 @@
     const letra = document.createElement("select");
     letra.title = "Letra de titulares, logo y cifras (vista previa)";
     for (const [clave, [nombre]] of Object.entries(LETRAS)) letra.append(new Option(nombre, clave));
-    letra.value = LETRAS[params.get("letra")] ? params.get("letra") : "plex";
+    letra.value = LETRAS[params.get("letra")] ? params.get("letra") : "outfit";
     letra.addEventListener("change", () => { ponerLetra(letra.value); letra.blur(); });
     caja.append(letra);
     boton("Copiar enlace", "Copia el enlace de este cuadro", () => {
@@ -1016,7 +1042,7 @@
   construir();
   preparar();
   medir();
-  ponerLetra(LETRAS[params.get("letra")] ? params.get("letra") : "plex");
+  ponerLetra(LETRAS[params.get("letra")] ? params.get("letra") : "outfit");   // Outfit por defecto; ?letra=plex vuelve a la anterior
   document.fonts?.ready.then(remedir);
   if (params.get("revisar") === "1") { abrirRevisor(); escalar(); }
   prepararAudio();
