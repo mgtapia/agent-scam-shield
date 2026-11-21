@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from scamshield.vivo.flujo import Flujo
-from scripts.validacion_cruzada_vivo import METRICAS, correr, resumir
+from scripts.validacion_cruzada_vivo import METRICAS, colados_por, correr, resumir
 
 
 def test_los_tres_pliegues_son_disjuntos_y_cubren_un_tercio_cada_uno():
@@ -77,3 +77,30 @@ def test_un_agrupar_invalido_se_rechaza():
 def test_una_corrida_por_familia_entrena_sin_tocar_lo_apartado():
     fila = correr(pliegue=0, semilla=1, episodios=60, agrupar="familia")
     assert fila["recall_antes"] == 0.0 and fila["recall"] > 0.3
+
+
+# --- Qué se coló: por familia y por canal, sumando las corridas ---
+
+def test_colados_por_familia_cuenta_correos_y_corridas():
+    filas = [
+        {"apartadas": [{"escenario": "a", "familia": "jefe", "canal": "correo", "n": 3},
+                       {"escenario": "b", "familia": "jefe", "canal": "whatsapp", "n": 3},
+                       {"escenario": "c", "familia": "banco", "canal": "llamada", "n": 3}],
+         "colados": [{"escenario": "b", "familia": "jefe", "canal": "whatsapp", "n": 2}]},
+        {"apartadas": [{"escenario": "a", "familia": "jefe", "canal": "correo", "n": 3}], "colados": []},
+    ]
+    fam = colados_por(filas, "familia")
+    assert fam["jefe"] == {"colados": 2, "correos": 9, "corridas": 2, "corridas_con_colados": 1,
+                           "escenarios": ["b"], "tasa": 0.222}
+    assert fam["banco"]["colados"] == 0 and fam["banco"]["corridas"] == 1
+    assert list(fam) == ["jefe", "banco"]   # primero lo que más se cuela
+    canal = colados_por(filas, "canal")
+    assert canal["whatsapp"]["colados"] == 2 and canal["correo"]["correos"] == 6
+
+
+def test_una_corrida_trae_lo_apartado_y_lo_colado_por_familia():
+    fila = correr(pliegue=0, semilla=1, episodios=20, agrupar="familia")
+    apartadas = sum(a["n"] for a in fila["apartadas"])
+    coladas = sum(c["n"] for c in fila["colados"])
+    assert apartadas and round((apartadas - coladas) / apartadas, 3) == fila["recall"]
+    assert {c["familia"] for c in fila["colados"]} <= {a["familia"] for a in fila["apartadas"]}

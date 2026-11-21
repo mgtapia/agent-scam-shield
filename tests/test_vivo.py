@@ -10,6 +10,7 @@ from scamshield.vivo.motor import Motor
 ESTADOS = {"leyendo", "pensando", "pagando", "esperando", "inactivo"}
 CLASES = {"cuenta", "dominio", "urgencia", "codigo", "monto", "autoridad", "inyeccion"}
 CAPAS = {"1", "2", "boveda", None}
+CANALES = {"correo", "llamada", "whatsapp", "web", "mcp"}
 
 
 @pytest.fixture(scope="module")
@@ -159,6 +160,10 @@ def test_los_eventos_cumplen_el_esquema_del_contrato():
                     "cambios"} <= e.keys()
             for c in e["cambios"]:
                 assert {"senal", "peso_antes", "peso_despues"} == c.keys()
+            for c in e["colados"]:
+                assert {"escenario", "familia", "mecanismo", "clase", "canal", "owasp", "atlas", "n", "de",
+                        "probabilidad", "probabilidad_max"} == c.keys()
+                assert c["canal"] in CANALES and 0 < c["n"] <= c["de"] and c["probabilidad"] <= 0.5
         else:
             raise AssertionError(f"tipo desconocido: {t}")
     assert vistos == {"agente_estado", "correo_nuevo", "lectura", "veredicto", "accion", "boveda",
@@ -225,3 +230,31 @@ def test_los_eventos_dicen_de_que_escenario_vienen():
     for tipo in ("correo_nuevo", "veredicto", "accion"):
         assert {e["escenario"] for e in _de_tipo(eventos, tipo)} == {"demo_microprocesadores"}
     assert {f["escenario"] for f in m.foto()["correos"]} == {"demo_microprocesadores"}
+
+
+def test_colados_son_las_estafas_apartadas_que_el_modelo_dejo_bajo_el_umbral(flujo):
+    """Lo que bajó la cobertura, por escenario y canal: cuadra con el recall y llega a la foto."""
+    m = _motor(flujo)
+    cl = m.clasificador
+    estafas = sum(y for _, y in cl.apartado)
+    # Sin entrenar se cuelan todas las estafas apartadas, y la foto de /api/vivo/estado las trae.
+    assert sum(c["n"] for c in cl.evaluar()["colados"]) == estafas
+    assert m.foto()["modelo"]["colados"] == cl.evaluar()["colados"]
+    familias = {c["familia"] for c in m.foto()["modelo"]["colados"]}
+    assert len(familias) > 3 and not familias & {"ingenieria_social", "tecnico"}   # anotaciones.familia, no la clase
+    for _ in range(40):
+        for c in m.flujo.episodio():
+            if not m.flujo.es_evaluacion(c):
+                cl.aprender(m._rasgos(c), int(c.etiqueta == "estafa"))
+    ev = cl.evaluar()
+    fn = sum(1 for r, y in cl.apartado if y and cl.probabilidad(r) <= cl.UMBRAL)
+    assert sum(c["n"] for c in ev["colados"]) == fn and round((estafas - fn) / estafas, 3) == ev["recall"]
+    assert {c["escenario"] for c in ev["colados"]} <= m.flujo.claves_evaluacion
+
+
+def test_sin_meta_colados_sale_vacio_y_meta_desalineada_se_rechaza(flujo):
+    from scamshield.vivo.clasificador import Clasificador
+    apartado = _motor(flujo).clasificador.apartado
+    assert Clasificador(apartado).evaluar()["colados"] == []
+    with pytest.raises(ValueError):
+        Clasificador(apartado, meta=[{}])

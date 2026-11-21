@@ -7,6 +7,11 @@ su rango. Cada pliegue evalúa 9 a 11 escenarios apartados (sus variaciones no s
 
 No usa ningún modelo ni API: el clasificador es propio y el corpus son los escenarios del repo.
 
+Además del recall, dice qué estafas se colaron: `colados_por_familia` y `colados_por_canal` cuentan, sobre todas las
+corridas, cuántos correos de estafa apartados de cada familia (`anotaciones.familia`) y de cada canal (correo, llamada,
+web, mcp) quedaron bajo el umbral, de cuántos se evaluaron, y en cuántas de las corridas en que estuvo apartada se coló
+al menos uno. El conjunto apartado es en español, como el flujo por defecto.
+
 Uso:
     python scripts/validacion_cruzada_vivo.py
     python scripts/validacion_cruzada_vivo.py --episodios 300 --semillas 1,2,3,4,5
@@ -20,6 +25,7 @@ import itertools
 import statistics as st
 import sys
 from pathlib import Path
+from collections import defaultdict
 from typing import Any
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -47,13 +53,49 @@ def correr(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenario
             motor.clasificador.aprender(motor._rasgos(c), int(c.etiqueta == "estafa"))
     if not entrenados.isdisjoint(flujo.claves_evaluacion):
         raise RuntimeError("el entrenamiento tocó un escenario apartado")
-    return {**motor.clasificador.evaluar(), "pliegue": pliegue, "semilla": semilla,
-            "escenarios_apartados": len(flujo.claves_evaluacion), "recall_antes": antes["recall"]}
+    cl = motor.clasificador
+    apartadas: dict[tuple[str, str, str], int] = defaultdict(int)
+    for m, (_, y) in zip(cl.meta or [], cl.apartado):
+        if y:
+            apartadas[(m["escenario"], m["familia"], m["canal"])] += 1
+    return {**cl.evaluar(), "pliegue": pliegue, "semilla": semilla,
+            "escenarios_apartados": len(flujo.claves_evaluacion), "recall_antes": antes["recall"],
+            "apartadas": [{"escenario": e, "familia": f, "canal": c, "n": n} for (e, f, c), n in sorted(apartadas.items())]}
 
 
 def resumir(filas: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
     return {k: {"media": st.mean(f[k] for f in filas), "min": min(f[k] for f in filas),
                 "max": max(f[k] for f in filas)} for k in METRICAS}
+
+
+def colados_por(filas: list[dict[str, Any]], campo: str) -> dict[str, dict[str, Any]]:
+    """Por familia o por canal: correos de estafa apartados que se colaron, de cuántos, y en cuántas corridas.
+
+    `corridas` es en cuántas corridas estuvo apartada (con `--agrupar familia` cada familia cae en un solo pliegue,
+    así que son tantas como semillas); `corridas_con_colados`, en cuántas de ellas se coló al menos un correo.
+    """
+    salida: dict[str, dict[str, Any]] = {}
+    for f in filas:
+        vistos: set[str] = set()
+        for a in f.get("apartadas", []):
+            g = salida.setdefault(a[campo], {"colados": 0, "correos": 0, "corridas": 0, "corridas_con_colados": 0,
+                                             "escenarios": set()})
+            g["correos"] += a["n"]
+            if a[campo] not in vistos:
+                vistos.add(a[campo])
+                g["corridas"] += 1
+        con: set[str] = set()
+        for c in f.get("colados", []):
+            g = salida[c[campo]]
+            g["colados"] += c["n"]
+            g["escenarios"].add(c["escenario"])
+            con.add(c[campo])
+        for k in con:
+            salida[k]["corridas_con_colados"] += 1
+    for g in salida.values():
+        g["tasa"] = round(g["colados"] / g["correos"], 3) if g["correos"] else 0.0
+        g["escenarios"] = sorted(g["escenarios"])
+    return dict(sorted(salida.items(), key=lambda kv: (-kv[1]["tasa"], -kv[1]["colados"], kv[0])))
 
 
 def validar(episodios: int, semillas: list[int],
@@ -80,10 +122,18 @@ def main(argv: list[str] | None = None) -> int:
     for k, v in total.items():
         print(f"  {k:15} media {v['media']:.2f}  rango [{v['min']:.2f} - {v['max']:.2f}]")
     print(f"  recall antes de entrenar: {sorted({f['recall_antes'] for f in filas})}")
+    por_familia, por_canal = colados_por(filas, "familia"), colados_por(filas, "canal")
+    print("\n| Familia | Correos colados | Corridas con colados | Escenarios |\n|---|---|---|---|")
+    for k, g in por_familia.items():
+        if g["colados"]:
+            print(f"| {k} | {g['colados']}/{g['correos']} | {g['corridas_con_colados']}/{g['corridas']} | {', '.join(g['escenarios'])} |")
+    print("\nPor canal: " + " · ".join(f"{k} {g['colados']}/{g['correos']}" for k, g in por_canal.items()))
     if a.json:
-        a.json.write_text(json.dumps({"agrupar": a.agrupar, "episodios": a.episodios, "semillas": [int(s) for s in a.semillas.split(",")],
-                                      "pliegues": 3, "corridas": len(filas), "total": total, "filas": filas},
-                                     indent=2, ensure_ascii=False), encoding="utf-8")
+        texto = json.dumps({"agrupar": a.agrupar, "episodios": a.episodios, "semillas": [int(s) for s in a.semillas.split(",")],
+                            "pliegues": 3, "corridas": len(filas), "total": total,
+                            "colados_por_familia": por_familia, "colados_por_canal": por_canal, "filas": filas},
+                           indent=2, ensure_ascii=False)
+        a.json.write_text(texto, encoding="utf-8")
     return 0
 
 

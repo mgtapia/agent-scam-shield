@@ -27,6 +27,14 @@ const ResultadosVista = (() => {
     r_at_nota: "{m} · {n} estafas · {r} rondas", r_at_cero: "ninguna estafa le ganó a ninguna defensa",
     r_at_incompletas: "{d}: rondas {r} incompletas ({v} de {n} estafas con episodio puntuado)", r_y: " y ", r_at_eje: "ronda del atacante", r_at_ronda: "Ronda", r_at_errores: "{e} muestras con error",
     sin_resultados_r: "No hay resultados.json: corre python scripts/resultados_demo.py",
+    r_colados: "Qué se cuela, por capa y por tipo de estafa", r_co_tipo: "Tipo de estafa", r_co_clasif: "Clasificador",
+    r_co_nota: "{e} estafas (escenario × idioma) · clasificador: {c} correos apartados en {r} corridas",
+    ayuda_co_clasif: "Correos de estafa apartados que el clasificador dejó bajo 0,5, de cuántos se evaluaron, sumando las {r} corridas de la validación cruzada por familia. No es un pago: lo aprendido solo sube la sospecha",
+    ayuda_co_capa: "Estafas que cruzaron esta configuración con el agente guionado: escenario × idioma",
+    r_co_total: "Total", r_co_resto: "Las otras {n} familias no se cuelan con la capa 2 ni al clasificador",
+    r_co_dicta: "dueño dicta", ayuda_co_dicta: "El dueño ya cayó y dicta la cuenta: la capa 2 no lo ve porque el dato viene del dueño. Las frena la capa 3, que compara el titular con el beneficiario",
+    ayuda_co_celda: "{f} · {c}: {n} de {d}\n{e}",
+    ayuda_colados_r: "Por capa: por_escenario de results/bench.json. Clasificador: colados_por_familia de results/clasificador.json\n{comando}",
   });
   Object.assign(T.en, {
     r_bench: "Agent that does whatever it reads", r_reales: "Real models and firewall", r_atacante: "Adaptive attacker",
@@ -51,6 +59,14 @@ const ResultadosVista = (() => {
     r_at_nota: "{m} · {n} scams · {r} rounds", r_at_cero: "no scam beat any defense",
     r_at_incompletas: "{d}: rounds {r} incomplete ({v} of {n} scams with a scored episode)", r_y: " and ", r_at_eje: "attacker round", r_at_ronda: "Round", r_at_errores: "{e} samples with errors",
     sin_resultados_r: "No resultados.json: run python scripts/resultados_demo.py",
+    r_colados: "What slips through, by layer and scam type", r_co_tipo: "Scam type", r_co_clasif: "Classifier",
+    r_co_nota: "{e} scams (scenario × language) · classifier: {c} held-out emails over {r} runs",
+    ayuda_co_clasif: "Held-out scam emails the classifier left below 0.5, out of how many were evaluated, over the {r} runs of the cross-validation by family. Not a payment: what it learns only raises suspicion",
+    ayuda_co_capa: "Scams that got past this configuration with the scripted agent: scenario × language",
+    r_co_total: "Total", r_co_resto: "The other {n} families slip past neither layer 2 nor the classifier",
+    r_co_dicta: "owner dictates", ayuda_co_dicta: "The owner was already fooled and dictates the account: layer 2 does not see it because the value comes from the owner. Layer 3 stops it by comparing the holder with the payee",
+    ayuda_co_celda: "{f} · {c}: {n} of {d}\n{e}",
+    ayuda_colados_r: "By layer: por_escenario in results/bench.json. Classifier: colados_por_familia in results/clasificador.json\n{comando}",
   });
 
   // Los textos de esta vista se registran después del primer pintado de app.js: se vuelven a pintar.
@@ -149,15 +165,52 @@ const ResultadosVista = (() => {
     G.curvaAtacante($("#res-curva"), series, { rondas, ayuda: { eje_x: t("r_at_eje"), ronda: t("r_at_ronda") } });
   }
 
+  // Qué se cuela: una fila por familia con algo que cruza la capa 2, el escudo completo o el clasificador. Por capa, del
+  // bench (escenario × idioma); el clasificador, de la validación cruzada (correos apartados). Los dos números vienen
+  // del JSON; la página solo suma la fila del total, que también viene hecha (`totales`).
+  function pintarColados(R) {
+    const co = R.colados;
+    const caja = $("#res-colados");
+    if (!co || !co.familias) { caja.innerHTML = `<p class="vacio">${esc(t("sin_resultados_r"))}</p>`; return; }
+    const cfg = co.configuraciones;
+    $("#f-colados").textContent = co.fuente;
+    $("#n-colados-r").textContent = t("r_co_nota", { e: co.estafas, c: co.clasificador?.correos ?? "—", r: co.corridas ?? "—" });
+    $("#t-colados-r").dataset.ayuda = t("ayuda_colados_r", { comando: co.comando });
+    const importa = (f) => (f.por_capa.layer2 || 0) + (f.por_capa.layer23 || 0) + (f.clasificador?.colados || 0) > 0;
+    const filas = co.familias.filter(importa);
+    const celda = (f, c, n, d, escenarios, rojo) => {
+      const cls = n ? (rojo ? "c-rojo" : "") : "r-cero";
+      const ayuda = t("ayuda_co_celda", { f: nombreFamilia(f), c, n, d, e: (escenarios || []).join(", ") });
+      return `<td class="dato ${cls}" data-et="${esc(c)}" data-ayuda="${esc(ayuda)}">${n}/${d}</td>`;
+    };
+    const fila = (f) => {
+      const dicta = f.dueno_dicta?.layer2 ? `<span class="tag" data-ayuda="${esc(t("ayuda_co_dicta"))}">${esc(t("r_co_dicta"))}</span>` : "";
+      const cl = f.clasificador;
+      return `<tr><th scope="row">${esc(nombreFamilia(f.familia))}${dicta}</th>
+        ${cfg.map((c) => (f.estafas ? celda(f.familia, t(`rc_${c}`), f.por_capa[c], f.estafas, f.escenarios?.[c], c === "layer23") : `<td class="dato r-cero" data-et="${esc(t(`rc_${c}`))}">—</td>`)).join("")}
+        ${cl ? celda(f.familia, t("r_co_clasif"), cl.colados, cl.correos, cl.escenarios) : `<td class="dato r-cero" data-et="${esc(t("r_co_clasif"))}">—</td>`}</tr>`;
+    };
+    const tot = `<tr class="r-total"><th scope="row">${esc(t("r_co_total"))}</th>
+      ${cfg.map((c) => `<td class="dato${c === "layer23" && co.totales[c] ? " c-rojo" : ""}" data-et="${esc(t(`rc_${c}`))}">${co.totales[c]}/${co.estafas}</td>`).join("")}
+      <td class="dato" data-et="${esc(t("r_co_clasif"))}">${co.clasificador ? `${co.clasificador.colados}/${co.clasificador.correos}` : "—"}</td></tr>`;
+    const resto = co.familias.length - filas.length;
+    caja.innerHTML = `<table class="r-tabla r-colados">
+      <thead><tr><th scope="col">${esc(t("r_co_tipo"))}</th>${cfg.map((c) => `<th scope="col" data-ayuda="${esc(`${t(`ayuda_rc_${c}`)}. ${t("ayuda_co_capa")}`)}">${esc(t(`rc_${c}`))}</th>`).join("")}
+        <th scope="col" data-ayuda="${esc(t("ayuda_co_clasif", { r: co.corridas ?? "—" }))}">${esc(t("r_co_clasif"))}</th></tr></thead>
+      <tbody>${filas.map(fila).join("")}${tot}</tbody></table>
+      ${resto ? `<p class="r-aviso">${ms("info")}<span>${esc(t("r_co_resto", { n: resto }))}</span></p>` : ""}`;
+  }
+
   function pintar(R) {
     if (!R || !R.bench) {
-      for (const id of ["#res-bench", "#res-atacante"]) $(id).innerHTML = `<p class="vacio">${esc(t("sin_resultados_r"))}</p>`;
+      for (const id of ["#res-bench", "#res-atacante", "#res-colados"]) $(id).innerHTML = `<p class="vacio">${esc(t("sin_resultados_r"))}</p>`;
       $("#res-reales").innerHTML = "";
       return;
     }
     pintarBench(R);
     pintarReales(R);
     pintarAtacante(R);
+    pintarColados(R);
   }
 
   // El rótulo de la barra: de dónde salen los números y cuándo se generaron.
