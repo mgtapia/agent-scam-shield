@@ -10,6 +10,8 @@ Grifter se publica con licencia MIT. Reutiliza ideas, estructura o código de es
 | [SpaPhish](https://data.mendeley.com/datasets/hz2d6gz7pc) | CC BY 4.0 | Correos de phishing en español para calibrar el clasificador. No se incluyen en el repo: se descargan con un script |
 | [Pipelock](https://github.com/pipelab-org/pipelock). Copyright 2026 Joshua Waldrep | Apache-2.0 (núcleo). Los binarios oficiales incluyen además código ELv2 de `enterprise/` | Capa 1: el firewall se usa como un proceso aparte (su API `/api/v1/scan` y `pipelock mcp scan`), sin copiar su código ni redistribuir su binario. `scamshield/defenses/pipelock.py` es un cliente propio. Probado con v3.8.0 |
 | [ScamWorld](https://github.com/wuyoscar/scamworld-bench) | Código Apache-2.0; datos CC BY-NC 4.0 | Solo su taxonomía de estafas, como referencia. No copiamos sus datos |
+| [MITRE ATLAS](https://atlas.mitre.org/) (datos 2026.10, [atlas-data](https://github.com/mitre-atlas/atlas-data)). Copyright 2021-2026 MITRE | Apache-2.0 | Solo identificadores y nombres de técnicas, para mapear cada escenario en `scamshield/estandares.py`. No copiamos descripciones ni datos |
+| [OWASP Top 10 for Agentic Applications for 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/), OWASP GenAI Security Project | Por confirmar: no se verificó la licencia de la lista | Solo identificadores y títulos (ASI01 a ASI10), para mapear cada escenario en `scamshield/estandares.py`. No copiamos su texto |
 
 Los textos de licencia completos están en cada repositorio de origen. Si un archivo de este repo copia código de alguno de ellos, lo dice en su encabezado.
 
