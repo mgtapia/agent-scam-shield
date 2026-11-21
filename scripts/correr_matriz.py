@@ -156,10 +156,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Error: {e}", file=sys.stderr)
         return 2
 
+    # Se carga siempre: con --modelos, Inspect igual necesita las llaves en el entorno.
+    cargar_dotenv(Path(args.env))
     if args.modelos:
         modelos = _lista(args.modelos)
     else:
-        cargar_dotenv(Path(args.env))
         presentes = llaves_presentes(os.environ)
         if not presentes:
             print(

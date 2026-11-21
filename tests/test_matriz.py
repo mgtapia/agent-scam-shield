@@ -81,10 +81,11 @@ def test_nunca_imprime_el_valor_de_una_llave(entorno, capsys):
 def test_dotenv_se_carga_sin_imprimir_la_llave(monkeypatch, tmp_path, capsys):
     for llave in matriz.MODELOS_POR_LLAVE:
         monkeypatch.delenv(llave, raising=False)
-    # setenv y luego delenv: así monkeypatch deja HF_TOKEN como estaba al terminar,
-    # aunque load_dotenv lo escriba en os.environ.
-    monkeypatch.setenv("HF_TOKEN", "x")
-    monkeypatch.delenv("HF_TOKEN")
+    # setenv y luego delenv: así monkeypatch deja las llaves como estaban al terminar,
+    # aunque load_dotenv las escriba en os.environ.
+    for llave in ("HF_TOKEN", "GROQ_API_KEY"):
+        monkeypatch.setenv(llave, "x")
+        monkeypatch.delenv(llave)
     env = tmp_path / ".env"
     env.write_text(f"HF_TOKEN={SECRETOS['HF_TOKEN']}\nGROQ_API_KEY=\n", encoding="utf-8")
 
