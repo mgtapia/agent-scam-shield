@@ -132,10 +132,11 @@ body.md-contestada .md-avatar { transform: scale(0.82); }
 .md-b { position: relative; height: 48px; border: var(--linea); background: transparent; color: var(--texto); font: var(--p-fuerte) 17px / 22px var(--sans); overflow: hidden; }
 .md-b.principal { background: var(--texto); color: var(--fondo); }
 .md-b.peligro { color: var(--rojo); border-color: transparent; }
-/* El toque de un dedo sobre «Pagar igual» (Marta) y «Rechazar» (Pablo): la yema clara encima del botón, que se hunde,
+/* El toque de un dedo sobre «Pagar igual» (Marta) y «Rechazar» (Pablo): la yema clara a la derecha del texto, dentro
+   del botón y sin taparlo; el botón se hunde
    y después una onda que se abre. render() fija --md-s (escala) y --md-o (opacidad) según el segundo: así un cuadro
    con ?t= muestra el toque igual que en vivo. Las clases .presionado y .elegido son del botón. */
-.md-toque { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; pointer-events: none;
+.md-toque { position: absolute; right: 14px; top: 50%; width: 36px; height: 36px; margin: -18px 0 0 0; border-radius: 50%; pointer-events: none;
   background: color-mix(in srgb, var(--texto) 70%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--texto) 35%, transparent);
   opacity: var(--md-o, 0); transform: scale(var(--md-s, 1)); }
 .md-b, .md-wa-b { transition: transform 120ms ease-out, background-color 120ms ease-out; }
@@ -180,9 +181,9 @@ body.md-aut .md-a1 .md-motivo span:not(.md-quien) { font-size: 20px; line-height
 .md-pablo .md-pantalla { border-radius: 36px; }
 .md-pablo .md-camara { top: 10px; width: 12px; height: 12px; margin-left: -6px; }
 .md-pablo .md-estado { height: 34px; padding: 0 20px; font-size: 13px; }
-.md-pablo-de { position: absolute; left: 0; right: 0; top: -54px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--texto-2); font-size: 22px; line-height: 28px; }
+.md-pablo-de { position: absolute; left: 0; right: 0; top: -80px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--texto-2); font-size: 22px; line-height: 28px; }
 /* La foto de Pablo junto a su nombre, redonda como la del nieto (si falta el archivo, se quita y queda el nombre) */
-.md-foto-pablo { width: 40px; height: 40px; flex: none; border-radius: 50%; object-fit: cover; display: block; }
+.md-foto-pablo { width: 64px; height: 64px; flex: none; border-radius: 50%; object-fit: cover; display: block; }
 .md-wa { position: absolute; inset: 44px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
 .md-wa-cab { margin: 0 0 6px; display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: var(--linea); font-size: 17px; line-height: 22px; font-weight: var(--p-fuerte); }
 .md-wa-cab .md-ic { width: 22px; height: 22px; color: var(--verde); }

@@ -30,12 +30,16 @@
     shield: "M480-100.77q-129.77-35.39-214.88-152.77Q180-370.92 180-516v-230.15l300-112.31 300 112.31V-516q0 145.08-85.12 262.46Q609.77-136.16 480-100.77Zm0-63.23q104-33 172-132t68-220v-189l-240-89.62L240-705v189q0 121 68 220t172 132Zm0-315.62Z",
     shopping_cart: "M236.58-118.12q-20.42-20.42-20.42-49.57 0-29.16 20.42-49.58 20.42-20.42 49.57-20.42 29.16 0 49.58 20.42 20.42 20.42 20.42 49.58 0 29.15-20.42 49.57-20.42 20.43-49.58 20.43-29.15 0-49.57-20.43Zm387.69 0q-20.42-20.42-20.42-49.57 0-29.16 20.42-49.58 20.42-20.42 49.58-20.42 29.15 0 49.57 20.42t20.42 49.58q0 29.15-20.42 49.57Q703-97.69 673.85-97.69q-29.16 0-49.58-20.43ZM240.61-730 342-517.69h280L738.54-730H240.61Zm-28.76-60h628.46L657.46-457.69H324l-54.77 100h474.61v60H167.31l114.38-206L136.16-810H60v-60h113.85l38 80ZM342-517.69h280-280Z",
     play_arrow: "M320-200v-560l440 280-440 280Z",
-    smart_toy: "M180-380q-41.92 0-70.96-29.04Q80-438.08 80-480q0-41.92 29.04-70.96Q138.08-580 180-580v-160h200q0-41.92 29.04-70.96Q438.08-840 480-840q41.92 0 70.96 29.04Q580-781.92 580-740h200v160q41.92 0 70.96 29.04Q880-521.92 880-480q0 41.92-29.04 70.96Q821.92-380 780-380v240H180v-240Zm215.38-84.57Q410-479.14 410-499.95q0-20.82-14.57-35.43Q380.86-550 360.05-550q-20.82 0-35.43 14.57Q310-520.86 310-500.05q0 20.82 14.57 35.43Q339.14-450 359.95-450q20.82 0 35.43-14.57Zm240 0Q650-479.14 650-499.95q0-20.82-14.57-35.43Q620.86-550 600.05-550q-20.82 0-35.43 14.57Q550-520.86 550-500.05q0 20.82 14.57 35.43Q579.14-450 599.95-450q20.82 0 35.43-14.57ZM330-290h300v-60H330v60Zm-90 90h480v-480H240v480Zm240-240Z",
   };
   // La marca de Grifter: el escudo en un solo trazo y un check en ámbar adentro. En la portada se dibuja sola al cargar
   // (stroke-dashoffset, con pathLength 1); con ?t= o movimiento reducido aparece ya dibujada.
   const marca = (cls = "") => `<svg class="md-marca ${cls}" viewBox="0 0 120 140" aria-hidden="true"><path class="md-marca-escudo" pathLength="1" d="M60 8 L108 26 V68 C108 100 88 122 60 132 C32 122 12 100 12 68 V26 Z"/><path class="md-marca-check" pathLength="1" d="M38 70 L54 86 L84 54"/></svg>`;
-  const ic = (n, cls = "") => `<svg class="md-ic ${cls}" viewBox="0 -960 960 960" aria-hidden="true"><path d="${P[n]}"/></svg>`;
+  // El agente: la misma constelación de la versión dinámica (puntos en una esfera de Fibonacci, en proyección y con
+  // los de atrás más chicos y tenues), quieta y del tamaño de los demás íconos.
+  const AGENTE = '<circle cx="14.2" cy="20.9" r="1.15" opacity="0.77"/><circle cx="11.0" cy="17.7" r="1.29" opacity="0.93"/><circle cx="9.3" cy="21.0" r="1.04" opacity="0.64"/><circle cx="18.2" cy="17.4" r="1.22" opacity="0.84"/><circle cx="5.5" cy="16.3" r="1.23" opacity="0.86"/><circle cx="15.1" cy="20.0" r="0.96" opacity="0.54"/><circle cx="14.7" cy="12.9" r="1.34" opacity="0.98"/><circle cx="4.4" cy="17.4" r="1.02" opacity="0.61"/><circle cx="20.6" cy="15.9" r="1.06" opacity="0.66"/><circle cx="7.0" cy="11.0" r="1.31" opacity="0.95"/><circle cx="10.5" cy="17.6" r="0.86" opacity="0.42"/><circle cx="19.4" cy="10.4" r="1.24" opacity="0.87"/><circle cx="2.5" cy="12.0" r="1.10" opacity="0.70"/><circle cx="18.5" cy="14.7" r="0.89" opacity="0.46"/><circle cx="11.9" cy="6.9" r="1.31" opacity="0.95"/><circle cx="5.8" cy="13.4" r="0.87" opacity="0.43"/><circle cx="21.1" cy="9.3" r="1.07" opacity="0.67"/><circle cx="4.9" cy="6.7" r="1.17" opacity="0.79"/><circle cx="13.6" cy="12.1" r="0.80" opacity="0.35"/><circle cx="16.3" cy="4.7" r="1.20" opacity="0.82"/><circle cx="4.5" cy="8.0" r="0.95" opacity="0.53"/><circle cx="18.4" cy="7.8" r="0.91" opacity="0.48"/><circle cx="9.7" cy="3.1" r="1.15" opacity="0.76"/><circle cx="9.9" cy="7.4" r="0.84" opacity="0.40"/><circle cx="16.0" cy="3.6" r="1.02" opacity="0.61"/><circle cx="9.5" cy="3.4" r="0.98" opacity="0.56"/>';
+  const ic = (n, cls = "") => n === "agente"
+    ? `<svg class="md-ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${AGENTE}</svg>`
+    : `<svg class="md-ic ${cls}" viewBox="0 -960 960 960" aria-hidden="true"><path d="${P[n]}"/></svg>`;
 
   // --- Textos. Los episodios salen de los escenarios; la transcripción en español es la del mp3 (#171), con la
   // cifra y la cuenta en dígitos para leerlas. Los motivos de las defensas solo existen en español en el motor:
@@ -362,7 +366,7 @@
           </div>
 
           <div class="md-celular md-pablo" data-v="${AUT.pablo}">
-            <p class="md-pablo-de"><img class="md-foto-pablo" src="img/pablo.jpg" onerror="this.remove()" alt="" width="40" height="40"><span>${esc(t("pablo_de"))}</span></p>
+            <p class="md-pablo-de"><img class="md-foto-pablo" src="img/pablo.jpg" onerror="this.remove()" alt="" width="64" height="64"><span>${esc(t("pablo_de"))}</span></p>
             <div class="md-pantalla">
               <i class="md-camara" aria-hidden="true"></i>
               <div class="md-estado"><span class="md-hora-real">16:08</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
@@ -380,12 +384,12 @@
       </section>
 
       <section class="md-acto md-comp md-a2" data-desde="${CL}" data-hasta="${CO}">
-        <p class="md-rotulo" data-v="${CL}">${esc(t("k_rotulo"))}</p>${tres([["mail", "k_1"], ["smart_toy", "k_2"], ["block", "k_3"]], [r2(NK.en + 0.1), r2(NK.en + NK.agente), r2(NK.en + NK.frena)])}${celular(`
+        <p class="md-rotulo" data-v="${CL}">${esc(t("k_rotulo"))}</p>${tres([["mail", "k_1"], ["agente", "k_2"], ["block", "k_3"]], [r2(NK.en + 0.1), r2(NK.en + NK.agente), r2(NK.en + NK.frena)])}${celular(`
             <div class="md-correo">
               <p class="md-correo-de">${ic("mail")}<span>${esc(t("k_usuario"))}@<mark class="md-clave">${esc(t("k_dominio"))}</mark></span></p>
               <p class="md-correo-asunto">${esc(t("k_asunto"))}</p>
               <p class="md-correo-cuerpo">${subraya(t("k_cuerpo"), [r2(NK.en + NK.cargo), r2(NK.en + NK.codigo)])}</p>
-              <div class="md-respuesta" data-v="${r2(NK.en + NK.agente)}"><p class="md-rot">${ic("smart_toy")}<span>${esc(t("k_responder"))}</span></p><p>${esc(t("k_respuesta"))} <b class="dato">482 913</b></p></div>
+              <div class="md-respuesta" data-v="${r2(NK.en + NK.agente)}"><p class="md-rot">${ic("agente")}<span>${esc(t("k_responder"))}</span></p><p>${esc(t("k_respuesta"))} <b class="dato">482 913</b></p></div>
             </div>`, r2(NK.en + NK.frena), t("k_retenido"), esc(t("k_no_salio")))}
         <div class="md-cinetica" data-v="${r2(NK.regla - 0.1)}"><p>${cinetica(t("k_cinetica"), NK.regla, pasos(7))}</p></div>
       </section>
