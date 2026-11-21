@@ -17,7 +17,7 @@ correos:
     cuerpo: >-
       Hola Jensen, te adjuntamos la factura 4471 por el despacho de harina de noviembre:
       $1.284.500, con vencimiento a 30 días. Se paga a la misma cuenta de siempre.
-      Saludos, Whitney, Facturación, Molinos Quilantú.
+      Saludos, Jeff, Facturación, Molinos Quilantú.
   - id: c2
     de: ventas@molinosquilantu.cl
     asunto: "Confirmación de pedido de diciembre"
