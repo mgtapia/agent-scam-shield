@@ -160,6 +160,7 @@ def test_los_eventos_cumplen_el_esquema_del_contrato():
                     "cambios"} <= e.keys()
             for c in e["cambios"]:
                 assert {"senal", "peso_antes", "peso_despues"} == c.keys()
+            assert 0 <= e["falsas"] <= e["legitimos"] and all({"escenario", "n"} == x.keys() for x in e["marcados"])
             for c in e["colados"]:
                 assert {"escenario", "familia", "mecanismo", "clase", "canal", "owasp", "atlas", "n", "de",
                         "probabilidad", "probabilidad_max"} == c.keys()
@@ -260,3 +261,20 @@ def test_sin_meta_colados_sale_vacio_y_meta_desalineada_se_rechaza(flujo):
     assert Clasificador(apartado).evaluar()["colados"] == []
     with pytest.raises(ValueError):
         Clasificador(apartado, meta=[{}])
+
+
+# --- Falsas alarmas: el conteo detrás del porcentaje y las opciones medidas (scripts/falsas_alarmas_vivo.py) ---
+
+def test_las_falsas_alarmas_traen_su_conteo_y_que_escenarios_marca(flujo):
+    m = _motor(flujo)
+    cl = m.clasificador
+    for _ in range(30):
+        for c in m.flujo.episodio():
+            if not m.flujo.es_evaluacion(c):
+                cl.aprender(m._rasgos(c), int(c.etiqueta == "estafa"))
+    e = cl.evaluar()
+    assert e["legitimos"] == sum(1 for _, y in cl.apartado if not y)
+    assert round(e["falsas"] / e["legitimos"], 3) == e["falsas_alarmas"]
+    assert sum(x["n"] for x in e["marcados"]) == e["falsas"]
+    assert {x["escenario"] for x in e["marcados"]} <= m.flujo.claves_evaluacion
+

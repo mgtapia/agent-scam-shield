@@ -55,6 +55,8 @@ class Correo:
     extra: list[tuple[str, str]] = field(default_factory=list)    # lo que lee después, antes de actuar
     accion: Optional[dict[str, Any]] = None                        # {"herramienta", "args"}
     tarea: str = ""
+    # Lo que el servidor de correo verificó del remitente ({"spf": "pass", "dkim": "pass", ...}), si el escenario lo trae.
+    autenticacion: dict[str, str] = field(default_factory=dict)
 
     @property
     def texto(self) -> str:
@@ -386,9 +388,12 @@ class Flujo:
         salida: list[Correo] = []
         leidos: list[tuple[str, str]] = []
 
+        autenticacion = {m["de"]: dict(m.get("autenticacion") or {}) for m in esc.get("correos", [])}
+
         def nuevo(de, asunto, cuerpo, origen, etiqueta, familia, accion=None, extra=()):
             c = Correo(self._id(prefijo), agente, de, asunto, cuerpo, origen, etiqueta, familia,
-                       unidad.clave, esc, list(leidos), list(extra), accion, tarea)
+                       unidad.clave, esc, list(leidos), list(extra), accion, tarea,
+                       autenticacion=autenticacion.get(de, {}) if origen == CORREO else {})
             salida.append(c)
             leidos.append((origen, c.texto))
             return c

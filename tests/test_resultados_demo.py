@@ -176,3 +176,24 @@ def test_juez_sin_archivo_y_con_archivo(tmp_path):
 def test_solo_json_no_toca_resultados_js(tmp_path):
     escritos = escribir({"a": 1}, tmp_path, solo_json=True)
     assert [p.name for p in escritos] == ["resultados.json"] and not (tmp_path / "resultados.js").exists()
+
+
+# --- Las opciones para bajar las falsas alarmas del clasificador ---
+
+def test_falsas_alarmas_sin_archivo_y_con_archivo(tmp_path):
+    from scripts.resultados_demo import falsas_alarmas
+    assert falsas_alarmas(tmp_path / "no.json")["estado"] == "sin_archivo"
+    m = {"recall": {"media": 0.9}, "precision": {"media": 0.97}, "falsas_alarmas": {"media": 0.06}}
+    datos = {"agrupar": "familia", "corridas": 9, "total": {"fijo": m, "calibrado": m},
+             "curva_umbral": [{"umbral": 0.5, "recall": 0.9, "falsas_alarmas": 0.06, "falsas_alarmas_max": 0.1}],
+             "filas": [{"umbral_calibrado": 0.5, "falsas_alarmas_fijo": ["control_x"]}]}
+    (tmp_path / "f.json").write_text(json.dumps(datos), encoding="utf-8")
+    f = falsas_alarmas(tmp_path / "f.json")
+    assert f["estado"] == "ok" and [r["clave"] for r in f["reglas"]] == ["fijo", "calibrado"]
+    assert f["escenarios_con_falsa_alarma"] == ["control_x"] and f["umbral_calibrado"] == [0.5]
+
+
+def test_el_archivo_de_falsas_alarmas_del_repo_tiene_las_cuatro_reglas():
+    f = armar()["falsas_alarmas"]
+    assert f["estado"] == "ok" and {r["clave"] for r in f["reglas"]} == {"fijo", "calibrado", "remitente", "ambas"}
+    assert f["corridas"] == 9 and any(c["umbral"] == 0.45 for c in f["curva_umbral"])
