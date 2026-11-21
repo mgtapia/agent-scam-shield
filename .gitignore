@@ -22,3 +22,9 @@ Thumbs.db
 
 # Demo: respuestas del dueño guardadas por el servidor
 demo/etiquetas.jsonl
+
+# Grifter como proxy MCP: la configuración trae los datos del dueño y los eventos traen lo que el agente
+# intentó enviar (un RUT o un código, por ejemplo). Nunca entran al repo.
+grifter.yaml
+grifter_eventos.jsonl
+banco_sandbox.jsonl
