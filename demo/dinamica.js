@@ -29,6 +29,8 @@
     play_arrow: "M320-200v-560l440 280-440 280Z",
     arrow_forward: "M665.08-450H180v-60h485.08L437.23-737.85 480-780l300 300-300 300-42.77-42.15L665.08-450Z",
   };
+  // La marca de Grifter, la misma de la versión A: el escudo en un solo trazo y un check en ámbar adentro.
+  const marca = (cls = "") => `<svg class="dn-marca ${cls}" viewBox="0 0 120 140" aria-hidden="true"><path class="dn-marca-escudo" pathLength="1" d="M60 8 L108 26 V68 C108 100 88 122 60 132 C32 122 12 100 12 68 V26 Z"/><path class="dn-marca-check" pathLength="1" d="M38 70 L54 86 L84 54"/></svg>`;
   const ic = (n, cls = "") => `<svg class="dn-ic ${cls}" viewBox="0 -960 960 960" aria-hidden="true"><path d="${P[n]}"/></svg>`;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   // Miles con punto, a mano: en es-CL, toLocaleString no agrupa los números de 4 cifras («5280»).
@@ -69,7 +71,7 @@
   // La narración (ElevenLabs, eleven_v3, voz de biblioteca). `pal` es el inicio de cada palabra en el mp3, sacado
   // de /with-timestamps: el texto de pantalla se escribe al ritmo de la voz, sin cargar audio (sirve para ?t=N).
   const NARR = {
-    gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,   dur: 4.0,  pal: [0.14, 0.21, 0.37, 0.62, 1.01, 1.65, 1.98, 2.39, 2.75, 2.84, 3, 3.43] },
+    gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,   dur: 4.08, pal: [0.07, 0.36, 0.53, 0.7, 1.01, 1.33, 1.95, 2.2, 2.71, 2.91, 3, 3.16, 3.59] },
     agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.8,   dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
     retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 44.6,  dur: 4.64, pal: [0.13, 0.51, 0.64, 1.28, 1.82, 2.22, 2.51, 2.6, 2.77, 3.55, 3.81, 3.95, 4.06] },
     banco:    { src: "audio/dinamica_04_banco.mp3",    en: 70.8,  dur: 3.04, pal: [0, 0.16, 0.63, 1.04, 1.31, 1.43, 1.88, 2.24] },
@@ -159,9 +161,10 @@
 
     // 1. Gancho
     esc_("gancho", `
-        <div class="dn-personas">${[0, 1, 2, 3].map((i) => `<span class="dn-persona"${ap(palabra("gancho", 3) + i * 0.08, "pop")}>${ic("person")}${i === 3 ? `<span class="dn-persona-cae"${ap(palabra("gancho", 6), "nada")}>${ic("person")}</span>` : ""}</span>`).join("")}</div>
-        <h1 class="dn-titular dn-enorme">${saltan("1 de cada 4 chilenos", "gancho", 0)}</h1>
-        <p class="dn-bajada">${escribe("ya perdió plata en una estafa digital.", 0, desdePalabra("gancho", 5))}</p>`, "dn-centro");
+        <div class="dn-personas">${[0, 1, 2, 3].map((i) => `<span class="dn-persona"${ap(palabra("gancho", 4) + i * 0.08, "pop")}>${ic("person")}${i === 3 ? `<span class="dn-persona-cae"${ap(palabra("gancho", 7), "nada")}>${ic("person")}</span>` : ""}</span>`).join("")}</div>
+        <h1 class="dn-cifra-gancho">${saltan("Casi 1 de cada 4", "gancho", 0)}</h1>
+        <p class="dn-bajada">${escribe("chilenos ya perdió plata en una estafa digital.", 0, desdePalabra("gancho", 5))}</p>
+        <p class="dn-fuente dato"${ap(4.0, "nada")}>TransUnion, 2025: 23 % de los consumidores chilenos</p>`, "dn-centro");
     esc_("agentes", `
         <div class="dn-agentes-fila">
           <div${ap(4.65, "pop")}>${agente("grande")}</div>
@@ -379,12 +382,7 @@
         <h1 class="dn-titular dn-frase-final">${escribe(FRASE_FINAL[0], 0, desdePalabra("remate", 0))}<span class="dn-remate-2">${escribe(FRASE_FINAL[1], 0, desdePalabra("remate", FRASE_FINAL[0].split(" ").length))}</span></h1>`, "dn-centro");
     esc_("cierre", `
         <div class="dn-logo">
-          <svg class="dn-logo-ic" viewBox="0 -960 960 960" aria-hidden="true">
-            <defs><mask id="dn-trazo" maskUnits="userSpaceOnUse" x="0" y="-960" width="960" height="960">
-              <path id="dn-trazo-p" d="M480-860 L780-746 V-516 Q780-250 480-110 Q180-250 180-516 V-746 Z" fill="none" stroke="#fff" stroke-width="150" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>
-            </mask></defs>
-            <path d="${P.shield}" mask="url(#dn-trazo)"/>
-          </svg>
+          ${marca("dn-marca-cierre")}
           <span class="dn-logo-txt">${[..."Grifter"].map((c, i) => `<span${ap(palabra("cierre", 0) - 0.05 + i * 0.07, "cae")}>${c}</span>`).join("")}</span>
         </div>
         <p class="dn-lema">${escribe("Escudo para agentes que pagan", 0, desdePalabra("cierre", 1))}</p>
@@ -393,8 +391,8 @@
 
     h.push(`<div class="dn-progreso" aria-hidden="true"><i id="dn-barra"></i></div>
       <div class="dn-portada" aria-hidden="true">
-        <div class="dn-logo">${ic("shield", "dn-logo-ic")}<span>Grifter</span></div>
-        <p class="dn-lema">1 de cada 4 chilenos ya perdió plata en una estafa digital.</p>
+        <p class="dn-evento dato">Platanus Hack 26 · AI Security · Equipo 40</p>
+        <div class="dn-logo dn-logo-portada">${marca("dibuja")}<span>Grifter</span></div>
       </div>
       <button type="button" class="dn-inicio" id="dn-inicio" aria-label="Iniciar o pausar la demo (Espacio)">${ic("play_arrow")}<span>Espacio</span></button>`);
     $("#dn-escenario").innerHTML = h.join("");
@@ -419,7 +417,7 @@
       pulsa: [...el.querySelectorAll(".dn-pulsa")],
       vibra: el.querySelector(".dn-vibra"),
       contestar: el.querySelector(".contestar"),
-      trazo: el.querySelector("#dn-trazo-p"),
+      marca: [...el.querySelectorAll(".dn-marca-cierre path")],
     }));
   }
 
@@ -548,7 +546,11 @@
       const seg = Math.max(0, Math.floor(Math.min(tt, LL.cuelga) - LL.contesta));
       s.relojes.forEach((r) => { r.textContent = `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, "0")}`; });
       s.pulsa.forEach((p) => p.style.setProperty("--pulso", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(tt * 2 * Math.PI * 0.9))).toFixed(3)));
-      if (s.trazo) s.trazo.setAttribute("stroke-dashoffset", (quieto ? (tt >= s.desde ? 0 : 1) : 1 - salida(clamp((tt - s.desde - 0.15) / 1.3))).toFixed(3));
+      // La marca del cierre se dibuja: primero el escudo (1 s) y después el check (0,4 s).
+      s.marca.forEach((p, i) => {
+        const desde = s.desde + (i ? 1.15 : 0.15), dura = i ? 0.4 : 1.0;
+        p.style.strokeDashoffset = (quieto ? 0 : 1 - salida(clamp((tt - desde) / dura))).toFixed(3);
+      });
     }
     // El borde rojo de alerta, mientras el pago está retenido y nadie lo rechazó. Late en opacidad (fijo si reducido).
     const alarma = tt >= ALARMA[0] && tt < ALARMA[1];
@@ -623,7 +625,15 @@
     if (tiempo >= DURACION) { corriendo = false; document.body.classList.remove("dn-corriendo"); return; }
     requestAnimationFrame(cuadro);
   }
+  let saliendo = false;
   function alternar() {
+    if (document.body.classList.contains("dn-en-portada")) {
+      if (saliendo) return;
+      saliendo = true;
+      document.body.classList.add("dn-saliendo");
+      setTimeout(() => { document.body.classList.remove("dn-en-portada", "dn-saliendo"); saliendo = false; alternar(); }, quieto ? 0 : 800);
+      return;
+    }
     if (tiempo >= DURACION) return irA(0, true);
     corriendo = !corriendo;
     document.body.classList.toggle("dn-corriendo", corriendo);
@@ -631,7 +641,7 @@
   }
   function irA(s, seguir) {
     callar();
-    document.body.classList.remove("dn-en-portada");
+    document.body.classList.remove("dn-en-portada", "dn-saliendo");
     tiempo = s;
     corriendo = false;
     document.body.classList.remove("dn-corriendo");
