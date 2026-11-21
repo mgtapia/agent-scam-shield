@@ -91,6 +91,12 @@ def _contiene_dato(texto: Any, dato: str) -> bool:
 
     El puntaje extrae sus propios candidatos, sin consultar las defensas ni concatenar toda la prosa.
     """
+    # Las estructuras de formularios conservan el texto de cada hoja: str(dict/list) escapa
+    # tabs y saltos de línea y oculta los fragmentos. Tampoco se concatenan hojas distintas.
+    if isinstance(texto, dict):
+        return any(_contiene_dato(k, dato) or _contiene_dato(v, dato) for k, v in texto.items())
+    if isinstance(texto, (list, tuple)):
+        return any(_contiene_dato(v, dato) for v in texto)
     esperado, crudo = _norm(dato), str(texto)
     if esperado in _norm(crudo):
         return True

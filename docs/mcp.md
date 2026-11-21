@@ -30,11 +30,29 @@ Lo confiable es solo lo que escribe el dueño en `grifter.yaml` (o en `--encargo
 Quien controla la máquina podría editar `grifter.yaml` (inscribir la cuenta del estafador, apagar una capa) o apuntar al agente directo al banco. Grifter no lo impide, pero hace que **no pase sin que el dueño se entere**:
 
 1. **Solo Grifter tiene la credencial del banco.** La credencial va en el `env` del servidor en `grifter.yaml` y el banco la exige (`--clave-env BANCO_CLAVE`); un agente que lo levante por su cuenta no la tiene y el banco rechaza todo. Con el banco sandbox: `args: ["-m", "scamshield.mcp.servidor_banco", "--clave-env", "BANCO_CLAVE"]` y `env: {BANCO_CLAVE: ...}`.
-2. **Huella de la política.** Al arrancar y antes de cada llamada sensible, Grifter compara `grifter.yaml` (cuentas inscritas, datos del dueño, encargo, herramientas sensibles, capas, servidores) con la última política que aprobó el dueño (`.grifter_aprobada.json`, o la ruta de `estado:`). Si cambió, **retiene todo lo sensible, incluso a las cuentas inscritas**, y le manda al dueño el diff por Telegram con dos botones (aprobar o rechazar). El diff dice qué cambió en los datos del dueño y en las credenciales, nunca el valor. Un `grifter.yaml` ilegible o borrado también retiene. El primer arranque deja registrada la política inicial.
+2. **Huella de la política.** Al arrancar y antes de cada llamada, Grifter compara `grifter.yaml` (cuentas inscritas, datos del dueño, encargo, herramientas sensibles, capas, servidores y rutas de estado y semillas) con la última política que aprobó el dueño (`.grifter_aprobada.json`, o la ruta de `estado:`). Si cambió, **retiene las llamadas, incluso los pagos a las cuentas inscritas**, y le manda al dueño el diff por Telegram con dos botones (aprobar o rechazar). El diff dice qué cambió en los datos del dueño y en las credenciales, nunca el valor. Un `grifter.yaml` ilegible o borrado también retiene. **Sin un registro aprobado, incluso en el primer arranque, espera la aprobación inicial explícita del dueño**: no crea ni firma un estado automáticamente. Cambiar o quitar `estado:`, o borrar su archivo, tampoco reinicializa la confianza.
 3. **Registro firmado.** Si el proceso del proxy tiene `GRIFTER_CLAVE_ESTADO`, el registro de lo aprobado va firmado con HMAC: reescribirlo a mano sin la clave se nota.
 4. **Latido.** Al arrancar y al detenerse, Grifter le manda al dueño un aviso con las capas activas y si la política era la aprobada. Si se apaga sin aviso, el dueño lo sabe.
 
 La capa 2 se puede apagar con `capas: {capa2: false}`, pero es un cambio de política: se retiene y se avisa como cualquier otro. Para que el aviso llegue, el proxy necesita `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en su entorno.
+
+**Primera aprobación.** Por Telegram decide el dueño del `TELEGRAM_CHAT_ID` configurado en el entorno del proceso. Los aprobadores, el quórum y las semillas del YAML pendiente todavía no son confiables y no autorizan esa inicialización. Después de que el dueño aprueba, pasan a regir los aprobadores y las semillas de la política aprobada; cualquier cambio posterior se autoriza con los anteriores, incluso si el YAML los cambia o los elimina. Rechazar la inicialización, no responder o no tener canal de aprobación deja las llamadas retenidas y no crea un estado. La integridad se verifica antes de clasificar cada llamada: mientras falte una política aprobada, haya un cambio pendiente o no se pueda verificar el registro, también se retienen lecturas. Así, quitar una herramienta de `sensibles` no evita la aprobación.
+
+WhatsApp no tiene un aprobador de política individual; para inicializar una instalación que solo usa WhatsApp, o una demo sin canal del dueño, el dueño debe revisar el YAML y aprobarlo explícitamente desde una terminal de confianza. Usa el mismo entorno `GRIFTER_CLAVE_ESTADO` que tendrá el proxy y ajusta la ruta de configuración si corresponde:
+
+```bash
+python - <<'PY'
+import os
+from scamshield.mcp.integridad import ENTORNO_CLAVE, Integridad, politica_canonica
+from scamshield.mcp.proxy import cargar_config
+
+config = cargar_config("grifter.yaml")
+Integridad(config.ruta, config.estado, clave=os.environ.get(ENTORNO_CLAVE) or None).aprobar(
+    politica_canonica(config), "dueño desde terminal")
+PY
+```
+
+**Migrar el registro.** Cambiar la ruta requiere aprobación aun si se copia allí un estado firmado válido. Puedes copiar el archivo aprobado a la nueva ruta y confirmar el diff por el canal anterior, o revisar y aprobar la nueva configuración desde la terminal. Un archivo ausente pide aprobación inicial; uno dañado o con firma incorrecta retiene sin permitir su aprobación remota: restaura el registro válido o realiza la recuperación explícita desde la terminal. El estado firmado conserva su protección HMAC.
 
 **Límite honesto:** alguien con acceso a la máquina, a la clave del registro *y* al teléfono del dueño puede todo.
 
@@ -48,7 +66,7 @@ quorum: 2
 umbral_doble: 5000000                     # los pagos sobre este monto piden quórum, aunque la cuenta esté inscrita
 semillas: ../fuera-del-repo/semillas.json # o GRIFTER_SEMILLAS en el .env; nunca dentro del repo
 ```
-**Piden quórum** (dos personas distintas): cualquier cambio de la política (cuenta inscrita nueva, apagar o bajar una capa, umbrales, aprobadores o quórum), los pagos sobre `umbral_doble` y los pagos que la capa 2 o 3 retuvo sobre ese umbral.
+**Piden quórum** (dos personas distintas): una vez aprobada la política inicial, cualquier cambio de la política (cuenta inscrita nueva, apagar o bajar una capa, umbrales, aprobadores o quórum), los pagos sobre `umbral_doble` y los pagos que la capa 2 o 3 retuvo sobre ese umbral.
 
 **Reglas:** quien inició el cambio no cuenta como aprobador; un solo «no» rechaza (sin código); vence si no hay quórum (30 min un pago, 24 h la política) y queda rechazada; cambiar la lista de aprobadores o el quórum se aprueba con la lista *anterior*, así que nadie se agrega a sí mismo; un pago aprobado sale una sola vez.
 
@@ -68,7 +86,7 @@ En el `.env` (los pone el dueño; los agentes no lo leen): `KAPSO_API_KEY`, `KAP
 
 **El webhook.** Telegram se consulta; WhatsApp empuja. Kapso llama a una URL pública con cada mensaje recibido: en el servidor de la demo es `POST /api/whatsapp/webhook`; en el proxy MCP, un servidor mínimo en `KAPSO_WEBHOOK_PORT` (8788) en la ruta `/webhook`. Hay que exponerlo (un túnel, por ejemplo) y registrar la URL en Kapso para el evento `whatsapp.message.received`, con el mismo secreto. Si el servidor de la demo y el proxy corren a la vez, cada uno necesita su webhook.
 
-**Falla cerrada.** Sin llaves, no hay canal y todo sigue como antes. Sin `KAPSO_WEBHOOK_SECRET`, o con una firma (`X-Webhook-Signature`, HMAC-SHA256 en hexadecimal del cuerpo crudo) mala o ausente, el webhook se rechaza y no cuenta nada. Solo el número del dueño responde la alerta y solo los números de los aprobadores votan. Una entrega repetida por reintento (`X-Idempotency-Key`) o un botón apretado dos veces no cuenta dos veces. Si Kapso falla o nadie responde, no se paga. Los errores dicen el estado, nunca la llave ni la URL.
+**Falla cerrada.** Sin llaves no hay canal; una instalación sin política aprobada sigue reteniendo hasta su inicialización explícita. Sin `KAPSO_WEBHOOK_SECRET`, o con una firma (`X-Webhook-Signature`, HMAC-SHA256 en hexadecimal del cuerpo crudo) mala o ausente, el webhook se rechaza y no cuenta nada. Solo el número del dueño responde la alerta y solo los números de los aprobadores votan. Una entrega repetida por reintento (`X-Idempotency-Key`) o un botón apretado dos veces no cuenta dos veces. Si Kapso falla o nadie responde, no se paga. Los errores dicen el estado, nunca la llave ni la URL.
 
 **Límite honesto.** WhatsApp Business solo deja mandar mensajes que no son plantilla dentro de la ventana de 24 horas desde el último mensaje del usuario: si el dueño no ha escrito al número en el último día, hace falta una plantilla aprobada (no incluida aquí) o que escriba primero. Los cambios de política sin aprobadores no tienen botón por WhatsApp; con aprobadores pasan por el quórum.
 

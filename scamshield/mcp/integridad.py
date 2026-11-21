@@ -7,8 +7,8 @@ que el dueño se entere**:
 - **Huella de la política.** Se calcula el hash de lo que decide qué se retiene (cuentas inscritas, datos del dueño,
   encargo, herramientas sensibles, capas encendidas y servidores de abajo) y se compara con la última que el dueño
   aprobó. Si cambió, Grifter retiene todo lo sensible y le manda al dueño el diff, hasta que aprueba o rechaza.
-- **Primer arranque.** Sin una política aprobada todavía, la de ese arranque queda registrada como la inicial y el
-  latido lo dice. Es la única vez que Grifter confía sin preguntar.
+- **Primera aprobación.** Sin un registro aprobado, todo lo sensible queda retenido hasta que el dueño aprueba
+  explícitamente la política inicial. Borrar el registro o cambiar su ruta nunca vuelve a inicializar la confianza.
 - **El diff no filtra secretos.** De los datos del dueño y de las credenciales de los servidores solo se dice qué
   cambió, nunca el valor.
 
@@ -81,6 +81,7 @@ def politica_canonica(config: Any) -> dict[str, Any]:
         "quorum": int(config.quorum),
         "umbral_doble": int(config.umbral_doble),
         "semillas": _ruta_relativa(config, config.semillas),
+        "estado": _ruta_relativa(config, config.estado) or NOMBRE_ESTADO,
         "servidores": {s.nombre: {"comando": s.comando, "args": list(s.args), "cwd": _cwd(config, s),
                                   "env": {str(k): _h(v) for k, v in sorted(s.env.items())},
                                   # La URL también puede llevar credenciales, incluso en la ruta o el query.
@@ -161,6 +162,8 @@ def diferencias(antes: Mapping[str, Any], despues: Mapping[str, Any]) -> list[st
         d.append(f"~ umbral de doble autorización: {antes.get('umbral_doble')} → {despues.get('umbral_doble')}")
     if antes.get("semillas", "") != despues.get("semillas", ""):
         d.append("~ cambió la ruta de las credenciales de aprobación")
+    if antes.get("estado") != despues.get("estado"):
+        d.append("~ cambió la ruta del registro de la política aprobada")
     a, b = antes.get("servidores", {}), despues.get("servidores", {})
     for k in sorted(set(a) | set(b)):
         if k not in a:
@@ -241,7 +244,7 @@ class Integridad:
         return hmac.new(self._clave, datos, hashlib.sha256).hexdigest() if self._clave else ""
 
     def estado(self) -> Optional[Estado]:
-        """La política aprobada, o None si todavía no hay (primer arranque). Un archivo roto o con firma mala
+        """La política aprobada, o None si falta su registro. Un archivo roto o con firma mala
         lanza `IntegridadError`: no se confía en él."""
         if not self.ruta_estado.exists():
             return None
@@ -268,8 +271,8 @@ class Integridad:
 
     # --- La comparación -----------------------------------------------------------------------------
     def cambio(self) -> Optional[Cambio]:
-        """None si la política de hoy es la aprobada; si no, qué cambió. Sin política aprobada no hay cambio:
-        `arrancar` la registra como inicial. Un registro dañado o un archivo ilegible cuentan como cambio."""
+        """None solo si la política de hoy está aprobada. Sin registro se pide la primera aprobación;
+        un registro dañado o un archivo ilegible retienen sin permitir aprobarlos."""
         try:
             aprobada = self.estado()
         except IntegridadError as e:
@@ -278,22 +281,15 @@ class Integridad:
         if actual is None:
             return Cambio(aprobada.huella if aprobada else "", "", ilegible=error)
         if aprobada is None:
-            return None
+            return Cambio("", huella(actual), [
+                "No hay un registro de política aprobada: el dueño debe confirmar la política inicial.",
+                *diferencias({}, actual),
+            ])
         nueva = huella(actual)
         if nueva == aprobada.huella:
             return None
         return Cambio(aprobada.huella, nueva, diferencias(aprobada.politica, actual))
 
     def arrancar(self) -> str:
-        """Al arrancar: «inicial» si no había política aprobada (la deja registrada), «igual» o «cambio»."""
-        try:
-            aprobada = self.estado()
-        except IntegridadError:
-            return "cambio"
-        if aprobada is None:
-            _, actual, error = self.leer_actual()
-            if actual is None:
-                return "cambio"
-            self.aprobar(actual, "primer arranque")
-            return "inicial"
+        """«Igual» si la política está aprobada; «cambio» si espera aprobación o no se puede verificar."""
         return "cambio" if self.cambio() else "igual"

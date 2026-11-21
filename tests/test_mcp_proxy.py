@@ -22,6 +22,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.client.streamable_http import streamable_http_client
 
+from scamshield.mcp.integridad import Integridad, politica_canonica
 from scamshield.mcp.proxy import Config, Guardia, cargar_config
 from scamshield.mcp.remoto import crear_app
 from scamshield.mcp.servidor_proveedor import CUENTA_ESTAFADOR, CUENTA_LEGITIMA
@@ -54,6 +55,8 @@ async def servir_asgi(app):
 async def _conexion(carpeta: Path, transporte: str):
     """(read, write) hacia Grifter, por stdio (un subproceso) o por HTTP (/mcp con token)."""
     config = _escribir_config(carpeta)
+    aprobada = cargar_config(config)
+    Integridad(aprobada.ruta, aprobada.estado).aprobar(politica_canonica(aprobada), "dueño")
     if transporte == "stdio":
         parametros = StdioServerParameters(
             command=sys.executable, args=["-m", "scamshield.mcp.proxy", "--config", str(config)],

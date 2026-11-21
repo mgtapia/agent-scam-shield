@@ -18,7 +18,7 @@ from scamshield.mcp.alerta_telegram import QuorumTelegram, ganchos_desde_entorno
 from scamshield.mcp.aprobaciones import (APROBADA, PENDIENTE, RECHAZADA, VENCIDA, Aprobaciones, Aprobador,
                                          AprobadorQuorum, RegistroEncadenado, cargar_semillas, contador_valido, desafio, digipass,
                                          generar_semilla, hotp, main as main_digipass, totp)
-from scamshield.mcp.integridad import Integridad
+from scamshield.mcp.integridad import Integridad, politica_canonica
 from scamshield.mcp.proxy import Grifter, cargar_config
 
 T0 = 1_700_000_000.0
@@ -296,6 +296,7 @@ def _proxy(tmp_path, umbral=5_000_000, **extra):
     quorum = QuorumFalso(_aprobaciones(reloj), reloj)
     config = cargar_config(ruta)
     integridad = Integridad(ruta)
+    integridad.aprobar(politica_canonica(config), "dueño")
     g = Grifter(config, escalar=lambda a: False, integridad=integridad, aprobador=AprobadorQuorum(quorum), quorum=quorum)
     abajo = SesionFalsa()
     g.sesiones["abajo"] = abajo
