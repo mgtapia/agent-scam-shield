@@ -19,12 +19,15 @@ El daño posible queda acotado a esa deriva.
 La misma guardia tiene un presupuesto de falsas alarmas: contra un atacante que le quita todas las
 señales a sus estafas, la salida fácil es subir el sesgo y marcar todo (el duelo, `duelo.py`, llegó a
 66 % de falsas alarmas en el apartado). Una versión que sube las falsas alarmas del apartado más de
-`PRESUPUESTO_FALSAS_ALARMAS` sobre las que tenía al arrancar también se revierte.
+`PRESUPUESTO_FALSAS_ALARMAS` sobre las que tenía al arrancar también se revierte. El presupuesto se redondea hacia
+arriba a correos enteros: con 27 legítimos apartados, el 10 % son 2,7 y lo que se puede tolerar son 3 falsas alarmas, no 2
+(sin el redondeo, una versión con 3 de 27 = 11,1 % se rechazaba por una décima y el calentamiento quedaba en 1.0.0).
 
 Solo usa numpy (ya está en el entorno) y zlib para un hashing estable entre corridas.
 """
 from __future__ import annotations
 
+import math
 import random
 import re
 import zlib
@@ -201,7 +204,7 @@ class Clasificador:
         metricas = self.evaluar()
         p_estafas = self.p_medio_estafas()
         if (p_estafas < self.mejor_p_estafas - self.DERIVA_MAX
-                or metricas["falsas_alarmas"] > self.falsas_alarmas_base + self.PRESUPUESTO_FALSAS_ALARMAS):
+                or metricas["falsas_alarmas"] > self.falsas_alarmas_base + self._presupuesto_falsas_alarmas() + 1e-9):
             # Deriva sospechosa: se vuelve a la última versión buena y se descarta el lote que la causó.
             self.w, self.wh, self.b = (a.copy() if hasattr(a, "copy") else a for a in self._estado_bueno)
             del self._memoria[-self.cada:]
@@ -217,6 +220,11 @@ class Clasificador:
                    for k, v in self._pesos_version.items() if abs(v - antes[k]) >= 0.005]
         cambios.sort(key=lambda c: -abs(c["peso_despues"] - c["peso_antes"]))
         return self.evento_modelo(cambios)
+
+    def _presupuesto_falsas_alarmas(self) -> float:
+        """`PRESUPUESTO_FALSAS_ALARMAS` redondeado hacia arriba a correos legítimos enteros del apartado."""
+        legitimos = sum(1 for _, y in self.apartado if not y)
+        return math.ceil(self.PRESUPUESTO_FALSAS_ALARMAS * legitimos - 1e-9) / legitimos if legitimos else self.PRESUPUESTO_FALSAS_ALARMAS
 
     def evaluar(self) -> dict[str, Any]:
         """Precisión, recall y falsas alarmas (FP / (FP + TN)) en el conjunto apartado, y las estafas que se colaron.

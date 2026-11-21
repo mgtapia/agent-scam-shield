@@ -791,7 +791,7 @@ mark.tramo { background: transparent; color: inherit; }
 /* --- Duelo: el hacker que aprende, contra el escudo congelado y contra el que aprende ---
    Cabe en una pantalla desde 1100 de ancho (un laptop a 1280×609): la franja y la ayuda toman su alto y los dos
    gráficos, lado a lado, el resto. */
-.vista.duelo { height: calc(100vh - var(--barra)); min-height: 480px; padding: var(--pad); gap: var(--e-1) var(--e-2);
+.vista.duelo { height: calc(100vh - var(--barra)); min-height: 480px; padding: var(--pad); gap: var(--e-2);
   grid-template-rows: auto minmax(0, 1fr) auto; align-items: stretch; }
 .duelo-franja { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 4fr) repeat(2, minmax(0, 3fr)) minmax(0, 2fr); border: var(--linea); background: var(--superficie); }
 .du-celda { display: grid; align-content: center; min-width: 0; padding: var(--e-1) var(--e-2); }
@@ -860,7 +860,7 @@ mark.tramo { background: transparent; color: inherit; }
 }
 /* Episodios en una pantalla baja: los carriles toman el alto que queda bajo la franja, con el veredicto a la vista. */
 @media (min-width: 1100px) and (max-height: 899px) {
-  #vista-vivo { gap: var(--e-1) var(--e-2); }
+  #vista-vivo { gap: var(--e-2); }
   .carril { height: calc(100vh - var(--barra) - 112px); min-height: 400px; }
   .monitor { height: 64px; }
   .alerta { inset: 112px 0 0 0; }
@@ -871,7 +871,7 @@ mark.tramo { background: transparent; color: inherit; }
    página. Agentes en una línea; Entrada a la izquierda; Lectura al centro, con el veredicto y la acción en una franja;
    a la derecha, los contadores de capas y un panel con pestañas para Registro, Bóveda y Modelo. */
 @media (min-width: 1100px) and (max-width: 1599px), (min-width: 1100px) and (max-height: 899px) {
-  .vista.ops { height: calc(100vh - var(--barra)); min-height: 520px; gap: var(--e-1) var(--e-2);
+  .vista.ops { height: calc(100vh - var(--barra)); min-height: 520px; gap: var(--e-2);
     grid-template-rows: auto auto auto minmax(0, 1fr); }
   .ops-cola { grid-column: 1 / span 3; grid-row: 2 / span 3; }
   .ops-lectura { grid-column: 4 / span 5; grid-row: 2 / span 3; }
@@ -884,7 +884,7 @@ mark.tramo { background: transparent; color: inherit; }
   .ops-registro > .titulo, .ops-boveda > .titulo, .ops-modelo > .titulo { display: none; }
   .ops .titulo { min-height: 40px; padding-top: 0; padding-bottom: 0; }
 
-  .ops-agentes { gap: var(--e-1) var(--e-2); }
+  .ops-agentes { gap: var(--e-2); }
   .agente { display: flex; align-items: center; gap: var(--e-1); min-height: 40px; padding: 0 var(--e-2); }
   .agente .ag-l1 { flex: 1; }
   .agente .ag-tarea, .agente .ag-l2 .tag.capa { display: none; }

@@ -138,10 +138,11 @@ def test_el_codigo_o_la_tarjeta_que_se_piden_por_chat_no_salen(id_, idioma):
 
 
 @pytest.mark.xfail(strict=True, reason=(
-    "La regla de credenciales (capa 2) ignora los valores de menos de 4 caracteres para no frenar cualquier "
-    "número chico: un CVV de 3 dígitos que se manda solo, sin el número de la tarjeta, sale."))
+    "Un CVV de 3 dígitos mandado solo, sin ninguna frase que lo nombre y sin el número de la tarjeta, no se reconoce: "
+    "cualquier número de 3 dígitos aparece por todos lados. Con «CVV 482», «el código de seguridad es 482» o pegado a "
+    "la tarjeta sí (tests/test_credencial_corta.py)."))
 @pytest.mark.parametrize("idioma", IDIOMAS)
-def test_el_cvv_de_la_tarjeta_mandado_solo_no_sale(idioma):
+def test_el_cvv_de_la_tarjeta_mandado_solo_y_sin_pista_no_sale(idioma):
     esc, w, h = _mundo("chat_premio_tarjeta", idioma, [politica_origen])
     _leer(h)
     assert MOTIVO_CREDENCIAL in h.compartir_dato("482", esc["evaluacion"]["destinatario_estafador"])
