@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from html.parser import HTMLParser
 
@@ -17,6 +18,7 @@ def demo(tmp_path, monkeypatch):
     for nombre in server.ACTIVOS_PUBLICOS:
         origen = server.DEMO / nombre
         if origen.is_file():
+            (tmp_path / nombre).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(origen, tmp_path / nombre)
     shutil.copytree(server.DEMO / "episodios", tmp_path / "episodios")
     shutil.copytree(server.DEMO / "audio", tmp_path / "audio")
@@ -111,7 +113,10 @@ def test_el_modo_demo_del_pitch_y_sus_activos_son_publicos(demo):
         pytest.skip("demo.html todavía no está en esta rama")
     referencias = _Referencias()
     referencias.feed((raiz / "demo.html").read_text(encoding="utf-8"))
-    for ruta in referencias.rutas | {"/demo.html"}:
+    # demo.js arma el teléfono y la llamada después de cargar: sus imágenes y audios tampoco pueden dar 404.
+    desde_js = {"/" + r for r in re.findall(r"[\"'`]((?:img|audio)/[\w./-]+\.(?:svg|png|jpg|webp|mp3))", (raiz / "demo.js").read_text(encoding="utf-8"))}
+    assert {"/img/nieto.svg", "/audio/cuento_del_tio_nieto.mp3"} <= desde_js
+    for ruta in referencias.rutas | desde_js | {"/demo.html"}:
         respuesta = cliente.get(ruta)
         assert respuesta.status_code == 200, ruta
         assert respuesta.content == (raiz / ruta.lstrip("/")).read_bytes()

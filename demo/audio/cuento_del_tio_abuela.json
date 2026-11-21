@@ -4,10 +4,11 @@
   "origen": "llamada",
   "texto": "¿Aló? ¿Quién habla?",
   "voz": "femenina",
-  "voz_id": "XrExE9yKIg1WjnnlVkGX",
-  "clase_de_voz": "premade",
-  "modelo": "eleven_multilingual_v2",
+  "voz_id": "KiFSnOkWlUTh37bqvrCZ",
+  "clase_de_voz": "generated",
+  "descripcion_de_la_voz": "Abuela chilena de unos 78 años, de Santiago, voz cálida y algo temblorosa, contesta el teléfono fijo.",
+  "modelo": "eleven_v3",
   "sintetica": true,
-  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "aviso": "Voz sintética creada con el Diseño de Voz de ElevenLabs a partir de una descripción escrita (sin clonar a nadie). No es la voz de ninguna persona real.",
   "caracteres": 19
 }
