@@ -72,7 +72,7 @@ Funciona con cualquier lista de funciones de Python, síncronas o `async`, sin f
 
    Si Grifter retiene, la función no corre y el modelo recibe el porqué.
 
-Ejemplos que corren sin llaves: [`examples/funciones_python.py`](../examples/funciones_python.py) y [`examples/anthropic_tool_use.py`](../examples/anthropic_tool_use.py) `--mock`. Con Stripe en modo prueba: [stripe-test-mode.md](stripe-test-mode.md). Las opciones están en el [README](../README.md#úsalo-en-tu-agente).
+Ejemplos que corren sin llaves: [`examples/funciones_python.py`](../examples/funciones_python.py) y [`examples/anthropic_tool_use.py`](../examples/anthropic_tool_use.py) `--mock`. Con Stripe en modo prueba: [stripe-test-mode.md](stripe-test-mode.md). Las opciones están en la [guía completa](../GUIA.md#úsalo-en-tu-agente).
 
 ## 5. Soy un banco, una billetera o un comercio
 Grifter va como un **proxy MCP remoto** delante de tus herramientas de pago. El agente del cliente se conecta a Grifter, y Grifter a tu MCP. Tus credenciales quedan en Grifter, nunca en el agente.
@@ -96,4 +96,4 @@ pip install -e ".[dev,demo]"
 grifter bench          # el benchmark completo, sin llaves de API, en segundos
 pytest                 # las pruebas, sin llamar a ningún modelo
 ```
-Para correr con modelos reales (Anthropic, OpenAI, Gemini, Groq) y con el atacante adaptativo, mira el [README](../README.md#benchmark-en-un-comando).
+Para correr con modelos reales (Anthropic, OpenAI, Gemini, Groq) y con el atacante adaptativo, mira la [guía completa](../GUIA.md#benchmark-en-un-comando).

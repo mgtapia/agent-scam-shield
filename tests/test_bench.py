@@ -332,8 +332,8 @@ INICIO, FIN = "<!-- bench:inicio -->", "<!-- bench:fin -->"
 
 
 def _bloque_del_readme() -> str:
-    texto = (RAIZ / "README.md").read_text(encoding="utf-8").replace("\r\n", "\n")
-    assert INICIO in texto and FIN in texto, "el README debe traer la salida entre los marcadores bench"
+    texto = (RAIZ / "GUIA.md").read_text(encoding="utf-8").replace("\r\n", "\n")
+    assert INICIO in texto and FIN in texto, "la guía debe traer la salida entre los marcadores bench"
     return texto.split(INICIO, 1)[1].split(FIN, 1)[0].strip("\n") + "\n"
 
 

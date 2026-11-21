@@ -1,4 +1,4 @@
-"""Una sola fuente de cifras (docs/cifras.md): lo que dicen el README, el pitch y la demo calza con demo/resultados.json.
+"""Una sola fuente de cifras (docs/cifras.md): la guía completa, el pitch y la demo calzan con demo/resultados.json.
 
 Si agregas escenarios o regeneras `results/`, corre `python scripts/resultados_demo.py` y después
 `python scripts/cifras_finales.py`; estas pruebas dicen qué número quedó desfasado.
@@ -16,7 +16,8 @@ from scripts import cifras_finales as cf
 
 RAIZ = Path(__file__).resolve().parent.parent
 R = json.loads((RAIZ / "demo" / "resultados.json").read_text(encoding="utf-8"))
-README = (RAIZ / "README.md").read_text(encoding="utf-8")
+# El README es la portada de la hackathon; su contenido completo se conserva en GUIA.md.
+README = (RAIZ / "GUIA.md").read_text(encoding="utf-8")
 PITCH = (RAIZ / "docs" / "pitch.md").read_text(encoding="utf-8")
 
 ESTAFAS = R["bench"]["escenarios"]["estafas"]
