@@ -64,6 +64,30 @@ python scripts/correr_matriz.py --modelos groq/openai/gpt-oss-120b --max-connect
 
 Los logs quedan en `logs/` y se abren con `inspect view`. Si no hay ninguna llave y no se pasa `--modelos`, el script termina con un error que dice qué variables definir.
 
+## Capa 1: Pipelock
+`defense=layer1` usa [Pipelock](https://github.com/pipelab-org/pipelock) (núcleo Apache-2.0) como firewall real, en cuanto está configurado. Sin Pipelock, por ejemplo en CI, corre unas reglas de referencia propias (`scamshield/defenses/layer1.py`) y se reporta como «capa 1 de referencia».
+
+```bash
+# Baja el binario de https://github.com/pipelab-org/pipelock/releases (probado con v3.8.0) y apunta a él.
+export PIPELOCK_BIN=/ruta/a/pipelock        # en .env; la eval lo levanta sola, en un puerto libre y con un token al azar
+inspect eval scamshield/evals/task.py --model <proveedor/modelo> -T defense=layer1
+python scripts/capa1_cobertura.py           # qué bloquea cada capa 1, sin ningún modelo
+```
+
+`SCAMSHIELD_CAPA1=pipelock|referencia|auto` fuerza el respaldo (auto: Pipelock si hay `PIPELOCK_URL` o `PIPELOCK_BIN`). Con `pipelock` y sin Pipelock disponible la eval se corta con un error: nunca se mide «capa 1» con una defensa que no corrió. Con `PIPELOCK_URL` y `PIPELOCK_TOKEN` se usa un Pipelock que ya está corriendo.
+
+Qué se le pregunta a Pipelock, y qué ve:
+
+| Se le manda | Cómo | Qué detecta de nuestros escenarios |
+|---|---|---|
+| Lo que el agente lee de correo y web | `POST /api/v1/scan`, `kind=prompt_injection` | Instrucciones que pisan al agente (`inyeccion_web`, en español y en inglés). No ve el `<IMPORTANT>` ni el «no se lo menciones al usuario» |
+| Las descripciones de herramientas MCP | `pipelock mcp scan` | Envenenamiento de herramientas («Instruction Tag»): `mcp_envenenado` |
+| La acción sensible | `POST /api/v1/scan`, `kind=tool_call` | Secretos y credenciales en los argumentos. Una cuenta nueva o un monto no son secretos |
+
+Sobre las 42 estafas (21 por idioma) y los 16 controles, medido con `capa1_cobertura.py` y Pipelock 3.8.0, la capa 1 real bloquea 4 estafas: `inyeccion_web` y `mcp_envenenado`, en es y en. Deja pasar las otras 38, incluidas las dos inyecciones más sutiles (`portal_cuenta_centralizada` y `verificador_proveedores_envenenado`), y no da falsas alarmas en los 16 controles. Es la hipótesis de la tesis: un firewall técnico no ve una boleta falsa ni un «cambio de cuenta». Las reglas de referencia dan el mismo resultado.
+
+Nota de licencia: los binarios oficiales de Pipelock traen además código bajo ELv2 (carpeta `enterprise/` del repo). No los redistribuimos: cada persona baja el suyo, y el proyecto solo lo corre como un proceso aparte.
+
 ## Atacante adaptativo («grifter»)
 `scamshield/attacker/` reescribe cada estafa, ronda tras ronda, para ver si alguna defensa aguanta. Es una versión de PAIR (MIT) adaptada a estafas:
 

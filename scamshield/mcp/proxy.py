@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import sys
+import time
 from contextlib import AsyncExitStack
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -228,6 +229,31 @@ def _texto_de(resultado: types.CallToolResult) -> str:
     return "\n".join(partes)
 
 
+# Argumentos que delatan una herramienta de dinero aunque no esté declarada en `sensibles`.
+# Un servidor que expone el pago como `send_money` o `pagar_factura` no se salta la revisión.
+CLAVES_CUENTA = ("cuenta", "cuenta_destino", "numero_cuenta", "account", "account_number", "iban")
+CLAVES_DESTINO = ("destinatario", "beneficiario", "recipient", "destino", "to")
+CLAVES_DINERO = ("monto", "amount", "importe", "valor", "total")
+
+# Tope de alertas: si un atacante inunda al agente de pagos retenidos para cansar al dueño, Grifter
+# deja de preguntar y retiene todo lo sensible en silencio hasta que pase la ventana.
+TOPE_ALERTAS = 5
+VENTANA_ALERTAS_S = 600
+
+
+def regla_por_argumentos(args: Mapping[str, Any]) -> Optional[AccionSensible]:
+    """Si los argumentos parecen un pago, la regla con la que revisarlo; si no, None."""
+    claves = {str(k).lower(): str(k) for k in args}
+    for c in CLAVES_CUENTA:
+        if c in claves:
+            return AccionSensible(destino=claves[c], que="el destino")
+    if any(m in claves for m in CLAVES_DINERO):
+        for c in CLAVES_DESTINO:
+            if c in claves:
+                return AccionSensible(destino=claves[c], que="el destino")
+    return None
+
+
 def _error(mensaje: str) -> types.CallToolResult:
     return types.CallToolResult(content=[types.TextContent(type="text", text=mensaje)], isError=True)
 
@@ -241,6 +267,7 @@ class Grifter:
         # Nombre expuesto -> (servidor, nombre original de la herramienta).
         self.rutas: dict[str, tuple[str, str]] = {}
         self.herramientas: list[types.Tool] = []
+        self._alertas_recientes: list[float] = []
 
     async def conectar(self, pila: AsyncExitStack, errlog=None) -> None:
         """Levanta cada servidor de abajo por stdio y junta sus herramientas."""
@@ -268,20 +295,46 @@ class Grifter:
         if nombre not in self.rutas:
             return _error(f"Grifter no conoce la herramienta {nombre}.")
         servidor, original = self.rutas[nombre]
+        if original not in self.config.sensibles:
+            regla = regla_por_argumentos(args)
+            if regla is not None:
+                log.warning("%s no estaba declarada como sensible; se revisa como pago", original)
+                self.config.sensibles[original] = regla
         if original in self.config.sensibles:
-            alerta = self.guardia.revisar(original, args, servidor)
-            if alerta is not None:
-                aprobada = self.escalar(alerta)
-                if inspect.isawaitable(aprobada):
-                    aprobada = await aprobada
-                self._registrar("aprobado_por_dueno" if aprobada else "retenido", alerta=alerta)
-                if not aprobada:
-                    return _error(alerta.mensaje)
-            else:
-                self._registrar("permitido", herramienta=original, servidor=servidor, args=args)
+            try:
+                alerta = self.guardia.revisar(original, args, servidor)
+                if alerta is not None:
+                    if self._inundado():
+                        self._registrar("retenido_sin_preguntar", alerta=alerta)
+                        return _error(alerta.mensaje + " Hay demasiadas alertas seguidas: Grifter "
+                                      "retiene todo sin preguntar por unos minutos.")
+                    aprobada = self.escalar(alerta)
+                    if inspect.isawaitable(aprobada):
+                        aprobada = await aprobada
+                    self._registrar("aprobado_por_dueno" if aprobada else "retenido", alerta=alerta)
+                    if not aprobada:
+                        return _error(alerta.mensaje)
+                else:
+                    self._registrar("permitido", herramienta=original, servidor=servidor, args=args)
+            except Exception as e:  # falla cerrada: si Grifter no pudo revisar, no se reenvía
+                log.exception("error al revisar %s", original)
+                try:
+                    self._registrar("error_de_revision", herramienta=original, servidor=servidor,
+                                    error=type(e).__name__)
+                except Exception:
+                    pass
+                return _error(f"Grifter retuvo la llamada a {original}: no pudo revisarla "
+                              f"({type(e).__name__}). Por seguridad no se reenvía.")
         resultado = await self.sesiones[servidor].call_tool(original, args)
         self.guardia.anotar_resultado(servidor, original, _texto_de(resultado))
         return resultado
+
+    def _inundado(self) -> bool:
+        """Cuenta esta alerta y dice si ya se pasó el tope de la ventana (contra el cansancio)."""
+        ahora = time.monotonic()
+        self._alertas_recientes = [t for t in self._alertas_recientes if ahora - t < VENTANA_ALERTAS_S]
+        self._alertas_recientes.append(ahora)
+        return len(self._alertas_recientes) > TOPE_ALERTAS
 
     def _registrar(self, evento: str, alerta: Optional[Alerta] = None, **datos: Any) -> None:
         if self.config.registro is None:

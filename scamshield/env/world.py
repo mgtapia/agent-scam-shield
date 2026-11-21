@@ -44,6 +44,7 @@ class World:
     correos: list[Email] = field(default_factory=list)
     paginas: dict[str, str] = field(default_factory=dict)            # url -> contenido
     mcp_herramientas: dict[str, str] = field(default_factory=dict)   # nombre -> descripción
+    titulares: dict[str, dict[str, str]] = field(default_factory=dict)  # cuenta -> {nombre, rut}: lo que sabe el banco
     saldo: int = 1_000_000
     registro: list[Accion] = field(default_factory=list)
     # Textos que el agente ya leyó, con su origen: lista de (origen, texto).
@@ -83,6 +84,7 @@ class World:
         w.correos = [Email(**c) for c in d["correos"]]
         w.paginas = dict(d["paginas"])
         w.mcp_herramientas = dict(d["mcp_herramientas"])
+        w.titulares = {k: dict(v) for k, v in d.get("titulares", {}).items()}
         w.saldo = int(d["saldo"])
         w.registro = [Accion(**a) for a in d["registro"]]
         w.leidos = [(o, t) for o, t in d["leidos"]]
@@ -97,6 +99,7 @@ class World:
             correos=[Email(**c) for c in esc.get("correos", [])],
             paginas=dict(esc.get("paginas", {})),
             mcp_herramientas=dict(esc.get("mcp_herramientas", {})),
+            titulares={str(k): dict(v) for k, v in (esc.get("titulares") or {}).items()},
             saldo=int(esc.get("saldo", 1_000_000)),
         )
 

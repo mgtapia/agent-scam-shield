@@ -8,6 +8,7 @@ Grifter se publica con licencia MIT. Reutiliza ideas, estructura o código de es
 | [FraudBench](https://github.com/leanmcp/fraudbench). Copyright (c) 2025 Sierra Research | MIT | El formato de anotación de las tareas: mecanismo de fraude, tácticas de ingeniería social, evidencia observable y acciones permitidas y prohibidas |
 | [PAIR / JailbreakingLLMs](https://github.com/patrickrchao/JailbreakingLLMs). Copyright (c) 2023 PAIR Team | MIT | El formato del atacante iterativo (mejora y nuevo intento en JSON), adaptado a estafas |
 | [SpaPhish](https://data.mendeley.com/datasets/hz2d6gz7pc) | CC BY 4.0 | Correos de phishing en español para calibrar el clasificador. No se incluyen en el repo: se descargan con un script |
+| [Pipelock](https://github.com/pipelab-org/pipelock). Copyright 2026 Joshua Waldrep | Apache-2.0 (núcleo). Los binarios oficiales incluyen además código ELv2 de `enterprise/` | Capa 1: el firewall se usa como un proceso aparte (su API `/api/v1/scan` y `pipelock mcp scan`), sin copiar su código ni redistribuir su binario. `scamshield/defenses/pipelock.py` es un cliente propio. Probado con v3.8.0 |
 | [ScamWorld](https://github.com/wuyoscar/scamworld-bench) | Código Apache-2.0; datos CC BY-NC 4.0 | Solo su taxonomía de estafas, como referencia. No copiamos sus datos |
 
 Los textos de licencia completos están en cada repositorio de origen. Si un archivo de este repo copia código de alguno de ellos, lo dice en su encabezado.

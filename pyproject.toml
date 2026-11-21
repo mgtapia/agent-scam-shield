@@ -20,8 +20,8 @@ dev = ["pytest"]
 proveedores = ["google-genai>=3.3.0", "groq>=0.28.0"]
 # AgentDojo de inspect_evals, para scripts/agentdojo_banking.py.
 agentdojo = ["inspect-evals[agentdojo]"]
-# Servidor de la demo.
-demo = ["fastapi", "uvicorn"]
+# Servidor de la demo. numpy es para el clasificador del modo en vivo (scamshield/vivo).
+demo = ["fastapi", "uvicorn", "numpy"]
 
 [tool.setuptools.packages.find]
 include = ["scamshield*"]
