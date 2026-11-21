@@ -331,6 +331,15 @@ tests/        pruebas sin API
 - CaMeL: *Defeating Prompt Injections by Design* (Google DeepMind). De aquí viene la idea de separar los datos confiables de los no confiables.
 - Firewalls abiertos: [Pipelock](https://github.com/luckyPipewrench/pipelock), [mcp-watchdog](https://pypi.org/project/mcp-watchdog), [Snyk Agent Scan](https://github.com/snyk/agent-scan).
 
+## De dónde salen las estafas
+Las siete estafas que evolucionaron con IA del corpus (`deepfake_autoridad_inversion`, `credito_falso_comision`, `suplantacion_regulador`, `soporte_falso_buscador`, `qr_en_factura`, `agente_vendedor_estafador` y `tareas_pagadas`) se escribieron a partir de estas fuentes. Todo lo que aparece en los escenarios es inventado: marcas, bancos, reguladores, dominios, cuentas y personas.
+
+- FBI IC3 2025, US$893 M perdidos en estafas con IA: [Malwarebytes](https://www.malwarebytes.com/blog/news/2026/06/americans-lost-nearly-900-million-to-ai-powered-scams-fbi-says).
+- EBA, [fraudes y estafas financieras en línea en un mundo de IA](https://eba.europa.eu/sites/default/files/2026-01/fa63af9a-bafd-4821-baee-48c7c8fb6490/Online%20financial%20frauds%20and%20scams%20in%20an%20AI%20world_ES.pdf).
+- BCG, [cómo la IA agéntica va a industrializar las estafas financieras](https://www.bcg.com/publications/2026/how-agentic-ai-will-industrialize-financial-scams).
+- Banco Central de Chile, [alerta por un video con IA que muestra falsamente a su presidenta promocionando inversiones](https://www.theclinic.cl/2026/09/02/banco-central-alerta-por-video-con-ia-que-muestra-falsamente-a-rosanna-costa-promocionando-inversiones/) (septiembre de 2026): el caso real detrás de `deepfake_autoridad_inversion`.
+- CMF, [alertas al público](https://www.cmfchile.cl/portal/prensa/625/w4-article-115043.html): detrás de `credito_falso_comision` (el cobro por adelantado) y `suplantacion_regulador`.
+
 ## Equipo
 Matías Tapia y Matías Ramírez, con Claude Code.
 

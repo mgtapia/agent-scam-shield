@@ -16,7 +16,7 @@ import dataclasses
 import pytest
 
 from scamshield.defenses.layer2 import politica_origen
-from scamshield.vivo.boveda import MAXIMO_INDICADORES, TOPE_POR_REMITENTE
+from scamshield.vivo.boveda import MAXIMO_INDICADORES, TOPE_POR_REMITENTE, plantilla
 from scamshield.vivo.clasificador import Clasificador
 from scamshield.vivo.flujo import Flujo
 from scamshield.vivo.motor import Motor
@@ -46,6 +46,17 @@ def _estafa(m: Motor, clave: str = "proveedor_factura_cambio"):
 
 def _legitimo(m: Motor, clave: str = "control_proveedor_factura"):
     return next(c for c in m.flujo.episodio(clave=clave, idioma="es") if c.etiqueta == "legitimo")
+
+
+def _legitimo_sin_historial(m: Motor):
+    """Un correo legítimo cuya plantilla el dueño todavía no confirmó, sea cual sea el corpus.
+
+    El precalentado ve controles al azar y, si ya vio uno con esa redacción, la plantilla queda como vista
+    legítima. Estas pruebas miden el primer correo, así que se parte sin ese historial.
+    """
+    legitimo = _legitimo(m)
+    m.boveda.vistos_legitimos["plantilla"].discard(plantilla(legitimo.cuerpo))
+    return legitimo
 
 
 def _veredicto(m: Motor, c) -> dict:
@@ -88,7 +99,7 @@ def test_el_primer_correo_legitimo_tras_envenenar_el_dominio_no_se_marca(motor):
 
 
 def test_una_plantilla_copiada_de_un_correo_legitimo_deja_de_atajar_cuando_el_dueno_lo_confirma(motor):
-    legitimo = _legitimo(motor)
+    legitimo = _legitimo_sin_historial(motor)
     copia = dataclasses.replace(_estafa(motor), cuerpo=legitimo.cuerpo.replace("$", "$9"), etiqueta="estafa")
     motor.boveda.confirmar(copia, 1.0)
     assert _de_tipo(motor.boveda.revisar(legitimo), "plantilla")      # la colisión envenena
@@ -104,7 +115,7 @@ def test_una_plantilla_copiada_de_un_correo_legitimo_deja_de_atajar_cuando_el_du
     "plantilla copiada ataja el legítimo. Una plantilla genérica («adjunto la factura...») no se puede "
     "distinguir de la del estafador sin otra señal."))
 def test_una_plantilla_copiada_no_ataja_el_primer_correo_legitimo(motor):
-    legitimo = _legitimo(motor)
+    legitimo = _legitimo_sin_historial(motor)
     copia = dataclasses.replace(_estafa(motor), cuerpo=legitimo.cuerpo.replace("$", "$9"), etiqueta="estafa")
     motor.boveda.confirmar(copia, 1.0)
     assert not _de_tipo(motor.boveda.revisar(legitimo), "plantilla")
