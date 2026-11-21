@@ -53,7 +53,7 @@ NARRACION = {
     "cifras": "[warm] Y lo medimos. Ciento cincuenta estafas, de treinta y dos tipos. Con Grifter completo, "
               "no pasa ninguna. Un atacante que aprende lo intentó cinco mil doscientas ochenta veces… "
               "y ninguna cruzó la capa dos.",
-    "cierre": "[calm] El clasificador puede equivocarse. La regla no lo necesita.",
+    "cierre": "[calm] Tu agente puede creerle a cualquiera. Tu plata, no.",
 }
 
 

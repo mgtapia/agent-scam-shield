@@ -85,8 +85,8 @@
       // Lo que dice la narradora (el mp3 de cada escena; sin mp3, speechSynthesis lee esto mismo)
       n_correo: "Ahora llega un correo que dice ser del banco. Hay un cargo raro, y piden el código del SMS. El agente se lo iba a mandar… y Grifter lo frena. La clave no sale sin el dueño.",
       n_compra: "Otra trampa, en una compra. Aprobaste cuatrocientos doce mil pesos… y la tienda cobra cuatro millones ciento veinte mil. Grifter retiene el pago. Solo lo que aprobaste.",
+      n_cierre: "Tu agente puede creerle a cualquiera. Tu plata, no.",
       n_cifras: "Y lo medimos. Ciento cincuenta estafas, de treinta y dos tipos. Con Grifter completo, no pasa ninguna. Un atacante que aprende lo intentó cinco mil doscientas ochenta veces… y ninguna cruzó la capa dos.",
-      n_cierre: "El clasificador puede equivocarse. La regla no lo necesita.",
       narra: "Grifter narra",
       c_rotulo: "Otra regla: solo lo que aprobaste",
       c_1: "Aprobaste [[$412.000]]",
@@ -98,7 +98,7 @@
       a3_frase: "Lo medimos",
       c1_de: "estafas", c1_con: "con Grifter completo", c1_a: "pasan", c1_det: "{f} tipos de estafa · agente que hace todo lo que lee · grifter bench",
       c2_de: "intentos de un atacante que aprende", c2_con: "contra la capa 2", c2_a: "cruzan", c2_det: "{g} generaciones del duelo contra la capa 2 · grifter duelo",
-      cierre1: "El clasificador puede equivocarse.", cierre2: "La regla no lo necesita.",
+      cierre1: "Tu agente puede creerle a cualquiera.", cierre2: "Tu plata, no.",
       url: "grifter.onrender.com",
     },
     en: {
@@ -147,8 +147,8 @@
       k_cinetica: "The code doesn't leave without the owner.", c_cinetica: "Only what you approved.",
       n_correo: "Now an email arrives claiming to be from the bank. There's a strange charge, and they ask for the SMS code. The agent was about to send it… and Grifter stops it. The code doesn't leave without the owner.",
       n_compra: "Another trap, in a purchase. You approved four hundred twelve thousand pesos… and the store charges four million one hundred twenty thousand. Grifter holds the payment. Only what you approved.",
+      n_cierre: "Your agent can believe anyone. Your money can't.",
       n_cifras: "And we measured it. One hundred fifty scams, of thirty-two types. With full Grifter, none get through. An attacker that learns tried five thousand two hundred eighty times… and none got past layer two.",
-      n_cierre: "The classifier can be wrong. The rule doesn't need it.",
       narra: "Grifter narrates",
       c_rotulo: "Another rule: only what you approved",
       c_1: "You approved [[$412,000]]",
@@ -160,7 +160,7 @@
       a3_frase: "We measured it",
       c1_de: "scams", c1_con: "with full Grifter", c1_a: "get through", c1_det: "{f} scam types · agent that does whatever it reads · grifter bench",
       c2_de: "attempts by an attacker that learns", c2_con: "against layer 2", c2_a: "get past", c2_det: "{g} duel generations against layer 2 · grifter duel",
-      cierre1: "The classifier can be wrong.", cierre2: "The rule doesn't need it.",
+      cierre1: "Your agent can believe anyone.", cierre2: "Your money can't.",
       url: "grifter.onrender.com",
     },
   };
@@ -186,8 +186,8 @@
   const C2 = { v: r2(N3.en + N3.atacante - 0.15), sube: r2(N3.en + N3.intento), ds: r2(N3.veces - N3.intento),
     det: r2(N3.en + N3.veces), con: r2(N3.en + N3.cruzo), cae: r2(N3.en + N3.cruzo), dc: 0.5 };
   const CI = r2(N3.en + N3.dura + 1.2);   // cierre
-  const NF = { en: r2(CI + 0.3), dura: 4, frase: [0.069, 0.144, 1.013, 1.32, 2.267, 2.46, 3.04, 3.227, 3.351] };
-  const DURACION = r2(NF.en + NF.dura + 3);
+  const NF = { en: r2(CI + 0.3), dura: 3.12, frase: [0.147, 0.213, 0.627, 1, 1.44, 1.552, 2.188, 2.308, 2.961] };   // «Tu agente puede creerle a cualquiera. Tu plata, no.»
+  const DURACION = r2(NF.en + NF.dura + 4);
   const NARRA = { correo: NK, compra: NC, cifras: N3, cierre: NF };
   const ACTOS = [
     { id: "intro", desde: 0 }, { id: "a1", desde: 3 }, { id: "a2", desde: CL }, { id: "a3", desde: A3 }, { id: "cierre", desde: CI },
@@ -398,12 +398,12 @@
       </section>
 
       <section class="md-acto md-cierre" data-desde="${CI}" data-hasta="${DURACION}">
-        <h1 class="md-frase"><span>${cinetica(t("cierre1"), NF.en, NF.frase.slice(0, 4), 0)}</span><span class="md-frase-2">${cinetica(t("cierre2"), NF.en, NF.frase.slice(4), 0)}</span></h1>
-        <div class="md-logo" data-v="${r2(NF.en + NF.dura + 0.3)}">${ic("shield", "grande")}<span>Grifter</span></div>
-        <p class="md-url dato" data-v="${r2(NF.en + NF.dura + 0.8)}">${esc(t("url"))}</p>
+        <h1 class="md-frase"><span>${cinetica(t("cierre1"), NF.en, NF.frase.slice(0, 6), 0)}</span><span class="md-frase-2">${cinetica(t("cierre2"), NF.en, NF.frase.slice(6), 0)}</span></h1>
+        <div class="md-logo" data-v="${r2(NF.en + NF.dura + 0.5)}">${ic("shield", "grande")}<span>Grifter</span></div>
+        <p class="md-url dato" data-v="${r2(NF.en + NF.dura + 1)}">${esc(t("url"))}</p>
       </section>
 
-      <div class="md-narrador" data-v="${CL}" data-h="${r2(NF.en + NF.dura + 0.3)}" aria-hidden="true">${ic("shield")}<span>${esc(t("narra"))}</span><span class="md-narrador-barras">${"<i></i>".repeat(5)}</span></div>
+      <div class="md-narrador" data-v="${CL}" data-h="${r2(NF.en + NF.dura + 0.5)}" aria-hidden="true">${ic("shield")}<span>${esc(t("narra"))}</span><span class="md-narrador-barras">${"<i></i>".repeat(5)}</span></div>
       <div class="md-progreso" aria-hidden="true"><i id="md-barra"></i></div>
       <button type="button" class="md-inicio" id="md-inicio">${ic("play_arrow")}<span>${esc(t("iniciar"))}</span><small>${esc(t("tecla"))}</small></button>`;
     $("#md-inicio").addEventListener("click", alternar);
