@@ -34,7 +34,7 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
   - Un monto inflado a la cuenta inscrita.
   - Un pago partido entre varias cuentas nuevas.
 
-  En la misma pasada arreglamos varios: credenciales en base64, con letras cirílicas, de ancho completo o con los dígitos en palabras. También un `avisar` que devolvía «no» y aprobaba, un destino que escribía líneas falsas en la alerta, un monto «1.500.000» que se leía como 1 peso y el pago partido a un mismo titular.
+  En la misma pasada arreglamos varios: credenciales en base64, con letras cirílicas, de ancho completo o con los dígitos en palabras. También un `avisar` que devolvía «no» y aprobaba, un destino que escribía líneas falsas en el mensaje de la alerta (`Alerta.mensaje`; `valor` y `args` siguen crudos para quien integra), un monto «1.500.000» que se leía como 1 peso y el pago partido a un mismo titular.
 
 ## Proyectos parecidos de otras hackathons (si el jurado pregunta)
 No encontramos ninguno con la combinación completa, pero sí algunos con piezas parecidas. Conviene nombrarlos antes de que lo haga el jurado:
