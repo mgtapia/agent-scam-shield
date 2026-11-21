@@ -35,8 +35,11 @@ if str(RAIZ) not in sys.path:
 METRICAS = ("recall", "precision", "falsas_alarmas")
 
 
-def correr(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenario") -> dict[str, Any]:
-    """Entrena con los escenarios no apartados y evalúa en el pliegue apartado."""
+def entrenar(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenario") -> tuple[Any, dict[str, Any]]:
+    """El motor con el clasificador entrenado en los escenarios no apartados, y su evaluación antes de entrenar.
+
+    Lo usa también scripts/juez_vivo.py, que mide el juez LLM sobre el mismo apartado.
+    """
     from scamshield.vivo.flujo import Flujo
     from scamshield.vivo.motor import Motor
 
@@ -53,6 +56,13 @@ def correr(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenario
             motor.clasificador.aprender(motor._rasgos(c), int(c.etiqueta == "estafa"))
     if not entrenados.isdisjoint(flujo.claves_evaluacion):
         raise RuntimeError("el entrenamiento tocó un escenario apartado")
+    return motor, antes
+
+
+def correr(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenario") -> dict[str, Any]:
+    """Entrena con los escenarios no apartados y evalúa en el pliegue apartado."""
+    motor, antes = entrenar(pliegue, semilla, episodios, agrupar)
+    flujo = motor.flujo
     cl = motor.clasificador
     apartadas: dict[tuple[str, str, str], int] = defaultdict(int)
     for m, (_, y) in zip(cl.meta or [], cl.apartado):

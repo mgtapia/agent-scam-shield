@@ -23,6 +23,10 @@ from inspect_ai.model import GenerateConfig
 # factura. Si un precio cambia, se pasa por la línea de comandos. Fable 5.2 viene del issue #99; el de
 # Haiku, de scripts/demo_real.py. Un modelo que no está aquí cuenta como gratis (Groq, Gemini en capa gratis).
 PRECIOS: dict[str, tuple[float, float]] = {
+    # Los más específicos primero: `precio_de` toma el primero que calza. Haiku 5.5 y Sonnet 5.5, de la lista de
+    # precios de Anthropic (2026-11-03), para el juez LLM (#131).
+    "claude-haiku-5-5": (0.10, 0.50),
+    "claude-sonnet-5": (2.0, 10.0),
     "claude-fable-5": (8.0, 40.0),
     "claude-haiku-5": (1.0, 5.0),
 }
