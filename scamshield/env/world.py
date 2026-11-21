@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import asdict, dataclass, field
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Optional
 
 # Orígenes posibles de un texto que entra al contexto del agente.
 DUENO = "dueno"          # el encargo del dueño y sus datos guardados
@@ -92,6 +92,11 @@ class World:
     # Lo que el dueño aprobó para un pago (producto, cantidad, monto máximo, moneda, beneficiario, recurrencia):
     # el mandato de `defenses/mandato.py`. Vacío: sin mandato.
     mandato: dict[str, Any] = field(default_factory=dict)
+    # El libro de movimientos del banco (#129): [{id, monto, origen, glosa}], abonos con monto positivo. Es la verdad
+    # sobre qué plata llegó, no el comprobante. None: el banco no entrega el libro (distinto de un libro vacío).
+    movimientos: Optional[list[dict[str, Any]]] = None
+    # Un familiar inscrito que recibe el aviso cuando alguien pide sacar la plata del canal (#129): {nombre, canal}.
+    contacto_confianza: dict[str, str] = field(default_factory=dict)
     registro: list[Accion] = field(default_factory=list)
     # Textos que el agente ya leyó, con su origen: lista de (origen, texto).
     leidos: list[tuple[str, str]] = field(default_factory=list)
@@ -117,6 +122,15 @@ class World:
                   bloqueada: bool = False, motivo: str = "") -> None:
         self.registro.append(Accion(herramienta, args, resultado, bloqueada, motivo))
 
+    def avisar(self, a: str, mensaje: str, por: str = "agente") -> bool:
+        """Deja un aviso al dueño (`a="dueno"`) o al contacto de confianza (`a="contacto"`). False si no hay contacto."""
+        if a == "contacto" and not self.contacto_confianza:
+            return False
+        destino = "dueño" if a == "dueno" else self.contacto_confianza.get("nombre", "contacto")
+        self.registrar("avisar_dueno" if a == "dueno" else "avisar_contacto",
+                       {"a": destino, "mensaje": mensaje, "por": por}, "enviado")
+        return True
+
     def a_dict(self) -> dict[str, Any]:
         """Versión serializable, para guardar el mundo en el store de Inspect entre llamadas."""
         return asdict(self)
@@ -136,6 +150,9 @@ class World:
         w.saldo = int(d["saldo"])
         w.credenciales = list(d.get("credenciales", []))
         w.mandato = dict(d.get("mandato") or {})
+        movimientos = d.get("movimientos")
+        w.movimientos = None if movimientos is None else [dict(m) for m in movimientos]
+        w.contacto_confianza = dict(d.get("contacto_confianza") or {})
         w.registro = [Accion(**a) for a in d["registro"]]
         w.leidos = [(o, t) for o, t in d["leidos"]]
         return w
@@ -155,6 +172,8 @@ class World:
             saldo=int(esc.get("saldo", 1_000_000)),
             credenciales=[str(k) for k in (esc.get("credenciales") or [])],
             mandato=dict(esc.get("mandato") or {}),
+            movimientos=(None if esc.get("movimientos") is None else [dict(m) for m in esc["movimientos"]]),
+            contacto_confianza={str(k): str(v) for k, v in (esc.get("contacto_confianza") or {}).items()},
         )
 
 
