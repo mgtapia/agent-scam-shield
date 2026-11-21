@@ -333,7 +333,9 @@ body:not([data-vista="operaciones"]):not([data-vista="vivo"]) .solo-flujo { disp
 .in-codigo pre { margin: 0; padding: var(--e-1) var(--e-6) var(--e-1) var(--e-1); white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--l-1); }
 .in-codigo .boton { position: absolute; top: 0; right: 0; width: 40px; height: 40px; color: var(--texto-2); }
 @media (max-width: 1279px) { .in-camino { grid-column: span 6; } }
-@media (max-width: 899px) { .in-camino { grid-column: 1 / -1; } .in-nota { flex-wrap: wrap; } .in-nota a { margin-left: 0; } }
+@media (max-width: 899px) { .in-camino { grid-column: 1 / -1; } .in-nota { display: grid; grid-template-columns: 20px minmax(0, 1fr); } .in-nota a { grid-column: 2; margin-left: 0; } }
+/* Cinco pestañas no caben en un celular: se deslizan sin barra visible, la activa queda a la vista */
+@media (max-width: 599px) { .pestanas { overflow-x: auto; scrollbar-width: none; } .pestanas a { flex: none; } }
 /* Sin episodio en el escenario elegido: la lista de los que sí tienen */
 .ep-lista { grid-column: 1 / -1; border: var(--linea); background: var(--superficie); }
 .ep-lista .titulo { flex-wrap: wrap; }

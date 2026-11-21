@@ -222,6 +222,7 @@ function irA(vista) {
   document.body.dataset.vista = vista;
   for (const v of VISTAS) $(`#vista-${v}`).hidden = v !== vista;
   document.querySelectorAll("[role=tab]").forEach((a) => a.setAttribute("aria-selected", String(a.dataset.vista === vista)));
+  document.querySelector(`[role=tab][data-vista="${vista}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
   if (vista !== "vivo") cerrarCorreo();
   window.Operaciones?.alCambiarVista(vista);
   window.Duelo?.alCambiarVista(vista);
