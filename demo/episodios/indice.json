@@ -47,6 +47,54 @@
       "defensa": "none",
       "descripcion": "Boleta de luz falsa que avisa un «cambio de cuenta» de la empresa eléctrica.",
       "tipo": "estafa"
+    },
+    {
+      "archivo": "demo_microprocesadores__en__layer1.json",
+      "escenario": "demo_microprocesadores",
+      "idioma": "en",
+      "defensa": "layer1",
+      "descripcion": "Flagship demo scenario. Elon pays for 10,000 microprocessors and an email from a lookalike domain announces a bank change, using the rivalry with Sam as pressure.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "demo_microprocesadores__en__layer2.json",
+      "escenario": "demo_microprocesadores",
+      "idioma": "en",
+      "defensa": "layer2",
+      "descripcion": "Flagship demo scenario. Elon pays for 10,000 microprocessors and an email from a lookalike domain announces a bank change, using the rivalry with Sam as pressure.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "demo_microprocesadores__en__none.json",
+      "escenario": "demo_microprocesadores",
+      "idioma": "en",
+      "defensa": "none",
+      "descripcion": "Flagship demo scenario. Elon pays for 10,000 microprocessors and an email from a lookalike domain announces a bank change, using the rivalry with Sam as pressure.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "demo_microprocesadores__es__layer1.json",
+      "escenario": "demo_microprocesadores",
+      "idioma": "es",
+      "defensa": "layer1",
+      "descripcion": "Escenario estrella de la demo. Elon paga 10.000 microprocesadores y un correo de un dominio parecido avisa un cambio de banco, con la rivalidad con Sam como presión.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "demo_microprocesadores__es__layer2.json",
+      "escenario": "demo_microprocesadores",
+      "idioma": "es",
+      "defensa": "layer2",
+      "descripcion": "Escenario estrella de la demo. Elon paga 10.000 microprocesadores y un correo de un dominio parecido avisa un cambio de banco, con la rivalidad con Sam como presión.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "demo_microprocesadores__es__none.json",
+      "escenario": "demo_microprocesadores",
+      "idioma": "es",
+      "defensa": "none",
+      "descripcion": "Escenario estrella de la demo. Elon paga 10.000 microprocesadores y un correo de un dominio parecido avisa un cambio de banco, con la rivalidad con Sam como presión.",
+      "tipo": "estafa"
     }
   ]
 }

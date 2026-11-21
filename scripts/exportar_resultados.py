@@ -1,0 +1,154 @@
+"""Exporta los resultados agregados de la eval para los gráficos de la demo (demo/resultados.json).
+
+Lee registros .eval de Inspect y escribe una fila por muestra: modelo, defensa, idioma, escenario,
+tipo (estafa o control), tácticas y los tres valores del puntaje (seguridad, utilidad, falsa
+alarma), tal como los deja `puntaje_estafa` en `scamshield/evals/task.py`:
+
+- seguridad: "C" si no cayó, "I" si cayó; None en los controles.
+- utilidad: "C" si hizo la tarea legítima, "I" si no; None si el escenario no tiene tarea.
+- falsa_alarma: 1.0 si una defensa bloqueó algo en un control, 0.0 si no; None en las estafas.
+
+La página agrega esas filas: no hay números calculados a mano. Solo entran los registros con
+estado «success»; los demás quedan listados en `omitidos`. Si hay dos registros del mismo modelo
+y la misma defensa, se queda el más reciente. Con `--mock` las filas salen de mockllm y el JSON
+queda marcado como datos de prueba.
+
+Uso:
+    python scripts/exportar_resultados.py logs/primera_tabla/*.eval
+    python scripts/exportar_resultados.py --mock
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+RAIZ = Path(__file__).resolve().parents[1]
+if str(RAIZ) not in sys.path:
+    sys.path.insert(0, str(RAIZ))
+
+from inspect_ai.log import read_eval_log  # noqa: E402
+
+SALIDA = RAIZ / "demo"
+
+# Ejes del radar y filas del mapa de calor. Mezclan dos campos de las anotaciones del escenario:
+# las tácticas de ingeniería social y el mecanismo de la estafa.
+TACTICAS: list[dict[str, Any]] = [
+    {"clave": "urgencia", "es": "Urgencia", "en": "Urgency", "tacticas": ["urgency"]},
+    {"clave": "autoridad", "es": "Autoridad", "en": "Authority", "tacticas": ["authority"]},
+    {"clave": "cambio_cuenta", "es": "Cambio de cuenta", "en": "Account change",
+     "mecanismos": ["payee_account_change", "business_email_compromise"]},
+    {"clave": "pedido_codigo", "es": "Pedido de código", "en": "Code request", "mecanismos": ["otp_phishing"]},
+    {"clave": "tienda_falsa", "es": "Tienda falsa", "en": "Fake shop", "mecanismos": ["fake_shop"]},
+    {"clave": "mcp_envenenado", "es": "MCP envenenado", "en": "Poisoned MCP", "mecanismos": ["tool_poisoning"]},
+]
+
+
+def tacticas_de(escenario: dict[str, Any]) -> list[str]:
+    """Las claves de TACTICAS que aplican a un escenario, según sus anotaciones."""
+    an = escenario.get("anotaciones") or {}
+    sociales = set(an.get("social_eng_tactics") or [])
+    mecanismo = an.get("fraud_mechanism")
+    return [t["clave"] for t in TACTICAS
+            if sociales & set(t.get("tacticas", [])) or mecanismo in t.get("mecanismos", [])]
+
+
+def _fila(modelo: str, defensa: str, sample) -> dict[str, Any]:
+    esc = sample.metadata.get("escenario") or {}
+    valor = dict(next(iter((sample.scores or {}).values())).value) if sample.scores else {}
+    # Registros de una versión anterior del puntaje dan valor donde hoy va None: se aplican las
+    # mismas reglas de puntaje_estafa para que las tasas no se diluyan.
+    es_control = esc.get("tipo") == "control"
+    if es_control:
+        valor["seguridad"] = None
+    else:
+        valor["falsa_alarma"] = None
+    if (esc.get("evaluacion") or {}).get("tarea", "ninguna") == "ninguna":
+        valor["utilidad"] = None
+    return {
+        "modelo": modelo,
+        "defensa": defensa,
+        "idioma": esc.get("idioma"),
+        "escenario": esc.get("id"),
+        "tipo": esc.get("tipo"),
+        "tacticas": tacticas_de(esc),
+        "seguridad": valor.get("seguridad"),
+        "utilidad": valor.get("utilidad"),
+        "falsa_alarma": valor.get("falsa_alarma"),
+    }
+
+
+def exportar(rutas: list[Path], prueba: bool = False) -> dict[str, Any]:
+    """Junta las filas de los registros válidos, el más reciente por modelo y defensa."""
+    elegidos: dict[tuple[str, str], tuple[str, Any, Path]] = {}
+    omitidos: list[dict[str, Any]] = []
+    for ruta in rutas:
+        log = read_eval_log(str(ruta))
+        modelo = log.eval.model
+        defensa = (log.eval.task_args or {}).get("defense", "none")
+        if log.status != "success":
+            omitidos.append({"archivo": ruta.name, "modelo": modelo, "defensa": defensa,
+                             "motivo": f"estado {log.status}"})
+            continue
+        clave = (modelo, defensa)
+        creado = log.eval.created
+        if clave in elegidos and elegidos[clave][0] >= creado:
+            omitidos.append({"archivo": ruta.name, "modelo": modelo, "defensa": defensa, "motivo": "repetido"})
+            continue
+        if clave in elegidos:
+            viejo = elegidos[clave][2]
+            omitidos.append({"archivo": viejo.name, "modelo": modelo, "defensa": defensa, "motivo": "repetido"})
+        elegidos[clave] = (creado, log, ruta)
+
+    filas: list[dict[str, Any]] = []
+    for (modelo, defensa), (_, log, _) in sorted(elegidos.items()):
+        filas += [_fila(modelo, defensa, s) for s in log.samples or []]
+
+    return {
+        "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "fuente": "mockllm" if prueba else "inspect",
+        "prueba": prueba,
+        "registros": [{"archivo": r.name, "modelo": m, "defensa": d} for (m, d), (_, _, r) in sorted(elegidos.items())],
+        "omitidos": omitidos,
+        "tacticas": [{k: t[k] for k in ("clave", "es", "en")} for t in TACTICAS],
+        "filas": filas,
+    }
+
+
+def escribir(datos: dict[str, Any], salida: Path = SALIDA) -> list[Path]:
+    """Escribe resultados.json y su copia resultados.js (file:// no deja usar fetch)."""
+    salida.mkdir(parents=True, exist_ok=True)
+    texto = json.dumps(datos, ensure_ascii=False, indent=1)
+    json_ = salida / "resultados.json"
+    js = salida / "resultados.js"
+    json_.write_text(texto + "\n", encoding="utf-8")
+    js.write_text("// Generado por scripts/exportar_resultados.py. No editar a mano.\nwindow.RESULTADOS = "
+                  + texto + ";\n", encoding="utf-8")
+    return [json_, js]
+
+
+def main(argv: list[str] | None = None) -> None:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("logs", nargs="*", type=Path, help="archivos .eval de Inspect")
+    p.add_argument("--salida", type=Path, default=SALIDA, help="carpeta donde van resultados.json y .js")
+    p.add_argument("--mock", action="store_true", help="filas de mockllm, marcadas como datos de prueba")
+    a = p.parse_args(argv)
+    rutas = list(a.logs)
+    if a.mock:
+        from scripts.exportar_episodios import generar_logs_mock
+
+        rutas += generar_logs_mock(Path(tempfile.mkdtemp(prefix="scamshield-mock-")))
+    if not rutas:
+        p.error("pasa al menos un .eval o usa --mock")
+    datos = exportar(rutas, prueba=a.mock)
+    for r in escribir(datos, a.salida):
+        print(r.relative_to(RAIZ) if r.is_relative_to(RAIZ) else r)
+    print(f"{len(datos['filas'])} filas de {len(datos['registros'])} registros; {len(datos['omitidos'])} omitidos")
+
+
+if __name__ == "__main__":
+    main()
