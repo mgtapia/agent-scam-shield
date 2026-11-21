@@ -1,4 +1,5 @@
-// Grifter, modo demo (#demo → demo.html): unos 70 s que corren solos, siempre iguales, sin red ni modelo.
+// Grifter, modo demo (#demo → demo.html): unos 100 s que corren solos, siempre iguales, sin red ni modelo.
+// El acto 1 lo cuentan las voces de la llamada; los actos 2 y 3 y el cierre, una narradora (demo/audio/narracion_*).
 // Pensado para proyectar en vivo o grabar tal cual para el video del pitch.
 //
 //   Espacio o «Iniciar demo»  arranca (y pausa / sigue). Esa pulsación del presentador habilita el audio.
@@ -78,8 +79,15 @@
       k_3: "Grifter retuvo: «La clave del dueño no sale sin su confirmación»",
       k_usuario: "seguridad", k_dominio: "bancocordillera-alertas.cl",
       k_asunto: "Cargo no reconocido por $389.990 en tu tarjeta",
-      k_cuerpo: "Hola, detectamos un cargo de $389.990 en Tienda Electro Online que no coincide con tus compras habituales. Para revertirlo antes de 30 minutos, responde con el código de verificación que te llegó por SMS. Si no respondes, el cargo quedará firme y tu tarjeta será bloqueada.",
+      k_cuerpo: "Hola, detectamos {{un cargo de $389.990}} en Tienda Electro Online que no coincide con tus compras habituales. Para revertirlo antes de 30 minutos, {{responde con el código de verificación que te llegó por SMS}}. Si no respondes, el cargo quedará firme y tu tarjeta será bloqueada.",
       k_responder: "Respuesta del agente", k_respuesta: "Hola, el código de verificación es", k_no_salio: "código 482 913 · no se envió",
+      k_cinetica: "La clave no sale sin el dueño.", c_cinetica: "Solo lo que aprobaste.",
+      // Lo que dice la narradora (el mp3 de cada escena; sin mp3, speechSynthesis lee esto mismo)
+      n_correo: "Ahora llega un correo que dice ser del banco. Hay un cargo raro, y piden el código del SMS. El agente se lo iba a mandar… y Grifter lo frena. La clave no sale sin el dueño.",
+      n_compra: "Otra trampa, en una compra. Aprobaste cuatrocientos doce mil pesos… y la tienda cobra cuatro millones ciento veinte mil. Grifter retiene el pago. Solo lo que aprobaste.",
+      n_cifras: "Y lo medimos. Ciento cincuenta estafas, de treinta y dos tipos. Con Grifter completo, no pasa ninguna. Un atacante que aprende lo intentó cinco mil doscientas ochenta veces… y ninguna cruzó la capa dos.",
+      n_cierre: "El clasificador puede equivocarse. La regla no lo necesita.",
+      narra: "Grifter narra",
       c_rotulo: "Otra regla: solo lo que aprobaste",
       c_1: "Aprobaste [[$412.000]]",
       c_2: "La tienda cobra [[$4.120.000]]",
@@ -88,8 +96,8 @@
       c_aprobaste: "Aprobaste", c_total: "Total a pagar", c_pagar: "Pagar",
       k_retenido: "Grifter retuvo el envío", c_retenido: "Grifter retuvo el pago", c_no_salio: "$4.120.000 · no se pagó",
       a3_frase: "Lo medimos",
-      c1_de: "estafas", c1_a: "pasan", c1_det: "{f} tipos de estafa · agente que hace todo lo que lee · grifter bench",
-      c2_de: "ataques de una IA que aprende", c2_a: "cruzan", c2_det: "{g} generaciones del duelo contra la capa 2 · grifter duelo",
+      c1_de: "estafas", c1_con: "con Grifter completo", c1_a: "pasan", c1_det: "{f} tipos de estafa · agente que hace todo lo que lee · grifter bench",
+      c2_de: "intentos de un atacante que aprende", c2_con: "contra la capa 2", c2_a: "cruzan", c2_det: "{g} generaciones del duelo contra la capa 2 · grifter duelo",
       cierre1: "El clasificador puede equivocarse.", cierre2: "La regla no lo necesita.",
       url: "grifter.onrender.com",
     },
@@ -134,8 +142,14 @@
       k_3: "Grifter held it: “The owner's code doesn't leave without their confirmation”",
       k_usuario: "security", k_dominio: "cordillerabank-alerts.cl",
       k_asunto: "Unrecognized charge of $389,990 on your card",
-      k_cuerpo: "Hello, we detected a $389,990 charge at Electro Online Store that does not match your usual purchases. To reverse it within 30 minutes, reply with the verification code you received by SMS. If you do not reply, the charge will be final and your card will be blocked.",
+      k_cuerpo: "Hello, we detected {{a $389,990 charge}} at Electro Online Store that does not match your usual purchases. To reverse it within 30 minutes, {{reply with the verification code you received by SMS}}. If you do not reply, the charge will be final and your card will be blocked.",
       k_responder: "Agent's reply", k_respuesta: "Hi, the verification code is", k_no_salio: "code 482 913 · not sent",
+      k_cinetica: "The code doesn't leave without the owner.", c_cinetica: "Only what you approved.",
+      n_correo: "Now an email arrives claiming to be from the bank. There's a strange charge, and they ask for the SMS code. The agent was about to send it… and Grifter stops it. The code doesn't leave without the owner.",
+      n_compra: "Another trap, in a purchase. You approved four hundred twelve thousand pesos… and the store charges four million one hundred twenty thousand. Grifter holds the payment. Only what you approved.",
+      n_cifras: "And we measured it. One hundred fifty scams, of thirty-two types. With full Grifter, none get through. An attacker that learns tried five thousand two hundred eighty times… and none got past layer two.",
+      n_cierre: "The classifier can be wrong. The rule doesn't need it.",
+      narra: "Grifter narrates",
       c_rotulo: "Another rule: only what you approved",
       c_1: "You approved [[$412,000]]",
       c_2: "The store charges [[$4,120,000]]",
@@ -144,18 +158,40 @@
       c_aprobaste: "You approved", c_total: "Total due", c_pagar: "Pay",
       k_retenido: "Grifter held the reply", c_retenido: "Grifter held the payment", c_no_salio: "$4,120,000 · not paid",
       a3_frase: "We measured it",
-      c1_de: "scams", c1_a: "get through", c1_det: "{f} scam types · agent that does whatever it reads · grifter bench",
-      c2_de: "attacks from an AI that learns", c2_a: "get past", c2_det: "{g} duel generations against layer 2 · grifter duel",
+      c1_de: "scams", c1_con: "with full Grifter", c1_a: "get through", c1_det: "{f} scam types · agent that does whatever it reads · grifter bench",
+      c2_de: "attempts by an attacker that learns", c2_con: "against layer 2", c2_a: "get past", c2_det: "{g} duel generations against layer 2 · grifter duel",
       cierre1: "The classifier can be wrong.", cierre2: "The rule doesn't need it.",
       url: "grifter.onrender.com",
     },
   };
 
   // --- Línea de tiempo (segundos) ---
+  const r2 = (x) => Math.round(x * 100) / 100;
+  // Actos 2 y 3 y el cierre: la narradora (demo/audio/narracion_*.mp3). Cada escena dura lo que su audio más un
+  // respiro, y lo que aparece en pantalla sigue a la voz: los números son el segundo en que empieza cada palabra,
+  // medido en la ficha .json del mp3 (desde que empieza el audio), igual que FRASES en el acto 1.
+  const CL = 55;   // escena del correo del falso banco
+  const NK = { en: r2(CL + 0.4), dura: 11.04, cargo: 2.36, codigo: 3.6, agente: 5.787, frena: 7.52,
+    frase: [9.067, 9.2, 9.653, 9.84, 10.24, 10.507, 10.62] };   // «La clave no sale sin el dueño.»
+  const CO = r2(NK.en + NK.dura + 1.2);   // escena del checkout con el monto cambiado
+  const NC = { en: r2(CO + 0.4), dura: 11.76, aprobaste: 1.92, tienda: 5.24, retiene: 8.853,
+    frase: [10.528, 10.747, 10.84, 11] };   // «Solo lo que aprobaste.»
+  const A3 = r2(NC.en + NC.dura + 1.4);   // acto 3: las cifras, una por escena
+  const N3 = { en: r2(A3 + 0.3), dura: 12.48, ciento: 1.02, tipos: 2.773, completo: 4.04, ninguna: 5.333,
+    atacante: 6.267, intento: 7.6, veces: 10.08, cruzo: 10.68 };
+  // Cada cifra en su escena: aparece, cuenta hacia arriba mientras se nombra y cae a cero cuando la voz dice que no
+  // pasa ninguna (v: aparece, sube y ds: empieza a contar y cuánto dura, det y con: las líneas de abajo, cae y dc: la caída).
+  const C1 = { v: r2(N3.en + N3.ciento - 0.15), sube: r2(N3.en + N3.ciento), ds: 1.3, det: r2(N3.en + N3.tipos),
+    con: r2(N3.en + N3.completo), cae: r2(N3.en + N3.ninguna), dc: 0.5 };
+  const C2 = { v: r2(N3.en + N3.atacante - 0.15), sube: r2(N3.en + N3.intento), ds: r2(N3.veces - N3.intento),
+    det: r2(N3.en + N3.veces), con: r2(N3.en + N3.cruzo), cae: r2(N3.en + N3.cruzo), dc: 0.5 };
+  const CI = r2(N3.en + N3.dura + 1.2);   // cierre
+  const NF = { en: r2(CI + 0.3), dura: 4, frase: [0.069, 0.144, 1.013, 1.32, 2.267, 2.46, 3.04, 3.227, 3.351] };
+  const DURACION = r2(NF.en + NF.dura + 3);
+  const NARRA = { correo: NK, compra: NC, cifras: N3, cierre: NF };
   const ACTOS = [
-    { id: "intro", desde: 0 }, { id: "a1", desde: 3 }, { id: "a2", desde: 55 }, { id: "a3", desde: 67 }, { id: "cierre", desde: 78 },
+    { id: "intro", desde: 0 }, { id: "a1", desde: 3 }, { id: "a2", desde: CL }, { id: "a3", desde: A3 }, { id: "cierre", desde: CI },
   ];
-  const DURACION = 86;
   const LLAMADA = { suena: 4.4, contesta: 7, abuela: 7.3, nieto: 9.9, cuelga: 34.6 };
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
@@ -163,8 +199,9 @@
   // Pablo recibe el pedido por WhatsApp y rechaza. Con ?whatsapp=1 su rechazo puede ser real (ver avisarEnVivo).
   const AUT = { igual: 40.2, pide: 40.9, correo: 41.6, digitos: 42.6, uno: 44.6, pablo: 45.3, rechaza: 48.6, rechazado: 49.6, nada: 50.2, frase: 50.8 };
   const CODIGO = "482913";   // el código del correo de ejemplo: es un dibujo, no un código real
-  // Acto 2: una escena a la vez, 6 s cada una, con tres líneas que aparecen de a una (segundos desde que empieza).
-  const CL = 55, CO = 61, LINEAS = [0.6, 2.2, 3.6];
+  // El toque de un dedo en un botón: se hunde un instante y suelta una onda. Dura lo que alcanza antes de que la
+  // pantalla cambie (la alerta de Marta se va en AUT.pide).
+  const TOQUE = { igual: r2(AUT.pide - AUT.igual - 0.05), rechaza: 0.9 };
 
   const Graficos = { quieto: matchMedia("(prefers-reduced-motion: reduce)").matches };
   const params = new URLSearchParams(location.search);
@@ -195,8 +232,21 @@
 
   // Escapa el texto y resalta lo marcado con [[…]] (la cuenta nueva y los montos).
   const resalta = (s) => esc(s).replace(/\[\[(.+?)\]\]/g, '<mark class="md-clave">$1</mark>');
-  const tres = (claves, desde) => `
-        <ol class="md-tres">${claves.map(([icono, k], i) => `<li${i === 2 ? ' class="md-ret"' : ""} data-v="${desde + LINEAS[i]}">${ic(icono)}<span>${resalta(t(k))}</span></li>`).join("")}</ol>`;
+  // Las tres líneas de una escena del acto 2, cada una desde el segundo en que la narradora llega a ella.
+  const tres = (claves, tiempos) => `
+        <ol class="md-tres">${claves.map(([icono, k], i) => `<li${i === 2 ? ' class="md-ret"' : ""} data-v="${tiempos[i]}">${ic(icono)}<span>${resalta(t(k))}</span></li>`).join("")}</ol>`;
+  // Lo marcado con {{…}} se subraya cuando la narradora lo nombra (data-on: desde ese segundo).
+  const subraya = (s, tiempos) => { let i = 0; return esc(s).replace(/\{\{(.+?)\}\}/g, (_, x) => `<mark class="md-subraya" data-on="${tiempos[i++]}">${x}</mark>`); };
+  // Tipografía en movimiento: la frase entra palabra por palabra, cada una cuando la voz la dice. Si la frase tiene
+  // otro número de palabras que la voz (en inglés), se reparten los mismos tiempos.
+  const cinetica = (texto, desde, tiempos, verdes = 1) => {
+    const palabras = texto.split(" ");
+    return palabras.map((p, i) => {
+      const j = palabras.length > 1 ? Math.round((i * (tiempos.length - 1)) / (palabras.length - 1)) : 0;
+      const verde = i >= palabras.length - verdes ? " c-verde" : "";
+      return `<span class="md-palabra${verde}" data-v="${r2(desde + tiempos[j])}">${esc(p)}</span>`;
+    }).join(" ");
+  };
   const celular = (pantalla, retenido, titulo, detalle) => `
         <div class="md-celular ve">
           <div class="md-pantalla">
@@ -217,7 +267,7 @@
         <p class="md-lema">${esc(t("lema"))}</p>
       </section>
 
-      <section class="md-acto md-comp md-a1" data-desde="3" data-hasta="55">
+      <section class="md-acto md-comp md-a1" data-desde="3" data-hasta="${CL}">
         <p class="md-rotulo" data-v="3">${esc(t("a1_rotulo"))}</p>
         <h1 class="md-frase"><span data-v="3.3" data-h="37">${esc(t("a1_frase"))}</span><span class="md-frase-2" data-v="37" data-h="${AUT.frase}">${esc(t("a1_frase2"))}</span><span class="md-frase-2 md-frase-3" data-v="${AUT.frase}">${esc(t("a1_frase3"))}</span></h1>
         <div class="md-cols">
@@ -273,7 +323,7 @@
                 <div class="md-al-botones">
                   <button type="button" class="md-b principal" tabindex="-1">${esc(t("b_inscrita"))}</button>
                   <button type="button" class="md-b" tabindex="-1">${esc(t("b_no"))}</button>
-                  <button type="button" class="md-b peligro" tabindex="-1">${esc(t("b_igual"))}<span class="md-toque" data-v="${AUT.igual}"></span></button>
+                  <button type="button" class="md-b peligro" tabindex="-1">${esc(t("b_igual"))}<span class="md-toque" data-toque="${AUT.igual}" data-dura="${TOQUE.igual}"></span></button>
                 </div>
               </div>
               <div class="md-espera md-codigo" data-v="${AUT.pide}" data-h="${AUT.uno}">
@@ -297,7 +347,7 @@
                 <div class="md-wa-msg"><p>${esc(t("pablo_msg"))}</p><p class="md-wa-avance">${esc(t("pablo_avance"))}</p></div>
                 <div class="md-wa-botones">
                   <span class="md-wa-b">${esc(t("pablo_aprobar"))}</span>
-                  <span class="md-wa-b">${esc(t("pablo_rechazar"))}<span class="md-toque" data-v="${AUT.rechaza}"></span></span>
+                  <span class="md-wa-b">${esc(t("pablo_rechazar"))}<span class="md-toque" data-toque="${AUT.rechaza}" data-dura="${TOQUE.rechaza}"></span></span>
                 </div>
               </div>
             </div>
@@ -306,49 +356,54 @@
       </section>
 
       <section class="md-acto md-comp md-a2" data-desde="${CL}" data-hasta="${CO}">
-        <p class="md-rotulo" data-v="${CL}">${esc(t("k_rotulo"))}</p>${tres([["mail", "k_1"], ["smart_toy", "k_2"], ["block", "k_3"]], CL)}${celular(`
+        <p class="md-rotulo" data-v="${CL}">${esc(t("k_rotulo"))}</p>${tres([["mail", "k_1"], ["smart_toy", "k_2"], ["block", "k_3"]], [r2(NK.en + 0.1), r2(NK.en + NK.agente), r2(NK.en + NK.frena)])}${celular(`
             <div class="md-correo">
               <p class="md-correo-de">${ic("mail")}<span>${esc(t("k_usuario"))}@<mark class="md-clave">${esc(t("k_dominio"))}</mark></span></p>
               <p class="md-correo-asunto">${esc(t("k_asunto"))}</p>
-              <p class="md-correo-cuerpo">${esc(t("k_cuerpo"))}</p>
-              <div class="md-respuesta" data-v="${CL + LINEAS[1]}"><p class="md-rot">${ic("smart_toy")}<span>${esc(t("k_responder"))}</span></p><p>${esc(t("k_respuesta"))} <b class="dato">482 913</b></p></div>
-            </div>`, CL + LINEAS[2], t("k_retenido"), esc(t("k_no_salio")))}
+              <p class="md-correo-cuerpo">${subraya(t("k_cuerpo"), [r2(NK.en + NK.cargo), r2(NK.en + NK.codigo)])}</p>
+              <div class="md-respuesta" data-v="${r2(NK.en + NK.agente)}"><p class="md-rot">${ic("smart_toy")}<span>${esc(t("k_responder"))}</span></p><p>${esc(t("k_respuesta"))} <b class="dato">482 913</b></p></div>
+            </div>`, r2(NK.en + NK.frena), t("k_retenido"), esc(t("k_no_salio")))}
+        <div class="md-cinetica" data-v="${r2(NK.en + NK.frase[0] - 0.15)}"><p>${cinetica(t("k_cinetica"), NK.en, NK.frase)}</p></div>
       </section>
 
-      <section class="md-acto md-comp md-a2" data-desde="${CO}" data-hasta="67">
-        <p class="md-rotulo" data-v="${CO}">${esc(t("c_rotulo"))}</p>${tres([["check", "c_1"], ["shopping_cart", "c_2"], ["block", "c_3"]], CO)}${celular(`
+      <section class="md-acto md-comp md-a2" data-desde="${CO}" data-hasta="${A3}">
+        <p class="md-rotulo" data-v="${CO}">${esc(t("c_rotulo"))}</p>${tres([["check", "c_1"], ["shopping_cart", "c_2"], ["block", "c_3"]], [r2(NC.en + NC.aprobaste), r2(NC.en + NC.tienda), r2(NC.en + NC.retiene)])}${celular(`
             <div class="md-compra">
               <p class="md-compra-tienda">${ic("shopping_cart")}<span>${esc(t("c_tienda"))}</span></p>
               <p class="md-compra-orden dato">${esc(t("c_orden"))}</p>
               <p class="md-compra-item">${esc(t("c_item"))}</p>
               <dl class="md-compra-tot">
-                <dt data-v="${CO + LINEAS[0]}">${esc(t("c_aprobaste"))}</dt><dd data-v="${CO + LINEAS[0]}"><mark class="md-clave">$${f(412000)}</mark></dd>
-                <dt data-v="${CO + LINEAS[1]}">${esc(t("c_total"))}</dt><dd class="md-total" data-v="${CO + LINEAS[1]}"><mark class="md-clave">$${f(4120000)}</mark></dd>
+                <dt data-v="${r2(NC.en + NC.aprobaste)}">${esc(t("c_aprobaste"))}</dt><dd data-v="${r2(NC.en + NC.aprobaste)}"><mark class="md-clave">$${f(412000)}</mark></dd>
+                <dt data-v="${r2(NC.en + NC.tienda)}">${esc(t("c_total"))}</dt><dd class="md-total" data-v="${r2(NC.en + NC.tienda)}"><mark class="md-clave">$${f(4120000)}</mark></dd>
               </dl>
-              <span class="md-b principal md-compra-b" data-h="${CO + LINEAS[2]}">${esc(t("c_pagar"))}</span>
-            </div>`, CO + LINEAS[2], t("c_retenido"), esc(t("c_no_salio")))}
+              <span class="md-b principal md-compra-b" data-h="${r2(NC.en + NC.retiene)}">${esc(t("c_pagar"))}</span>
+            </div>`, r2(NC.en + NC.retiene), t("c_retenido"), esc(t("c_no_salio")))}
+        <div class="md-cinetica" data-v="${r2(NC.en + NC.frase[0] - 0.15)}"><p>${cinetica(t("c_cinetica"), NC.en, NC.frase)}</p></div>
       </section>
 
-      <section class="md-acto md-a3" data-desde="67" data-hasta="78">
-        <h1 class="md-frase"><span data-v="67">${esc(t("a3_frase"))}</span></h1>
-        <div class="md-cifras">
-          <div class="md-cifra" data-v="67.8">
-            <p class="md-linea"><span class="md-n dato" id="md-n1">0</span><span>${esc(t("c1_de"))}</span>${ic("arrow_forward")}<span class="md-n dato c-verde" data-v="70">${cifras.pasan ?? "—"}</span><span data-v="70">${esc(t("c1_a"))}</span></p>
-            <p class="md-det">${esc(t("c1_det", { f: cifras.tipos ?? "—" }))}</p>
-          </div>
-          <div class="md-cifra" data-v="71.5">
-            <p class="md-linea"><span class="md-n dato" id="md-n2">0</span><span>${esc(t("c2_de"))}</span>${ic("arrow_forward")}<span class="md-n dato c-verde" data-v="74">${cifras.cruzan ?? "—"}</span><span data-v="74">${esc(t("c2_a"))}</span></p>
-            <p class="md-det">${esc(t("c2_det", { g: cifras.generaciones ?? "—" }))}</p>
-          </div>
+      <section class="md-acto md-a3" data-desde="${A3}" data-hasta="${CI}">
+        <h1 class="md-frase md-a3-frase" data-v="${N3.en}" data-h="${C1.v}"><span>${esc(t("a3_frase"))}</span></h1>
+        <div class="md-cifra-esc" data-v="${C1.v}" data-h="${C2.v}">
+          <p class="md-n dato" id="md-n1" data-on="${r2(C1.cae + C1.dc)}">0</p>
+          <p class="md-cifra-rot"><span data-h="${C1.cae}">${esc(t("c1_de"))}</span><span class="c-verde" data-v="${C1.cae}">${esc(t("c1_a"))}</span></p>
+          <p class="md-cifra-con" data-v="${C1.con}">${esc(t("c1_con"))}</p>
+          <p class="md-det" data-v="${C1.det}">${esc(t("c1_det", { f: cifras.tipos ?? "—" }))}</p>
+        </div>
+        <div class="md-cifra-esc" data-v="${C2.v}">
+          <p class="md-n dato" id="md-n2" data-on="${r2(C2.cae + C2.dc)}">0</p>
+          <p class="md-cifra-rot"><span data-h="${C2.cae}">${esc(t("c2_de"))}</span><span class="c-verde" data-v="${C2.cae}">${esc(t("c2_a"))}</span></p>
+          <p class="md-cifra-con" data-v="${C2.con}">${esc(t("c2_con"))}</p>
+          <p class="md-det" data-v="${C2.det}">${esc(t("c2_det", { g: cifras.generaciones ?? "—" }))}</p>
         </div>
       </section>
 
-      <section class="md-acto md-cierre" data-desde="78" data-hasta="86">
-        <h1 class="md-frase"><span data-v="78.3">${esc(t("cierre1"))}</span><span class="md-frase-2" data-v="80.3">${esc(t("cierre2"))}</span></h1>
-        <div class="md-logo" data-v="82.5">${ic("shield", "grande")}<span>Grifter</span></div>
-        <p class="md-url dato" data-v="83">${esc(t("url"))}</p>
+      <section class="md-acto md-cierre" data-desde="${CI}" data-hasta="${DURACION}">
+        <h1 class="md-frase"><span>${cinetica(t("cierre1"), NF.en, NF.frase.slice(0, 4), 0)}</span><span class="md-frase-2">${cinetica(t("cierre2"), NF.en, NF.frase.slice(4), 0)}</span></h1>
+        <div class="md-logo" data-v="${r2(NF.en + NF.dura + 0.3)}">${ic("shield", "grande")}<span>Grifter</span></div>
+        <p class="md-url dato" data-v="${r2(NF.en + NF.dura + 0.8)}">${esc(t("url"))}</p>
       </section>
 
+      <div class="md-narrador" data-v="${CL}" data-h="${r2(NF.en + NF.dura + 0.3)}" aria-hidden="true">${ic("shield")}<span>${esc(t("narra"))}</span><span class="md-narrador-barras">${"<i></i>".repeat(5)}</span></div>
       <div class="md-progreso" aria-hidden="true"><i id="md-barra"></i></div>
       <button type="button" class="md-inicio" id="md-inicio">${ic("play_arrow")}<span>${esc(t("iniciar"))}</span><small>${esc(t("tecla"))}</small></button>`;
     $("#md-inicio").addEventListener("click", alternar);
@@ -398,8 +453,39 @@
     else if (suenaPista(pistas.abuela)) enLlamada = LLAMADA.abuela + pistas.abuela.currentTime;
     const s = Math.max(0, Math.floor(enLlamada - LLAMADA.contesta));
     $("#md-reloj").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-    if (cifras.estafas !== null) $("#md-n1").textContent = num(sube(68.1, 1.8, cifras.estafas, tt));
-    if (cifras.ataques !== null) $("#md-n2").textContent = num(sube(71.8, 2.2, cifras.ataques, tt));
+    // Las cifras cuentan hacia arriba y después caen a lo que pasa (cero): el valor depende solo de tt.
+    const cuenta = (c, n, fin) => Math.round(sube(c.sube, c.ds, n, tt) - sube(c.cae, c.dc, n - fin, tt));
+    if (cifras.estafas !== null) $("#md-n1").textContent = num(cuenta(C1, cifras.estafas, cifras.pasan ?? 0));
+    if (cifras.ataques !== null) $("#md-n2").textContent = num(cuenta(C2, cifras.ataques, cifras.cruzan ?? 0));
+    // data-on: una marca que se enciende desde ese segundo (el subrayado del correo, la cifra que queda en verde).
+    document.querySelectorAll("[data-on]").forEach((el) => el.classList.toggle("on", tt >= +el.dataset.on));
+    // El toque de un dedo: primero el botón se hunde con la yema encima y después suelta una onda. La fase q va de 0
+    // a 1 en data-dura segundos; con movimiento reducido queda la yema quieta, sin onda.
+    document.querySelectorAll("[data-toque]").forEach((el) => {
+      const q = (tt - +el.dataset.toque) / +el.dataset.dura;
+      const boton = el.parentElement;
+      boton.classList.toggle("presionado", q >= 0 && q < 0.45);
+      boton.classList.toggle("elegido", q >= 0.45);
+      let escala = 1, opacidad = 0;
+      if (q >= 0 && q < 0.45) { escala = 1 - (q / 0.45) * 0.15; opacidad = 0.6; }
+      else if (q >= 0.45 && q < 1 && !Graficos.quieto) { const o = (q - 0.45) / 0.55; escala = 0.85 + o * 7; opacidad = 0.45 * (1 - o); }
+      el.style.setProperty("--md-s", escala.toFixed(3));
+      el.style.setProperty("--md-o", opacidad.toFixed(3));
+    });
+    // Grifter «habla»: mientras suena la narradora, el escudo late y sus barras siguen la voz.
+    const narra = Object.values(NARRA).some((n) => tt >= n.en && tt < n.en + n.dura);
+    document.body.classList.toggle("md-narra", narra);
+    const nivelN = narra && nivelesReales();
+    document.querySelectorAll(".md-narrador-barras i").forEach((b, i) => {
+      const d = Math.abs(i - 2);
+      let h = 0.12;
+      if (narra && Graficos.quieto) h = 0.6 - d * 0.15;
+      else if (nivelN) h = Math.max(0.12, nivelN[d]);
+      else if (narra) h = (0.3 + 0.7 * Math.abs(0.6 * Math.sin(tt * 6.3 + d * 0.9) + 0.4 * Math.sin(tt * 11.7 + d * 2.1))) * (1 - d * 0.15);
+      b.style.setProperty("--md-h", h.toFixed(3));
+    });
+    const latidoN = narra && !Graficos.quieto ? (Math.sin(tt * 2 * Math.PI * 1.6) + 1) / 2 : 0;
+    $(".md-narrador").style.setProperty("--md-latido", latidoN.toFixed(3));
     // El borde rojo de alerta, mientras el pago está retenido y nadie respondió (como en Episodios).
     document.body.classList.toggle("md-alarma", tt >= 37 && tt < AUT.rechazado);
     // Con el teléfono de Pablo a la vista, el texto de la izquierda le deja espacio.
@@ -411,7 +497,9 @@
 
   // --- Audio: los mp3 del #171 (ElevenLabs, voces sintéticas de biblioteca); sin mp3 o si no cargan,
   // speechSynthesis del navegador, frase por frase para que siga a los subtítulos ---
-  const MP3 = { es: { abuela: "audio/cuento_del_tio_abuela.mp3", nieto: "audio/cuento_del_tio_nieto.mp3" } };
+  // La narradora de los actos 2 y 3 es otra voz de la biblioteca (scripts/generar_narracion_demo.py).
+  const MP3 = { es: { abuela: "audio/cuento_del_tio_abuela.mp3", nieto: "audio/cuento_del_tio_nieto.mp3",
+    correo: "audio/narracion_correo.mp3", compra: "audio/narracion_compra.mp3", cifras: "audio/narracion_cifras.mp3", cierre: "audio/narracion_cierre.mp3" } };
   const pistas = {};
   let mudo = false;
   function prepararAudio() {
@@ -488,6 +576,7 @@
     { en: LLAMADA.abuela, hacer: () => (pistas.abuela ? reproducir(pistas.abuela, () => sintetica(t("abuela"), true)) : sintetica(t("abuela"), true)) },
     { en: LLAMADA.nieto, hacer: () => { if (pistas.nieto) reproducir(pistas.nieto, () => sintetica(t("nieto")[0])); else sintetica(t("nieto")[0]); } },
     ...FRASES.slice(1).map((d, i) => ({ en: LLAMADA.nieto + d, hacer: () => { if (!pistas.nieto) sintetica(t("nieto")[i + 1]); } })),
+    ...Object.entries(NARRA).map(([k, n]) => ({ en: n.en, hacer: () => { if (pistas[k]) reproducir(pistas[k], () => sintetica(t(`n_${k}`))); else sintetica(t(`n_${k}`)); } })),
   ];
   const hecho = new Set();
   function reproducir(a, respaldo) { conectar(a); a.currentTime = 0; a.play().catch(respaldo); }
@@ -551,9 +640,10 @@
     corriendo = !corriendo;
     document.body.classList.toggle("md-corriendo", corriendo);
     if (corriendo) {
-      // Si se pausó a mitad del nieto, el mp3 sigue desde donde iba.
-      if (pistas.nieto && tiempo > LLAMADA.nieto && tiempo < LLAMADA.cuelga && !mudo) {
-        pistas.nieto.currentTime = tiempo - LLAMADA.nieto; pistas.nieto.play().catch(() => {});
+      // Si se pausó a mitad del nieto o de la narradora, el mp3 sigue desde donde iba.
+      const tramos = [["nieto", LLAMADA.nieto, LLAMADA.cuelga], ...Object.entries(NARRA).map(([k, n]) => [k, n.en, n.en + n.dura])];
+      for (const [k, desde, hasta] of tramos) {
+        if (pistas[k] && tiempo > desde && tiempo < hasta && !mudo) { pistas[k].currentTime = tiempo - desde; pistas[k].play().catch(() => {}); }
       }
       previo = 0; requestAnimationFrame(cuadro);
     } else callar();

@@ -130,10 +130,19 @@ body.md-contestada .md-avatar { transform: scale(0.82); }
 .md-b { position: relative; height: 48px; border: var(--linea); background: transparent; color: var(--texto); font: var(--p-fuerte) 17px / 22px var(--sans); overflow: hidden; }
 .md-b.principal { background: var(--texto); color: var(--fondo); }
 .md-b.peligro { color: var(--rojo); border-color: transparent; }
-/* El toque: un círculo que se agranda y se desvanece sobre «Pagar a mi inscrita» */
-.md-toque { position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 50%; background: var(--fondo); }
-.md-toque.ve { animation: md-toque 700ms ease-out forwards; }
-@keyframes md-toque { from { transform: scale(0.4); opacity: 0.6; } to { transform: scale(14); opacity: 0; } }
+/* El toque de un dedo sobre «Pagar igual» (Marta) y «Rechazar» (Pablo): la yema clara encima del botón, que se hunde,
+   y después una onda que se abre. render() fija --md-s (escala) y --md-o (opacidad) según el segundo: así un cuadro
+   con ?t= muestra el toque igual que en vivo. Las clases .presionado y .elegido son del botón. */
+.md-toque { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; pointer-events: none;
+  background: color-mix(in srgb, var(--texto) 70%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--texto) 35%, transparent);
+  opacity: var(--md-o, 0); transform: scale(var(--md-s, 1)); }
+.md-b, .md-wa-b { transition: transform 120ms ease-out, background-color 120ms ease-out; }
+.md-cuadro .md-b, .md-cuadro .md-wa-b { transition: none; }
+.md-b.presionado, .md-wa-b.presionado { transform: scale(0.95); }
+.md-b.peligro.presionado { background: color-mix(in srgb, var(--rojo) 26%, transparent); }
+.md-b.peligro.elegido { background: color-mix(in srgb, var(--rojo) 14%, transparent); }
+.md-wa-b.presionado { background: color-mix(in srgb, var(--texto) 22%, var(--superficie)); }
+.md-wa-b.elegido { background: color-mix(in srgb, var(--texto) 10%, var(--superficie)); border-color: var(--texto-2); }
 .md-al-hecho { top: 200px; display: grid; justify-items: center; gap: 12px; padding: 48px 24px; text-align: center; border: var(--linea); background: var(--superficie); }
 .md-al-hecho p { margin: 0; font-size: 28px; line-height: 36px; font-weight: var(--p-fuerte); }
 .md-al-hecho p.dato { color: var(--texto-2); font-size: 22px; font-weight: var(--p-normal); }
@@ -212,17 +221,39 @@ body.md-aut .md-a1 .md-motivo span:not(.md-quien) { font-size: 20px; line-height
 .md-ret { color: var(--verde); font-weight: var(--p-fuerte); }
 .md-ret .md-ic { vertical-align: middle; }
 
-/* Acto 3: las cifras que cuentan solas */
-.md-cifras { flex: 1; display: grid; align-content: center; gap: 72px; }
-.md-cifra { display: grid; gap: 16px; }
-.md-linea { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 32px; font-size: 48px; line-height: 56px; color: var(--texto-2); }
-.md-linea .md-ic { width: 56px; height: 56px; align-self: center; color: var(--texto-3); }
-.md-n { font-size: 160px; line-height: 160px; font-weight: var(--p-fuerte); color: var(--texto); font-variant-numeric: tabular-nums; }
-.md-n.c-verde { color: var(--verde); }
-.md-det { margin: 0; color: var(--texto-3); font: var(--p-normal) 24px / 32px var(--mono); }
+/* El correo del acto 2: lo que la narradora nombra se subraya en ámbar en ese momento */
+.md-subraya { background: transparent; color: inherit; transition: color 320ms ease-out, background-color 320ms ease-out; }
+.md-subraya.on { color: var(--texto); background: color-mix(in srgb, var(--ambar) 22%, transparent); box-shadow: 0 2px 0 var(--ambar); }
+.md-cuadro .md-subraya { transition: none; }
+
+/* Tipografía en movimiento: la regla de cada escena del acto 2, grande y al centro, palabra por palabra.
+   Tapa la escena entera (fondo del escenario) mientras se dice. */
+.md-cinetica { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: 0 160px; background: var(--fondo); text-align: center; }
+.md-cinetica p { margin: 0; max-width: 1500px; font-size: 112px; line-height: 124px; font-weight: var(--p-fuerte); letter-spacing: -0.03em; }
+.md-palabra { display: inline-block; transform: translateY(40px); }
+.md-palabra.ve { transform: none; }
+
+/* Acto 3: una cifra por escena, enorme al centro. Cuenta hacia arriba y cae a cero (render() fija el número) */
+.md-a3, .md-intro, .md-cierre { justify-content: center; align-items: center; text-align: center; }
+.md-a3-frase { position: absolute; inset: 0; display: grid; place-items: center; font-size: 112px; line-height: 124px; }
+.md-a3-frase > span { grid-area: auto; }
+.md-cifra-esc { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 8px; }
+.md-n { margin: 0; font-size: 280px; line-height: 280px; font-weight: var(--p-fuerte); color: var(--texto); font-variant-numeric: tabular-nums; letter-spacing: -0.04em; transition: color 320ms ease-out; }
+.md-n.on { color: var(--verde); }
+.md-cifra-rot { margin: 0; display: grid; font-size: 64px; line-height: 72px; font-weight: var(--p-fuerte); }
+.md-cifra-rot > span { grid-area: 1 / 1; }
+.md-cifra-con { margin: 8px 0 0; color: var(--texto-2); font-size: 48px; line-height: 56px; }
+.md-det { margin: 32px 0 0; color: var(--texto-3); font: var(--p-normal) 24px / 32px var(--mono); }
+
+/* Grifter «habla»: el escudo abajo a la izquierda late y sus barras siguen la voz mientras suena la narradora */
+.md-narrador { position: absolute; z-index: 5; left: 96px; bottom: 28px; display: flex; align-items: center; gap: 12px; color: var(--texto-3); font-size: 22px; line-height: 28px; }
+.md-narrador .md-ic { width: 36px; height: 36px; color: var(--texto-3); transform: scale(calc(1 + var(--md-latido, 0) * 0.12)); transition: color 240ms ease-out; }
+body.md-narra .md-narrador, body.md-narra .md-narrador .md-ic { color: var(--verde); }
+.md-narrador-barras { display: flex; align-items: center; gap: 4px; height: 28px; }
+.md-narrador-barras i { width: 5px; height: calc(4px + var(--md-h, 0.12) * 24px); background: currentColor; border-radius: 3px; opacity: 0.45; }
+body.md-narra .md-narrador-barras i { opacity: 1; }
 
 /* Intro y cierre */
-.md-intro, .md-cierre { justify-content: center; align-items: center; text-align: center; }
 .md-logo { display: flex; align-items: center; gap: 24px; font-size: 96px; line-height: 96px; font-weight: var(--p-fuerte); letter-spacing: -0.02em; }
 .md-logo .md-ic { width: 96px; height: 96px; }
 .md-lema { margin: 0; color: var(--texto-2); font-size: 40px; line-height: 48px; }
@@ -246,6 +277,8 @@ body.md-corriendo { cursor: none; }
 
 @media (prefers-reduced-motion: reduce) {
   [data-v], [data-h], .md-avatar { transition: none; }
-  .md-toque.ve { animation: none; opacity: 0; }
+  .md-b, .md-wa-b, .md-subraya, .md-n, .md-narrador .md-ic { transition: none; }
+  .md-b.presionado, .md-wa-b.presionado, .md-palabra { transform: none; }
+  body.md-narra .md-narrador-barras i { animation: md-voz-pulso 1200ms ease-in-out infinite; }
   body.md-voz .md-voz-barras i { animation: md-voz-pulso 1200ms ease-in-out infinite; }
 }
