@@ -43,7 +43,7 @@
       a1_frase: "Llama «tu nieto» y pide $650.000", a1_frase2: "La cuenta salió de una llamada, no de tu encargo.",
       dueno: "Marta", encargo: "Contesta mis llamadas y ayúdame con lo que me pidan mis nietos.", encargo_de: "Encargo de {d}",
       entrante: "Llamada entrante", privado: "Número privado", en_llamada: "En llamada",
-      n_marta: "Marta", n_nieto: "‹tu nieto›",
+      n_marta: "Marta", n_nieto: "Tomás (nieto)", al_a_v: "Tomás, tu nieto",
       abuela: "¿Aló? ¿Quién habla?",
       nieto: [
         "Abuelita, soy yo po, tu nieto. No le digai a nadie, por favor.",
@@ -53,7 +53,7 @@
         "Hazlo rápido, por favor, no me cortí.",
       ],
       escucho: "escuchó", intento: "intentó", grifter: "Grifter", eligio: "eligió",
-      escucho_v: "llamada de número privado · 25 s", llamada: "llamada",
+      escucho_v: "llamada de Tomás (nieto) · número privado · 25 s", llamada: "llamada",
       retuvo: "Retuvo", motivo1: "la cuenta de destino (48-2210-7735) viene solo de contenido no confiable (llamada), no del encargo ni de las cuentas inscritas del dueño",
       igual_v: "pagar igual", pablo: "Pablo",
       pide_v: "pide 2 aprobaciones (Marta y Pablo)", correo_v: "correo con código a Marta", envio: "envió",
@@ -63,7 +63,7 @@
       codigo: "Ingresa tu código para aprobar", mail_de: "Grifter · correo", mail_txt: "Tu código para aprobar el pago de $650.000: 482 913",
       uno_de_dos: "1 de 2 aprobaciones · falta Pablo (tu hijo)", quorum: "aprobadores: Marta y Pablo · 2 de 2",
       pablo_de: "Pablo, su hijo", pablo_chat: "Grifter",
-      pablo_msg: "Marta quiere pagar $650.000 a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser su nieto.",
+      pablo_msg: "Marta quiere pagar $650.000 a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser Tomás, su nieto.",
       pablo_avance: "1 de 2: Marta ya aprobó con su código",
       pablo_aprobar: "Aprobar (pide tu código)", pablo_rechazar: "Rechazar",
       a1_frase3: "Si la abuela ya cayó, su hijo tiene que aprobar con su código.",
@@ -99,7 +99,7 @@
       a1_frase: "«Your grandson» calls and asks for $650,000", a1_frase2: "The account came from a call, not your request.",
       dueno: "Marta", encargo: "Answer my calls and help me with whatever my grandchildren ask for.", encargo_de: "{d}'s request",
       entrante: "Incoming call", privado: "Private number", en_llamada: "On call",
-      n_marta: "Marta", n_nieto: "‹your grandson›",
+      n_marta: "Marta", n_nieto: "Tomás (grandson)", al_a_v: "Tomás, your grandson",
       abuela: "Hello? Who's speaking?",
       nieto: [
         "Grandma, it's me, your grandson. Don't tell anyone, please.",
@@ -109,7 +109,7 @@
         "Do it fast, grandma, please, don't hang up.",
       ],
       escucho: "heard", intento: "tried", grifter: "Grifter", eligio: "chose",
-      escucho_v: "call from a private number · 25 s", llamada: "call",
+      escucho_v: "call from Tomás (grandson) · private number · 25 s", llamada: "call",
       retuvo: "Held", motivo1: "the destination account (48-2210-7735) comes only from untrusted content (call), not from the owner's request or registered accounts",
       igual_v: "pay anyway", pablo: "Pablo",
       pide_v: "asks for 2 approvals (Marta and Pablo)", correo_v: "email with a code to Marta", envio: "sent",
@@ -119,7 +119,7 @@
       codigo: "Enter your code to approve", mail_de: "Grifter · email", mail_txt: "Your code to approve the $650,000 payment: 482 913",
       uno_de_dos: "1 of 2 approvals · Pablo (your son) is missing", quorum: "approvers: Marta and Pablo · 2 of 2",
       pablo_de: "Pablo, her son", pablo_chat: "Grifter",
-      pablo_msg: "Marta wants to pay $650,000 to J. Contreras V. The account came from a call from a private number claiming to be her grandson.",
+      pablo_msg: "Marta wants to pay $650,000 to J. Contreras V. The account came from a call from a private number claiming to be Tomás, her grandson.",
       pablo_avance: "1 of 2: Marta already approved with her code",
       pablo_aprobar: "Approve (asks for your code)", pablo_rechazar: "Reject",
       a1_frase3: "If grandma already fell for it, her son has to approve with his code.",
@@ -196,7 +196,7 @@
         <div class="md-celular ve">
           <div class="md-pantalla">
             <i class="md-camara" aria-hidden="true"></i>
-            <div class="md-estado"><span>16:12</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
+            <div class="md-estado"><span class="md-hora-real">16:12</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
             ${pantalla}
             <div class="md-retenido" data-v="${retenido}">${ic("gpp_good")}<p><b>${esc(titulo)}</b><span>${detalle}</span></p></div>
           </div>
@@ -240,7 +240,7 @@
           <div class="md-celular" data-v="${LLAMADA.suena}">
             <div class="md-pantalla">
               <i class="md-camara" aria-hidden="true"></i>
-              <div class="md-estado"><span>16:07</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
+              <div class="md-estado"><span class="md-hora-real">16:07</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
               <div class="md-llamada" data-h="${LLAMADA.cuelga + 2}">
                 <p class="md-ll-estado"><span data-h="${LLAMADA.contesta}" class="ve">${esc(t("entrante"))}</span><span data-v="${LLAMADA.contesta}" data-h="${LLAMADA.cuelga}">${esc(t("en_llamada"))} · <span class="dato" id="md-reloj">0:00</span></span></p>
                 <div class="md-avatar"><i class="md-pulso"></i><i class="md-pulso dos"></i>
@@ -261,7 +261,7 @@
                 <p class="md-al-motivo">${esc(t("motivo1"))}</p>
                 <dl class="md-al-datos">
                   <dt>${esc(t("al_titular"))}</dt><dd>J. Contreras V.</dd>
-                  <dt>${esc(t("al_a"))}</dt><dd>‹${idioma === "en" ? "your grandson" : "tu nieto"}› <b>$${f(650000)}</b></dd>
+                  <dt>${esc(t("al_a"))}</dt><dd>‹${esc(t("al_a_v"))}› <b>$${f(650000)}</b></dd>
                   <dt>${esc(t("al_cuenta"))}</dt><dd class="dato">‹48-2210-7735›</dd>
                   <dt>${esc(t("al_de"))}</dt><dd>‹${esc(t("al_de_v"))}›</dd>
                 </dl>
@@ -286,7 +286,7 @@
             <p class="md-pablo-de">${esc(t("pablo_de"))}</p>
             <div class="md-pantalla">
               <i class="md-camara" aria-hidden="true"></i>
-              <div class="md-estado"><span>16:08</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
+              <div class="md-estado"><span class="md-hora-real">16:08</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
               <div class="md-wa">
                 <p class="md-wa-cab">${ic("shield")}<span>${esc(t("pablo_chat"))}</span></p>
                 <div class="md-wa-msg"><p>${esc(t("pablo_msg"))}</p><p class="md-wa-avance">${esc(t("pablo_avance"))}</p></div>
@@ -387,7 +387,11 @@
     }
     const latido = suena ? (Math.sin((tt - LLAMADA.suena) * 2 * Math.PI) + 1) / 2 : 0;
     document.querySelectorAll(".md-ll-b.contestar").forEach((b) => b.style.setProperty("--md-latido", latido.toFixed(3)));
-    const s = Math.max(0, Math.floor(tt - LLAMADA.contesta));
+    let enLlamada = Math.min(tt, LLAMADA.cuelga);
+    const suenaPista = (a) => a && !a.paused && !a.ended;
+    if (suenaPista(pistas.nieto)) enLlamada = Math.min(LLAMADA.nieto + pistas.nieto.currentTime, LLAMADA.cuelga);
+    else if (suenaPista(pistas.abuela)) enLlamada = LLAMADA.abuela + pistas.abuela.currentTime;
+    const s = Math.max(0, Math.floor(enLlamada - LLAMADA.contesta));
     $("#md-reloj").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
     if (cifras.estafas !== null) $("#md-n1").textContent = num(sube(68.1, 1.8, cifras.estafas, tt));
     if (cifras.ataques !== null) $("#md-n2").textContent = num(sube(71.8, 2.2, cifras.ataques, tt));
@@ -583,6 +587,16 @@
     document.body.classList.add("md-cuadro");
   }
   render(tiempo);
+  // La hora de la barra de estado de los teléfonos es la real del notebook. Con ?t=N queda la fija, para que la
+  // captura salga siempre igual.
+  if (!params.has("t")) {
+    const hora = () => {
+      const ahora = new Date(), hh = String(ahora.getHours()).padStart(2, "0"), mm = String(ahora.getMinutes()).padStart(2, "0");
+      document.querySelectorAll(".md-hora-real").forEach((el) => { if (el.textContent !== `${hh}:${mm}`) el.textContent = `${hh}:${mm}`; });
+    };
+    hora();
+    setInterval(hora, 1000);   // revisa cada segundo y cambia el texto solo cuando cambia el minuto
+  }
   // Solo lectura, para revisar en la consola si la demo corre y si el audio suena: GrifterDemo.estado()
   window.GrifterDemo = { estado: () => ({ tiempo: Math.round(tiempo * 10) / 10, corriendo, mudo,
     audio: Object.fromEntries(Object.entries(pistas).map(([k, x]) => [k, { sonando: !x.paused, en: Math.round(x.currentTime * 10) / 10, listo: x.readyState }])) }) };

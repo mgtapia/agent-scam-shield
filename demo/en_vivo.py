@@ -47,13 +47,13 @@ BOTON = re.compile(r"^(demo-[0-9a-f]{4}):(ap|re)$")
 CUENTA, MONTO = "48-2210-7735", 650_000
 TEXTOS = {
     "es": {
-        "detalle": "Marta quiere pagar $650.000 a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser su nieto.",
+        "detalle": "Marta quiere pagar $650.000 a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser Tomás, su nieto.",
         "progreso": "1 de 2 aprobaciones: Marta ya aprobó con su código",
         "pie": "Para aprobar, saca el código de tu digipass para el desafío {d} y escríbelo aquí.",
         "titulo": "Grifter pide aprobación ({id})", "aprobar": "Aprobar", "rechazar": "Rechazar",
     },
     "en": {
-        "detalle": "Marta wants to pay $650,000 to J. Contreras V. The account came from a call from a private number claiming to be her grandson.",
+        "detalle": "Marta wants to pay $650,000 to J. Contreras V. The account came from a call from a private number claiming to be Tomás, her grandson.",
         "progreso": "1 of 2 approvals: Marta already approved with her code",
         "pie": "To approve, get the code from your digipass for challenge {d} and type it here.",
         "titulo": "Grifter asks for approval ({id})", "aprobar": "Approve", "rechazar": "Reject",
