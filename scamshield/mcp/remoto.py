@@ -86,6 +86,8 @@ class ConectorMCP:
         pila = AsyncExitStack()
         try:
             await self.grifter.conectar(pila)
+            await self.grifter.arrancar()   # revisa la política aprobada y manda el latido (#102)
+            pila.push_async_callback(self.grifter.detener)
             gestor = StreamableHTTPSessionManager(
                 app=self.grifter.servidor_mcp(), json_response=True, stateless=True)
             await pila.enter_async_context(gestor.run())
@@ -121,9 +123,10 @@ class ConectorMCP:
             raise
 
 
-def crear_app(config: Config, token: Optional[str], escalar: Escalar = escalar_por_defecto) -> Starlette:
+def crear_app(config: Config, token: Optional[str], escalar: Escalar = escalar_por_defecto,
+              grifter: Optional[Grifter] = None) -> Starlette:
     """Una app Starlette con solo `/mcp`. Lanza ValueError si el token falta o es corto."""
-    conector = ConectorMCP(config, token, escalar)
+    conector = ConectorMCP(config, token, escalar, grifter)
 
     @asynccontextmanager
     async def vida(_app: Starlette):
@@ -137,9 +140,10 @@ def crear_app(config: Config, token: Optional[str], escalar: Escalar = escalar_p
 
 
 def servir(config: Config, host: str = "127.0.0.1", puerto: int = 8766,
-           token: Optional[str] = None, escalar: Escalar = escalar_por_defecto) -> None:
+           token: Optional[str] = None, escalar: Escalar = escalar_por_defecto,
+           grifter: Optional[Grifter] = None) -> None:
     import uvicorn
 
-    app = crear_app(config, token if token is not None else os.environ.get(VARIABLE_TOKEN), escalar)
+    app = crear_app(config, token if token is not None else os.environ.get(VARIABLE_TOKEN), escalar, grifter)
     log.info("Grifter en http://%s:%s%s (token de portador en %s)", host, puerto, RUTA, VARIABLE_TOKEN)
     uvicorn.run(app, host=host, port=puerto, log_level="warning")

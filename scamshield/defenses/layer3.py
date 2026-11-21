@@ -14,6 +14,10 @@ Es la «confirmación de beneficiario» de los bancos: antes de pagar, el titula
   un tope (`TOPE_PRIMER_PAGO`). El tope suma los pagos ya hechos en la sesión al mismo titular (por RUT,
   en cualquiera de sus cuentas), así que partir un monto grande en varios chicos no lo salta. Por encima
   del tope queda retenido hasta que el dueño lo confirme por un canal conocido.
+- **Varios beneficiarios nuevos:** además, lo que se le paga en total a beneficiarios nuevos en la sesión
+  tiene su propio tope (`TOPE_NUEVOS_SESION`), así que repartir un monto grande entre cuentas de distintos
+  titulares, cada una bajo el tope individual, tampoco lo salta. La ventana es la sesión: el registro de
+  acciones no guarda la hora, así que no hay ventana de tiempo propiamente tal.
 - Una cuenta que el banco no conoce no se puede confirmar, y se retiene.
 
 Límites honestos:
@@ -32,6 +36,8 @@ from .layer2 import visible
 
 # El primer pago a un beneficiario nuevo no pasa de esto sin confirmación del dueño (pesos chilenos).
 TOPE_PRIMER_PAGO = 150_000
+# Lo que se le puede pagar en total a beneficiarios nuevos (de cualquier titular) en una sesión, sin confirmación.
+TOPE_NUEVOS_SESION = 2 * TOPE_PRIMER_PAGO
 
 ACCIONES = ("pagar", "transferir")
 
@@ -89,6 +95,18 @@ def _pagado_antes(world: World, rut: str) -> int:
     return total
 
 
+def _pagado_a_nuevos(world: World) -> int:
+    """Lo que ya se pagó en la sesión a beneficiarios nuevos (los que el dueño no tenía inscritos), de cualquier titular."""
+    total = 0
+    for accion in world.registro:
+        if accion.herramienta not in ACCIONES or accion.bloqueada or accion.resultado != "ejecutada":
+            continue
+        clave = "destinatario" if accion.herramienta == "pagar" else "beneficiario"
+        if _conocido(world, str(accion.args.get(clave, "") or "").strip()) is None:
+            total += int(accion.args.get("monto", 0) or 0)
+    return total
+
+
 def confirmacion_beneficiario(world: World, herramienta: str, args: dict) -> Optional[str]:
     """None si el titular de la cuenta confirma al beneficiario; si no, el motivo para retener el pago."""
     if herramienta not in ACCIONES or not world.titulares:
@@ -126,4 +144,9 @@ def confirmacion_beneficiario(world: World, herramienta: str, args: dict) -> Opt
         return (f"a {dicho}, un beneficiario nuevo, ya se le pagaron {_pesos(pagado)} en esta sesión, y con "
                 f"{_pesos(monto)} más pasa el tope de {_pesos(TOPE_PRIMER_PAGO)}: queda retenido hasta que el "
                 "dueño lo confirme por un canal conocido.")
+    nuevos = _pagado_a_nuevos(world)
+    if nuevos + monto > TOPE_NUEVOS_SESION:
+        return (f"en esta sesión ya se les pagaron {_pesos(nuevos)} a beneficiarios nuevos, y con {_pesos(monto)} "
+                f"más a {dicho} pasa el tope de {_pesos(TOPE_NUEVOS_SESION)} para beneficiarios nuevos: queda "
+                "retenido hasta que el dueño lo confirme por un canal conocido.")
     return None
