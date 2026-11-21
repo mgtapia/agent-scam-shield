@@ -23,6 +23,18 @@ En `grifter.yaml` van los servidores de abajo, las cuentas inscritas, los datos 
 
 Lo confiable es solo lo que escribe el dueño en `grifter.yaml` (o en `--encargo "..."`). Los clientes MCP no le pasan el mensaje del usuario al servidor, así que sin `encargo` la regla es conservadora: solo valen las cuentas inscritas. Lo que escribe el agente en los argumentos nunca cuenta como confiable.
 
+## Integridad: que nadie pueda apagar Grifter en silencio (#102)
+Quien controla la máquina podría editar `grifter.yaml` (inscribir la cuenta del estafador, apagar una capa) o apuntar al agente directo al banco. Grifter no lo impide, pero hace que **no pase sin que el dueño se entere**:
+
+1. **Solo Grifter tiene la credencial del banco.** La credencial va en el `env` del servidor en `grifter.yaml` y el banco la exige (`--clave-env BANCO_CLAVE`); un agente que lo levante por su cuenta no la tiene y el banco rechaza todo. Con el banco sandbox: `args: ["-m", "scamshield.mcp.servidor_banco", "--clave-env", "BANCO_CLAVE"]` y `env: {BANCO_CLAVE: ...}`.
+2. **Huella de la política.** Al arrancar y antes de cada llamada sensible, Grifter compara `grifter.yaml` (cuentas inscritas, datos del dueño, encargo, herramientas sensibles, capas, servidores) con la última política que aprobó el dueño (`.grifter_aprobada.json`, o la ruta de `estado:`). Si cambió, **retiene todo lo sensible, incluso a las cuentas inscritas**, y le manda al dueño el diff por Telegram con dos botones (aprobar o rechazar). El diff dice qué cambió en los datos del dueño y en las credenciales, nunca el valor. Un `grifter.yaml` ilegible o borrado también retiene. El primer arranque deja registrada la política inicial.
+3. **Registro firmado.** Si el proceso del proxy tiene `GRIFTER_CLAVE_ESTADO`, el registro de lo aprobado va firmado con HMAC: reescribirlo a mano sin la clave se nota.
+4. **Latido.** Al arrancar y al detenerse, Grifter le manda al dueño un aviso con las capas activas y si la política era la aprobada. Si se apaga sin aviso, el dueño lo sabe.
+
+La capa 2 se puede apagar con `capas: {capa2: false}`, pero es un cambio de política: se retiene y se avisa como cualquier otro. Para que el aviso llegue, el proxy necesita `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en su entorno.
+
+**Límite honesto:** alguien con acceso a la máquina, a la clave del registro *y* al teléfono del dueño puede todo.
+
 ## Claude Code
 Desde la raíz del repo, con el Python del venv:
 ```bash
