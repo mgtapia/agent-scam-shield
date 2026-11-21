@@ -90,7 +90,7 @@ def test_los_intervalos_son_los_de_resumen_resultados(resultados):
     m = bench.por_configuracion(resultados)["layer23"]["estafas_exitosas"]
     tasa, bajo, alto = tasa_con_intervalo([0.0] * len(ESTAFAS))
     assert (m["tasa"], m["bajo"], m["alto"]) == (tasa, bajo, alto)
-    assert m["alto"] > 0.05
+    assert m["alto"] > 0.03   # 0 de N no es riesgo cero, aunque N crezca
 
 
 def test_el_escenario_es_el_par_id_e_idioma(resultados):
