@@ -742,6 +742,14 @@ mark.tramo { background: transparent; color: inherit; }
 .metricas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: var(--linea); }
 .metrica { display: grid; padding: var(--e-1) var(--e-2); min-width: 0; }
 .metrica + .metrica { border-left: var(--linea); }
+.metricas > .m-de { grid-column: 1 / -1; padding: var(--e-1) var(--e-2) 0; color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
+/* Bajo la detección del clasificador: lo que frena Grifter completo, para que la cifra del clasificador no se lea como la de Grifter */
+.ops-grifter { display: flex; align-items: center; gap: var(--e-1); margin: 0; padding: var(--e-1) var(--e-2); border-bottom: var(--linea); font-weight: var(--p-fuerte); outline-offset: -1px; }
+.ops-grifter > .ms { color: var(--verde); }
+.ops-grifter .og-txt { display: grid; min-width: 0; }
+.ops-grifter .og-de { color: var(--texto-2); font-weight: var(--p-normal); font-size: var(--t-1); line-height: var(--l-1); }
+.ops-grifter a { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; color: var(--texto-2); }
+.ops-grifter a:hover { color: var(--texto); }
 .m-et { display: flex; align-items: center; gap: var(--e-1); color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); white-space: nowrap; overflow: hidden; }
 .linea { flex: none; width: 16px; border-top: 2px solid var(--texto); }
 .linea.l-2 { border-top: 2px dashed var(--texto-2); }
