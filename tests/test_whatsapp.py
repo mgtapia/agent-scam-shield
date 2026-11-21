@@ -9,6 +9,7 @@ import hmac
 import json
 import logging
 import threading
+import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -329,12 +330,15 @@ def test_con_espera_pagar_igual_confirmado_aprueba_y_no_pagar_no(kapso):
     ganchos = alerta_whatsapp.ganchos_desde_entorno(_entorno(kapso), esperar_s=5)
 
     def apretar(*acciones):
-        id_ = kapso.a(DUENO)[-1]["interactive"]["action"]["buttons"][0]["reply"]["id"].split(":")[0]
+        # La última alerta (3 botones): el texto de confirmación del toque anterior puede llegar después de ella.
+        alertas = [c for c in kapso.a(DUENO) if len(c.get("interactive", {}).get("action", {}).get("buttons", [])) == 3]
+        id_ = alertas[-1]["interactive"]["action"]["buttons"][0]["reply"]["id"].split(":")[0]
         for a in acciones:
             _entregar(ganchos.canal, _boton(DUENO, f"{id_}:{a}"))
 
     threading.Timer(0.3, apretar, args=("np",)).start()
     assert ganchos.escalar(_alerta_proxy()) is None
+    time.sleep(0.5)   # que termine la confirmación del toque anterior
     threading.Timer(0.3, apretar, args=("pg", "pgc")).start()
     assert ganchos.escalar(_alerta_proxy()) is True
 
