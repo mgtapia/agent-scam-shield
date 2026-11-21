@@ -282,7 +282,8 @@ const Graficos = (() => {
     if (!g) return null;
     const serie = (nombre, color, tipo) => ({
       type: "line", name: nombre, showSymbol: false,
-      endLabel: { show: true, color, fontFamily: MONO, fontSize: T1, formatter: (p) => `${Math.round(p.value[1])}%` }, symbol: "rect", symbolSize: 4, smooth: false,
+      endLabel: { show: true, color, fontFamily: MONO, fontSize: T1, formatter: (p) => `${Math.round(p.value[1])}%` },
+      labelLayout: { moveOverlap: "shiftY" }, symbol: "rect", symbolSize: 4, smooth: false,
       lineStyle: { color, width: 1.5, type: tipo }, itemStyle: { color }, emphasis: { disabled: true }, data: [],
     });
     g.setOption({

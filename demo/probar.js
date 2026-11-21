@@ -102,6 +102,10 @@ const Probar = (() => {
       }
       ultima = { pedido, respuesta: await res.json() };
       pintar();
+      // En pantallas angostas el resultado queda bajo el formulario: se lleva a la vista, debajo de la barra fija.
+      const caja = $("#probar-resultado").getBoundingClientRect();
+      const barra = document.querySelector(".barra").offsetHeight;
+      if (caja.top < barra || caja.top > innerHeight / 2) scrollTo({ top: scrollY + caja.top - barra - 16 });
     } catch (_) {
       mostrarError(t("p_e_red"));
     } finally {
