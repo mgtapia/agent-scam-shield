@@ -135,6 +135,27 @@ def test_el_quorum_y_las_semillas_salen_de_la_politica_aprobada_aunque_el_yaml_l
     assert recibida.semillas == tmp_path / "credenciales" / "anteriores.json"
 
 
+@pytest.mark.parametrize("ruta_aprobada", [None, "auditoria/aprobaciones.jsonl"], ids=["defecto", "explicita"])
+@pytest.mark.parametrize("cambio", [{"registro_aprobaciones": "mallory/aprobaciones.jsonl"},
+                                    {"registro_aprobaciones": None}, {}], ids=["cambiado", "nulo", "quitado"])
+def test_el_registro_de_aprobaciones_sale_de_la_politica_aprobada_aunque_el_yaml_lo_cambie(tmp_path,
+                                                                                       ruta_aprobada, cambio):
+    ruta = tmp_path / "grifter.yaml"
+    aprobada = _escribir(ruta, **({"registro_aprobaciones": ruta_aprobada} if ruta_aprobada else {}))
+    integridad = Integridad(ruta, clave="clave-hmac-ficticia")
+    integridad.aprobar(politica_canonica(aprobada), "dueño")
+    pendiente = _escribir(ruta, **cambio)
+    antes = asdict(pendiente)
+    modulo = ModuloFalso()
+
+    quorum = proxy._quorum_aprobado(pendiente, integridad, modulo, object(), {})
+
+    assert quorum is modulo.quorums[0]
+    recibida = modulo.configuraciones[0]
+    assert recibida is not pendiente and asdict(pendiente) == antes
+    assert recibida.registro_aprobaciones == tmp_path / (ruta_aprobada or "grifter_aprobaciones.jsonl")
+
+
 def test_una_lista_aprobada_vacia_no_se_sustituye_por_aprobadores_nuevos_del_yaml(tmp_path):
     ruta = tmp_path / "grifter.yaml"
     config = _escribir(ruta, aprobadores=[])

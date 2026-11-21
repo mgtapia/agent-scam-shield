@@ -9,6 +9,7 @@ import asyncio
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 import mcp.types as types
 import pytest
@@ -411,6 +412,49 @@ def test_las_rutas_de_semillas_con_doble_punto_no_se_fusionan_con_la_ruta_direct
     directa = politica_canonica(_config({**BASE, "semillas": "credenciales/totp.json"}))
     assert huella(con_doble_punto) != huella(directa)
     assert diferencias(con_doble_punto, directa) == ["~ cambió la ruta de las credenciales de aprobación"]
+
+
+@pytest.mark.parametrize("nueva_ruta", ["privado/otras-aprobaciones.jsonl", None])
+def test_cambiar_o_quitar_la_ruta_del_registro_de_aprobaciones_cambia_la_huella_y_retiene(tmp_path, nueva_ruta):
+    aprobador = AprobadorFalso()
+    g, abajo, integridad, ruta = _montar(tmp_path, aprobador,
+                                       registro_aprobaciones="privado/aprobaciones.jsonl")
+    _arrancar(g)
+    antes = integridad.estado().politica
+    _escribir(ruta, registro_aprobaciones=nueva_ruta)
+    _, despues, error = integridad.leer_actual()
+    assert error == "" and huella(antes) != huella(despues)
+    assert diferencias(antes, despues) == ["~ cambió la ruta del registro de aprobaciones"]
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    assert "privado" not in aprobador.pedidos[0].texto
+
+
+def test_la_ruta_del_registro_de_aprobaciones_se_normaliza_sin_leer_sus_datos(tmp_path, monkeypatch):
+    leer = Path.read_text
+
+    def sin_registro(archivo, *a, **kw):
+        assert archivo.suffix != ".jsonl", "la huella no debe leer el registro de aprobaciones"
+        return leer(archivo, *a, **kw)
+
+    monkeypatch.setattr(Path, "read_text", sin_registro)
+    politicas = []
+    for carpeta in (tmp_path / "original", tmp_path / "movida"):
+        carpeta.mkdir()
+        ruta = carpeta / "grifter.yaml"
+        _escribir(ruta, registro_aprobaciones="privado/../votos/aprobaciones.jsonl")
+        politicas.append(politica_canonica(cargar_config(ruta)))
+    assert politicas[0]["registro_aprobaciones"] == "privado/../votos/aprobaciones.jsonl"
+    assert huella(politicas[0]) == huella(politicas[1])
+    directa = politica_canonica(_config({**BASE, "registro_aprobaciones": "votos/aprobaciones.jsonl"}))
+    assert huella(politicas[0]) != huella(directa)
+    assert diferencias(politicas[0], directa) == ["~ cambió la ruta del registro de aprobaciones"]
+
+
+def test_la_ruta_por_defecto_del_registro_de_aprobaciones_es_canonica():
+    implicita = politica_canonica(_config(BASE))
+    explicita = politica_canonica(_config({**BASE, "registro_aprobaciones": "grifter_aprobaciones.jsonl"}))
+    assert implicita["registro_aprobaciones"] == "grifter_aprobaciones.jsonl"
+    assert huella(implicita) == huella(explicita)
 
 
 @pytest.mark.parametrize("cambio,diff", [

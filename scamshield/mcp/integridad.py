@@ -82,6 +82,7 @@ def politica_canonica(config: Any) -> dict[str, Any]:
         "umbral_doble": int(config.umbral_doble),
         "semillas": _ruta_relativa(config, config.semillas),
         "estado": _ruta_relativa(config, config.estado) or NOMBRE_ESTADO,
+        "registro_aprobaciones": _ruta_relativa(config, config.registro_aprobaciones) or "grifter_aprobaciones.jsonl",
         "servidores": {s.nombre: {"comando": s.comando, "args": list(s.args), "cwd": _cwd(config, s),
                                   "env": {str(k): _h(v) for k, v in sorted(s.env.items())},
                                   # La URL también puede llevar credenciales, incluso en la ruta o el query.
@@ -164,6 +165,8 @@ def diferencias(antes: Mapping[str, Any], despues: Mapping[str, Any]) -> list[st
         d.append("~ cambió la ruta de las credenciales de aprobación")
     if antes.get("estado") != despues.get("estado"):
         d.append("~ cambió la ruta del registro de la política aprobada")
+    if antes.get("registro_aprobaciones") != despues.get("registro_aprobaciones"):
+        d.append("~ cambió la ruta del registro de aprobaciones")
     a, b = antes.get("servidores", {}), despues.get("servidores", {})
     for k in sorted(set(a) | set(b)):
         if k not in a:

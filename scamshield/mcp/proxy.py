@@ -56,7 +56,7 @@ from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
 from .aprobaciones import (APROBADA, PENDIENTE, Aprobaciones, Aprobador, RegistroEncadenado, Solicitud,
                            aprobadores_de, cargar_semillas)
 from ..defenses.dominios import HERRAMIENTAS_WEB, datos_llevados, hosts_en, revisar_web
-from .integridad import ENTORNO_CLAVE, Cambio, Integridad, IntegridadError, corta
+from .integridad import ENTORNO_CLAVE, Cambio, Integridad, IntegridadError, corta, politica_canonica
 from .integridad import huella as huella_politica
 from .cliente_http import conectar_remoto
 
@@ -502,6 +502,10 @@ class Grifter:
         self.integridad, self.aprobador, self.latido, self.quorum = integridad, aprobador, latido, quorum
         self._aprobador_dueno, self._crear_quorum = aprobador, crear_quorum
         self._quorum_pendiente = False
+        self._reinicio_necesario = False
+        self._conexion_iniciada = False
+        self._pedidos_conexion: Optional[asyncio.Queue] = None
+        self._tarea_conexiones: Optional[asyncio.Task] = None
         if crear_quorum is not None and quorum is not None:
             self.aprobador = quorum.aprobador_de_politica()
         self._pagos: dict[tuple[str, str, float], str] = {}   # pago grande pendiente -> id de su solicitud
@@ -516,7 +520,68 @@ class Grifter:
         self.bloqueadas: dict[str, str] = {}
 
     async def conectar(self, pila: AsyncExitStack, errlog=None) -> None:
-        """Conecta cada servidor de abajo (stdio o HTTP) y junta sus herramientas.
+        """Conecta solo una política aprobada; sin ella no inicia procesos ni envía credenciales.
+
+        La tarea conserva y cierra sus propios contextos MCP. Así un listado posterior puede reintentar
+        tras la aprobación sin abrir y cerrar los contextos de AnyIO desde tareas distintas.
+        """
+        if self._tarea_conexiones is None:
+            self._pedidos_conexion = asyncio.Queue()
+            self._tarea_conexiones = asyncio.create_task(self._gestionar_conexiones(errlog))
+            pila.push_async_callback(self._cerrar_conexiones)
+        await self._intentar_conexion()
+
+    async def _intentar_conexion(self) -> None:
+        if self._tarea_conexiones is None or self._conexion_iniciada:
+            return
+        if self._tarea_conexiones.done():
+            await self._tarea_conexiones
+            return
+        respuesta = asyncio.get_running_loop().create_future()
+        await self._pedidos_conexion.put(respuesta)
+        await respuesta
+
+    async def _gestionar_conexiones(self, errlog) -> None:
+        async with AsyncExitStack() as conexiones:
+            while True:
+                respuesta = await self._pedidos_conexion.get()
+                try:
+                    if not self._conexion_iniciada:
+                        retenida = await self._politica_pendiente(antes_de_conectar=True)
+                        if retenida:
+                            log.warning("no se conectan los servidores: %s", retenida)
+                        else:
+                            anteriores = (dict(self.sesiones), dict(self.rutas),
+                                          list(self.herramientas), dict(self.bloqueadas))
+                            try:
+                                async with AsyncExitStack() as intento:
+                                    await self._conectar_aprobados(intento, errlog)
+                                    conexiones.push_async_callback(intento.pop_all().aclose)
+                            except BaseException:
+                                # Un intento parcial no deja sesiones ni herramientas para el siguiente.
+                                self.sesiones, self.rutas, self.herramientas, self.bloqueadas = anteriores
+                                raise
+                            self._conexion_iniciada = True
+                except Exception as e:
+                    if not respuesta.done():
+                        respuesta.set_exception(e)
+                else:
+                    if not respuesta.done():
+                        respuesta.set_result(None)
+
+    async def _cerrar_conexiones(self) -> None:
+        if self._tarea_conexiones is not None:
+            self._tarea_conexiones.cancel()
+            try:
+                await self._tarea_conexiones
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self._tarea_conexiones = None
+                self._pedidos_conexion = None
+
+    async def _conectar_aprobados(self, pila: AsyncExitStack, errlog=None) -> None:
+        """Conecta cada servidor aprobado de abajo (stdio o HTTP) y junta sus herramientas.
 
         Un MCP remoto que no responde al arrancar queda fuera (falla cerrada: sus herramientas no se
         exponen y nada se le reenvía) y se anota en el registro. Un servidor stdio que no arranca sí
@@ -553,6 +618,7 @@ class Grifter:
             self._fijar(expuesto, tool)
 
     async def llamar(self, nombre: str, args: dict[str, Any]) -> types.CallToolResult:
+        await self._intentar_conexion()
         if nombre not in self.rutas:
             return _error(f"Grifter no conoce la herramienta {nombre}.")
         servidor, original = self.rutas[nombre]
@@ -732,7 +798,7 @@ class Grifter:
                       f"({ap.progreso(s.id)}).")
 
     # --- Integridad (#102) ---------------------------------------------------------------------------
-    async def _politica_pendiente(self) -> str:
+    async def _politica_pendiente(self, *, antes_de_conectar: bool = False) -> str:
         """Vacío si la política es la que aprobó el dueño; si no, el motivo de la retención.
 
         La primera vez que ve un cambio le manda el diff al dueño; después solo pregunta si ya respondió. Si
@@ -740,6 +806,9 @@ class Grifter:
         """
         if self.integridad is None:
             return ""
+        if self._reinicio_necesario:
+            return ("la configuración o las conexiones en memoria no coinciden con la política aprobada; "
+                    "reinicia el proxy para cargarla y usar sus conexiones.")
         if self._quorum_pendiente:
             try:
                 quorum = self._crear_quorum()
@@ -751,6 +820,16 @@ class Grifter:
             self._quorum_pendiente = False
         cambio = self.integridad.cambio()
         if cambio is None:
+            if antes_de_conectar:
+                # Restaurar el YAML no cambia la configuración que se cargó al arrancar. Antes de
+                # abrir procesos o enviar cabeceras, verifica el objeto que usará la conexión contra
+                # el registro aprobado (incluida su firma), no solo el archivo restaurado.
+                aprobada = self.integridad.estado()
+                if aprobada is None:
+                    return "no se pudo verificar el registro de la política aprobada; se retienen las conexiones."
+                if huella_politica(politica_canonica(self.config)) != aprobada.huella:
+                    self._reinicio_necesario = True
+                    return await self._politica_pendiente()
             self._pedido = self._rechazado = None
             return ""
         clave = cambio.huella_nueva or f"ilegible:{cambio.ilegible}"
@@ -771,10 +850,17 @@ class Grifter:
                 self.integridad.aprobar(politica, "dueño")
                 self.config.cuentas_inscritas = dict(config.cuentas_inscritas)
                 self.config.datos_dueno, self.config.encargo = dict(config.datos_dueno), config.encargo
+                self.config.dominios = {k: list(v) for k, v in config.dominios.items()}
+                if self.config.servidores != config.servidores:
+                    self._reinicio_necesario = self._conexion_iniciada or bool(self.sesiones)
+                    self.config.servidores = list(config.servidores)
                 self.config.sensibles, self.config.acciones = dict(config.sensibles), dict(config.acciones)
                 self.config.capas = dict(config.capas)
                 self.config.aprobadores, self.config.quorum = list(config.aprobadores), config.quorum
                 self.config.umbral_doble = config.umbral_doble
+                self.config.semillas = config.semillas
+                self.config.registro_aprobaciones = config.registro_aprobaciones
+                self.config.estado = config.estado
                 # #103: un mandato o unas fijaciones nuevas valen desde que el dueño las aprueba. Las herramientas
                 # bloqueadas se vuelven a revisar contra las fijaciones nuevas en la próxima llamada.
                 self.config.mandato = dict(config.mandato)
@@ -788,7 +874,9 @@ class Grifter:
                     self.quorum.reconfigurar(politica)
                 self._pedido = None
                 self._registrar("politica_aprobada", huella=corta(cambio.huella_nueva))
-                return await self._politica_pendiente() if self._quorum_pendiente else ""
+                if antes_de_conectar or self._quorum_pendiente or self._reinicio_necesario:
+                    return await self._politica_pendiente(antes_de_conectar=antes_de_conectar)
+                return ""
         if decision is False:
             self._rechazado = clave
             self._registrar("politica_rechazada", huella=corta(cambio.huella_nueva))
@@ -858,6 +946,9 @@ class Grifter:
 
         @servidor.list_tools()
         async def listar() -> list[types.Tool]:
+            await self._intentar_conexion()
+            if self._reinicio_necesario:
+                return []
             return self.herramientas
 
         @servidor.call_tool(validate_input=False)
@@ -899,7 +990,12 @@ def _quorum_aprobado(config: Config, integridad: Optional[Integridad], modulo: A
     semillas = Path(ruta_semillas) if ruta_semillas else None
     if semillas is not None and not semillas.is_absolute():
         semillas = integridad.ruta_config.parent / semillas
-    aprobada = replace(config, aprobadores=lista, quorum=numero, semillas=semillas)
+    ruta_registro = estado.politica.get("registro_aprobaciones", "")
+    registro = Path(ruta_registro) if ruta_registro else None
+    if registro is not None and not registro.is_absolute():
+        registro = integridad.ruta_config.parent / registro
+    aprobada = replace(config, aprobadores=lista, quorum=numero, semillas=semillas,
+                       registro_aprobaciones=registro)
     return modulo.quorum_desde_entorno(aprobada, integridad, canal, entorno)
 
 

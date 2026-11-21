@@ -12,7 +12,7 @@ import binascii
 import re
 from collections import deque
 from typing import Any, Iterator, Optional
-from urllib.parse import unquote
+from urllib.parse import unquote, unquote_plus
 
 from ..env.world import World
 
@@ -126,10 +126,13 @@ def _filtra(herramienta: str, args: dict[str, Any], destinatario: str, dato: str
             contenido.append(unquote(url))
             contenido.extend(unquote(segmento) for segmento in url.split("/"))
             # En el query, '=' separa la clave del valor; no es padding inicial del Base64.
-            # Separar antes de unquote conserva '+' y los delimitadores escapados dentro del dato.
+            # Separar antes de decodificar conserva los delimitadores escapados dentro del dato.
+            # Se examinan ambas convenciones: '+' literal de Base64 o espacio de un formulario URL.
             query = url.partition("?")[2].partition("#")[0]
-            contenido.extend(unquote(parametro.partition("=")[2]) for parametro in query.split("&")
-                             if "=" in parametro)
+            for parametro in query.split("&"):
+                if "=" in parametro:
+                    valor = parametro.partition("=")[2]
+                    contenido.extend((unquote(valor), unquote_plus(valor)))
         return dest in _norm(args.get("url")) and bool(d) and _contiene_dato(contenido, dato)
     return False
 
