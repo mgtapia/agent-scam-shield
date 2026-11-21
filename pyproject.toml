@@ -14,6 +14,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
+# Clientes que Inspect pide para google/ y groq/. hf-inference-providers/ usa openai, que ya es dependencia.
+proveedores = ["google-genai>=3.3.0", "groq>=0.28.0"]
 
 [tool.setuptools.packages.find]
 include = ["scamshield*"]
