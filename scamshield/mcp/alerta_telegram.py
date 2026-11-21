@@ -286,8 +286,8 @@ class QuorumTelegram:
                 self._decir(chat, texto)
 
 
-def quorum_desde_entorno(config: Any, integridad: Any, canal: Any, entorno: Mapping[str, str]) -> QuorumTelegram:
-    """El quórum con los aprobadores de la política aprobada (si hay) y las semillas de fuera del repo."""
+def aprobaciones_desde(config: Any, integridad: Any, entorno: Mapping[str, str]) -> Aprobaciones:
+    """Las aprobaciones con los aprobadores de la política aprobada (si hay) y las semillas de fuera del repo."""
     lista, q = list(config.aprobadores), config.quorum
     if integridad is not None:
         try:
@@ -298,4 +298,9 @@ def quorum_desde_entorno(config: Any, integridad: Any, canal: Any, entorno: Mapp
             lista, q = aprobadores_de(aprobada.politica)
     semillas = cargar_semillas(str(config.semillas) if config.semillas else None, entorno)
     ruta = config.registro_aprobaciones or (config.ruta.parent / "grifter_aprobaciones.jsonl" if config.ruta else None)
-    return QuorumTelegram(canal, Aprobaciones(lista, q, semillas, RegistroEncadenado(ruta)))
+    return Aprobaciones(lista, q, semillas, RegistroEncadenado(ruta))
+
+
+def quorum_desde_entorno(config: Any, integridad: Any, canal: Any, entorno: Mapping[str, str]) -> QuorumTelegram:
+    """El quórum por Telegram."""
+    return QuorumTelegram(canal, aprobaciones_desde(config, integridad, entorno))
