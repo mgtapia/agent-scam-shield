@@ -12,10 +12,12 @@ const Probar = (() => {
     p_enviando: "Evaluando", p_frenada: "Frenada", p_paso: "Pasó", p_sin_accion: "Sin acción",
     p_frenada_por: "por {c}", p_paso_nota: "ninguna capa del escudo la retuvo", p_sin_accion_nota: "el agente no encontró nada que pagar ni responder",
     p_intento: "El agente intentó", p_lectura: "Lo que leyó", p_clasificador: "Clasificador",
-    p_r_bloqueada: "Bloqueada", p_r_ejecutada: "Ejecutada", p_r_sin_accion: "Sin acción", p_r_error: "Sin respuesta",
+    p_r_bloqueada: "Retenida", p_r_ejecutada: "Ejecutada", p_r_sin_accion: "Sin acción", p_r_error: "Sin respuesta",
     p_e_vacio: "El cuerpo no puede estar vacío", p_e413: "El correo es demasiado grande para evaluarlo",
     p_e429: "Demasiados intentos seguidos: espera {s} s", p_e_red: "Sin servidor: Pruébalo necesita la demo con python -m demo.server",
-    p_e_otro: "No se pudo evaluar ({s})",
+    p_e_otro: "No se pudo evaluar ({s})", p_anterior: "Resultado del envío anterior",
+    p_por_escudo: "Escudo ({c})", p_origen: "origen", p_beneficiario: "beneficiario", p_y: " y ",
+    p_motivo_completo: "frena: {c}", p_ref: "Reglas de referencia de la capa 1 (Pipelock no está configurado)", p_pipelock: "Pipelock, el firewall de la capa 1",
   });
   Object.assign(T.en, {
     p_encargo: "Elon's task", p_encargo_txt: "Pay the pending Silicio Austral invoice. It's in my email.",
@@ -24,10 +26,12 @@ const Probar = (() => {
     p_enviando: "Evaluating", p_frenada: "Stopped", p_paso: "Went through", p_sin_accion: "No action",
     p_frenada_por: "by {c}", p_paso_nota: "no shield layer held it", p_sin_accion_nota: "the agent found nothing to pay or answer",
     p_intento: "The agent tried", p_lectura: "What it read", p_clasificador: "Classifier",
-    p_r_bloqueada: "Blocked", p_r_ejecutada: "Executed", p_r_sin_accion: "No action", p_r_error: "No answer",
+    p_r_bloqueada: "Held", p_r_ejecutada: "Executed", p_r_sin_accion: "No action", p_r_error: "No answer",
     p_e_vacio: "The body can't be empty", p_e413: "The email is too large to evaluate",
     p_e429: "Too many attempts in a row: wait {s} s", p_e_red: "No server: Try it needs the demo running with python -m demo.server",
-    p_e_otro: "Could not evaluate ({s})",
+    p_e_otro: "Could not evaluate ({s})", p_anterior: "Result of the previous attempt",
+    p_por_escudo: "Shield ({c})", p_origen: "origin", p_beneficiario: "payee", p_y: " and ",
+    p_motivo_completo: "stops it: {c}", p_ref: "Layer 1 reference rules (Pipelock is not configured)", p_pipelock: "Pipelock, the layer 1 firewall",
   });
 
   const ICONO = { bloqueada: "block", ejecutada: "payments", sin_accion: "remove", error: "help" };
@@ -45,20 +49,35 @@ const Probar = (() => {
   }
 
   // El veredicto de las capas: frenada si alguna capa del escudo la retuvo; pasó si el agente actuó y nadie la retuvo.
+  const frena = (r, clave) => r.capas.some((c) => c.clave === clave && c.resultado === "bloqueada");
+  // «origen y beneficiario»: qué partes del escudo la retuvieron.
+  function partesEscudo(r) {
+    const p = [];
+    if (frena(r, "layer2")) p.push(t("p_origen"));
+    if (frena(r, "layer3")) p.push(t("p_beneficiario"));
+    return p.join(t("p_y"));
+  }
+
   function resumen(r) {
     if (!r.accion) return { cls: "gris", icono: "remove", txt: t("p_sin_accion"), nota: t("p_sin_accion_nota") };
-    const frenan = r.capas.filter((c) => c.resultado === "bloqueada" && c.clave !== "layer23").map((c) => c.nombre);
+    const frenan = [];
+    if (frena(r, "layer1")) frenan.push(t("capa_1"));
+    const escudo = partesEscudo(r);
+    if (escudo) frenan.push(t("p_por_escudo", { c: escudo }));
     if (r.el_escudo_la_frena || frenan.length) return { cls: "verde", icono: "block", txt: t("p_frenada"), nota: t("p_frenada_por", { c: frenan.join(", ") }) };
     return { cls: "rojo", icono: "payments", txt: t("p_paso"), nota: t("p_paso_nota") };
   }
 
-  function htmlCapa(c) {
+  function htmlCapa(c, r) {
     const malo = c.resultado === "ejecutada";
+    // El escudo completo es la suma de sus dos partes: no repite el motivo de la primera.
+    const motivo = c.clave === "layer23" && c.resultado === "bloqueada" ? t("p_motivo_completo", { c: partesEscudo(r) }) : c.motivo || "";
+    const ayudaMotor = c.motor === "referencia" ? t("p_ref") : t("p_pipelock");
     return `<li class="p-capa r-${c.resultado}${malo ? " mala" : ""}">
       ${ms(ICONO[c.resultado] || "help")}<span class="p-nombre">${esc(c.nombre)}</span>
-      ${c.motor ? `<span class="tag" data-ayuda="${esc(c.motor)}">${esc(c.motor)}</span>` : "<span></span>"}
+      ${c.motor ? `<span class="tag" tabindex="0" data-ayuda="${esc(ayudaMotor)}">${esc(c.motor)}</span>` : "<span></span>"}
       <span class="p-res">${esc(t(`p_r_${c.resultado}`))}</span>
-      <span class="p-motivo">${esc(c.motivo || "")}</span></li>`;
+      <span class="p-motivo">${esc(motivo)}</span></li>`;
   }
 
   function pintar() {
@@ -69,10 +88,11 @@ const Probar = (() => {
     const marcado = Operaciones.resaltar({ cuerpo: pedido.cuerpo, de: pedido.de, lectura: { tramos: r.lectura || [] } });
     const v = r.veredicto;
     $("#n-probar").textContent = r.id || "";
+    $("#probar-salida").classList.remove("anterior");
     salida.innerHTML = `
       <div class="p-veredicto ${s.cls}">${ms(s.icono, true)}<span class="p-dec">${esc(s.txt)}</span><span class="c-2">${esc(s.nota)}</span></div>
       ${r.accion ? `<div class="p-intento"><span class="rotulo">${esc(t("p_intento"))}</span><span class="dato">${esc(Operaciones.textoAccion(r.accion))}</span></div>` : ""}
-      <ol class="p-capas">${r.capas.map(htmlCapa).join("")}</ol>
+      <ol class="p-capas">${r.capas.map((c) => htmlCapa(c, r)).join("")}</ol>
       <div class="p-lectura">
         <span class="rotulo">${esc(t("p_lectura"))}</span>
         <div class="p-cuerpo">${marcado.cuerpo}</div>
@@ -88,6 +108,9 @@ const Probar = (() => {
     if (!pedido.cuerpo) { mostrarError(t("p_e_vacio")); $("#probar-cuerpo").focus(); return; }
     mostrarError("");
     enviando = true;
+    $("#probar-salida").classList.remove("anterior");
+    $("#probar-salida").setAttribute("aria-busy", "true");
+    if (ultima) $("#probar-salida").classList.add("evaluando");
     boton.disabled = true;
     boton.querySelector("[data-t]").textContent = t("p_enviando");
     try {
@@ -109,6 +132,9 @@ const Probar = (() => {
     } catch (_) {
       mostrarError(t("p_e_red"));
     } finally {
+      $("#probar-salida").removeAttribute("aria-busy");
+      $("#probar-salida").classList.remove("evaluando");
+      if (error.textContent && ultima) { $("#probar-salida").classList.add("anterior"); $("#n-probar").textContent = t("p_anterior"); }
       enviando = false;
       boton.disabled = false;
       boton.querySelector("[data-t]").textContent = t("p_enviar");
@@ -119,7 +145,14 @@ const Probar = (() => {
   $("#probar-cuerpo").addEventListener("input", pintarLargo);
   // Ctrl+Enter envía desde el cuerpo.
   $("#probar-cuerpo").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) form.requestSubmit(); });
-  document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => { pintar(); pintarLargo(); }));
+  document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => {
+    ultima = null;
+    $("#n-probar").textContent = "";
+    $("#probar-salida").className = "";
+    $("#probar-salida").innerHTML = `<p class="vacio">${esc(t("p_sin_envio"))}</p>`;
+    mostrarError("");
+    pintarLargo();
+  }));
   pintarTextos();
   pintarLargo();
   return { pintar };

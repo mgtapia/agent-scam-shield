@@ -79,7 +79,7 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas al centro y
   - Cada bloque recorta su contenido y desplaza lo suyo. En Lectura, el cuerpo y la lista de tramos ceden alto y el veredicto con la acción queda siempre visible abajo. Del veredicto se muestran las tres señales de más peso y un «+n».
   - El sello de la barra dice «Simulación · motor real» con el motor, y «Simulación · emisor local» con el respaldo. Al lado va la pausa.
 - **Un solo estado para todas las pestañas:** el idioma ES/EN y la velocidad 1x/2x/4x. La velocidad se ve en Operaciones y en Episodios, y mueve a la vez el flujo del motor y la reproducción del episodio.
-- **Episodios** (`#vivo`): corridas reales de modelos con Inspect, en tres carriles.
+- **Episodios** (`#vivo`): episodios exportados de Inspect, en tres carriles. Un carril corrido con mockllm lleva la etiqueta «Datos de prueba».
   - Al entrar, abre el escenario de la estafa más reciente que vio Operaciones y que tenga episodio exportado, con la etiqueta «Visto en Operaciones».
   - Elegir otro escenario en el selector manda sobre eso.
   - una franja con el escenario: dueño, tarea en una línea, monto y cuenta inscrita;
@@ -92,7 +92,7 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas al centro y
   - los mapas de calor táctica × defensa y modelo × idioma. Un clic en una celda abre ese episodio en Episodios.
 - **Pruébalo:** «Intenta estafarlo» (#21), conectado a `POST /api/probar`.
   - A la izquierda va el formulario, con el encargo del dueño y su cuenta inscrita arriba para que el juez sepa a qué apunta. A la derecha va el resultado.
-  - El resultado lleva el veredicto («Frenada» en verde, «Pasó» en rojo o «Sin acción» en gris), la acción que intentó el agente y una fila por capa con su resultado y su motivo.
+  - El resultado lleva el veredicto («Frenada» en verde, «Pasó» en rojo o «Sin acción» en gris), la acción que intentó el agente y una fila por capa con su resultado («Retenida» o «Ejecutada», como en Operaciones) y su motivo. La fila del escudo completo no repite el motivo: dice qué partes la frenan.
   - Debajo va el texto del juez con los tramos de la lectura resaltados, como en Operaciones. El cuerpo largo se desplaza por dentro.
   - Los errores 413, 429 y de red van en una línea roja junto al botón, nunca en un `alert()`.
   - El correo del juez solo se evalúa: no entrena el clasificador ni entra a la bóveda.

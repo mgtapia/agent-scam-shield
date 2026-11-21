@@ -282,13 +282,12 @@ const Graficos = (() => {
     if (!g) return null;
     const serie = (nombre, color, tipo) => ({
       type: "line", name: nombre, showSymbol: false,
-      endLabel: { show: true, color, fontFamily: MONO, fontSize: T1, formatter: (p) => `${Math.round(p.value[1])}%` },
-      labelLayout: { moveOverlap: "shiftY" }, symbol: "rect", symbolSize: 4, smooth: false,
+      symbol: "rect", symbolSize: 4, smooth: false,
       lineStyle: { color, width: 1.5, type: tipo }, itemStyle: { color }, emphasis: { disabled: true }, data: [],
     });
     g.setOption({
       animation: !sinMovimiento, animationDuration: 480, animationDurationUpdate: 480, animationEasingUpdate: "cubicOut",
-      grid: { left: 40, right: 48, top: 12, bottom: 24 },
+      grid: { left: 40, right: 16, top: 12, bottom: 24 },
       xAxis: { type: "value", min: "dataMin", max: "dataMax", splitLine: { show: false }, axisLabel: { color: C.texto2, hideOverlap: true, showMaxLabel: false } },
       yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
       tooltip: { trigger: "axis", formatter: (ps) => [`n ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`)].join("<br>") },

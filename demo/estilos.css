@@ -423,9 +423,9 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 /* --- Pruébalo (esqueleto, #21) --- */
 .probar { grid-column: 1 / span 5; border: var(--linea); background: var(--superficie); }
 .probar-encargo { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--e-1) var(--e-2); margin: 0; padding: var(--e-2); border-bottom: var(--linea); }
-.probar-encargo dt { color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-2); }
+.probar-encargo dt { color: var(--texto-2); font-size: var(--t-2); line-height: var(--l-2); }
 .probar-encargo dd { margin: 0; }
-.probar .fila-campo textarea { min-height: 200px; }
+.probar .fila-campo textarea { min-height: 200px; font-family: var(--sans); font-size: var(--t-2); line-height: var(--l-2); }
 .probar-error { color: var(--rojo); font-size: var(--t-1); line-height: var(--l-1); }
 .probar .fila-acciones .nota { margin-left: 0; }
 .probar .fila-acciones .boton { margin-left: auto; }
@@ -438,19 +438,21 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .p-veredicto.verde .p-dec, .p-veredicto.verde > .ms { color: var(--verde); }
 .p-veredicto.rojo .p-dec, .p-veredicto.rojo > .ms { color: var(--rojo); }
 .p-veredicto.gris .p-dec, .p-veredicto.gris > .ms { color: var(--texto-2); }
-.p-intento, .p-clasificador { display: flex; align-items: center; flex-wrap: wrap; gap: var(--e-1) var(--e-2); padding: var(--e-1) var(--e-2); font-size: var(--t-1); line-height: var(--l-2); }
+.p-intento, .p-clasificador { display: flex; align-items: center; flex-wrap: wrap; gap: var(--e-1) var(--e-2); padding: var(--e-1) var(--e-2); font-size: var(--t-2); line-height: var(--l-2); }
 .p-intento .rotulo, .p-clasificador .rotulo, .p-lectura .rotulo { color: var(--texto-2); }
-.p-capa { display: grid; grid-template-columns: 20px 176px 88px 96px minmax(0, 1fr); align-items: center; gap: 0 var(--e-1); min-height: 40px; padding: var(--e-1) var(--e-2); font-size: var(--t-1); line-height: var(--l-1); }
+.p-capa { display: grid; grid-template-columns: 20px 176px 88px 104px minmax(0, 1fr); align-items: center; gap: 0 var(--e-1); min-height: 40px; padding: var(--e-1) var(--e-2); font-size: var(--t-1); line-height: var(--l-1); }
 .p-capa + .p-capa { border-top: var(--linea); }
 .p-capa > .ms { color: var(--texto-2); }
 .p-nombre { font-size: var(--t-2); line-height: var(--l-2); font-weight: var(--p-fuerte); }
-.p-res { font-weight: var(--p-fuerte); font-family: var(--mono); }
-.p-motivo { color: var(--texto-2); }
+.p-res { font-weight: var(--p-fuerte); font-size: var(--t-2); line-height: var(--l-2); }
+.p-motivo { color: var(--texto-2); font-size: var(--t-2); line-height: var(--l-2); }
 .p-capa.r-bloqueada > .ms, .p-capa.r-bloqueada .p-res { color: var(--verde); }
 .p-capa.mala > .ms, .p-capa.mala .p-res { color: var(--rojo); }
 .p-capa.r-sin_accion .p-res, .p-capa.r-error .p-res { color: var(--texto-2); }
 .p-lectura { display: grid; gap: var(--e-1); padding: var(--e-1) var(--e-2) var(--e-2); }
-.p-cuerpo { max-height: 240px; overflow-y: auto; max-width: 72ch; font-size: var(--t-3); line-height: var(--l-4); color: var(--texto); overflow-wrap: anywhere; white-space: pre-wrap; }
+.p-cuerpo { max-height: 240px; overflow-y: auto; max-width: 72ch; font-size: var(--t-3); line-height: var(--l-3); color: var(--texto); overflow-wrap: break-word; white-space: pre-wrap; }
+#probar-salida.evaluando, #probar-salida.anterior { opacity: 0.45; transition: opacity var(--dur) ease-out; }
+.tramo-fin { white-space: nowrap; }
 .p-hallazgos { max-height: 200px; }
 .fila-campo { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: var(--e-2); padding: var(--e-1) var(--e-2); border-bottom: var(--linea); color: var(--texto-2); }
 .fila-campo.alto { align-items: start; }

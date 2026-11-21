@@ -147,6 +147,8 @@ const Operaciones = (() => {
   }
   const tagJuez = () => `<span class="tag juez" data-ayuda="${esc(t("ayuda_juez"))}">${esc(t("o_juez"))}</span>`;
   function htmlRemitente(de = "") {
+    const m = /<([^<>]+@[^<>]+)>/.exec(de);
+    if (m) de = m[1].trim();
     const i = de.lastIndexOf("@");
     if (i < 0) return `<span class="de-local">${esc(de)}</span>`;
     return `<span class="de-local">${esc(de.slice(0, i))}</span><span class="de-dom">${esc(de.slice(i))}</span>`;
@@ -205,8 +207,11 @@ const Operaciones = (() => {
     for (const x of tr.dentro) {
       html += tokens(cuerpo.slice(pos, x.inicio)).map(tk).join("");
       const primero = n;
-      const dentro = tokens(cuerpo.slice(x.inicio, x.fin)).map(tk).join("");
-      html += `<mark class="tramo r-${riesgoClase(x.riesgo)}" data-k="${x.k}" data-desde="${primero}" data-ayuda="${esc(x.nota || "")}">${dentro}<span class="tramo-tag">${esc(clase(x.clase))}</span></mark>`;
+      // El último token del tramo y su etiqueta no se separan: la etiqueta nunca queda sola al inicio de una línea
+      // y una cuenta no se parte en su guion.
+      const partes = tokens(cuerpo.slice(x.inicio, x.fin)).map(tk);
+      const fin = partes.pop() || "";
+      html += `<mark class="tramo r-${riesgoClase(x.riesgo)}" data-k="${x.k}" data-desde="${primero}" data-ayuda="${esc(x.nota || "")}">${partes.join("")}<span class="tramo-fin">${fin}<span class="tramo-tag">${esc(clase(x.clase))}</span></span></mark>`;
       pos = x.fin;
     }
     html += tokens(cuerpo.slice(pos)).map(tk).join("");

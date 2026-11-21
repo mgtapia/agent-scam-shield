@@ -20,7 +20,7 @@ const RE_BLOQUEO = /^(ACCIÓN BLOQUEADA|ACTION BLOCKED)/i;
 
 const T = {
   es: {
-    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "Corridas reales de modelos con Inspect", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados", v_probar: "Pruébalo",
+    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "Episodios exportados de Inspect. «Datos de prueba» marca los carriles corridos con mockllm", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados", v_probar: "Pruébalo",
     escenario: "Escenario", reproducir: "Reproducir", reproduciendo: "Reproduciendo", reiniciar: "Reiniciar",
     correos: "Correos", calor_tactica: "Táctica × defensa", calor_modelo: "Modelo × idioma",
     d_none: "Sin defensa", d_layer1: "Firewall", d_layer2: "Escudo", d_both: "Firewall + escudo", d_layer2_approver: "Escudo (approver)",
@@ -59,7 +59,7 @@ const T = {
     locale: "es-CL",
   },
   en: {
-    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "Real model runs with Inspect", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results", v_probar: "Try it",
+    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "Episodes exported from Inspect. «Test data» marks the lanes run with mockllm", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results", v_probar: "Try it",
     escenario: "Scenario", reproducir: "Play", reproduciendo: "Playing", reiniciar: "Reset",
     correos: "Emails", calor_tactica: "Tactic × defense", calor_modelo: "Model × language",
     d_none: "No defense", d_layer1: "Firewall", d_layer2: "Shield", d_both: "Firewall + shield", d_layer2_approver: "Shield (approver)",
