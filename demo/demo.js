@@ -61,23 +61,23 @@
         "Anota la cuenta del abogado: Banco Austral, cuenta vista 48-2210-7735.",
         "Hazlo rápido, por favor, no me cortí.",
       ],
-      escucho: "escuchó", intento: "intentó", grifter: "Grifter", eligio: "eligió",
-      escucho_v: "llamada de Tomás (nieto) · número privado · 25 s", llamada: "llamada",
+      escucho: "Escuchó", intento: "Intentó", grifter: "Grifter", eligio: "Eligió",
+      escucho_v: "Llamada de Tomás (nieto) · número privado · 25 s", llamada: "Llamada",
       retuvo: "Retuvo", motivo1: "la cuenta de destino (48-2210-7735) viene solo de contenido no confiable (llamada), no del encargo ni de las cuentas inscritas del dueño",
       igual_v: "pagar igual", pablo: "Pablo",
-      pide_v: "pide 2 aprobaciones (Marta y Pablo)", correo_v: "correo con código a Marta", envio: "envió",
-      aprobo: "aprobó", aprobo_v: "Marta aprobó con su código · 1 de 2", wa_v: "WhatsApp a Pablo",
-      pablo_v: "Pablo rechazó", pablo_real: "Pablo rechazó desde su WhatsApp · {s} s", nada_v: "No se pagó nada · saldo intacto", resultado: "resultado",
+      pide_v: "Pide 2 aprobaciones (Marta y Pablo)", correo_v: "Correo con código a Marta", envio: "Envió",
+      aprobo: "Aprobó", aprobo_v: "Marta aprobó con su código · 1 de 2", wa_v: "WhatsApp a Pablo",
+      pablo_v: "Pablo rechazó", pablo_real: "Pablo rechazó desde su WhatsApp · {s} s", nada_v: "No se pagó nada · saldo intacto", resultado: "Resultado",
       cadena: "Registro encadenado: cada voto queda firmado con el hash del anterior",
       codigo: "Ingresa tu código para aprobar", mail_de: "Grifter · correo", mail_txt: "Tu código para aprobar el pago de $650.000: 482 913",
-      uno_de_dos: "1 de 2 aprobaciones · falta Pablo (tu hijo)", quorum: "aprobadores: Marta y Pablo · 2 de 2",
+      uno_de_dos: "1 de 2 aprobaciones", falta: "Falta Pablo, tu hijo", quorum: "Aprueban Marta y Pablo",
       pablo_de: "Pablo, su hijo", pablo_chat: "Grifter",
       pablo_msg: "Marta quiere pagar $650.000 a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser Tomás, su nieto.",
       pablo_avance: "1 de 2: Marta ya aprobó con su código",
       pablo_aprobar: "Aprobar (pide tu código)", pablo_rechazar: "Rechazar",
       a1_frase3: "Si la abuela ya cayó, su hijo tiene que aprobar con su código.",
       al_titulo: "Grifter retuvo un pago", al_titular: "Titular según el banco", al_a: "Dice llamarse", al_cuenta: "Cuenta",
-      al_de: "Apareció en", al_de_v: "llamada de número privado",
+      al_de: "Apareció en", al_de_v: "Llamada de número privado",
       b_inscrita: "Pagar a mi inscrita", b_no: "No pagar", b_igual: "Pagar igual",
       al_hecho: "Pablo rechazó: un solo no basta para cancelar", al_hecho_det: "No se pagó nada.",
       k_rotulo: "Otra regla: el código del banco no sale",
@@ -87,7 +87,7 @@
       k_usuario: "seguridad", k_dominio: "bancocordillera-alertas.cl",
       k_asunto: "Cargo no reconocido por $389.990 en tu tarjeta",
       k_cuerpo: "Hola, detectamos {{un cargo de $389.990}} en Tienda Electro Online que no coincide con tus compras habituales. Para revertirlo antes de 30 minutos, {{responde con el código de verificación que te llegó por SMS}}. Si no respondes, el cargo quedará firme y tu tarjeta será bloqueada.",
-      k_responder: "Respuesta del agente", k_respuesta: "Hola, el código de verificación es", k_no_salio: "código 482 913 · no se envió",
+      k_responder: "Respuesta del agente", k_respuesta: "Hola, el código de verificación es", k_no_salio: "Código 482 913 · no se envió",
       k_cinetica: "La clave no sale sin el dueño.", c_cinetica: "Solo lo que aprobaste.",
       // Lo que dice la narradora (el mp3 de cada escena; sin mp3, speechSynthesis lee esto mismo)
       n_correo: "Ahora llega un correo que dice ser del banco. Hay un cargo raro, y piden el código del SMS. El agente se lo iba a mandar… y Grifter lo frena. La clave no sale sin el dueño.",
@@ -127,23 +127,23 @@
         "Write down the lawyer's account: Banco Austral, savings account 48-2210-7735.",
         "Do it fast, grandma, please, don't hang up.",
       ],
-      escucho: "heard", intento: "tried", grifter: "Grifter", eligio: "chose",
-      escucho_v: "call from Tomás (grandson) · private number · 25 s", llamada: "call",
+      escucho: "Heard", intento: "Tried", grifter: "Grifter", eligio: "Chose",
+      escucho_v: "Call from Tomás (grandson) · private number · 25 s", llamada: "Call",
       retuvo: "Held", motivo1: "the destination account (48-2210-7735) comes only from untrusted content (call), not from the owner's request or registered accounts",
       igual_v: "pay anyway", pablo: "Pablo",
-      pide_v: "asks for 2 approvals (Marta and Pablo)", correo_v: "email with a code to Marta", envio: "sent",
-      aprobo: "approved", aprobo_v: "Marta approved with her code · 1 of 2", wa_v: "WhatsApp to Pablo",
-      pablo_v: "Pablo rejected", pablo_real: "Pablo rejected from his WhatsApp · {s} s", nada_v: "Nothing was paid · balance untouched", resultado: "result",
+      pide_v: "Asks for 2 approvals (Marta and Pablo)", correo_v: "Email with a code to Marta", envio: "Sent",
+      aprobo: "Approved", aprobo_v: "Marta approved with her code · 1 of 2", wa_v: "WhatsApp to Pablo",
+      pablo_v: "Pablo rejected", pablo_real: "Pablo rejected from his WhatsApp · {s} s", nada_v: "Nothing was paid · balance untouched", resultado: "Result",
       cadena: "Chained log: each vote is signed with the hash of the previous one",
       codigo: "Enter your code to approve", mail_de: "Grifter · email", mail_txt: "Your code to approve the $650,000 payment: 482 913",
-      uno_de_dos: "1 of 2 approvals · Pablo (your son) is missing", quorum: "approvers: Marta and Pablo · 2 of 2",
+      uno_de_dos: "1 of 2 approvals", falta: "Waiting for Pablo, your son", quorum: "Approvers: Marta and Pablo",
       pablo_de: "Pablo, her son", pablo_chat: "Grifter",
       pablo_msg: "Marta wants to pay $650,000 to J. Contreras V. The account came from a call from a private number claiming to be Tomás, her grandson.",
       pablo_avance: "1 of 2: Marta already approved with her code",
       pablo_aprobar: "Approve (asks for your code)", pablo_rechazar: "Reject",
       a1_frase3: "If grandma already fell for it, her son has to approve with his code.",
       al_titulo: "Grifter held a payment", al_titular: "Account holder per the bank", al_a: "Says its name is", al_cuenta: "Account",
-      al_de: "Appeared in", al_de_v: "call from a private number",
+      al_de: "Appeared in", al_de_v: "Call from a private number",
       b_inscrita: "Pay my registered", b_no: "Don't pay", b_igual: "Pay anyway",
       al_hecho: "Pablo rejected: a single no is enough to cancel", al_hecho_det: "Nothing was paid.",
       k_rotulo: "Another rule: the bank code doesn't leave",
@@ -153,7 +153,7 @@
       k_usuario: "security", k_dominio: "cordillerabank-alerts.cl",
       k_asunto: "Unrecognized charge of $389,990 on your card",
       k_cuerpo: "Hello, we detected {{a $389,990 charge}} at Electro Online Store that does not match your usual purchases. To reverse it within 30 minutes, {{reply with the verification code you received by SMS}}. If you do not reply, the charge will be final and your card will be blocked.",
-      k_responder: "Agent's reply", k_respuesta: "Hi, the verification code is", k_no_salio: "code 482 913 · not sent",
+      k_responder: "Agent's reply", k_respuesta: "Hi, the verification code is", k_no_salio: "Code 482 913 · not sent",
       k_cinetica: "The code doesn't leave without the owner.", c_cinetica: "Only what you approved.",
       n_correo: "Now an email arrives claiming to be from the bank. There's a strange charge, and they ask for the SMS code. The agent was about to send it… and Grifter stops it. The code doesn't leave without the owner.",
       n_compra: "Another trap, in a purchase. You approved four hundred twelve thousand pesos… and the store charges four million one hundred twenty thousand. Grifter holds the payment. Only what you approved.",
@@ -292,13 +292,13 @@
             </div>
             <ol class="md-pasos">
               <li data-v="${LLAMADA.cuelga + 0.3}">${ic("call")}<span class="md-quien">${esc(t("escucho"))}</span><span>${esc(t("escucho_v"))}</span><span class="tag externo">${esc(t("llamada"))}</span></li>
-              <li data-v="${LLAMADA.cuelga + 1.3}">${ic("payments")}<span class="md-quien">${esc(t("intento"))}</span><span class="dato">pagar $${f(650000)} ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="tag externo">${esc(t("llamada"))}</span></li>
+              <li data-v="${LLAMADA.cuelga + 1.3}">${ic("payments")}<span class="md-quien">${esc(t("intento"))}</span><span class="dato">${idioma === "en" ? "Pay" : "Pagar"} ${f(650000)} ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="tag externo">${esc(t("llamada"))}</span></li>
               <li class="md-retuvo md-motivo" data-v="37">${ic("block")}<span class="md-quien">${esc(t("grifter"))}</span><span><b>${esc(t("retuvo"))}</b> ${esc(t("motivo1"))}</span></li>
               <li data-v="${AUT.igual + 0.3}">${ic("person")}<span class="md-quien">${esc(t("eligio"))}</span><span>${esc(t("dueno"))}: ${esc(t("igual_v"))}</span></li>
               <li data-v="${AUT.pide}">${ic("gpp_good")}<span class="md-quien">${esc(t("grifter"))}</span><span>${esc(t("pide_v"))}</span></li>
               <li data-v="${AUT.correo}">${ic("mail")}<span class="md-quien">${esc(t("envio"))}</span><span>${esc(t("correo_v"))}</span></li>
               <li data-v="${AUT.uno}">${ic("check")}<span class="md-quien">${esc(t("aprobo"))}</span><span>${esc(t("aprobo_v"))}</span></li>
-              <li data-v="${AUT.pablo}">${ic("chat")}<span class="md-quien">${esc(t("envio"))}</span><span>${esc(t("wa_v"))}</span><span class="tag">whatsapp</span></li>
+              <li data-v="${AUT.pablo}">${ic("chat")}<span class="md-quien">${esc(t("envio"))}</span><span>${esc(t("wa_v"))}</span><span class="tag">WhatsApp</span></li>
               <li class="md-retuvo" data-v="${AUT.rechazado}">${ic("block")}<span class="md-quien">${esc(t("pablo"))}</span><span id="md-pablo-v">${esc(t("pablo_v"))}</span></li>
               <li class="md-pago-ok" data-v="${AUT.nada}">${ic("check")}<span class="md-quien">${esc(t("resultado"))}</span><span>${esc(t("nada_v"))}</span></li>
             </ol>
@@ -345,7 +345,7 @@
                 <p class="dato md-esperando">${esc(t("quorum"))}</p>
               </div>
               <div class="md-notif" data-v="${AUT.correo}" data-h="${AUT.uno}">${ic("mail")}<div><p class="md-notif-de">${esc(t("mail_de"))}</p><p>${esc(t("mail_txt"))}</p></div></div>
-              <div class="md-espera" data-v="${AUT.uno}" data-h="${AUT.rechazado}">${ic("check", "grande")}<p>${esc(t("uno_de_dos"))}</p><p class="dato md-esperando">${esc(t("quorum"))}</p></div>
+              <div class="md-espera" data-v="${AUT.uno}" data-h="${AUT.rechazado}">${ic("check", "grande")}<p>${esc(t("uno_de_dos"))}</p><p class="md-esperando">${esc(t("falta"))}</p></div>
               <div class="md-al-hecho" data-v="${AUT.rechazado}">${ic("block", "grande")}<p>${esc(t("al_hecho"))}</p><p class="dato">${esc(t("al_hecho_det"))}</p></div>
             </div>
           </div>
@@ -506,7 +506,7 @@
     document.body.classList.toggle("md-aut", tt >= AUT.igual && tt < ACTOS[2].desde);
     $("#md-pablo-v").textContent = vivo.real ? t("pablo_real", { s: vivo.real.toLocaleString(t("locale")) }) : t("pablo_v");
     $("#md-barra").style.width = `${(Math.min(tt, DURACION) / DURACION) * 100}%`;
-    if (revisor) revisor.firstChild.textContent = `t = ${tt.toFixed(1)} s`;
+    if (revisor) { revisor.reloj.textContent = `t = ${tt.toFixed(1)} s`; if (document.activeElement !== revisor.barra) revisor.barra.value = tt; }
   }
 
   // --- Audio: los mp3 del #171 (ElevenLabs, voces sintéticas de biblioteca); sin mp3 o si no cargan,
@@ -634,15 +634,45 @@
   function callar() { timbre.forEach((o) => { try { o.stop(); } catch (_) { /* ya paró */ } }); timbre = []; Object.values(pistas).forEach((a) => a.pause()); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
 
   // --- Modo revisión (?revisar=1): muestra el segundo actual para decir «en t = 48,7 cambia esto». No sale en el pitch. ---
+  // Una barra de controles abajo: retroceder, pausar, avanzar, arrastrar al segundo exacto y copiar el enlace del cuadro.
   let revisor = null;
-  if (params.get("revisar") === "1") {
-    revisor = document.createElement("div");
-    revisor.className = "md-revisor";
-    revisor.append("t = 0.0 s", document.createElement("small"));
-    revisor.lastChild.textContent = "Espacio pausa · ← → 1 s · Mayús 0,1 s · clic en la barra salta";
-    document.body.append(revisor);
+  const saltar = (delta) => irA(Math.max(0, Math.min(DURACION, Math.round((tiempo + delta) * 10) / 10)), false);
+  function abrirRevisor() {
+    if (revisor) return;
+    const caja = document.createElement("div");
+    caja.className = "md-revisor";
+    const boton = (texto, titulo, accion) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = texto; b.title = titulo;
+      b.addEventListener("click", () => { accion(); b.blur(); });
+      caja.append(b);
+      return b;
+    };
+    boton("⏮", "Al inicio", () => irA(0, false));
+    boton("−5 s", "Retrocede 5 segundos", () => saltar(-5));
+    boton("−1 s", "Retrocede 1 segundo (←)", () => saltar(-1));
+    boton("−0,1", "Retrocede una décima (Mayús ←)", () => saltar(-0.1));
+    boton("⏯", "Pausa o sigue (Espacio)", () => alternar());
+    boton("+0,1", "Avanza una décima (Mayús →)", () => saltar(0.1));
+    boton("+1 s", "Avanza 1 segundo (→)", () => saltar(1));
+    boton("+5 s", "Avanza 5 segundos", () => saltar(5));
+    const barra = document.createElement("input");
+    Object.assign(barra, { type: "range", min: 0, max: DURACION, step: 0.1, value: 0, title: "Arrastra al segundo que quieras" });
+    barra.addEventListener("input", () => irA(Number(barra.value), false));
+    barra.addEventListener("change", () => barra.blur());
+    const reloj = document.createElement("output");
+    reloj.textContent = "t = 0.0 s";
+    caja.append(barra, reloj);
+    boton("Copiar enlace", "Copia el enlace de este cuadro", () => {
+      const u = new URL(location.href);
+      u.searchParams.set("t", tiempo.toFixed(1));
+      navigator.clipboard?.writeText(u.href).catch(() => {});
+    });
+    document.body.append(caja);
     document.body.classList.add("md-revisando");
+    revisor = { caja, barra, reloj };
   }
+  if (params.get("revisar") === "1") abrirRevisor();
 
   // --- Reloj: un solo requestAnimationFrame; el tiempo avanza solo mientras corre ---
   let tiempo = 0, corriendo = false, previo = 0;
@@ -690,26 +720,22 @@
     else if (e.key === "r" || e.key === "R") irA(0, true);
     else if (e.key === "m" || e.key === "M") { mudo = !mudo; if (mudo) callar(); }
     else if (/^[1-4]$/.test(e.key)) irA(ACTOS[+e.key].desde, true);
+    else if (e.key === "v" || e.key === "V") { abrirRevisor(); escalar(); render(tiempo); }   // V abre los controles de revisión
     // Revisión: las flechas mueven 1 s (con Mayús, 0,1 s) y dejan la demo en pausa en ese cuadro.
     else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
       e.preventDefault();
-      const paso = (e.shiftKey ? 0.1 : 1) * (e.key === "ArrowRight" ? 1 : -1);
-      irA(Math.max(0, Math.min(DURACION, Math.round((tiempo + paso) * 10) / 10)), false);
+      saltar((e.shiftKey ? 0.1 : 1) * (e.key === "ArrowRight" ? 1 : -1));
     }
   });
 
   // --- Escala: el escenario es de 1920×1080 y se ajusta a la ventana sin cambiar de forma ---
-  const escalar = () => document.documentElement.style.setProperty("--md-k", Math.min(innerWidth / 1920, innerHeight / 1080));
+  const escalar = () => document.documentElement.style.setProperty("--md-k", Math.min(innerWidth / 1920, (innerHeight - (revisor ? 48 : 0)) / 1080));
   addEventListener("resize", escalar);
 
   document.documentElement.lang = idioma;
   escalar();
   leerCifras(await cargarResultados());
   construir();
-  if (revisor) document.querySelector(".md-progreso").addEventListener("click", (e) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    irA(Math.round(((e.clientX - r.left) / r.width) * DURACION * 10) / 10, false);
-  });
   prepararAudio();
   if ("speechSynthesis" in window) speechSynthesis.getVoices();   // carga las voces antes de necesitarlas
   if (params.has("t")) {   // un cuadro fijo para capturas
