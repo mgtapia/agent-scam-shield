@@ -73,11 +73,23 @@ flowchart LR
 ```
 
 - **Capa 1** ([`scamshield/defenses/pipelock.py`](scamshield/defenses/pipelock.py)): un firewall de agentes abierto para lo técnico, con falla cerrada.
-- **Capa 2** ([`scamshield/defenses/layer2.py`](scamshield/defenses/layer2.py)): cada valor lleva su origen (dueño, correo, web o MCP). Un destinatario o una cuenta que no aparece completa en el encargo ni en las cuentas inscritas no llega a un pago sin el toque del dueño. Además, una credencial del dueño (clave, código, token o API key) no sale nunca sin su toque, a ningún destino, salvo que el encargo pida ese envío. Es determinista: no depende de que un LLM acierte, y pruebas de propiedad con semilla fija lo verifican.
-- **Capa 3** ([`scamshield/defenses/layer3.py`](scamshield/defenses/layer3.py)): para cuando al dueño ya lo engañaron y dicta él la cuenta. El titular tiene que calzar con el RUT de la cuenta inscrita, no con el de la factura, y un beneficiario nuevo tiene un tope en el primer pago.
+- **Capa 2** ([`scamshield/defenses/layer2.py`](scamshield/defenses/layer2.py)): cada valor lleva su origen (dueño, correo, web o MCP). Un destinatario o una cuenta que no aparece completa en el encargo ni en las cuentas inscritas no llega a un pago sin el toque del dueño. Además, una credencial del dueño (clave, código, token o API key) no sale por `compartir_dato` ni por `responder` sin su toque, a ningún destino, salvo que el encargo pida ese envío (en base64, con separadores o con letras de otro alfabeto también se reconoce). Es determinista: no depende de que un LLM acierte, y pruebas de propiedad con semilla fija lo verifican.
+- **Capa 3** ([`scamshield/defenses/layer3.py`](scamshield/defenses/layer3.py)): para cuando al dueño ya lo engañaron y dicta él la cuenta. El titular tiene que calzar con el RUT de la cuenta inscrita, no con el de la factura, y un beneficiario nuevo tiene un tope en lo que se le paga en la sesión, sumado por RUT, para que un pago partido en varios chicos no lo salte.
 - **Proxy MCP** ([`scamshield/mcp/`](scamshield/mcp/)): se pone delante de cualquier agente que hable MCP. Revisa también las herramientas de pago que no se declararon, falla cerrada si algo revienta y no se deja cansar con una inundación de alertas.
 - **Atacante adaptativo** ([`scamshield/attacker/`](scamshield/attacker/)): un LLM que reescribe cada estafa, ronda tras ronda, contra cada defensa.
 - **Eval reproducible** con [Inspect](https://inspect.aisi.org.uk/) ([`scamshield/evals/`](scamshield/evals/)): configuraciones de defensa × modelos × idiomas, con repeticiones e intervalos.
+
+## Lo que Grifter no cubre
+Un equipo rojo de caja blanca ([`tests/test_equipo_rojo.py`](tests/test_equipo_rojo.py), #90) atacó a Grifter con el código a la vista. Lo que resistió o se arregló queda en verde. Lo que sigue nos rompe y queda como prueba `xfail(strict=True)`:
+
+- **Fuente que el integrador declara confiable:** si esa fuente está envenenada (un ERP en `origen_por_herramienta`, el mensaje de sistema o las cuentas que carga desde ella), Grifter le cree.
+- **`grifter.yaml` reescrito:** un agente con una herramienta de archivos puede inscribir la cuenta del estafador desde el próximo arranque. El archivo tiene que ser de solo lectura para el agente.
+- **Credencial partida en varios mensajes:** cada `responder` se revisa solo, así que media clave en cada uno no calza.
+- **Credencial en otra herramienta:** una clave pegada en la URL de `abrir_web` (u otra herramienta que no es de pago ni de datos) sale igual.
+- **Pago por fuera:** si el agente le pasa al dueño un link de pago o la cuenta del estafador para que pague él, no hay herramienta de pago que revisar.
+- **Coincidencia numérica:** si el número de factura que escribe el dueño tiene los dígitos de la cuenta del estafador, la capa 2 la toma como del dueño. La capa 3 la retiene si hay registro de titulares.
+- **Monto inflado:** ninguna capa compara el monto con el encargo, y un beneficiario conocido no tiene tope.
+- **Pago partido entre varias mulas:** el tope es por beneficiario nuevo, así que varias cuentas nuevas, cada una a nombre de su titular, pasan bajo el tope en cada una.
 
 ## Benchmark en un comando
 Un clon limpio corre el benchmark **sin llaves de API y en menos de 2 minutos** (unos 5 segundos en una laptop) y obtiene la tabla de abajo, la misma que imprime el comando. Una prueba (`tests/test_bench.py`) compara esta tabla con la salida real, así que si cambia el puntaje o un escenario y no se actualiza el README, la prueba falla.
@@ -345,6 +357,9 @@ El atacante, el crítico y el juez son un modelo abierto barato (por defecto `gr
 Primeros resultados, con Haiku 5.5 de víctima, en `results/atacante/`: la ronda 0 de las 14 estafas atacables en español y de las 3 defensas dio 0/14 en todas (Haiku no cae ni sin defensa), y la corrida chica de 5 estafas convincentes sumó 2 rondas de adaptación reales (17 reescrituras, realismo medio 8,4/10) sin que Haiku intentara ni una. Esa curva queda plana en 0 y no distingue las defensas: para mostrar que la capa 2 aguanta hace falta una víctima que sí caiga o más rondas.
 
 **Con una víctima que sí cae** (`groq/openai/gpt-oss-20b`; `llama-3.1-8b-instant` ya no existe en la cuenta de Groq; atacante `groq/qwen/qwen3.8-27b`; 5 estafas en español, 3 rondas; datos en `results/atacante/grifter_20b_*`): sin defensa cayeron 4 de 5 ya en la ronda 0 (80 % [38-96]) y la adaptación no sumó ninguna; con la capa 2 cayeron 0 de 5 (0 % [0-43]) aunque el agente intentó pagar en 4 de 5. En la capa 2, las rondas 2 y 3 quedaron incompletas (2 y 1 de 5 estafas con episodio puntuado) porque se agotó la cuota diaria de la víctima en Groq. El resumen sale de `python scripts/resumen_curva_atacante.py <jsonl>...`. Con n=5 es un humo, no una curva.
+
+## Duelo: el hacker que aprende y el escudo que aprende de él
+`grifter duelo --generaciones 20 --semilla 0` corre, sin llaves de API, un atacante por mutaciones (paráfrasis, sacar la urgencia, cambiar de autoridad, partir, deletrear o disfrazar la cuenta, homoglifos en el dominio, repartir el pedido en dos correos) que aprende con Thompson sampling contra qué señal le sirve cada una. Enfrente tiene el clasificador y la bóveda reales, que se reentrenan con lo que el dueño simulado confirma, con un conjunto apartado que nunca entrena. La capa 2 no se entrena: la tabla imprime, por generación, la evasión del hacker, el recall del escudo y los pagos que cruzan la capa 2, que quedan en 0. `--sin-entrenar` congela al escudo para ver al hacker solo. En el motor en vivo emite eventos `duelo`, y `/api/vivo/estado` trae `historial_duelo`.
 
 ## Estructura
 ```
