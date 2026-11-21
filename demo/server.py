@@ -32,7 +32,7 @@ from types import SimpleNamespace
 from typing import Any, Literal
 
 from fastapi import Body, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -45,6 +45,30 @@ from demo.notificar import notificar
 DEMO = Path(__file__).resolve().parent
 ETIQUETAS = DEMO / "etiquetas.jsonl"
 ELECCIONES = {"pagar_inscrita", "no_pagar", "pagar_igual"}
+ACTIVOS_PUBLICOS = frozenset({
+    "index.html", "estilos.css", "favicon.svg", "app.js", "graficos.js", "duelo.js",
+    "operaciones.js", "vivo_simulado.js", "resultados.js", "resultados_vista.js",
+    "resultados.json", "instalar.js", "demo.html", "demo.css", "demo.js",
+})
+
+
+class _ActivosPublicos(StaticFiles):
+    """Solo los activos de la página; el historial y el código de la demo son privados."""
+
+    def lookup_path(self, path: str) -> tuple[str, os.stat_result | None]:
+        archivo, estado = super().lookup_path(path)
+        if estado is None:
+            return archivo, estado
+        # Un nombre público no hace público su destino si es un enlace a un archivo privado.
+        relativo = Path(archivo).relative_to(Path(self.directory).resolve()).as_posix()
+        if relativo != "." and relativo not in ACTIVOS_PUBLICOS:
+            return "", None
+        return archivo, estado
+
+    async def get_response(self, path: str, scope: dict[str, Any]) -> Response:
+        if path != "." and path not in ACTIVOS_PUBLICOS:
+            raise HTTPException(404, "Not Found")
+        return await super().get_response(path, scope)
 
 # Grifter como conector MCP remoto en /mcp (#105). Sin GRIFTER_MCP_TOKEN la ruta responde 404 y la demo
 # sigue como siempre. La configuración por defecto pone detrás la tienda ficticia con el checkout desviado.
@@ -286,8 +310,12 @@ def probar_estafa(correo: CorreoJuez, request: Request) -> dict[str, Any]:
 
 app.add_route("/mcp", ruta_mcp, methods=["GET", "POST", "DELETE"])
 
-# El montaje estático va al final: en «/» captura todo lo que no sea /api.
-app.mount("/", StaticFiles(directory=DEMO, html=True), name="demo")
+# Los episodios exportados son públicos y tienen su propia raíz para impedir salir de esa carpeta.
+app.mount("/episodios", StaticFiles(directory=DEMO / "episodios"), name="episodios")
+if (DEMO / "audio").is_dir():
+    app.mount("/audio", StaticFiles(directory=DEMO / "audio"), name="audio")
+# El montaje raíz va al final y solo permite los activos de la interfaz.
+app.mount("/", _ActivosPublicos(directory=DEMO, html=True), name="demo")
 
 
 def main() -> None:

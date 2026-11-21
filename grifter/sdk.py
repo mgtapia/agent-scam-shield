@@ -32,13 +32,15 @@ import inspect
 import json
 import logging
 import re
+from copy import copy
 from pathlib import Path
+from threading import RLock
 from typing import Any, Callable, Iterable, Mapping, Optional, Union
 
 from scamshield.defenses.dominios import HERRAMIENTAS_WEB, datos_llevados, hosts_en
 from scamshield.defenses.layer2 import AccionSensible
 from scamshield.defenses.layer3 import confirmacion_beneficiario
-from scamshield.env.world import World
+from scamshield.env.world import Accion, World
 from scamshield.mcp.proxy import (
     ACCION_POR_DEFECTO,
     CLAVES_DESTINO,
@@ -117,6 +119,10 @@ class _Escudo:
         self.avisar = avisar
         self.grifter = Grifter(self.config)  # sin conectar: solo la guardia, el tope y el registro
         self.guardia = self.grifter.guardia
+        # Decide y reserva bajo el mismo cerrojo, compartido por funciones sync y async.
+        # Nunca se mantiene mientras se ejecuta una herramienta o se espera al dueño.
+        self._cerrojo = RLock()
+        self._pagos_en_curso: dict[int, Accion] = {}
         self.mundo: Optional[World] = None
         if titulares:
             self.mundo = World(encargo=self.config.encargo, cuentas_inscritas=self.config.cuentas_inscritas,
@@ -156,8 +162,10 @@ class _Escudo:
         if self.mundo is None or regla.dato is not None or regla.mensaje is not None:
             return None  # sin registro de titulares, o no es un pago
         cuenta, destinatario, monto = self._datos_de_pago(regla, args)
+        mundo = copy(self.mundo)
+        mundo.registro = [*self.mundo.registro, *self._pagos_en_curso.values()]
         motivo = confirmacion_beneficiario(
-            self.mundo, "pagar", {"cuenta": cuenta, "destinatario": destinatario, "monto": _entero(monto)})
+            mundo, "pagar", {"cuenta": cuenta, "destinatario": destinatario, "monto": _entero(monto)})
         if motivo is None:
             return None
         accion = self.config.acciones.get(nombre, f"la llamada a {nombre}")
@@ -237,17 +245,45 @@ class _Escudo:
     def _registrar(self, evento: str, alerta: Optional[Alerta] = None, **datos: Any) -> None:
         self.grifter._registrar(evento, alerta=alerta, **datos)
 
-    def _anotar(self, nombre: str, resultado: Any) -> None:
-        if self._es_lectora(nombre):
-            self.guardia.anotar_resultado(SERVIDOR, nombre, _texto(resultado))
-
-    def _anotar_pago(self, nombre: str, args: Mapping[str, Any]) -> None:
-        """Un pago que sí se ejecutó queda en el registro de la capa 3, que suma lo pagado a cada titular."""
+    def _pago(self, nombre: str, args: Mapping[str, Any]) -> Optional[Accion]:
+        """Captura el pago antes de ceder control: otra llamada puede cambiar la regla detectada."""
         regla = self.config.sensibles.get(nombre)
         if self.mundo is None or regla is None or regla.dato is not None or regla.mensaje is not None:
-            return
-        cuenta, _, monto = self._datos_de_pago(regla, args)
-        self.mundo.registrar("pagar", {"cuenta": str(cuenta), "monto": _entero(monto)}, "ejecutada")
+            return None
+        cuenta, destinatario, monto = self._datos_de_pago(regla, args)
+        return Accion("pagar", {"cuenta": str(cuenta), "destinatario": str(destinatario),
+                               "monto": _entero(monto)}, "ejecutada")
+
+    def _preparar(self, nombre: str, args: Mapping[str, Any]
+                  ) -> tuple[Optional[str], Optional[Alerta], Optional[Accion], bool]:
+        with self._cerrojo:
+            retenido, alerta = self._decidir(nombre, args)
+            lectora = self._es_lectora(nombre)
+            if retenido is not None:
+                return retenido, alerta, None, lectora
+            try:
+                pago = self._pago(nombre, args)
+            except Exception as e:
+                return self._falla(nombre, "revisarla", e), None, None, lectora
+            if alerta is None:
+                self._reservar_pago(pago)
+            return retenido, alerta, pago, lectora
+
+    def _reservar_pago(self, pago: Optional[Accion]) -> None:
+        with self._cerrojo:
+            if pago is not None:
+                self._pagos_en_curso[id(pago)] = pago
+
+    def _terminar_pago(self, pago: Optional[Accion], ejecutado: bool) -> None:
+        with self._cerrojo:
+            if pago is not None and self._pagos_en_curso.pop(id(pago), None) is not None:
+                if ejecutado:
+                    self.mundo.registro.append(pago)
+
+    def _anotar(self, nombre: str, resultado: Any, lectora: bool) -> None:
+        if lectora:
+            with self._cerrojo:
+                self.guardia.anotar_resultado(SERVIDOR, nombre, _texto(resultado))
 
     # --- envoltura -------------------------------------------------------------------------
     def envolver(self, nombre: str, funcion: Callable[..., Any]) -> Callable[..., Any]:
@@ -259,37 +295,61 @@ class _Escudo:
         def argumentos(a: tuple, kw: dict) -> dict[str, Any]:
             if firma is not None:
                 try:
-                    return dict(firma.bind(*a, **kw).arguments)
+                    enlazados = firma.bind(*a, **kw)
                 except TypeError:
                     pass
+                else:
+                    enlazados.apply_defaults()
+                    args = dict(enlazados.arguments)
+                    for parametro in firma.parameters.values():
+                        if parametro.kind is inspect.Parameter.VAR_KEYWORD:
+                            adicionales = args.pop(parametro.name)
+                            if args.keys() & adicionales.keys():
+                                # Un parámetro posicional exclusivo puede repetirse dentro de **kwargs.
+                                # No se puede elegir uno sin ocultarle el otro valor a la política.
+                                raise TypeError("Grifter no puede revisar argumentos con nombres repetidos")
+                            args.update(adicionales)
+                    return args
             return dict(kw)
 
         if inspect.iscoroutinefunction(funcion):
             @functools.wraps(funcion)
             async def envuelta(*a: Any, **kw: Any) -> Any:
                 args = argumentos(a, kw)
-                retenido, alerta = self._decidir(nombre, args)
-                if alerta is not None:
-                    retenido = await self._preguntar_async(nombre, alerta)
-                if retenido is not None:
-                    return retenido
-                resultado = await funcion(*a, **kw)
-                self._anotar(nombre, resultado)
-                self._anotar_pago(nombre, args)
-                return resultado
+                retenido, alerta, pago, lectora = self._preparar(nombre, args)
+                ejecutado = False
+                try:
+                    if alerta is not None:
+                        retenido = await self._preguntar_async(nombre, alerta)
+                        if retenido is None:
+                            self._reservar_pago(pago)
+                    if retenido is not None:
+                        return retenido
+                    resultado = await funcion(*a, **kw)
+                    ejecutado = True
+                    self._anotar(nombre, resultado, lectora)
+                    return resultado
+                finally:
+                    self._terminar_pago(pago, ejecutado)
         else:
             @functools.wraps(funcion)
             def envuelta(*a: Any, **kw: Any) -> Any:
                 args = argumentos(a, kw)
-                retenido, alerta = self._decidir(nombre, args)
-                if alerta is not None:
-                    retenido = self._preguntar(nombre, alerta)
-                if retenido is not None:
-                    return retenido
-                resultado = funcion(*a, **kw)
-                self._anotar(nombre, resultado)
-                self._anotar_pago(nombre, args)
-                return resultado
+                retenido, alerta, pago, lectora = self._preparar(nombre, args)
+                ejecutado = False
+                try:
+                    if alerta is not None:
+                        retenido = self._preguntar(nombre, alerta)
+                        if retenido is None:
+                            self._reservar_pago(pago)
+                    if retenido is not None:
+                        return retenido
+                    resultado = funcion(*a, **kw)
+                    ejecutado = True
+                    self._anotar(nombre, resultado, lectora)
+                    return resultado
+                finally:
+                    self._terminar_pago(pago, ejecutado)
 
         envuelta.__grifter__ = True  # type: ignore[attr-defined]
         return envuelta

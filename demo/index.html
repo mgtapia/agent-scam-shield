@@ -11,6 +11,10 @@
   <meta property="og:title" content="Grifter · Escudo para agentes que pagan">
   <meta property="og:description" content="Red-teaming y escudo para agentes de IA que pagan: frena las estafas que el agente no ve, con una garantía que vive fuera del modelo.">
   <meta name="twitter:card" content="summary">
+  <script>
+    // #demo es la secuencia automática del pitch (demo.html): sin pestañas, a pantalla completa.
+    if (/^#demo/.test(location.hash)) { var q = location.hash.split("?")[1]; location.replace("demo.html" + (q ? "?" + q : "")); }
+  </script>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,6 +33,7 @@
       <a role="tab" href="#vivo" data-vista="vivo" aria-selected="false" data-ayuda-solo="ayuda_v_vivo"><span class="ms" aria-hidden="true">replay</span><span data-t="v_vivo">Episodios</span></a>
       <a role="tab" href="#resultados" data-vista="resultados" aria-selected="false"><span class="ms" aria-hidden="true">grid_view</span><span data-t="v_resultados">Resultados</span></a>
       <a role="tab" href="#duelo" data-vista="duelo" aria-selected="false" data-ayuda-solo="ayuda_v_duelo"><span class="ms" aria-hidden="true">swords</span><span data-t="v_duelo">Duelo</span></a>
+      <a role="tab" href="#instalar" data-vista="instalar" aria-selected="false" data-ayuda-solo="ayuda_v_instalar"><span class="ms" aria-hidden="true">download</span><span data-t="v_instalar">Instalar</span></a>
     </nav>
     <div class="controles">
       <label class="campo solo-vivo">
@@ -149,6 +154,8 @@
       <p class="du-ayuda" id="du-ayuda"></p>
     </section>
 
+    <section class="vista instalar" id="vista-instalar" data-vista="instalar" aria-label="Instalar" hidden></section>
+
   </main>
 
   <aside class="panel-lateral" id="panel-correo" role="dialog" aria-modal="false" aria-labelledby="pc-asunto" hidden></aside>
@@ -164,5 +171,6 @@
   <script src="duelo.js"></script>
   <script src="operaciones.js"></script>
   <script src="resultados_vista.js"></script>
+  <script src="instalar.js"></script>
 </body>
 </html>

@@ -229,6 +229,127 @@ def test_la_huella_cambia_con_cada_cosa_que_decide_que_se_retiene():
     assert huella(politica_canonica(_config(BASE))) == huella(base)
 
 
+@pytest.mark.parametrize("campo,valor", [("dato", "dato"), ("mensaje", "texto"), ("opcional", True)])
+def test_la_huella_incluye_las_condiciones_de_cada_regla_sensible(campo, valor):
+    regla = {"destino": "cuenta", "que": "la cuenta"}
+    antes = politica_canonica(_config({**BASE, "sensibles": {"pagar": regla}}))
+    despues = politica_canonica(_config({**BASE, "sensibles": {"pagar": {**regla, campo: valor}}}))
+    assert huella(antes) != huella(despues)
+    assert diferencias(antes, despues) == ["~ cambió cómo se revisa pagar"]
+
+
+@pytest.mark.parametrize("campo,valor", [("dato", "dato"), ("mensaje", "texto"), ("opcional", True)])
+def test_cambiar_una_condicion_de_la_regla_retiene_el_pago_hasta_aprobar(tmp_path, campo, valor):
+    regla = {"destino": "cuenta", "que": "la cuenta"}
+    aprobador = AprobadorFalso()
+    g, abajo, _, ruta = _montar(tmp_path, aprobador, sensibles={"pagar": regla})
+    _arrancar(g)
+    _escribir(ruta, sensibles={"pagar": {**regla, campo: valor}})
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    assert aprobador.pedidos[0].lineas == ["~ cambió cómo se revisa pagar"]
+
+
+def test_cambiar_el_texto_de_aprobacion_cambia_la_huella_y_retiene_el_pago(tmp_path):
+    regla = {"destino": "cuenta", "que": "la cuenta", "accion": "el pago"}
+    aprobador = AprobadorFalso()
+    g, abajo, integridad, ruta = _montar(tmp_path, aprobador, sensibles={"pagar": regla})
+    _arrancar(g)
+    antes = integridad.estado().politica
+    _escribir(ruta, sensibles={"pagar": {**regla, "accion": "una consulta inofensiva"}})
+    _, despues, error = integridad.leer_actual()
+    assert error == "" and huella(antes) != huella(despues)
+    assert diferencias(antes, despues) == ["~ cambió el texto de aprobación de pagar"]
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    assert "consulta inofensiva" not in aprobador.pedidos[0].texto
+
+
+@pytest.mark.parametrize("nueva_ruta", ["privado/otras.json", None])
+def test_cambiar_o_quitar_la_ruta_de_semillas_cambia_la_huella_y_retiene_el_pago(tmp_path, nueva_ruta):
+    aprobador = AprobadorFalso()
+    g, abajo, integridad, ruta = _montar(tmp_path, aprobador, semillas="privado/totp.json")
+    _arrancar(g)
+    antes = integridad.estado().politica
+    _escribir(ruta, semillas=nueva_ruta)
+    _, despues, error = integridad.leer_actual()
+    assert error == "" and huella(antes) != huella(despues)
+    assert diferencias(antes, despues) == ["~ cambió la ruta de las credenciales de aprobación"]
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    assert "privado" not in aprobador.pedidos[0].texto
+
+
+def test_la_ruta_de_semillas_se_normaliza_sin_leerla_y_es_estable_al_mover_la_carpeta(tmp_path):
+    politicas = []
+    for carpeta in (tmp_path / "original", tmp_path / "movida"):
+        carpeta.mkdir()
+        ruta = carpeta / "grifter.yaml"
+        # No existe el archivo de semillas: la integridad solo sigue la ruta configurada.
+        _escribir(ruta, semillas="privado/../credenciales/totp.json")
+        politicas.append(politica_canonica(cargar_config(ruta)))
+    assert politicas[0]["semillas"] == "privado/../credenciales/totp.json"
+    assert huella(politicas[0]) == huella(politicas[1])
+
+
+def test_las_rutas_de_semillas_con_doble_punto_no_se_fusionan_con_la_ruta_directa():
+    # `privado` podría ser un enlace: ambas rutas no necesariamente apuntan al mismo archivo.
+    con_doble_punto = politica_canonica(_config({**BASE, "semillas": "privado/../credenciales/totp.json"}))
+    directa = politica_canonica(_config({**BASE, "semillas": "credenciales/totp.json"}))
+    assert huella(con_doble_punto) != huella(directa)
+    assert diferencias(con_doble_punto, directa) == ["~ cambió la ruta de las credenciales de aprobación"]
+
+
+@pytest.mark.parametrize("cambio,diff", [
+    ({"url": "https://otro.example/mcp?token=otro-secreto"}, "URL"),
+    ({"headers": {"Authorization": "Bearer otro-secreto"}}, "cabeceras HTTP"),
+    ({"headers": {}}, "cabeceras HTTP"),
+    ({"headers": {"X-API-Key": "Bearer secreto-header"}}, "cabeceras HTTP"),
+])
+def test_cambiar_el_endpoint_o_sus_cabeceras_cambia_la_huella_y_retiene_el_pago(tmp_path, cambio, diff):
+    servidor = {"url": "https://tienda.example/mcp?token=secreto-url",
+                "headers": {"Authorization": "Bearer secreto-header"}}
+    aprobador = AprobadorFalso()
+    g, abajo, integridad, ruta = _montar(tmp_path, aprobador, servidores={"banco": servidor})
+    _arrancar(g)
+    antes = integridad.estado().politica
+    _escribir(ruta, servidores={"banco": {**servidor, **cambio}})
+    _, despues, error = integridad.leer_actual()
+    assert error == "" and huella(antes) != huella(despues)
+    assert diferencias(antes, despues) == [f"~ servidor banco: cambió {diff}"]
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    texto = aprobador.pedidos[0].texto + json.dumps(antes) + json.dumps(despues)
+    for secreto in ("secreto-url", "secreto-header", "otro-secreto"):
+        assert secreto not in texto
+
+
+def test_agregar_un_servidor_remoto_no_filtra_credenciales_de_su_url_o_cabeceras():
+    antes = politica_canonica(_config({**BASE, "servidores": {}}))
+    despues = politica_canonica(_config({**BASE, "servidores": {"tienda": {
+        "url": "https://usuario:clave-url@tienda.example/clave-ruta?token=clave-query",
+        "headers": {"Authorization": "Bearer clave-header"},
+    }}}))
+    texto = "\n".join(diferencias(antes, despues))
+    assert texto == "+ servidor nuevo tienda: HTTP"
+    for secreto in ("clave-url", "clave-ruta", "clave-query", "clave-header"):
+        assert secreto not in texto and secreto not in json.dumps(despues)
+
+
+def test_las_cabeceras_se_canonicalizan_sin_depender_del_orden():
+    servidor = {"url": "https://tienda.example/mcp", "headers": {"X-Tenant": "uno", "Authorization": "token"}}
+    antes = politica_canonica(_config({**BASE, "servidores": {"tienda": servidor}}))
+    servidor["headers"] = dict(reversed(list(servidor["headers"].items())))
+    despues = politica_canonica(_config({**BASE, "servidores": {"tienda": servidor}}))
+    assert huella(antes) == huella(despues) and diferencias(antes, despues) == []
+
+
+def test_el_diff_acepta_politicas_previas_sin_endpoint_ni_cabeceras():
+    despues = politica_canonica(_config({**BASE, "servidores": {"banco": {
+        "url": "https://tienda.example/mcp", "headers": {"Authorization": "token"},
+    }}}))
+    antes = json.loads(json.dumps(despues))
+    for campo in ("url", "headers"):
+        antes["servidores"]["banco"].pop(campo)
+    assert diferencias(antes, despues) == ["~ servidor banco: cambió URL, cabeceras HTTP"]
+
+
 def _config(datos):
     import tempfile
     from pathlib import Path

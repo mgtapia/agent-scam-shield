@@ -37,7 +37,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from ..env.world import World
-from .layer2 import visible
+from .layer2 import citado
 
 # El primer pago a un beneficiario nuevo no pasa de esto sin confirmación del dueño (pesos chilenos).
 TOPE_PRIMER_PAGO = 150_000
@@ -136,13 +136,13 @@ def confirmacion_beneficiario(world: World, herramienta: str, args: dict) -> Opt
     if herramienta not in ACCIONES or not world.titulares:
         return None
     cuenta_real = str(args.get("cuenta", ""))
-    cuenta = visible(cuenta_real)   # va en el aviso al dueño: sin saltos de línea ni texto largo
+    cuenta = citado(cuenta_real)   # va en el aviso al dueño: sin saltos de línea ni texto largo
     titular = _titular(world, cuenta_real)
     if titular is None:
         return (f"la cuenta {cuenta} no figura en el registro de titulares del banco: no se puede confirmar "
                 "a nombre de quién está.")
     declarado = str(args.get("destinatario" if herramienta == "pagar" else "beneficiario", "") or "").strip()
-    dicho = visible(declarado)
+    dicho = citado(declarado)
     monto = int(args.get("monto", 0))
     quien = f"{titular['nombre']} (RUT {titular['rut']})"
 

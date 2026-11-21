@@ -195,8 +195,8 @@ class CanalTelegram:
             if self._alertas.pop(id_, None) is None:
                 self._responder(cb, t["ya"])
                 return
-        self.al_elegir({"ts": datetime.now(timezone.utc).isoformat(), "eleccion": eleccion, "canal": "telegram",
-                        **alerta})
+        self.al_elegir({**alerta, "ts": datetime.now(timezone.utc).isoformat(), "eleccion": eleccion,
+                       "canal": "telegram"})
         self._editar(mensaje, f"{texto_de_alerta(alerta)}\n\n{t['hecho_' + eleccion]}", {"inline_keyboard": []})
         self._responder(cb, t["hecho_" + eleccion])
 
