@@ -123,3 +123,27 @@ def test_colados_con_archivos_propios(tmp_path):
     assert c["estafas"] == 2 and c["totales"] == {"none": 2, "layer1": 2, "layer2": 1, "layer3": 1, "layer23": 0}
     assert c["familias"][0]["familia"] == "banco" and c["familias"][0]["escenarios"]["layer2"] == ["a"]
     assert c["clasificador"] is None and c["familias"][0]["clasificador"] is None
+
+
+# --- El juez LLM de los casos dudosos ---
+
+def test_juez_sin_archivo_y_con_archivo(tmp_path):
+    from scripts.resultados_demo import juez
+    assert juez(tmp_path / "no.json")["estado"] == "sin_archivo"
+    m = lambda r, fa: {"recall": {"media": r}, "precision": {"media": 0.9}, "falsas_alarmas": {"media": fa}}
+    fila = lambda lo, r, fa: {"banda": [lo, 0.5], "fraccion_dudosa": 0.1, "usd_por_1000_correos": 0.0, "con_juez": m(r, fa)}
+    datos = {"modelo": "google/x", "precio": "gratis (plan gratuito)", "corridas": 9, "max_falsas": 0.08,
+             "sin_juez": m(0.85, 0.04), "barrido": [fila(0.0, 1.0, 0.5), fila(0.3, 0.9, 0.06)],
+             "llamadas": 10, "fallas": 0, "gasto": {"gastado_usd": 0.0}}
+    datos["punto_operacion"] = datos["barrido"][1]
+    (tmp_path / "j.json").write_text(json.dumps(datos), encoding="utf-8")
+    j = juez(tmp_path / "j.json")
+    assert j["estado"] == "ok" and j["punto_operacion"]["banda"] == [0.3, 0.5] and len(j["barrido"]) == 2
+    datos["punto_operacion"] = None
+    (tmp_path / "j.json").write_text(json.dumps(datos), encoding="utf-8")
+    assert juez(tmp_path / "j.json")["estado"] == "sin_punto"
+
+
+def test_solo_json_no_toca_resultados_js(tmp_path):
+    escritos = escribir({"a": 1}, tmp_path, solo_json=True)
+    assert [p.name for p in escritos] == ["resultados.json"] and not (tmp_path / "resultados.js").exists()

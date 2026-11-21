@@ -9,6 +9,8 @@ Origen de cada número:
 - `results/sonnet_jefe.json`: `python scripts/resumen_resultados.py logs/jefe --json results/sonnet_jefe.json`.
 - `results/haiku_dueno.json`: `python scripts/resumen_resultados.py logs/dueno --idioma es --json results/haiku_dueno.json`.
 - `results/clasificador.json`: `python scripts/validacion_cruzada_vivo.py --agrupar familia --json results/clasificador.json`.
+- `results/juez_gemini.json`: `python scripts/juez_vivo.py --modelo gemini-lite --banda 0.2,0.5 --barrido --pausa 7 --concurrencia 1
+  --json results/juez_gemini.json` (el juez LLM de los casos dudosos, #131; bloque `juez`).
 - `colados` (qué se cuela por capa y por familia): `por_escenario` de `results/bench.json` y `colados_por_familia` de
   `results/clasificador.json`.
 - `results/atacante/*_curva.json`: `python scripts/resumen_curva_atacante.py <jsonl>... --salida <archivo>`, que une
@@ -188,6 +190,36 @@ def colados(bench_json: Path | None = None, clasif_json: Path | None = None) -> 
     }
 
 
+JUEZ = RESULTS / "juez_gemini.json"
+COMANDO_JUEZ = ("python scripts/juez_vivo.py --modelo gemini-lite --banda 0.2,0.5 --barrido --pausa 7 --concurrencia 1 "
+                "--json results/juez_gemini.json")
+
+
+def juez(ruta: Path | None = None) -> dict[str, Any]:
+    """El juez LLM de los casos dudosos: cobertura y falsas alarmas sin y con juez en el punto de operación elegido.
+
+    `punto_operacion` es la banda con más cobertura cuyas falsas alarmas medias no pasan de `max_falsas`; si ninguna
+    cumple, va None y la página lo dice. `barrido` trae cada banda probada con los mismos veredictos.
+    """
+    ruta = ruta or JUEZ
+    if not ruta.exists():
+        return {"estado": "sin_archivo", "fuente": None, "comando": COMANDO_JUEZ}
+    j = _leer(ruta)
+    resumen = lambda f: {"banda": f["banda"], "fraccion_dudosa": f["fraccion_dudosa"],
+                         "usd_por_1000_correos": f.get("usd_por_1000_correos"),
+                         "delta_recall": f.get("delta_recall"), "delta_falsas": f.get("delta_falsas"),
+                         **{m: f["con_juez"][m] for m in ("recall", "precision", "falsas_alarmas")}}
+    punto = j.get("punto_operacion")
+    return {
+        "estado": "ok" if punto else "sin_punto",
+        "modelo": j["modelo"], "precio": j.get("precio"), "motivo": j.get("motivo"), "corridas": j["corridas"], "max_falsas": j.get("max_falsas"),
+        "sin_juez": j["sin_juez"], "punto_operacion": resumen(punto) if punto else None,
+        "barrido": [resumen(f) for f in j.get("barrido", [])],
+        "veredictos": j.get("textos_distintos", j["llamadas"]), "fallas": j["fallas"], "gasto_usd": j["gasto"]["gastado_usd"],
+        "fuente": _rel(ruta) if ruta.is_relative_to(RAIZ) else str(ruta), "comando": COMANDO_JUEZ,
+    }
+
+
 SEMILLAS_DUELO = (0, 1, 2)
 MODOS_DUELO = {"congelado": "--sin-entrenar", "aprende": ""}
 
@@ -313,15 +345,17 @@ def armar(curva: Path | None = None) -> dict[str, Any]:
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "readme": "README.md#resultados",
         "bench": bench(), "pipelock": PIPELOCK, "sonnet": sonnet(), "haiku": haiku(),
-        "clasificador": clasificador(), "colados": colados(), "atacante": atacante(elegida=curva), "duelo": duelo(),
+        "clasificador": clasificador(), "colados": colados(), "juez": juez(), "atacante": atacante(elegida=curva), "duelo": duelo(),
     })
 
 
-def escribir(datos: dict[str, Any], salida: Path = DEMO) -> list[Path]:
+def escribir(datos: dict[str, Any], salida: Path = DEMO, solo_json: bool = False) -> list[Path]:
     """resultados.json y su copia resultados.js (abrir la página como archivo no deja usar fetch)."""
     texto = json.dumps(datos, indent=1, ensure_ascii=False, allow_nan=False)
     json_, js = salida / "resultados.json", salida / "resultados.js"
     json_.write_text(texto + "\n", encoding="utf-8")
+    if solo_json:
+        return [json_]
     js.write_text(f"// Generado por scripts/resultados_demo.py. No editar a mano.\nwindow.RESULTADOS = {texto};\n",
                   encoding="utf-8")
     return [json_, js]
@@ -330,9 +364,10 @@ def escribir(datos: dict[str, Any], salida: Path = DEMO) -> list[Path]:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--atacante", type=Path, help="el _curvas.json del atacante que se muestra")
+    p.add_argument("--solo-json", action="store_true", help="escribe solo resultados.json, sin tocar resultados.js")
     a = p.parse_args(argv)
     datos = armar(a.atacante)
-    for ruta in escribir(datos):
+    for ruta in escribir(datos, solo_json=a.solo_json):
         print(f"escrito {_rel(ruta)}")
     a = datos["atacante"]
     print(f"atacante: {a['estado']}" + (f" ({a['fuente']})" if a["fuente"] else ""))
