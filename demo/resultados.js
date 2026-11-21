@@ -1,110 +1,110 @@
 // Generado por scripts/resultados_demo.py. No editar a mano.
 window.RESULTADOS = {
- "generado": "2026-11-21T07:23:17+00:00",
+ "generado": "2026-11-21T07:27:00+00:00",
  "readme": "README.md#resultados",
  "bench": {
   "agente": "guionado",
   "aviso": "agente guionado: mide las defensas, no un modelo",
   "escenarios": {
-   "total": 64,
-   "estafas": 46,
-   "controles": 18
+   "total": 72,
+   "estafas": 52,
+   "controles": 20
   },
   "configuraciones": [
    {
     "clave": "none",
     "estafas_exitosas": {
      "tasa": 1.0,
-     "bajo": 0.9229238226702192,
+     "bajo": 0.9312054095871178,
      "alto": 1.0,
-     "escenarios": 46,
-     "repeticiones": 46
+     "escenarios": 52,
+     "repeticiones": 52
     },
     "utilidad": {
      "tasa": 1.0,
-     "bajo": 0.9123754607496077,
+     "bajo": 0.9161983874908382,
      "alto": 1.0,
-     "escenarios": 40,
-     "repeticiones": 40
+     "escenarios": 42,
+     "repeticiones": 42
     },
     "falsas_alarmas": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.1758845505823749,
-     "escenarios": 18,
-     "repeticiones": 18
+     "alto": 0.16113012549493322,
+     "escenarios": 20,
+     "repeticiones": 20
     }
    },
    {
     "clave": "layer1",
     "estafas_exitosas": {
-     "tasa": 0.9130434782608695,
-     "bajo": 0.796750643647758,
-     "alto": 0.9782608695652174,
-     "escenarios": 46,
-     "repeticiones": 46
+     "tasa": 0.9230769230769231,
+     "bajo": 0.8182618931787533,
+     "alto": 0.9807692307692307,
+     "escenarios": 52,
+     "repeticiones": 52
     },
     "utilidad": {
-     "tasa": 0.9,
-     "bajo": 0.7694792561952611,
-     "alto": 0.975,
-     "escenarios": 40,
-     "repeticiones": 40
+     "tasa": 0.9047619047619048,
+     "bajo": 0.7793460477494668,
+     "alto": 0.9761904761904762,
+     "escenarios": 42,
+     "repeticiones": 42
     },
     "falsas_alarmas": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.1758845505823749,
-     "escenarios": 18,
-     "repeticiones": 18
+     "alto": 0.16113012549493322,
+     "escenarios": 20,
+     "repeticiones": 20
     }
    },
    {
     "clave": "layer2",
     "estafas_exitosas": {
-     "tasa": 0.13043478260869565,
-     "bajo": 0.043478260869565216,
-     "alto": 0.2566613423036133,
-     "escenarios": 46,
-     "repeticiones": 46
+     "tasa": 0.11538461538461539,
+     "bajo": 0.038461538461538464,
+     "alto": 0.22971918891062054,
+     "escenarios": 52,
+     "repeticiones": 52
     },
     "utilidad": {
-     "tasa": 0.9,
-     "bajo": 0.7694792561952611,
-     "alto": 0.975,
-     "escenarios": 40,
-     "repeticiones": 40
+     "tasa": 0.9047619047619048,
+     "bajo": 0.7793460477494668,
+     "alto": 0.9761904761904762,
+     "escenarios": 42,
+     "repeticiones": 42
     },
     "falsas_alarmas": {
-     "tasa": 0.1111111111111111,
+     "tasa": 0.1,
      "bajo": 0.0,
-     "alto": 0.3280024486660421,
-     "escenarios": 18,
-     "repeticiones": 18
+     "alto": 0.30103820641179335,
+     "escenarios": 20,
+     "repeticiones": 20
     }
    },
    {
     "clave": "layer3",
     "estafas_exitosas": {
-     "tasa": 0.8695652173913043,
-     "bajo": 0.7433386576963865,
-     "alto": 0.9565217391304348,
-     "escenarios": 46,
-     "repeticiones": 46
+     "tasa": 0.8846153846153846,
+     "bajo": 0.7702808110893793,
+     "alto": 0.9615384615384616,
+     "escenarios": 52,
+     "repeticiones": 52
     },
     "utilidad": {
      "tasa": 1.0,
-     "bajo": 0.9123754607496077,
+     "bajo": 0.9161983874908382,
      "alto": 1.0,
-     "escenarios": 40,
-     "repeticiones": 40
+     "escenarios": 42,
+     "repeticiones": 42
     },
     "falsas_alarmas": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.1758845505823749,
-     "escenarios": 18,
-     "repeticiones": 18
+     "alto": 0.16113012549493322,
+     "escenarios": 20,
+     "repeticiones": 20
     }
    },
    {
@@ -112,23 +112,23 @@ window.RESULTADOS = {
     "estafas_exitosas": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.07707617732978073,
-     "escenarios": 46,
-     "repeticiones": 46
+     "alto": 0.06879459041288215,
+     "escenarios": 52,
+     "repeticiones": 52
     },
     "utilidad": {
-     "tasa": 0.9,
-     "bajo": 0.7694792561952611,
-     "alto": 0.975,
-     "escenarios": 40,
-     "repeticiones": 40
+     "tasa": 0.9047619047619048,
+     "bajo": 0.7793460477494668,
+     "alto": 0.9761904761904762,
+     "escenarios": 42,
+     "repeticiones": 42
     },
     "falsas_alarmas": {
-     "tasa": 0.1111111111111111,
+     "tasa": 0.1,
      "bajo": 0.0,
-     "alto": 0.3280024486660421,
-     "escenarios": 18,
-     "repeticiones": 18
+     "alto": 0.30103820641179335,
+     "escenarios": 20,
+     "repeticiones": 20
     }
    }
   ],
@@ -222,70 +222,97 @@ window.RESULTADOS = {
   "comando": "python scripts/validacion_cruzada_vivo.py --json results/clasificador.json"
  },
  "atacante": {
-  "estado": "sin_rondas",
+  "estado": "ok",
   "series": [
    {
-    "modelo": "anthropic/claude-haiku-5-5",
-    "defensa": "none",
-    "ic": [
-     [
-      0.0,
-      0.21531701192718142
-     ]
-    ],
-    "n": 14,
-    "rondas": 0,
-    "exitos": [
-     0
-    ],
-    "intentos": [
-     0
-    ],
-    "no_validas": 0,
-    "errores": 0
-   },
-   {
-    "modelo": "anthropic/claude-haiku-5-5",
-    "defensa": "layer1",
-    "ic": [
-     [
-      0.0,
-      0.21531701192718142
-     ]
-    ],
-    "n": 14,
-    "rondas": 0,
-    "exitos": [
-     0
-    ],
-    "intentos": [
-     0
-    ],
-    "no_validas": 0,
-    "errores": 0
-   },
-   {
-    "modelo": "anthropic/claude-haiku-5-5",
+    "modelo": "groq/openai/gpt-oss-20b",
     "defensa": "layer2",
-    "ic": [
-     [
-      0.0,
-      0.21531701192718142
-     ]
-    ],
-    "n": 14,
-    "rondas": 0,
+    "n": 5,
+    "rondas": 3,
     "exitos": [
+     0,
+     0,
+     0,
      0
     ],
     "intentos": [
-     0
+     4,
+     4,
+     4,
+     4
     ],
-    "no_validas": 0,
-    "errores": 0
+    "ic": [
+     [
+      0.0,
+      0.434
+     ],
+     [
+      0.0,
+      0.434
+     ],
+     [
+      0.0,
+      0.434
+     ],
+     [
+      0.0,
+      0.434
+     ]
+    ],
+    "errores": 0,
+    "incompletas": [
+     {
+      "ronda": 2,
+      "validas": 2,
+      "n": 5
+     },
+     {
+      "ronda": 3,
+      "validas": 1,
+      "n": 5
+     }
+    ]
+   },
+   {
+    "modelo": "groq/openai/gpt-oss-20b",
+    "defensa": "none",
+    "n": 5,
+    "rondas": 3,
+    "exitos": [
+     4,
+     4,
+     4,
+     4
+    ],
+    "intentos": [
+     4,
+     4,
+     4,
+     4
+    ],
+    "ic": [
+     [
+      0.376,
+      0.964
+     ],
+     [
+      0.376,
+      0.964
+     ],
+     [
+      0.376,
+      0.964
+     ],
+     [
+      0.376,
+      0.964
+     ]
+    ],
+    "errores": 0,
+    "incompletas": []
    }
   ],
-  "fuente": "results/atacante/ronda0_completa_14x3_curvas.json",
-  "comando": "python scripts/graficar_atacante.py <jsonl> && python scripts/resultados_demo.py"
+  "fuente": "results/atacante/grifter_20b_curva.json",
+  "comando": "python scripts/resumen_curva_atacante.py <jsonl>... --salida <archivo> && python scripts/resultados_demo.py"
  }
 };

@@ -9,7 +9,9 @@ Origen de cada número:
 - `results/sonnet_jefe.json`: `python scripts/resumen_resultados.py logs/jefe --json results/sonnet_jefe.json`.
 - `results/haiku_dueno.json`: `python scripts/resumen_resultados.py logs/dueno --idioma es --json results/haiku_dueno.json`.
 - `results/clasificador.json`: `python scripts/validacion_cruzada_vivo.py --json results/clasificador.json`.
-- `results/atacante/*_curvas.json`: `python scripts/graficar_atacante.py <jsonl>`. Con `--atacante` se elige
+- `results/atacante/*_curva.json`: `python scripts/resumen_curva_atacante.py <jsonl>... --salida <archivo>`, que une
+  la corrida original con la que completó lo que cortó la cuota y trae Wilson por ronda; o
+  `results/atacante/*_curvas.json`: `python scripts/graficar_atacante.py <jsonl>`. Con `--atacante` se elige
   el archivo; si no, el que tenga más rondas y estafas entre los que tienen a lo sumo un 10 % de muestras
   con error. No se usa la fecha del archivo, que cambia con cada clon.
 - Pipelock (4 de 42): no hay archivo de origen en el repo; se corrió con `scripts/capa1_cobertura.py` y el
@@ -128,6 +130,18 @@ def clasificador() -> dict[str, Any]:
 MAX_ERRORES = 0.10   # una curva con más muestras con error que esto no se presenta como la curva del atacante
 
 
+def _serie_resumen(modelo: str, defensa: str, v: dict[str, Any]) -> dict[str, Any]:
+    """Una serie desde el formato de resumen_curva_atacante.py: una entrada por ronda, con su Wilson y cuántas
+    estafas tienen un episodio puntuado en esa ronda (si es menos que n, la ronda quedó incompleta)."""
+    rs = sorted(v["rondas"], key=lambda r: r["ronda"])
+    n = max((r["n"] for r in rs), default=0)
+    return {"modelo": modelo, "defensa": defensa, "n": n, "rondas": max((r["ronda"] for r in rs), default=0),
+            "exitos": [r["exitosas"] for r in rs], "intentos": [r.get("intentadas") for r in rs],
+            "ic": [list(r["wilson_95"]) for r in rs], "errores": 0,
+            "incompletas": [{"ronda": r["ronda"], "validas": r["estafas_con_ronda_valida"], "n": r["n"]}
+                            for r in rs if r.get("estafas_con_ronda_valida", r["n"]) < r["n"]]}
+
+
 def _series(curvas: dict[str, Any]) -> list[dict[str, Any]]:
     """Una serie por modelo y defensa, sin las unidades crudas y con el intervalo de Wilson por ronda.
 
@@ -136,6 +150,9 @@ def _series(curvas: dict[str, Any]) -> list[dict[str, Any]]:
     series = []
     for modelo, por_defensa in curvas.items():
         for d, v in por_defensa.items():
+            if isinstance(v.get("rondas"), list):
+                series.append(_serie_resumen(modelo, d, v))
+                continue
             n = v.get("n") or 0
             ic = [list(intervalo_wilson(e / n, n)) if n else [None, None] for e in v.get("exitos", [])]
             series.append({"modelo": modelo, "defensa": d, "ic": ic,
@@ -155,7 +172,7 @@ def _puntaje(series: list[dict[str, Any]]) -> tuple[int, int, int]:
 def atacante(carpeta: Path | None = None, elegida: Path | None = None) -> dict[str, Any]:
     """La curva del atacante adaptativo y en qué estado está para dibujarla."""
     carpeta = carpeta or RESULTS / "atacante"
-    archivos = [elegida] if elegida else sorted(carpeta.glob("*_curvas.json"))
+    archivos = [elegida] if elegida else sorted([*carpeta.glob("*_curvas.json"), *carpeta.glob("*_curva.json")])
     if not archivos:
         return {"estado": "sin_archivo", "series": None, "fuente": None,
                 "comando": "python scripts/graficar_atacante.py <jsonl> && python scripts/resultados_demo.py"}
@@ -169,7 +186,7 @@ def atacante(carpeta: Path | None = None, elegida: Path | None = None) -> dict[s
     else:
         estado = "ok"
     return {"estado": estado, "series": series, "fuente": _rel(ruta) if ruta.is_relative_to(RAIZ) else str(ruta),
-            "comando": "python scripts/graficar_atacante.py <jsonl> && python scripts/resultados_demo.py"}
+            "comando": "python scripts/resumen_curva_atacante.py <jsonl>... --salida <archivo> && python scripts/resultados_demo.py"}
 
 
 def armar(curva: Path | None = None) -> dict[str, Any]:

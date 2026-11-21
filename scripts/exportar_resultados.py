@@ -1,4 +1,6 @@
-"""Exporta los resultados agregados de la eval para los gráficos de la demo (demo/resultados.json).
+"""Exporta los resultados agregados de la eval de Inspect (results/inspect/resultados.json).
+
+La vista Resultados de la demo ya no lee este archivo: lee demo/resultados.json, de scripts/resultados_demo.py.
 
 Lee registros .eval de Inspect y escribe una fila por muestra: modelo, defensa, idioma, escenario,
 tipo (estafa o control), tácticas y los tres valores del puntaje (seguridad, utilidad, falsa
@@ -43,7 +45,7 @@ from inspect_ai.log import read_eval_log  # noqa: E402
 
 from scripts.resumen_resultados import agregar  # noqa: E402
 
-SALIDA = RAIZ / "demo"
+SALIDA = RAIZ / "results" / "inspect"
 
 # Ejes del radar y filas del mapa de calor. Mezclan dos campos de las anotaciones del escenario:
 # las tácticas de ingeniería social y el mecanismo de la estafa.

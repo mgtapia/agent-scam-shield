@@ -25,7 +25,7 @@ const ResultadosVista = (() => {
     r_at_sin_archivo: "La curva del atacante todavía no está", r_at_sin_rondas: "La última corrida solo tiene la ronda 0", r_at_con_errores: "La corrida tiene demasiadas muestras con error", r_at_con_errores_det: "Más del 10 % de las muestras falló: no se presenta como la curva. Con una corrida limpia se regenera con:",
     r_at_sin_archivo_det: "Cuando llegue a results/atacante/, se regenera con:", r_at_sin_rondas_det: "El atacante no alcanzó a reescribir ninguna estafa. Con una corrida de varias rondas se regenera con:",
     r_at_nota: "{m} · {n} estafas · {r} rondas", r_at_cero: "ninguna estafa le ganó a ninguna defensa",
-    r_at_eje: "ronda del atacante", r_at_ronda: "Ronda", r_at_errores: "{e} muestras con error",
+    r_at_incompletas: "{d}: rondas {r} incompletas ({v} de {n} estafas con episodio puntuado)", r_y: " y ", r_at_eje: "ronda del atacante", r_at_ronda: "Ronda", r_at_errores: "{e} muestras con error",
     sin_resultados_r: "No hay resultados.json: corre python scripts/resultados_demo.py",
   });
   Object.assign(T.en, {
@@ -49,7 +49,7 @@ const ResultadosVista = (() => {
     r_at_sin_archivo: "The attacker curve is not here yet", r_at_sin_rondas: "The latest run only has round 0", r_at_con_errores: "The run has too many failed samples", r_at_con_errores_det: "Over 10 % of the samples failed: it is not shown as the curve. With a clean run, regenerate with:",
     r_at_sin_archivo_det: "When it lands in results/attacker/, regenerate with:", r_at_sin_rondas_det: "The attacker did not get to rewrite any scam. With a multi-round run, regenerate with:",
     r_at_nota: "{m} · {n} scams · {r} rounds", r_at_cero: "no scam beat any defense",
-    r_at_eje: "attacker round", r_at_ronda: "Round", r_at_errores: "{e} samples with errors",
+    r_at_incompletas: "{d}: rounds {r} incomplete ({v} of {n} scams with a scored episode)", r_y: " and ", r_at_eje: "attacker round", r_at_ronda: "Round", r_at_errores: "{e} samples with errors",
     sin_resultados_r: "No resultados.json: run python scripts/resultados_demo.py",
   });
 
@@ -135,7 +135,11 @@ const ResultadosVista = (() => {
     nota.textContent = [t("r_at_nota", { m: corto(s0.modelo), n: s0.n, r: rondas }), a.estado === "en_cero" ? t("r_at_cero") : "",
       errores ? t("r_at_errores", { e: errores }) : ""].filter(Boolean).join(" · ");
     $("#t-atacante").dataset.ayuda = a.fuente;
-    caja.innerHTML = `<div class="lienzo" id="res-curva"></div>`;
+    // Si una defensa tiene rondas sin todos sus episodios (la cuota cortó el flujo), se dice en una línea.
+    const incompletas = a.series.filter((s) => s.incompletas?.length).map((s) => t("r_at_incompletas", {
+      d: t(`d_${s.defensa}`), r: s.incompletas.map((i) => i.ronda).join(t("r_y")),
+      v: s.incompletas.map((i) => i.validas).join(t("r_y")), n: s.n }));
+    caja.innerHTML = `<div class="lienzo" id="res-curva"></div>${incompletas.map((x) => `<p class="r-aviso">${ms("info")}<span>${esc(x)}</span></p>`).join("")}`;
     const series = a.series.map((s) => ({
       nombre: t(`d_${s.defensa}`) || s.defensa,
       puntos: (s.exitos || []).map((e, i) => [i, s.n ? (100 * e) / s.n : 0]),

@@ -421,6 +421,8 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 
 /* Curva del atacante, o su estado vacío */
 .res-curva .lienzo { height: 304px; }
+.r-aviso { display: flex; align-items: center; gap: var(--e-1); margin: 0; padding: var(--e-1) var(--e-2); border-top: var(--linea); color: var(--texto-2); }
+.r-aviso .ms { color: var(--texto-2); }
 .r-vacio { display: flex; align-items: flex-start; gap: var(--e-2); padding: var(--e-3) var(--e-2); }
 .r-vacio > .ms { color: var(--texto-2); }
 .r-vacio p { margin: 0 0 var(--e-1); }

@@ -20,7 +20,7 @@ Proyecto para la hackathon de Platanus, track **AI Security**: *AI control* (un 
 | **Claude Haiku** con el dueño en el circuito (21 escenarios en español × 3) | **0 % de estafas [0-15]**, 79 % de utilidad [57-95] y unos **6 toques por cada 100 acciones sensibles** [0-23] |
 | **Clasificador que aprende en vivo** (escenarios apartados, 3 pliegues × 3 semillas) | Recall **0,87 [0,75-1,00]**, precisión 0,96 y 4 % de falsas alarmas. Lo aprendido solo sube la sospecha: nunca aprueba un pago |
 
-Todos los números llevan intervalo al 95 %. Lo que significan y lo que no está en [docs/pitch.md](docs/pitch.md) y en [Benchmark en un comando](#benchmark-en-un-comando). Las estafas las escribimos nosotros: un 0 % dice que la garantía se cumple sobre este corpus, no que ninguna estafa pueda saltarla.
+Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango entre 9 corridas (3 pliegues × 3 semillas). Lo que significan y lo que no está en [docs/pitch.md](docs/pitch.md) y en [Benchmark en un comando](#benchmark-en-un-comando). Las estafas las escribimos nosotros: un 0 % dice que la garantía se cumple sobre este corpus, no que ninguna estafa pueda saltarla.
 
 ## Pruébalo
 
