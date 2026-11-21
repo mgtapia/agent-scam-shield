@@ -1,6 +1,6 @@
 // Generado por scripts/exportar_resultados.py. No editar a mano.
 window.RESULTADOS = {
- "generado": "2026-11-21T05:38:10+00:00",
+ "generado": "2026-11-21T06:01:18+00:00",
  "fuente": "inspect",
  "prueba": false,
  "registros": [
@@ -114,14 +114,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.15464382326420195,
     "escenarios": 21,
     "repeticiones": 63,
     "repeticiones_totales": 63
    },
    "utilidad": {
     "tasa": 0.7368421052631579,
-    "bajo": 0.5263157894736842,
+    "bajo": 0.5120803155892935,
     "alto": 0.8947368421052632,
     "escenarios": 19,
     "repeticiones": 57,
@@ -130,7 +130,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.125,
     "bajo": 0.0,
-    "alto": 0.375,
+    "alto": 0.4708948057698615,
     "escenarios": 8,
     "repeticiones": 24,
     "repeticiones_totales": 24
@@ -139,7 +139,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.2425007574992425,
      "escenarios": 12,
      "repeticiones": 36,
      "repeticiones_totales": 36
@@ -147,7 +147,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.22810184305529166,
      "escenarios": 13,
      "repeticiones": 39,
      "repeticiones_totales": 39
@@ -155,7 +155,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.43449149475208104,
      "escenarios": 5,
      "repeticiones": 15,
      "repeticiones_totales": 15
@@ -163,7 +163,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 6,
      "repeticiones_totales": 6
@@ -171,7 +171,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 3,
      "repeticiones_totales": 3
@@ -179,7 +179,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 6,
      "repeticiones_totales": 6
@@ -198,14 +198,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.15464382326420195,
     "escenarios": 21,
     "repeticiones": 63,
     "repeticiones_totales": 63
    },
    "utilidad": {
     "tasa": 0.7368421052631579,
-    "bajo": 0.5263157894736842,
+    "bajo": 0.5120803155892935,
     "alto": 0.8947368421052632,
     "escenarios": 19,
     "repeticiones": 57,
@@ -214,7 +214,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.125,
     "bajo": 0.0,
-    "alto": 0.375,
+    "alto": 0.4708948057698615,
     "escenarios": 8,
     "repeticiones": 24,
     "repeticiones_totales": 24
@@ -223,7 +223,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.2425007574992425,
      "escenarios": 12,
      "repeticiones": 36,
      "repeticiones_totales": 36
@@ -231,7 +231,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.22810184305529166,
      "escenarios": 13,
      "repeticiones": 39,
      "repeticiones_totales": 39
@@ -239,7 +239,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.43449149475208104,
      "escenarios": 5,
      "repeticiones": 15,
      "repeticiones_totales": 15
@@ -247,7 +247,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 6,
      "repeticiones_totales": 6
@@ -255,7 +255,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 3,
      "repeticiones_totales": 3
@@ -263,7 +263,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 6,
      "repeticiones_totales": 6
@@ -282,14 +282,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.15464382326420195,
     "escenarios": 21,
     "repeticiones": 63,
     "repeticiones_totales": 63
    },
    "utilidad": {
     "tasa": 0.7894736842105263,
-    "bajo": 0.5789473684210527,
+    "bajo": 0.5666528575973392,
     "alto": 0.9473684210526315,
     "escenarios": 19,
     "repeticiones": 57,
@@ -298,7 +298,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.3244156195108769,
     "escenarios": 8,
     "repeticiones": 24,
     "repeticiones_totales": 24
@@ -307,7 +307,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.2425007574992425,
      "escenarios": 12,
      "repeticiones": 36,
      "repeticiones_totales": 36
@@ -315,7 +315,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.22810184305529166,
      "escenarios": 13,
      "repeticiones": 39,
      "repeticiones_totales": 39
@@ -323,7 +323,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.43449149475208104,
      "escenarios": 5,
      "repeticiones": 15,
      "repeticiones_totales": 15
@@ -331,7 +331,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 6,
      "repeticiones_totales": 6
@@ -339,7 +339,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 3,
      "repeticiones_totales": 3
@@ -347,7 +347,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 6,
      "repeticiones_totales": 6
@@ -366,14 +366,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.15464382326420195,
     "escenarios": 21,
     "repeticiones": 63,
     "repeticiones_totales": 63
    },
    "utilidad": {
     "tasa": 0.7894736842105263,
-    "bajo": 0.5789473684210527,
+    "bajo": 0.5666528575973392,
     "alto": 0.9473684210526315,
     "escenarios": 19,
     "repeticiones": 57,
@@ -382,7 +382,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.3244156195108769,
     "escenarios": 8,
     "repeticiones": 24,
     "repeticiones_totales": 24
@@ -391,7 +391,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.2425007574992425,
      "escenarios": 12,
      "repeticiones": 36,
      "repeticiones_totales": 36
@@ -399,7 +399,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.22810184305529166,
      "escenarios": 13,
      "repeticiones": 39,
      "repeticiones_totales": 39
@@ -407,7 +407,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.43449149475208104,
      "escenarios": 5,
      "repeticiones": 15,
      "repeticiones_totales": 15
@@ -415,7 +415,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 6,
      "repeticiones_totales": 6
@@ -423,7 +423,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 3,
      "repeticiones_totales": 3
@@ -431,7 +431,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 6,
      "repeticiones_totales": 6
@@ -450,14 +450,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.20388926630434784,
     "escenarios": 15,
     "repeticiones": 15,
     "repeticiones_totales": 15
    },
    "utilidad": {
     "tasa": 0.9090909090909091,
-    "bajo": 0.7272727272727273,
+    "bajo": 0.6226353745137962,
     "alto": 1.0,
     "escenarios": 11,
     "repeticiones": 11,
@@ -466,7 +466,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.2,
     "bajo": 0.0,
-    "alto": 0.6,
+    "alto": 0.6244717358814613,
     "escenarios": 5,
     "repeticiones": 5,
     "repeticiones_totales": 5
@@ -475,7 +475,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.2588400172488141,
      "escenarios": 11,
      "repeticiones": 11,
      "repeticiones_totales": 11
@@ -483,7 +483,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.3244156195108769,
      "escenarios": 8,
      "repeticiones": 8,
      "repeticiones_totales": 8
@@ -491,7 +491,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -499,7 +499,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -507,7 +507,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 1,
      "repeticiones_totales": 1
@@ -515,7 +515,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 1,
      "repeticiones_totales": 1
@@ -534,14 +534,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.20388926630434784,
     "escenarios": 15,
     "repeticiones": 15,
     "repeticiones_totales": 15
    },
    "utilidad": {
     "tasa": 0.9090909090909091,
-    "bajo": 0.7272727272727273,
+    "bajo": 0.6226353745137962,
     "alto": 1.0,
     "escenarios": 11,
     "repeticiones": 11,
@@ -550,7 +550,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.2,
     "bajo": 0.0,
-    "alto": 0.6,
+    "alto": 0.6244717358814613,
     "escenarios": 5,
     "repeticiones": 5,
     "repeticiones_totales": 5
@@ -559,7 +559,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.2588400172488141,
      "escenarios": 11,
      "repeticiones": 11,
      "repeticiones_totales": 11
@@ -567,7 +567,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.3244156195108769,
      "escenarios": 8,
      "repeticiones": 8,
      "repeticiones_totales": 8
@@ -575,7 +575,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -583,7 +583,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -591,7 +591,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 1,
      "repeticiones_totales": 1
@@ -599,7 +599,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 1,
      "repeticiones_totales": 1
@@ -618,14 +618,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.113517091390478,
     "escenarios": 30,
     "repeticiones": 30,
     "repeticiones_totales": 30
    },
    "utilidad": {
     "tasa": 0.9090909090909091,
-    "bajo": 0.7727272727272727,
+    "bajo": 0.7218461934161421,
     "alto": 1.0,
     "escenarios": 22,
     "repeticiones": 22,
@@ -634,7 +634,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.2,
     "bajo": 0.0,
-    "alto": 0.5,
+    "alto": 0.5098431532792765,
     "escenarios": 10,
     "repeticiones": 10,
     "repeticiones_totales": 10
@@ -643,7 +643,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.14865952572596125,
      "escenarios": 22,
      "repeticiones": 22,
      "repeticiones_totales": 22
@@ -651,7 +651,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.19361341827271994,
      "escenarios": 16,
      "repeticiones": 16,
      "repeticiones_totales": 16
@@ -659,7 +659,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.48990002040399916,
      "escenarios": 4,
      "repeticiones": 4,
      "repeticiones_totales": 4
@@ -667,7 +667,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.48990002040399916,
      "escenarios": 4,
      "repeticiones": 4,
      "repeticiones_totales": 4
@@ -675,7 +675,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -683,7 +683,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -702,14 +702,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.20388926630434784,
     "escenarios": 15,
     "repeticiones": 15,
     "repeticiones_totales": 15
    },
    "utilidad": {
     "tasa": 1.0,
-    "bajo": 1.0,
+    "bajo": 0.7411599827511859,
     "alto": 1.0,
     "escenarios": 11,
     "repeticiones": 11,
@@ -718,7 +718,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.43449149475208104,
     "escenarios": 5,
     "repeticiones": 5,
     "repeticiones_totales": 5
@@ -727,7 +727,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.2588400172488141,
      "escenarios": 11,
      "repeticiones": 11,
      "repeticiones_totales": 11
@@ -735,7 +735,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.3244156195108769,
      "escenarios": 8,
      "repeticiones": 8,
      "repeticiones_totales": 8
@@ -743,7 +743,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -751,7 +751,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -759,7 +759,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 1,
      "repeticiones_totales": 1
@@ -767,7 +767,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 1,
      "repeticiones_totales": 1
@@ -786,14 +786,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.20388926630434784,
     "escenarios": 15,
     "repeticiones": 15,
     "repeticiones_totales": 15
    },
    "utilidad": {
     "tasa": 1.0,
-    "bajo": 1.0,
+    "bajo": 0.7411599827511859,
     "alto": 1.0,
     "escenarios": 11,
     "repeticiones": 11,
@@ -802,7 +802,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.43449149475208104,
     "escenarios": 5,
     "repeticiones": 5,
     "repeticiones_totales": 5
@@ -811,7 +811,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.2588400172488141,
      "escenarios": 11,
      "repeticiones": 11,
      "repeticiones_totales": 11
@@ -819,7 +819,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.3244156195108769,
      "escenarios": 8,
      "repeticiones": 8,
      "repeticiones_totales": 8
@@ -827,7 +827,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -835,7 +835,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -843,7 +843,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 1,
      "repeticiones_totales": 1
@@ -851,7 +851,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.7934567085261071,
      "escenarios": 1,
      "repeticiones": 1,
      "repeticiones_totales": 1
@@ -870,14 +870,14 @@ window.RESULTADOS = {
    "estafas_exitosas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.113517091390478,
     "escenarios": 30,
     "repeticiones": 30,
     "repeticiones_totales": 30
    },
    "utilidad": {
     "tasa": 1.0,
-    "bajo": 1.0,
+    "bajo": 0.8513404742740388,
     "alto": 1.0,
     "escenarios": 22,
     "repeticiones": 22,
@@ -886,7 +886,7 @@ window.RESULTADOS = {
    "falsas_alarmas": {
     "tasa": 0.0,
     "bajo": 0.0,
-    "alto": 0.0,
+    "alto": 0.2775401687666166,
     "escenarios": 10,
     "repeticiones": 10,
     "repeticiones_totales": 10
@@ -895,7 +895,7 @@ window.RESULTADOS = {
     "urgencia": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.14865952572596125,
      "escenarios": 22,
      "repeticiones": 22,
      "repeticiones_totales": 22
@@ -903,7 +903,7 @@ window.RESULTADOS = {
     "autoridad": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.19361341827271994,
      "escenarios": 16,
      "repeticiones": 16,
      "repeticiones_totales": 16
@@ -911,7 +911,7 @@ window.RESULTADOS = {
     "cambio_cuenta": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.48990002040399916,
      "escenarios": 4,
      "repeticiones": 4,
      "repeticiones_totales": 4
@@ -919,7 +919,7 @@ window.RESULTADOS = {
     "pedido_codigo": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.48990002040399916,
      "escenarios": 4,
      "repeticiones": 4,
      "repeticiones_totales": 4
@@ -927,7 +927,7 @@ window.RESULTADOS = {
     "tienda_falsa": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2
@@ -935,7 +935,7 @@ window.RESULTADOS = {
     "mcp_envenenado": {
      "tasa": 0.0,
      "bajo": 0.0,
-     "alto": 0.0,
+     "alto": 0.6576280471103807,
      "escenarios": 2,
      "repeticiones": 2,
      "repeticiones_totales": 2

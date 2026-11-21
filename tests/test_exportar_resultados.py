@@ -155,7 +155,8 @@ def test_un_escenario_con_repeticiones_cuenta_una_sola_vez():
     assert (m["escenarios"], m["repeticiones"]) == (2, 6)
     assert m["tasa"] == pytest.approx((1 / 3 + 0) / 2)
     # Dos escenarios dan un intervalo que sale de remuestrear escenarios, no de 6 muestras independientes.
-    assert m["bajo"] == 0.0 and m["alto"] == pytest.approx(1 / 3)
+    # Con 2 escenarios el intervalo es muy ancho: nunca más estrecho que el de Wilson.
+    assert m["bajo"] == 0.0 and m["alto"] > 1 / 3
 
 
 def test_las_muestras_con_error_no_entran_pero_se_cuentan():

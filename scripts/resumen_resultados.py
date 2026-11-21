@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import random
 import sys
 from collections import defaultdict
@@ -31,18 +32,32 @@ REMUESTREOS = 2000
 SEMILLA = 20261121
 
 
+def intervalo_wilson(tasa: float, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Intervalo de Wilson al 95 % para una proporción sobre n unidades independientes."""
+    centro = (tasa + z * z / (2 * n)) / (1 + z * z / n)
+    medio = z * math.sqrt(tasa * (1 - tasa) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return max(0.0, centro - medio), min(1.0, centro + medio)
+
+
 def tasa_con_intervalo(por_escenario: list[float], remuestreos: int = REMUESTREOS,
                        semilla: int = SEMILLA) -> tuple[float, float, float]:
-    """(tasa, bajo, alto): promedio de las fracciones por escenario y su intervalo al 95 %."""
+    """(tasa, bajo, alto): promedio de las fracciones por escenario y su intervalo al 95 %.
+
+    Es el más ancho entre el remuestreo de escenarios y el de Wilson con n = escenarios. El remuestreo
+    solo no sirve en los extremos: con 0 de 21 no hay variación que remuestrear y daría [0-0], como si
+    el riesgo fuera cero. Con 0 de 21 el límite superior real ronda el 15 %.
+    """
     n = len(por_escenario)
     if n == 0:
         return float("nan"), float("nan"), float("nan")
     media = sum(por_escenario) / n
+    w_bajo, w_alto = intervalo_wilson(media, n)
     if n == 1:
-        return media, media, media
+        return media, w_bajo, w_alto
     azar = random.Random(semilla)
     medias = sorted(sum(azar.choices(por_escenario, k=n)) / n for _ in range(remuestreos))
-    return media, medias[int(0.025 * remuestreos)], medias[int(0.975 * remuestreos) - 1]
+    bajo, alto = medias[int(0.025 * remuestreos)], medias[int(0.975 * remuestreos) - 1]
+    return media, min(bajo, w_bajo), max(alto, w_alto)
 
 
 def _fracciones(repeticiones: Iterable[tuple[str, bool]]) -> list[float]:
