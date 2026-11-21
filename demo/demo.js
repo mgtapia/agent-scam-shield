@@ -167,6 +167,10 @@
 
   const Graficos = { quieto: matchMedia("(prefers-reduced-motion: reduce)").matches };
   const params = new URLSearchParams(location.search);
+  // La clave del WhatsApp en vivo no queda a la vista en el proyector: se guarda en la pestaña y sale de la barra.
+  let claveVivo = params.get("clave") || "";
+  try { if (claveVivo) sessionStorage.setItem("grifter-clave", claveVivo); else claveVivo = sessionStorage.getItem("grifter-clave") || ""; } catch { /* sin almacenamiento, sirve la de la URL */ }
+  if (params.has("clave")) { const u = new URL(location.href); u.searchParams.delete("clave"); history.replaceState(null, "", u); }
   const idioma = params.get("idioma") === "en" ? "en" : "es";
   const t = (k, v = {}) => { let s = T[idioma][k] ?? T.es[k] ?? k; if (typeof s !== "string") return s; for (const [a, b] of Object.entries(v)) s = s.replaceAll(`{${a}}`, b); return s; };
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -458,7 +462,7 @@
   function avisarEnVivo() {
     if (params.get("whatsapp") !== "1" || avisado || location.protocol === "file:") return;
     avisado = true;
-    const clave = params.get("clave") || "";
+    const clave = claveVivo;
     const corte = new AbortController();
     setTimeout(() => corte.abort(), 5000);
     fetch("api/demo/alerta-en-vivo", { method: "POST", headers: { "Content-Type": "application/json" }, signal: corte.signal,
