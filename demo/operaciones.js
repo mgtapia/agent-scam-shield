@@ -426,7 +426,9 @@ const Operaciones = (() => {
   const VENTANA_GRUPO = 3;   // segundos entre eventos del mismo tipo para que cuenten como una ráfaga
   function agrupar(ol, e) {
     if (e.tipo !== "boveda" && e.tipo !== "modelo") return false;
-    const li = ol.lastElementChild;
+    // La ráfaga puede venir intercalada con la otra (modelo, bóveda, modelo): se busca en las últimas líneas.
+    let li = ol.lastElementChild;
+    for (let k = 0; li && k < 3 && li.dataset.grupo !== e.tipo; k++) li = li.previousElementSibling;
     if (!li || li.dataset.grupo !== e.tipo || (e.ts || 0) - Number(li.dataset.ts || 0) > VENTANA_GRUPO) return false;
     const g = JSON.parse(li.dataset.g);
     let txt;
