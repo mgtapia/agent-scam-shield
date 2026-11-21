@@ -159,12 +159,20 @@ const VivoSimulado = (() => {
   const PESOS_META = { dominio_parecido: 0.44, cambio_cuenta: 0.4, pide_codigo: 0.46, pide_secreto: 0.48, inyeccion: 0.5,
     cuenta_nueva: 0.3, urgencia: 0.18, monto_inusual: 0.24, primer_contacto: 0.16, proveedor_inscrito: -0.35 };
 
+  // El duelo: las mutaciones que puede probar el atacante y la señal del escudo que cada una intenta esquivar.
+  const MUTACIONES_DUELO = [
+    ["parafrasear", "urgencia"], ["sacar_urgencia", "urgencia"], ["cambiar_autoridad", "autoridad"],
+    ["partir_cuenta", "cuenta_nueva"], ["cuenta_con_letras", "cuenta_nueva"], ["homoglifo_dominio", "dominio_parecido"],
+    ["remitente_conocido", "primer_contacto"], ["repartir_en_dos", "cambio_cuenta"], ["reenviar", "dominio_parecido"],
+  ];
+
   function crear(alEvento) {
     const s = {
       pausa: false, velocidad: 1, reloj: 0, cola: [], n: 0, etiquetas: 0, version: 0,
       boveda: new Map(), agentes: {}, correos: [], historial: [], bloqueos: { 1: 0, 2: 0, boveda: 0 },
       pesos: Object.fromEntries(Object.keys(PESOS_META).map((k) => [k, +(PESOS_META[k] * 0.45).toFixed(2)])),
       emitir: null,
+      duelo: { gen: 0, ataque: 0.08, defensa: 0.05, recall: 0.82, descubiertas: [], conteos: {}, historial: [] },
     };
     for (const [a, tarea] of Object.entries(AGENTES)) s.agentes[a] = { agente: a, estado: "inactivo", tarea, ts: Date.now() / 1000 };
 
@@ -296,8 +304,45 @@ const VivoSimulado = (() => {
       try { alEvento(e); } catch (err) { console.error(err); }
     }
 
+    function generacionDuelo() {
+      const d = s.duelo;
+      d.gen++;
+      if (d.descubiertas.length < MUTACIONES_DUELO.length && (d.gen === 1 || Math.random() < 0.3)) {
+        const nueva = MUTACIONES_DUELO[d.descubiertas.length];
+        d.descubiertas.push(nueva);
+        d.ataque = Math.min(0.85, d.ataque + entre(0.18, 0.3));
+      } else d.ataque = Math.min(0.85, d.ataque + 0.04 * (1 - d.ataque));
+      d.defensa += 0.28 * (d.ataque - d.defensa);
+      const evasion = Math.max(0, Math.min(1, d.ataque - d.defensa + entre(-0.03, 0.03)));
+      d.recall = Math.max(0.5, Math.min(0.99, 0.97 - 0.6 * evasion + entre(-0.02, 0.02)));
+      const candidatos = 16;
+      const evadidas = Math.round(evasion * candidatos);
+      const motivos = {};
+      for (let k = 0; k < candidatos - evadidas; k++) {
+        const [, senal] = d.descubiertas.length ? azar(d.descubiertas) : MUTACIONES_DUELO[0];
+        motivos[senal] = (motivos[senal] || 0) + 1;
+      }
+      for (const [m] of d.descubiertas) {
+        const c = (d.conteos[m] ||= { exitos: 0, intentos: 0 });
+        const i = Math.round(candidatos / d.descubiertas.length);
+        c.intentos += i;
+        c.exitos += Math.round(i * evasion * entre(0.6, 1.4));
+      }
+      const top = Object.entries(d.conteos).filter(([, c]) => c.exitos).map(([mutacion, c]) => ({ mutacion, exitos: c.exitos, intentos: c.intentos,
+        contra: (MUTACIONES_DUELO.find(([x]) => x === mutacion) || [])[1] || "" })).sort((a, b) => b.exitos / b.intentos - a.exitos / a.intentos).slice(0, 3);
+      const motivo = Object.entries(motivos).sort((a, b) => b[1] - a[1])[0]?.[0] || "ninguna";
+      const ev = { tipo: "duelo", generacion: d.gen, candidatos, evasion: +evasion.toFixed(3), recall: +d.recall.toFixed(3),
+        recall_mutaciones: +(1 - evasion).toFixed(3), falsas_alarmas: +entre(0.01, 0.05).toFixed(3),
+        // La capa 2 no se entrena: ninguna mutación cambia que la cuenta salga de un correo.
+        exitosas_capa2: 0, sin_capa2: evadidas, mutacion_top: top[0]?.mutacion || "", top_mutaciones: top,
+        motivo_bloqueo: motivo, motivos, version_modelo: ver() };
+      d.historial.push(ev);
+      if (d.historial.length > 50) d.historial.shift();
+      return ev;
+    }
+
     // Reloj virtual: la pausa lo detiene y la velocidad lo apura; los eventos salen en su hora virtual.
-    let proximo = 0;
+    let proximo = 0, proximoDuelo = 3000;
     function tic() {
       if (!s.pausa) {
         s.reloj += 100 * s.velocidad;
@@ -306,6 +351,7 @@ const VivoSimulado = (() => {
           s.cola.sort((a, b) => a[0] - b[0]);
           proximo = s.reloj + entre(2000, 5000);
         }
+        if (s.reloj >= proximoDuelo) { despachar(generacionDuelo()); proximoDuelo = s.reloj + 6000; }
         while (s.cola.length && s.cola[0][0] <= s.reloj) despachar(s.cola.shift()[1]);
       }
       setTimeout(tic, 100);
@@ -319,6 +365,7 @@ const VivoSimulado = (() => {
       }
     }
     for (const a of Object.keys(AGENTES)) s.agentes[a] = { agente: a, estado: "inactivo", tarea: AGENTES[a], ts: Date.now() / 1000 };
+    for (let k = 0; k < 8; k++) generacionDuelo();
     proximo = 600;
     setTimeout(tic, 100);
 
@@ -326,6 +373,7 @@ const VivoSimulado = (() => {
       estado: () => JSON.parse(JSON.stringify({
         agentes: Object.values(s.agentes), boveda: [...s.boveda.values()], modelo: s.historial.at(-1) || null,
         historial_modelo: s.historial.slice(-30), correos: s.correos, bloqueos_por_capa: s.bloqueos,
+        historial_duelo: s.duelo.historial,
         pausa: s.pausa, velocidad: s.velocidad,
       })),
       control({ accion, valor }) {

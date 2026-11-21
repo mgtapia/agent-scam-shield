@@ -144,9 +144,9 @@ button, select, input, textarea { font: inherit; color: inherit; }
 .pestanas a[aria-selected="true"] { color: var(--texto); box-shadow: inset 0 -1px 0 var(--texto); }
 .controles { display: flex; align-items: center; justify-content: flex-end; gap: var(--e-1); min-width: 0; }
 body[data-vista="vivo"] .solo-resultados, body:not([data-vista="vivo"]) .solo-vivo { display: none; }
-body[data-vista="probar"] .solo-resultados, body[data-vista="operaciones"] .solo-resultados { display: none; }
-body:not([data-vista="operaciones"]) .solo-ops { display: none; }
-body:not([data-vista="operaciones"]):not([data-vista="vivo"]) .solo-flujo { display: none; }
+body[data-vista="probar"] .solo-resultados, body[data-vista="operaciones"] .solo-resultados, body[data-vista="duelo"] .solo-resultados { display: none; }
+body:not([data-vista="operaciones"]):not([data-vista="duelo"]) .solo-ops { display: none; }
+body:not([data-vista="operaciones"]):not([data-vista="vivo"]):not([data-vista="duelo"]) .solo-flujo { display: none; }
 .tag.sello { height: 24px; margin-right: var(--e-1); }
 .tag.sello[data-estado="real"] { color: var(--texto); }
 .tag.sello[data-estado="reconectando"] { color: var(--texto-2); }
@@ -659,6 +659,47 @@ mark.tramo { background: transparent; color: inherit; }
 .pesos .p-delta { color: var(--texto-2); }
 .pesos li.golpe { animation: golpe var(--dur-dato) ease-out; }
 
+/* --- Duelo: el hacker que aprende contra el escudo que aprende --- */
+.vista.duelo { grid-template-rows: auto 400px minmax(240px, auto); align-items: stretch; }
+.duelo-franja { grid-column: 1 / -1; display: grid; grid-template-columns: 160px repeat(3, minmax(0, 1fr)); border: var(--linea); background: var(--superficie); }
+.du-celda { display: grid; align-content: center; gap: 0; min-height: 88px; padding: var(--e-1) var(--e-3); min-width: 0; }
+.du-celda + .du-celda { border-left: var(--linea); }
+.du-celda .rotulo { color: var(--texto-2); }
+.du-fila { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--e-2); }
+.du-num { font: var(--p-fuerte) var(--t-kpi) / var(--l-kpi) var(--mono); font-variant-numeric: tabular-nums; }
+.du-num.golpe { animation: golpe var(--dur-dato) ease-out; }
+.du-delta { display: inline-flex; align-items: center; font-size: var(--t-2); line-height: var(--l-2); }
+.du-delta .ms { color: inherit; }
+.duelo-curva { grid-column: 1 / span 8; }
+.duelo-curva .lienzo { flex: 1; min-height: 0; }
+.duelo-hacker { grid-column: 9 / span 4; }
+.duelo-gens { grid-column: 1 / -1; }
+#duelo-hacker { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: var(--e-1); }
+.du-sub { margin: 0; padding: var(--e-2) var(--e-2) var(--e-1); color: var(--texto-2); }
+.du-top li, .du-motivos li { display: grid; grid-template-columns: minmax(0, 1fr) 64px auto; align-items: center; gap: 0 var(--e-1); padding: var(--e-1) var(--e-2); }
+.du-top li + li { border-top: var(--linea); }
+.du-top li.golpe { animation: golpe var(--dur-dato) ease-out; }
+.du-top .du-mut { font-weight: var(--p-fuerte); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.du-top .primera .du-mut { color: var(--rojo); }
+.du-top .primera .medidor > span { background: var(--rojo); }
+.du-top .medidor, .du-motivos .medidor { width: 64px; }
+.du-top .du-contra { grid-column: 1 / -1; font-size: var(--t-1); line-height: var(--l-1); }
+.du-motivo { display: flex; align-items: center; gap: var(--e-1); margin: 0; padding: 0 var(--e-2) var(--e-1); font-size: var(--t-3); line-height: var(--l-3); font-weight: var(--p-fuerte); }
+.du-motivo .ms { color: var(--verde); }
+.du-motivos li { padding-top: 0; padding-bottom: 0; color: var(--texto-2); }
+.du-motivos .dato { color: var(--texto); text-align: right; }
+.duelo-lista { max-height: 288px; overflow-y: auto; }
+.duelo-lista li { display: grid; grid-template-columns: 6ch 8ch 6ch 7ch minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 0 var(--e-2); min-height: 32px; padding: 0 var(--e-2); }
+.duelo-lista li + li { border-top: var(--linea); }
+.duelo-lista li.cab { position: sticky; top: 0; z-index: 1; background: var(--superficie); color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); border-bottom: var(--linea); }
+.duelo-lista li.cab + li { border-top: 0; }
+.du-g-mut, .du-g-motivo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.du-vacio { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: var(--e-2); padding: var(--e-3) var(--e-2); }
+.du-vacio > .ms { color: var(--texto-2); }
+.du-vacio p { margin: 0 0 var(--e-1); }
+.du-vacio-tit { font-size: var(--t-3); line-height: var(--l-3); font-weight: var(--p-fuerte); }
+.vista.duelo.sin-duelo .ops-bloque { display: none; }
+
 /* --- Estado de alerta: borde rojo de toda la ventana. Es la única excepción a «sin glow» --- */
 .borde-alerta {
   position: fixed;
@@ -696,6 +737,7 @@ mark.tramo { background: transparent; color: inherit; }
 /* Con las pestañas fijas a la izquierda, el selector de escenario cede ancho para no tocarlas. */
 @media (max-width: 1439px) {
   .campo select { width: 176px; }
+  .pestanas a .ms { display: none; }
 }
 @media (max-width: 1599px) {
   .vista.ops { height: auto; min-height: 0; grid-template-rows: auto 512px 352px 304px; }
@@ -707,6 +749,9 @@ mark.tramo { background: transparent; color: inherit; }
   .ops-modelo { grid-column: 1 / -1; }
 }
 @media (max-width: 1099px) {
+  .duelo-curva, .duelo-hacker { grid-column: 1 / -1; }
+  .vista.duelo { grid-template-rows: none; }
+  .duelo-curva { height: 360px; }
   .res-bench, .res-reales, .res-atacante { grid-column: 1 / -1; grid-row: auto; }
   .barra { grid-template-columns: auto minmax(0, 1fr); height: auto; padding: var(--e-1) var(--e-2); row-gap: var(--e-1); }
   .pestanas { grid-row: 2; grid-column: 1 / -1; height: 48px; margin-left: 0; }
@@ -737,7 +782,7 @@ mark.tramo { background: transparent; color: inherit; }
   .modelo-curvas { border-right: 0; border-bottom: var(--linea); }
   .hallazgo { grid-template-columns: 88px minmax(0, 1fr) 96px; }
   .hallazgo .h-nota { display: none; }
-  .pestanas { justify-self: stretch; overflow-x: auto; }
+  .pestanas { justify-self: stretch; overflow-x: auto; scrollbar-width: none; }
   .pestanas a { flex: none; white-space: nowrap; }
   .lec-meta { grid-template-columns: auto minmax(0, 1fr); }
   .lec-quien { grid-column: 1 / -1; }
@@ -745,6 +790,13 @@ mark.tramo { background: transparent; color: inherit; }
 }
 @media (max-width: 599px) {
   .ops-agentes { grid-template-columns: minmax(0, 1fr); }
+  .duelo-franja { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .du-celda:nth-child(3) { border-left: 0; }
+  .du-celda:nth-child(n+3) { border-top: var(--linea); }
+  .du-num { font-size: var(--t-5); line-height: var(--l-5); }
+  .duelo-lista li { grid-template-columns: 5ch 5ch 5ch 3ch minmax(0, 1fr); }
+  .du-g-motivo, .duelo-lista .cab span:last-child { display: none; }
+  .duelo-curva .titulo .nota, .du-celda .c-2 { display: none; }
   .m-et { white-space: normal; }
   .ops-lectura { height: auto; }
   .lec-cuerpo { flex: none; }

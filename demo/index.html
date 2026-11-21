@@ -28,6 +28,7 @@
       <a role="tab" href="#operaciones" data-vista="operaciones" aria-selected="true"><span class="ms" aria-hidden="true">radar</span><span data-t="v_operaciones">Operaciones</span></a>
       <a role="tab" href="#vivo" data-vista="vivo" aria-selected="false" data-ayuda-solo="ayuda_v_vivo"><span class="ms" aria-hidden="true">replay</span><span data-t="v_vivo">Episodios</span></a>
       <a role="tab" href="#resultados" data-vista="resultados" aria-selected="false"><span class="ms" aria-hidden="true">grid_view</span><span data-t="v_resultados">Resultados</span></a>
+      <a role="tab" href="#duelo" data-vista="duelo" aria-selected="false" data-ayuda-solo="ayuda_v_duelo"><span class="ms" aria-hidden="true">swords</span><span data-t="v_duelo">Duelo</span></a>
       <a role="tab" href="#probar" data-vista="probar" aria-selected="false"><span class="ms" aria-hidden="true">science</span><span data-t="v_probar">Pruébalo</span></a>
     </nav>
     <div class="controles">
@@ -124,6 +125,22 @@
       </section>
     </section>
 
+    <section class="vista duelo" id="vista-duelo" data-vista="duelo" aria-label="Duelo" hidden>
+      <div class="duelo-franja" id="duelo-franja"></div>
+      <section class="ops-bloque duelo-curva" aria-labelledby="t-duelo-curva">
+        <h2 class="titulo" id="t-duelo-curva"><span class="ms" aria-hidden="true">swords</span><span data-t="du_curva">Hacker contra escudo</span><span class="nota" id="n-duelo"></span></h2>
+        <div class="lienzo" id="duelo-lienzo"></div>
+      </section>
+      <section class="ops-bloque duelo-hacker" aria-labelledby="t-duelo-hacker">
+        <h2 class="titulo" id="t-duelo-hacker"><span class="ms" aria-hidden="true">bug_report</span><span data-t="du_hacker">Lo que aprende el hacker</span></h2>
+        <div id="duelo-hacker"></div>
+      </section>
+      <section class="ops-bloque duelo-gens" aria-labelledby="t-duelo-gens">
+        <h2 class="titulo" id="t-duelo-gens"><span class="ms" aria-hidden="true">history</span><span data-t="du_gens">Generaciones</span><span class="nota" id="n-duelo-gens"></span></h2>
+        <ol class="duelo-lista" id="duelo-gens" role="log" aria-live="off"></ol>
+      </section>
+    </section>
+
     <section class="vista" id="vista-probar" data-vista="probar" aria-label="Pruébalo" hidden>
       <form class="probar" id="probar-form" novalidate aria-labelledby="t-probar">
         <h2 class="titulo" id="t-probar"><span class="ms" aria-hidden="true">science</span><span data-t="p_titulo">Intenta estafarlo</span></h2>
@@ -157,6 +174,7 @@
   <script src="graficos.js"></script>
   <script src="app.js"></script>
   <script src="vivo_simulado.js"></script>
+  <script src="duelo.js"></script>
   <script src="operaciones.js"></script>
   <script src="probar.js"></script>
   <script src="resultados_vista.js"></script>

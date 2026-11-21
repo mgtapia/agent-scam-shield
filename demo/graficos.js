@@ -262,6 +262,29 @@ const Graficos = (() => {
     });
   }
 
-  return { C, hay, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, curvas, curvaAtacante, redimensionar, sinMovimiento };
+  // Curvas del duelo: por generación, la evasión del hacker (rojo: es el riesgo) contra el recall del escudo
+  // (blanco), y las estafas exitosas con la capa 2 (verde, la garantía), que se mantienen en 0.
+  function curvaDuelo(el, nombres) {
+    const g = iniciar(el);
+    if (!g) return null;
+    const serie = (nombre, color, tipo, ancho = 1.5) => ({
+      type: "line", name: nombre, data: [], showSymbol: false, symbol: "rect", symbolSize: 4, smooth: false,
+      lineStyle: { color, width: ancho, type: tipo }, itemStyle: { color }, emphasis: { disabled: true },
+      endLabel: { show: true, color, fontFamily: MONO, fontSize: T1, formatter: (p) => `${p.seriesName} ${Math.round(p.value[1])}%` },
+      labelLayout: { moveOverlap: "shiftY" },
+    });
+    g.setOption({
+      animation: !sinMovimiento, animationDurationUpdate: 480, animationEasingUpdate: "cubicOut",
+      grid: { left: 40, right: 128, top: 16, bottom: 40 },
+      xAxis: { type: "value", min: "dataMin", max: "dataMax", minInterval: 1, splitLine: { show: false },
+        name: nombres.eje, nameLocation: "middle", nameGap: 24, nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 } },
+      yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
+      tooltip: { trigger: "axis", formatter: (ps) => [`${nombres.gen} ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`)].join("<br>") },
+      series: [serie(nombres.evasion, C.rojo, "solid", 2), serie(nombres.recall, C.texto, "solid", 2), serie(nombres.capa2, C.verde, [6, 3])],
+    });
+    return { poner(datos) { g.setOption({ series: datos.map((data) => ({ data, showSymbol: data.length < 3 })) }); } };
+  }
+
+  return { C, hay, curvaDuelo, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, curvas, curvaAtacante, redimensionar, sinMovimiento };
 })();
 window.Graficos = Graficos;

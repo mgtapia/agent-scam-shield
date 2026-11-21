@@ -66,7 +66,7 @@ Reglas:
 
 ## Arquitectura
 
-La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo después y los controles de la vista a la derecha. Las pestañas no cambian de lugar entre vistas: cada vista trae otros controles, y si estuvieran centradas saltarían al cambiar de pestaña. Cada vista tiene un solo propósito.
+La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo después y los controles de la vista a la derecha. Bajo 1440 px las pestañas van sin ícono, para que las cinco quepan sin tocar los controles de Episodios. Las pestañas no cambian de lugar entre vistas: cada vista trae otros controles, y si estuvieran centradas saltarían al cambiar de pestaña. Cada vista tiene un solo propósito.
 
 - **Operaciones** (primera pestaña): el centro de operaciones en vivo, alimentado por `/api/vivo`.
   - Arriba va una fila de agentes con su estado, su tarea y su cola. El agente cuyo correo está en Lectura se subraya como la pestaña activa.
@@ -92,6 +92,12 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo despu
   - «Modelos y firewall reales»: una fila por medición (Pipelock, Sonnet, Haiku y el clasificador), con el número en `--t-4` y su intervalo al lado. Para el clasificador va el rango entre corridas, y se dice que es un rango.
   - «Atacante adaptativo»: las estafas exitosas acumuladas por ronda, una línea gris por defensa, distinta por trazo y con su nombre al final. Pasa a rojo solo si una estafa le ganó a esa defensa. Si no hay curva con rondas, va un estado vacío que dice qué falta y con qué comando se regenera.
   - La fuente y el comando de cada número van en la ayuda (`data-ayuda`). Un número sin archivo de origen lleva la etiqueta «sin archivo».
+- **Duelo** (#82): un hacker que aprende de cómo lo bloqueamos, contra el escudo que se reentrena con él. Es una vista propia, no un bloque de Operaciones: Operaciones ya llena una pantalla y el duelo cuenta otra historia, que en el proyector necesita espacio.
+  - Arriba va la franja: la generación, la evasión del hacker en `--rojo`, el recall del escudo en blanco, cada uno con su cambio contra la generación anterior, y las estafas exitosas con la capa 2 en `--verde`, que se mantienen en 0.
+  - Al medio van las curvas por generación: evasión en rojo, recall en blanco y «con capa 2» en verde punteado, plana en 0, cada una con su nombre al final. Al lado, lo que aprende el hacker: sus tres mutaciones más útiles (la primera en rojo) y el motivo del último bloqueo, con el conteo por señal.
+  - Abajo, una fila por generación, la más nueva arriba.
+  - Los eventos `duelo` llegan por el flujo de `/api/vivo`: Operaciones se los pasa al Duelo y anota cada generación en su registro. `/api/vivo/estado` trae `historial_duelo`. Sin eventos, la vista dice que el duelo no corre en el motor y cómo verlo con el emisor local (`?sim`).
+  - El duelo es parte del flujo en vivo: lleva el sello, la pausa y la velocidad de Operaciones.
 - **Pruébalo:** «Intenta estafarlo» (#21), conectado a `POST /api/probar`.
   - A la izquierda va el formulario, con el encargo del dueño y su cuenta inscrita arriba para que el juez sepa a qué apunta. A la derecha va el resultado.
   - El resultado lleva el veredicto («Frenada» en verde, «Pasó» en rojo o «Sin acción» en gris), la acción que intentó el agente y una fila por capa con su resultado («Retenida» o «Ejecutada», como en Operaciones) y su motivo. La fila del escudo completo no repite el motivo: dice qué partes la frenan.

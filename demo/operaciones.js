@@ -5,7 +5,7 @@
 
 const Operaciones = (() => {
   Object.assign(T.es, {
-    o_juez: "Juez", ayuda_juez: "Correo escrito a mano en Pruébalo: solo se evalúa, no entrena ni entra a la bóveda", o_cola: "Entrada", o_lectura: "Lectura", o_registro: "Registro", o_capas: "Defensa en capas", o_boveda: "Bóveda", o_modelo: "Modelo",
+    du_r_evasion: "evasión", o_juez: "Juez", ayuda_juez: "Correo escrito a mano en Pruébalo: solo se evalúa, no entrena ni entra a la bóveda", o_cola: "Entrada", o_lectura: "Lectura", o_registro: "Registro", o_capas: "Defensa en capas", o_boveda: "Bóveda", o_modelo: "Modelo",
     o_sello_real: "Simulación · motor real", o_sello_sim: "Simulación · emisor local", o_sello_conectando: "Conectando",
     o_sello_reconectando: "Reconectando", ayuda_sello: "Los agentes y los correos son simulados. La defensa (firewall, escudo, bóveda y clasificador) corre sobre cada evento",
     o_pausa: "Pausa", o_seguir: "Seguir",
@@ -37,7 +37,7 @@ const Operaciones = (() => {
     tr_inyeccion: "inyección", tr_secreto: "secreto",
   });
   Object.assign(T.en, {
-    o_juez: "Judge", ayuda_juez: "Email written by hand in Try it: only evaluated, never trained on or added to the vault", o_cola: "Inbox", o_lectura: "Reading", o_registro: "Log", o_capas: "Layered defense", o_boveda: "Vault", o_modelo: "Model",
+    du_r_evasion: "evasion", o_juez: "Judge", ayuda_juez: "Email written by hand in Try it: only evaluated, never trained on or added to the vault", o_cola: "Inbox", o_lectura: "Reading", o_registro: "Log", o_capas: "Layered defense", o_boveda: "Vault", o_modelo: "Model",
     o_sello_real: "Simulation · real engine", o_sello_sim: "Simulation · local emitter", o_sello_conectando: "Connecting",
     o_sello_reconectando: "Reconnecting", ayuda_sello: "Agents and emails are simulated. The defense (firewall, shield, vault and classifier) runs on every event",
     o_pausa: "Pause", o_seguir: "Resume",
@@ -429,6 +429,7 @@ const Operaciones = (() => {
       case "veredicto": cls = e.decision === "estafa" ? "r-rojo" : ""; txt = `${id}${String(t(`o_dec_${e.decision}`)).toUpperCase()} ${Number(e.confianza).toFixed(2)}${e.capa && e.decision !== "seguro" ? ` · ${capa(e.capa)}` : ""}`; break;
       case "accion": cls = e.resultado !== "ejecutada" ? "r-verde" : ""; txt = `${id}${textoAccion(e)} · ${t(`ac_${e.resultado}`)}${e.capa && e.resultado !== "ejecutada" ? ` · ${capa(e.capa)}` : ""}`; break;
       case "boveda": { const i = e.indicador || {}; txt = `${i.veces > 1 ? `×${i.veces}` : "+"} ${t(`bv_${i.tipo}`)} ${i.valor}`; break; }
+      case "duelo": txt = `g${e.generacion} · ${t("du_r_evasion")} ${pct(e.evasion)} · recall ${Number(e.recall).toFixed(2)} · capa 2 ${e.exitosas_capa2}`; break;
       case "modelo": txt = `${e.version} · p ${Number(e.precision).toFixed(2)} r ${Number(e.recall).toFixed(2)} fa ${Number(e.falsas_alarmas).toFixed(2)}`; break;
       default: txt = JSON.stringify(e).slice(0, 120);
     }
@@ -608,6 +609,7 @@ const Operaciones = (() => {
         pintarIndicador(o.boveda.get(i.valor), true);
         break;
       }
+      case "duelo": window.Duelo?.aplicar(e); break;
       case "modelo": {
         o.modelo = e;
         if (!o.historial.some((m) => m.version === e.version)) o.historial.push(e);
@@ -651,6 +653,7 @@ const Operaciones = (() => {
     // Los contadores del motor cubren también lo anterior a los últimos 50 correos.
     const b = f.bloqueos_por_capa;
     if (b && typeof b === "object") for (const k of CAPAS) if (typeof b[k] === "number") o.capas[k] = Math.max(o.capas[k] || 0, b[k]);
+    window.Duelo?.cargar(f.historial_duelo);
     if (typeof f.pausa === "boolean") o.pausa = f.pausa;
     if ([1, 2, 4].includes(Number(f.velocidad))) { o.velocidad = Number(f.velocidad); estado.velocidad = o.velocidad; }
     pintarTodo();
@@ -795,7 +798,7 @@ const Operaciones = (() => {
     return { cuerpo, lista };
   }
 
-  return { iniciar, alCambiarVista, aplicar, resaltar, textoAccion, ultimaEstafa: (sirve = () => true) => [...o.estafas].reverse().find((x) => sirve(x.escenario)) || null, _o: o };
+  return { iniciar, alCambiarVista, aplicar, resaltar, textoAccion, senal, ultimaEstafa: (sirve = () => true) => [...o.estafas].reverse().find((x) => sirve(x.escenario)) || null, _o: o };
 })();
 window.Operaciones = Operaciones;
 Operaciones.alCambiarVista(estado.vista);
