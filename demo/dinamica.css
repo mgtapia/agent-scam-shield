@@ -305,3 +305,6 @@ body.dn-revisando .dn-marco { bottom: 48px; }
 /* Para medir las anclas de las partículas: la escena se arma oculta, sin sus movimientos de entrada. Va al final. */
 .dn-escena.dn-midiendo { display: flex !important; visibility: hidden !important; transform: none !important; }
 .dn-midiendo [data-an] { transform: none !important; }
+
+/* Las cifras de partículas ya no cuentan: sin cifras tabulares, para que el texto calce con los puntos muestreados */
+.dn-cifra.dato { font-variant-numeric: normal; }

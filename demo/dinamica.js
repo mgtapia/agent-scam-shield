@@ -588,7 +588,7 @@
   }
   const figTexto = (id, txt, color, { tenue = null } = {}) => (tt) => {
     const a = ancla(id, "cifra"), pts = puntosTexto(txt, a, NM);
-    const op = tenue !== null && tt >= tenue ? 0.35 : 0.95;   // cuando aparece el texto real encima, los puntos quedan de fondo
+    const op = tenue !== null && tt >= tenue ? 0.18 : 0.95;   // cuando aparece el texto real encima, los puntos quedan de fondo
     return { centro: { x: a.x, y: a.y, R: a.h * 0.45 }, p: pts.map((q) => ({ x: q.x, y: q.y, c: RGB[color], a: op, s: 3.2 })) };
   };
   const figPersonas = (tt) => {
