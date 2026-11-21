@@ -26,7 +26,7 @@ import statistics as st
 import sys
 from pathlib import Path
 from collections import defaultdict
-from typing import Any
+from typing import Any, Callable, Optional
 
 RAIZ = Path(__file__).resolve().parents[1]
 if str(RAIZ) not in sys.path:
@@ -35,10 +35,12 @@ if str(RAIZ) not in sys.path:
 METRICAS = ("recall", "precision", "falsas_alarmas")
 
 
-def entrenar(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenario") -> tuple[Any, dict[str, Any]]:
+def entrenar(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenario",
+             antes_de_aprender: Optional[Callable[[Any, Any, Any], None]] = None) -> tuple[Any, dict[str, Any]]:
     """El motor con el clasificador entrenado en los escenarios no apartados, y su evaluación antes de entrenar.
 
-    Lo usa también scripts/juez_vivo.py, que mide el juez LLM sobre el mismo apartado.
+    Lo usan también scripts/juez_vivo.py y scripts/falsas_alarmas_vivo.py, que miden sobre el mismo apartado.
+    `antes_de_aprender(motor, correo, rasgos)` corre antes de cada etiqueta (el modelo todavía no la vio).
     """
     from scamshield.vivo.flujo import Flujo
     from scamshield.vivo.motor import Motor
@@ -53,7 +55,10 @@ def entrenar(pliegue: int, semilla: int, episodios: int, agrupar: str = "escenar
             if flujo.es_evaluacion(c):
                 continue
             entrenados.add(c.unidad)
-            motor.clasificador.aprender(motor._rasgos(c), int(c.etiqueta == "estafa"))
+            r = motor._rasgos(c)
+            if antes_de_aprender is not None:
+                antes_de_aprender(motor, c, r)
+            motor.clasificador.aprender(r, int(c.etiqueta == "estafa"))
     if not entrenados.isdisjoint(flujo.claves_evaluacion):
         raise RuntimeError("el entrenamiento tocó un escenario apartado")
     return motor, antes

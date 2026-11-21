@@ -232,10 +232,14 @@ class Clasificador:
         `colados` son las estafas apartadas que el modelo dejó bajo el umbral (los falsos negativos del recall),
         agrupadas por escenario y canal: cuántos correos se colaron (`n`) de cuántos había (`de`) y la probabilidad
         media y máxima que les dio. Lo que se cuela aquí no se paga solo: la capa 1 y la capa 2 corren igual.
+
+        `falsas` y `legitimos` son los conteos detrás de `falsas_alarmas` (con pocos legítimos apartados, cada uno pesa
+        varios puntos), y `marcados` dice qué escenarios legítimos marcó, con cuántos correos.
         """
         tp = fp = tn = fn = 0
         colados: dict[tuple[str, str], dict[str, Any]] = {}
         estafas: dict[tuple[str, str], int] = {}
+        marcados: dict[str, int] = {}
         for i, (r, y) in enumerate(self.apartado):
             p = self.probabilidad(r)
             pred = p > self.UMBRAL
@@ -247,6 +251,8 @@ class Clasificador:
                 tp += 1
             elif pred:
                 fp += 1
+                if m:
+                    marcados[str(m.get("escenario"))] = marcados.get(str(m.get("escenario")), 0) + 1
             elif y:
                 fn += 1
                 if clave:
@@ -266,6 +272,8 @@ class Clasificador:
             "recall": round(tp / (tp + fn), 3) if tp + fn else 0.0,
             "falsas_alarmas": round(fp / (fp + tn), 3) if fp + tn else 0.0,
             "evaluado_en": len(self.apartado),
+            "falsas": fp, "legitimos": fp + tn,
+            "marcados": [{"escenario": e, "n": n} for e, n in sorted(marcados.items(), key=lambda kv: (-kv[1], kv[0]))],
             "colados": lista,
         }
 

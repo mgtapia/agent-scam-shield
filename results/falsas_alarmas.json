@@ -1,0 +1,603 @@
+{
+  "agrupar": "familia",
+  "episodios": 300,
+  "semillas": [
+    1,
+    2,
+    3
+  ],
+  "corridas": 9,
+  "total": {
+    "fijo": {
+      "recall": {
+        "media": 0.912,
+        "min": 0.857,
+        "max": 0.944
+      },
+      "precision": {
+        "media": 0.968,
+        "min": 0.947,
+        "max": 1.0
+      },
+      "falsas_alarmas": {
+        "media": 0.061,
+        "min": 0.0,
+        "max": 0.1
+      }
+    },
+    "calibrado": {
+      "recall": {
+        "media": 0.912,
+        "min": 0.857,
+        "max": 0.944
+      },
+      "precision": {
+        "media": 0.968,
+        "min": 0.947,
+        "max": 1.0
+      },
+      "falsas_alarmas": {
+        "media": 0.061,
+        "min": 0.0,
+        "max": 0.1
+      }
+    },
+    "remitente": {
+      "recall": {
+        "media": 0.912,
+        "min": 0.857,
+        "max": 0.944
+      },
+      "precision": {
+        "media": 0.968,
+        "min": 0.947,
+        "max": 1.0
+      },
+      "falsas_alarmas": {
+        "media": 0.061,
+        "min": 0.0,
+        "max": 0.1
+      }
+    },
+    "ambas": {
+      "recall": {
+        "media": 0.912,
+        "min": 0.857,
+        "max": 0.944
+      },
+      "precision": {
+        "media": 0.968,
+        "min": 0.947,
+        "max": 1.0
+      },
+      "falsas_alarmas": {
+        "media": 0.061,
+        "min": 0.0,
+        "max": 0.1
+      }
+    }
+  },
+  "curva_umbral": [
+    {
+      "umbral": 0.45,
+      "recall": 0.917,
+      "falsas_alarmas": 0.104,
+      "falsas_alarmas_max": 0.3
+    },
+    {
+      "umbral": 0.5,
+      "recall": 0.912,
+      "falsas_alarmas": 0.061,
+      "falsas_alarmas_max": 0.1
+    },
+    {
+      "umbral": 0.6,
+      "recall": 0.863,
+      "falsas_alarmas": 0.057,
+      "falsas_alarmas_max": 0.1
+    },
+    {
+      "umbral": 0.7,
+      "recall": 0.809,
+      "falsas_alarmas": 0.032,
+      "falsas_alarmas_max": 0.083
+    },
+    {
+      "umbral": 0.8,
+      "recall": 0.746,
+      "falsas_alarmas": 0.006,
+      "falsas_alarmas_max": 0.028
+    },
+    {
+      "umbral": 0.85,
+      "recall": 0.65,
+      "falsas_alarmas": 0.003,
+      "falsas_alarmas_max": 0.028
+    },
+    {
+      "umbral": 0.9,
+      "recall": 0.567,
+      "falsas_alarmas": 0.0,
+      "falsas_alarmas_max": 0.0
+    },
+    {
+      "umbral": 0.95,
+      "recall": 0.417,
+      "falsas_alarmas": 0.0,
+      "falsas_alarmas_max": 0.0
+    },
+    {
+      "umbral": 0.97,
+      "recall": 0.32,
+      "falsas_alarmas": 0.0,
+      "falsas_alarmas_max": 0.0
+    },
+    {
+      "umbral": 0.99,
+      "recall": 0.186,
+      "falsas_alarmas": 0.0,
+      "falsas_alarmas_max": 0.0
+    }
+  ],
+  "filas": [
+    {
+      "pliegue": 0,
+      "semilla": 1,
+      "umbral_calibrado": 0.5,
+      "legitimos": 36,
+      "estafas": 54,
+      "fijo": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "calibrado": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "remitente": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "ambas": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "falsas_alarmas_fijo": [],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": []
+    },
+    {
+      "pliegue": 0,
+      "semilla": 2,
+      "umbral_calibrado": 0.5,
+      "legitimos": 36,
+      "estafas": 54,
+      "fijo": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "calibrado": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "remitente": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "ambas": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "falsas_alarmas_fijo": [],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": []
+    },
+    {
+      "pliegue": 0,
+      "semilla": 3,
+      "umbral_calibrado": 0.5,
+      "legitimos": 36,
+      "estafas": 54,
+      "fijo": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "calibrado": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "remitente": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "ambas": {
+        "precision": 1.0,
+        "recall": 0.944,
+        "falsas_alarmas": 0.0,
+        "tp": 51,
+        "fp": 0,
+        "fn": 3,
+        "tn": 36
+      },
+      "falsas_alarmas_fijo": [],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": []
+    },
+    {
+      "pliegue": 1,
+      "semilla": 1,
+      "umbral_calibrado": 0.5,
+      "legitimos": 30,
+      "estafas": 63,
+      "fijo": {
+        "precision": 0.949,
+        "recall": 0.889,
+        "falsas_alarmas": 0.1,
+        "tp": 56,
+        "fp": 3,
+        "fn": 7,
+        "tn": 27
+      },
+      "calibrado": {
+        "precision": 0.949,
+        "recall": 0.889,
+        "falsas_alarmas": 0.1,
+        "tp": 56,
+        "fp": 3,
+        "fn": 7,
+        "tn": 27
+      },
+      "remitente": {
+        "precision": 0.949,
+        "recall": 0.889,
+        "falsas_alarmas": 0.1,
+        "tp": 56,
+        "fp": 3,
+        "fn": 7,
+        "tn": 27
+      },
+      "ambas": {
+        "precision": 0.949,
+        "recall": 0.889,
+        "falsas_alarmas": 0.1,
+        "tp": 56,
+        "fp": 3,
+        "fn": 7,
+        "tn": 27
+      },
+      "falsas_alarmas_fijo": [
+        "control_gasfiter_cuenta_nueva"
+      ],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": [
+        0.603,
+        0.604,
+        0.639
+      ]
+    },
+    {
+      "pliegue": 1,
+      "semilla": 2,
+      "umbral_calibrado": 0.5,
+      "legitimos": 30,
+      "estafas": 63,
+      "fijo": {
+        "precision": 0.947,
+        "recall": 0.857,
+        "falsas_alarmas": 0.1,
+        "tp": 54,
+        "fp": 3,
+        "fn": 9,
+        "tn": 27
+      },
+      "calibrado": {
+        "precision": 0.947,
+        "recall": 0.857,
+        "falsas_alarmas": 0.1,
+        "tp": 54,
+        "fp": 3,
+        "fn": 9,
+        "tn": 27
+      },
+      "remitente": {
+        "precision": 0.947,
+        "recall": 0.857,
+        "falsas_alarmas": 0.1,
+        "tp": 54,
+        "fp": 3,
+        "fn": 9,
+        "tn": 27
+      },
+      "ambas": {
+        "precision": 0.947,
+        "recall": 0.857,
+        "falsas_alarmas": 0.1,
+        "tp": 54,
+        "fp": 3,
+        "fn": 9,
+        "tn": 27
+      },
+      "falsas_alarmas_fijo": [
+        "control_gasfiter_cuenta_nueva"
+      ],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": [
+        0.579,
+        0.613,
+        0.635
+      ]
+    },
+    {
+      "pliegue": 1,
+      "semilla": 3,
+      "umbral_calibrado": 0.5,
+      "legitimos": 30,
+      "estafas": 63,
+      "fijo": {
+        "precision": 0.95,
+        "recall": 0.905,
+        "falsas_alarmas": 0.1,
+        "tp": 57,
+        "fp": 3,
+        "fn": 6,
+        "tn": 27
+      },
+      "calibrado": {
+        "precision": 0.95,
+        "recall": 0.905,
+        "falsas_alarmas": 0.1,
+        "tp": 57,
+        "fp": 3,
+        "fn": 6,
+        "tn": 27
+      },
+      "remitente": {
+        "precision": 0.95,
+        "recall": 0.905,
+        "falsas_alarmas": 0.1,
+        "tp": 57,
+        "fp": 3,
+        "fn": 6,
+        "tn": 27
+      },
+      "ambas": {
+        "precision": 0.95,
+        "recall": 0.905,
+        "falsas_alarmas": 0.1,
+        "tp": 57,
+        "fp": 3,
+        "fn": 6,
+        "tn": 27
+      },
+      "falsas_alarmas_fijo": [
+        "control_gasfiter_cuenta_nueva"
+      ],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": [
+        0.693,
+        0.722,
+        0.725
+      ]
+    },
+    {
+      "pliegue": 2,
+      "semilla": 1,
+      "umbral_calibrado": 0.5,
+      "legitimos": 36,
+      "estafas": 69,
+      "fijo": {
+        "precision": 0.955,
+        "recall": 0.913,
+        "falsas_alarmas": 0.083,
+        "tp": 63,
+        "fp": 3,
+        "fn": 6,
+        "tn": 33
+      },
+      "calibrado": {
+        "precision": 0.955,
+        "recall": 0.913,
+        "falsas_alarmas": 0.083,
+        "tp": 63,
+        "fp": 3,
+        "fn": 6,
+        "tn": 33
+      },
+      "remitente": {
+        "precision": 0.955,
+        "recall": 0.913,
+        "falsas_alarmas": 0.083,
+        "tp": 63,
+        "fp": 3,
+        "fn": 6,
+        "tn": 33
+      },
+      "ambas": {
+        "precision": 0.955,
+        "recall": 0.913,
+        "falsas_alarmas": 0.083,
+        "tp": 63,
+        "fp": 3,
+        "fn": 6,
+        "tn": 33
+      },
+      "falsas_alarmas_fijo": [
+        "hilo_secuestrado_cuenta"
+      ],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": [
+        0.778,
+        0.799,
+        0.873
+      ]
+    },
+    {
+      "pliegue": 2,
+      "semilla": 2,
+      "umbral_calibrado": 0.5,
+      "legitimos": 36,
+      "estafas": 69,
+      "fijo": {
+        "precision": 0.954,
+        "recall": 0.899,
+        "falsas_alarmas": 0.083,
+        "tp": 62,
+        "fp": 3,
+        "fn": 7,
+        "tn": 33
+      },
+      "calibrado": {
+        "precision": 0.954,
+        "recall": 0.899,
+        "falsas_alarmas": 0.083,
+        "tp": 62,
+        "fp": 3,
+        "fn": 7,
+        "tn": 33
+      },
+      "remitente": {
+        "precision": 0.954,
+        "recall": 0.899,
+        "falsas_alarmas": 0.083,
+        "tp": 62,
+        "fp": 3,
+        "fn": 7,
+        "tn": 33
+      },
+      "ambas": {
+        "precision": 0.954,
+        "recall": 0.899,
+        "falsas_alarmas": 0.083,
+        "tp": 62,
+        "fp": 3,
+        "fn": 7,
+        "tn": 33
+      },
+      "falsas_alarmas_fijo": [
+        "hilo_secuestrado_cuenta"
+      ],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": [
+        0.732,
+        0.743,
+        0.827
+      ]
+    },
+    {
+      "pliegue": 2,
+      "semilla": 3,
+      "umbral_calibrado": 0.5,
+      "legitimos": 36,
+      "estafas": 69,
+      "fijo": {
+        "precision": 0.955,
+        "recall": 0.913,
+        "falsas_alarmas": 0.083,
+        "tp": 63,
+        "fp": 3,
+        "fn": 6,
+        "tn": 33
+      },
+      "calibrado": {
+        "precision": 0.955,
+        "recall": 0.913,
+        "falsas_alarmas": 0.083,
+        "tp": 63,
+        "fp": 3,
+        "fn": 6,
+        "tn": 33
+      },
+      "remitente": {
+        "precision": 0.955,
+        "recall": 0.913,
+        "falsas_alarmas": 0.083,
+        "tp": 63,
+        "fp": 3,
+        "fn": 6,
+        "tn": 33
+      },
+      "ambas": {
+        "precision": 0.955,
+        "recall": 0.913,
+        "falsas_alarmas": 0.083,
+        "tp": 63,
+        "fp": 3,
+        "fn": 6,
+        "tn": 33
+      },
+      "falsas_alarmas_fijo": [
+        "hilo_secuestrado_cuenta"
+      ],
+      "sin_marcar_por_remitente": [],
+      "remitentes_confirmados": 2,
+      "p_falsas_alarmas": [
+        0.691,
+        0.715,
+        0.796
+      ]
+    }
+  ]
+}
