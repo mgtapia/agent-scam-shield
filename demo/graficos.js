@@ -202,6 +202,8 @@ const Graficos = (() => {
     echarts.getInstanceByDom(el)?.dispose();
     const g = echarts.init(el, "consola", { renderer: "canvas" });
     instancias.add(g);
+    // El contenedor cambia de alto sin que cambie la ventana (layout compacto, pestañas, carga de fuentes).
+    if ("ResizeObserver" in window) new ResizeObserver(() => !g.isDisposed() && g.resize()).observe(el);
     return g;
   }
   let espera;

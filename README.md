@@ -35,7 +35,6 @@ pytest                              # las pruebas, sin llamar a ningún modelo
 
 En la demo:
 - **Operaciones:** el centro de operaciones en vivo. Los agentes y los correos son simulados; las defensas, la bóveda de indicadores y el clasificador que aprende son reales y corren sobre cada correo.
-- **Pruébalo:** escribe tu propia estafa y mira qué capa la frena y dónde estaba el engaño. No gasta API ni entrena al modelo.
 - **Resultados:** las tablas de la evaluación con modelos reales.
 
 Con `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env`, la alerta de un pago retenido llega al celular del dueño con tres botones.

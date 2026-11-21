@@ -5,7 +5,7 @@
 
 const Operaciones = (() => {
   Object.assign(T.es, {
-    o_juez: "Juez", ayuda_juez: "Correo escrito a mano en Pruébalo: solo se evalúa, no entrena ni entra a la bóveda", o_cola: "Entrada", o_lectura: "Lectura", o_registro: "Registro", o_capas: "Defensa en capas", o_boveda: "Bóveda", o_modelo: "Modelo",
+    o_evasion: "evasión", o_capa2: "pagos con capa 2", o_indicadores_r: "indicadores", o_repetidos: "{n} ya vistos", o_juez: "Juez", ayuda_juez: "Correo escrito a mano y enviado a /api/probar: solo se evalúa, no entrena ni entra a la bóveda", o_cola: "Entrada", o_lectura: "Lectura", o_registro: "Registro", o_capas: "Defensa en capas", o_boveda: "Bóveda", o_modelo: "Modelo",
     o_sello_real: "Simulación · motor real", o_sello_sim: "Simulación · emisor local", o_sello_conectando: "Conectando",
     o_sello_reconectando: "Reconectando", ayuda_sello: "Los agentes y los correos son simulados. La defensa (firewall, escudo, bóveda y clasificador) corre sobre cada evento",
     o_pausa: "Pausa", o_seguir: "Seguir",
@@ -37,7 +37,7 @@ const Operaciones = (() => {
     tr_inyeccion: "inyección", tr_secreto: "secreto",
   });
   Object.assign(T.en, {
-    o_juez: "Judge", ayuda_juez: "Email written by hand in Try it: only evaluated, never trained on or added to the vault", o_cola: "Inbox", o_lectura: "Reading", o_registro: "Log", o_capas: "Layered defense", o_boveda: "Vault", o_modelo: "Model",
+    o_evasion: "evasion", o_capa2: "payments with layer 2", o_indicadores_r: "indicators", o_repetidos: "{n} already seen", o_juez: "Judge", ayuda_juez: "Email written by hand and sent to /api/probar: only evaluated, never trained on or added to the vault", o_cola: "Inbox", o_lectura: "Reading", o_registro: "Log", o_capas: "Layered defense", o_boveda: "Vault", o_modelo: "Model",
     o_sello_real: "Simulation · real engine", o_sello_sim: "Simulation · local emitter", o_sello_conectando: "Connecting",
     o_sello_reconectando: "Reconnecting", ayuda_sello: "Agents and emails are simulated. The defense (firewall, shield, vault and classifier) runs on every event",
     o_pausa: "Pause", o_seguir: "Resume",
@@ -71,7 +71,10 @@ const Operaciones = (() => {
 
   const FAMILIAS = ["tecnico", "ingenieria_social", "legitimo"];
   const CAPAS = ["1", "2", "boveda"];
-  const ICONO_ESTADO = { leyendo: "visibility", pensando: "psychology", pagando: "payments", esperando: "hourglass_top", inactivo: "pause", retenido: "block" };
+  const ICONO_ESTADO = { leyendo: "visibility", pensando: "psychology", pagando: "payments", esperando: "hourglass_top", inactivo: null, retenido: "block" };
+  // «Inactivo» va con un círculo vacío dibujado: el ícono de pausa se leía como dos rectángulos.
+  const SVG_INACTIVO = `<svg class="ms" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
+  const iconoEstado = (est) => (ICONO_ESTADO[est] ? ms(ICONO_ESTADO[est]) : SVG_INACTIVO);
   const ICONO_BOVEDA = { cuenta: "account_balance", dominio: "language", plantilla: "description" };
   const ICONO_DEC = { seguro: "check", sospechoso: "flag", estafa: "gpp_bad" };
   const MAX_COLA = 40, MAX_REGISTRO = 240, MAX_CURVA = 40;
@@ -117,9 +120,9 @@ const Operaciones = (() => {
     const est = a.retenido ? "retenido" : a.estado || "inactivo";
     const n = colaDe(a.agente);
     const foco = o.mostrado && o.correos.get(o.mostrado)?.agente === a.agente;
-    return `<li class="agente${foco ? " foco" : ""}" data-estado="${est}" id="ag-${esc(a.agente)}">
+    return `<li class="agente${foco ? " foco" : ""}" data-estado="${est}" id="ag-${esc(a.agente)}" data-ayuda="${esc(a.tarea || "")}">
       <div class="ag-l1"><span class="ag-nombre">${esc(a.agente)}</span>
-        <span class="ag-estado">${ms(ICONO_ESTADO[est] || "pause")}<span>${esc(t(`ea_${est}`))}</span></span></div>
+        <span class="ag-estado">${iconoEstado(est)}<span>${esc(t(`ea_${est}`))}</span></span></div>
       <div class="ag-l2"><span class="ag-tarea" data-ayuda="${esc(a.tarea || "")}">${esc(a.tarea || "")}</span>${a.retenido ? tagCapa(a.retenido) : ""}${n ? `<span class="tag" data-ayuda="${esc(t("o_en_cola", { n }))}">+${n}</span>` : ""}</div></li>`;
   }
   function pintarAgentes() {
@@ -378,6 +381,7 @@ const Operaciones = (() => {
     const vistas = senales.slice(0, 3), resto = senales.slice(3);
     const maxPeso = Math.max(0.5, ...senales.map((s) => Math.abs(s.peso)));
     caja.dataset.decision = v.decision;
+    caja.dataset.ayuda = [fuente, ...(v.senales || []).map((x) => `${senal(x.nombre)}  ${Number(x.peso).toFixed(2)}`)].join("\n");
     caja.innerHTML = `
       <div class="ver-l1">
         ${ms(ICONO_DEC[v.decision] || "check", true)}<span class="ver-dec">${esc(t(`o_dec_${v.decision}`))}</span>
@@ -417,9 +421,43 @@ const Operaciones = (() => {
   }
 
   // --- Registro: todos los eventos, con hora, en mono ---
+  // Una ráfaga (varios indicadores que entran a la bóveda juntos, o varias versiones del modelo seguidas) va en
+  // una sola línea que se actualiza, en vez de llenar el registro de líneas iguales.
+  const VENTANA_GRUPO = 3;   // segundos entre eventos del mismo tipo para que cuenten como una ráfaga
+  function agrupar(ol, e) {
+    if (e.tipo !== "boveda" && e.tipo !== "modelo") return false;
+    // La ráfaga puede venir intercalada con la otra (modelo, bóveda, modelo): se busca en las últimas líneas.
+    let li = ol.lastElementChild;
+    for (let k = 0; li && k < 3 && li.dataset.grupo !== e.tipo; k++) li = li.previousElementSibling;
+    if (!li || li.dataset.grupo !== e.tipo || (e.ts || 0) - Number(li.dataset.ts || 0) > VENTANA_GRUPO) return false;
+    const g = JSON.parse(li.dataset.g);
+    let txt;
+    if (e.tipo === "boveda") {
+      const i = e.indicador || {};
+      g.n++;
+      if (i.veces > 1) g.repetidos++;
+      g.tipos[i.tipo] = (g.tipos[i.tipo] || 0) + 1;
+      txt = textoBoveda(g);
+    } else {
+      g.hasta = e.version;
+      txt = `${g.desde} → ${e.version} · p ${Number(e.precision).toFixed(2)} r ${Number(e.recall).toFixed(2)} fa ${Number(e.falsas_alarmas).toFixed(2)}`;
+    }
+    li.dataset.g = JSON.stringify(g);
+    li.dataset.ts = String(e.ts || 0);
+    li.querySelector(".r-txt").textContent = txt;
+    li.querySelector("time").textContent = hora(e.ts);
+    reanimar(li, "golpe");
+    return true;
+  }
+  function textoBoveda(g) {
+    const partes = Object.entries(g.tipos).map(([tipo, n]) => `${n} ${t(`bv_${tipo}`)}`);
+    return `+${g.n} ${t("o_indicadores_r")} · ${partes.join(" · ")}${g.repetidos ? ` · ${t("o_repetidos", { n: g.repetidos })}` : ""}`;
+  }
+
   function registrar(e) {
     const ol = $("#ops-registro");
     if (!ol) return;
+    if (agrupar(ol, e)) { $("#n-registro").textContent = String(o.eventos = (o.eventos || 0) + 1); return; }
     let cls = "", txt;
     const id = e.id ? `${e.id} ` : "";
     switch (e.tipo) {
@@ -429,11 +467,20 @@ const Operaciones = (() => {
       case "veredicto": cls = e.decision === "estafa" ? "r-rojo" : ""; txt = `${id}${String(t(`o_dec_${e.decision}`)).toUpperCase()} ${Number(e.confianza).toFixed(2)}${e.capa && e.decision !== "seguro" ? ` · ${capa(e.capa)}` : ""}`; break;
       case "accion": cls = e.resultado !== "ejecutada" ? "r-verde" : ""; txt = `${id}${textoAccion(e)} · ${t(`ac_${e.resultado}`)}${e.capa && e.resultado !== "ejecutada" ? ` · ${capa(e.capa)}` : ""}`; break;
       case "boveda": { const i = e.indicador || {}; txt = `${i.veces > 1 ? `×${i.veces}` : "+"} ${t(`bv_${i.tipo}`)} ${i.valor}`; break; }
+      case "duelo": txt = `g${e.generacion} · ${t("o_evasion")} ${pct(e.evasion)} · recall ${Number(e.recall).toFixed(2)} · ${t("o_capa2")} ${e.exitosas_capa2}`; break;
       case "modelo": txt = `${e.version} · p ${Number(e.precision).toFixed(2)} r ${Number(e.recall).toFixed(2)} fa ${Number(e.falsas_alarmas).toFixed(2)}`; break;
       default: txt = JSON.stringify(e).slice(0, 120);
     }
     const abajo = ol.scrollHeight - ol.scrollTop - ol.clientHeight < 24;
-    ol.insertAdjacentHTML("beforeend", `<li class="${cls}"><time>${esc(hora(e.ts))}</time><span class="r-tipo">${esc(e.tipo === "agente_estado" ? "agente" : e.tipo === "correo_nuevo" ? "correo" : e.tipo)}</span><span class="r-txt">${esc(txt)}</span></li>`);
+    // La primera línea de una ráfaga posible guarda lo necesario para sumarle las siguientes.
+    let grupo = "";
+    if (e.tipo === "boveda") {
+      const i = e.indicador || {};
+      grupo = ` data-grupo="boveda" data-ts="${e.ts || 0}" data-g="${esc(JSON.stringify({ n: 1, repetidos: i.veces > 1 ? 1 : 0, tipos: { [i.tipo]: 1 } }))}"`;
+    } else if (e.tipo === "modelo") {
+      grupo = ` data-grupo="modelo" data-ts="${e.ts || 0}" data-g="${esc(JSON.stringify({ desde: e.version, hasta: e.version }))}"`;
+    }
+    ol.insertAdjacentHTML("beforeend", `<li class="${cls}"${grupo}><time>${esc(hora(e.ts))}</time><span class="r-tipo">${esc(e.tipo === "agente_estado" ? "agente" : e.tipo === "correo_nuevo" ? "correo" : e.tipo)}</span><span class="r-txt">${esc(txt)}</span></li>`);
     while (ol.children.length > MAX_REGISTRO) ol.firstElementChild.remove();
     if (abajo) ol.scrollTop = ol.scrollHeight;
     $("#n-registro").textContent = String(o.eventos = (o.eventos || 0) + 1);
@@ -773,8 +820,26 @@ const Operaciones = (() => {
     }
   }
 
+  function elegirPanel(panel) {
+    $("#vista-operaciones").dataset.panel = panel;
+    document.querySelectorAll(".ops-tabs [data-panel]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.panel === panel)));
+    if (panel === "modelo") requestAnimationFrame(() => { pintarCurva(); Graficos.redimensionar(); });
+    if (panel === "registro") { const ol = $("#ops-registro"); ol.scrollTop = ol.scrollHeight; }
+  }
+  function espejos() {
+    for (const el of document.querySelectorAll("[data-espejo]")) {
+      const origen = document.getElementById(el.dataset.espejo);
+      if (!origen) continue;
+      const copiar = () => { el.textContent = (origen.textContent.match(/v?[\d.]+/) || [""])[0]; };
+      copiar();
+      new MutationObserver(copiar).observe(origen, { childList: true, characterData: true, subtree: true });
+    }
+  }
+
   function iniciar() {
     o.iniciado = true;
+    espejos();
+    document.querySelectorAll(".ops-tabs [data-panel]").forEach((b) => b.addEventListener("click", () => elegirPanel(b.dataset.panel)));
     pintarTextos();
     pintarTodo();
     alCambiarVista(estado.vista);
@@ -787,15 +852,7 @@ const Operaciones = (() => {
     conectar();
   }
 
-  // Para Pruébalo: el texto con todos sus tramos marcados y la lista de tramos.
-  function resaltar(c) {
-    const tr = tramosDe(c);
-    const cuerpo = htmlCuerpo(c, tr).html.replaceAll('class="tk"', 'class="tk leido"').replaceAll('class="tramo ', 'class="tramo visto ');
-    const lista = [...tr.dentro, ...tr.fuera].map(htmlHallazgo).join("");
-    return { cuerpo, lista };
-  }
-
-  return { iniciar, alCambiarVista, aplicar, resaltar, textoAccion, ultimaEstafa: (sirve = () => true) => [...o.estafas].reverse().find((x) => sirve(x.escenario)) || null, _o: o };
+  return { iniciar, alCambiarVista, aplicar, ultimaEstafa: (sirve = () => true) => [...o.estafas].reverse().find((x) => sirve(x.escenario)) || null, _o: o };
 })();
 window.Operaciones = Operaciones;
 Operaciones.alCambiarVista(estado.vista);
