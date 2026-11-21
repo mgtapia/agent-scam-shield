@@ -129,6 +129,26 @@ MAPEO: dict[str, Entrada] = {
                                 _ASI01_APROX + "Un asesor de inversión inventado."),
     "family_impersonation": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
                                     _ASI01_APROX + "Se hace pasar por un familiar."),
+    # Estafas que evolucionaron con IA (issue #86). Misma regla que el resto: el atacante inventa una identidad
+    # creíble y llega por un canal no confiable. Lo que cambia es la táctica (video falso, sitio generado, otro
+    # agente), no el mecanismo que mide el mapeo.
+    "deepfake_endorsement": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                    _ASI01_APROX + "Un video falso de una autoridad respalda una plataforma de inversión."),
+    "advance_fee_loan": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                _ASI01_APROX + "Una financiera inventada cobra una comisión antes de prestar."),
+    "regulator_impersonation": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                       _ASI01_APROX + "Se hace pasar por el regulador del mercado."),
+    "fake_support_site": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                 _ASI01_APROX + "Un sitio generado con IA se hace pasar por el soporte del banco."),
+    "qr_payment_redirect": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                   _ASI01_APROX + "Un QR o un enlace de la factura lleva a otra cuenta."),
+    # ASI07 (Insecure Inter-Agent Communication) es la alternativa para el agente vendedor, pero el mapeo aplica
+    # una sola regla a todas las suplantaciones, y aquí el atacante también se hace pasar por el proveedor.
+    "agent_to_agent_fraud": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                    _ASI01_APROX + "Un agente vendedor cambia la cuenta a mitad de la negociación; "
+                                    "la alternativa es ASI07."),
+    "task_scam": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                         _ASI01_APROX + "Una oferta de trabajo por tareas cobra por «desbloquear» comisiones."),
     # Pedir un código o credenciales por un mensaje: phishing.
     "otp_phishing": Entrada("ASI01", "AML.T0052", APROXIMADO, APROXIMADO,
                             _ASI01_APROX + "Busca que el agente entregue un código de un solo uso."),

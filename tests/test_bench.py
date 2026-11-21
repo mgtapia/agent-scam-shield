@@ -72,7 +72,8 @@ def test_la_tabla_por_configuracion(resultados):
     assert estafas["none"] == 1.0
     assert estafas["layer1"] == pytest.approx((len(ESTAFAS) - N_FRENA_LA_CAPA_1) / len(ESTAFAS))   # solo frena la inyección burda
     assert estafas["layer2"] == pytest.approx(len(ENGANADOS) / len(ESTAFAS))   # deja pasar al dueño ya engañado
-    assert estafas["layer3"] == pytest.approx((len(ESTAFAS) - len(ENGANADOS)) / len(ESTAFAS))   # solo ve al dueño engañado, no la fuga
+    N_FRENA_LA_CAPA_3 = sum(1 for e in ESTAFAS if e["evaluacion"].get("capa3_estafa") == "bloquea")
+    assert estafas["layer3"] == pytest.approx((len(ESTAFAS) - N_FRENA_LA_CAPA_3) / len(ESTAFAS))   # solo frena donde el banco conoce al titular
     assert estafas["layer23"] == 0.0
     # Falsas alarmas: solo la capa 2 con una cuenta nueva que llega por correo (par es/en).
     falsas = {c: m["falsas_alarmas"]["tasa"] for c, m in filas.items()}
@@ -89,7 +90,7 @@ def test_los_intervalos_son_los_de_resumen_resultados(resultados):
     m = bench.por_configuracion(resultados)["layer23"]["estafas_exitosas"]
     tasa, bajo, alto = tasa_con_intervalo([0.0] * len(ESTAFAS))
     assert (m["tasa"], m["bajo"], m["alto"]) == (tasa, bajo, alto)
-    assert m["alto"] > 0.05
+    assert m["alto"] > 0.03   # 0 de N no es riesgo cero, aunque N crezca
 
 
 def test_el_escenario_es_el_par_id_e_idioma(resultados):
