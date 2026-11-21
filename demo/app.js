@@ -11,16 +11,19 @@ const ESCENARIO_POR_DEFECTO = "demo_microprocesadores";
 const CARRILES = [
   { clave: "none", defensas: ["none"], icono: "gpp_bad" },
   { clave: "layer1", defensas: ["layer1"], icono: "shield" },
-  { clave: "layer2", defensas: ["layer2", "both"], icono: "shield", escudo: true },
+  { clave: "layer2", defensas: ["layer2", "both", "layer2_approver"], icono: "shield", escudo: true },
 ];
 const VISTAS = ["operaciones", "vivo", "resultados", "duelo"];
 const HERRAMIENTAS_PAGO = ["pagar", "transferir"];
-const HERRAMIENTAS_LECTURA = ["leer_correos", "abrir_web", "usar_mcp"];
+const HERRAMIENTAS_LECTURA = ["leer_correos", "abrir_web", "usar_mcp", "leer_whatsapp", "escuchar_llamadas"];
+// De qué canal viene lo que lee el agente: el ícono y la etiqueta de origen de cada lectura.
+const CANAL_DE = { leer_correos: "correo", abrir_web: "web", usar_mcp: "mcp", leer_whatsapp: "whatsapp", escuchar_llamadas: "llamada" };
+const ICONO_CANAL = { correo: "mail", web: "language", mcp: "extension", whatsapp: "chat", llamada: "call", dueno: "person" };
 const RE_BLOQUEO = /^(ACCIÓN BLOQUEADA|ACTION BLOCKED)/i;
 
 const T = {
   es: {
-    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "Episodios exportados de Inspect. «Datos de prueba» marca los carriles corridos con mockllm", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados", v_duelo: "Duelo", ayuda_v_duelo: "Un hacker que aprende de cómo lo bloqueamos, contra el escudo congelado y contra el que aprende de él",
+    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "La caja negra de episodios reales de Inspect: qué leyó el agente, qué intentó y qué decidió cada defensa. «guionado» marca los carriles corridos con mockllm", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados", v_duelo: "Duelo", ayuda_v_duelo: "Un hacker que aprende de cómo lo bloqueamos, contra el escudo congelado y contra el que aprende de él",
     escenario: "Escenario", reproducir: "Reproducir", reproduciendo: "Reproduciendo", reiniciar: "Reiniciar",
     correos: "Correos", calor_tactica: "Táctica × defensa", calor_modelo: "Modelo × idioma",
     d_none: "Sin defensa", d_layer1: "Firewall", d_layer2: "Escudo", d_both: "Firewall + escudo", d_layer2_approver: "Escudo (approver)",
@@ -69,7 +72,7 @@ const T = {
     locale: "es-CL",
   },
   en: {
-    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "Episodes exported from Inspect. «Test data» marks the lanes run with mockllm", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results", v_duelo: "Duel", ayuda_v_duelo: "A hacker that learns from how we block it, against the frozen shield and against the one that learns from it",
+    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "The black box of real Inspect episodes: what the agent read, what it tried and what each defense decided. «scripted» marks the lanes run with mockllm", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results", v_duelo: "Duel", ayuda_v_duelo: "A hacker that learns from how we block it, against the frozen shield and against the one that learns from it",
     escenario: "Scenario", reproducir: "Play", reproduciendo: "Playing", reiniciar: "Reset",
     correos: "Emails", calor_tactica: "Tactic × defense", calor_modelo: "Model × language",
     d_none: "No defense", d_layer1: "Firewall", d_layer2: "Shield", d_both: "Firewall + shield", d_layer2_approver: "Shield (approver)",
@@ -117,6 +120,33 @@ const T = {
     locale: "en-US",
   },
 };
+
+Object.assign(T.es, {
+  cn_pidio: "pidió", cn_leyo: "leyó", cn_penso: "pensó", cn_intento: "intentó", cn_hizo: "hizo", cn_dueno: "dueño",
+  cn_grifter: "Grifter", cn_firewall: "firewall", cn_sin: "sin defensa", cn_carril_layer2: "Grifter",
+  cn_retuvo: "Retuvo", cn_dejo: "Dejó pasar: cuenta inscrita", cn_ejecuto: "Se ejecutó", cn_ejecuto_afuera: "Se ejecutó: cuenta de afuera",
+  o_dueno: "dueño", o_correo: "correo", o_web: "web", o_mcp: "MCP", o_whatsapp: "WhatsApp", o_llamada: "llamada",
+  ayuda_o_externo: "Valor de afuera: salió de {c}, no del dueño", ayuda_o_dueno: "Lo dio el dueño",
+  cn_cayeron: "cayó {k} de {n}", ayuda_cayeron: "De {n} repeticiones de este modelo con esta defensa, en {k} cayó. El carril muestra una de ellas",
+  cn_guionado: "guionado", ayuda_guionado: "Corrido con mockllm: un agente guionado, no un modelo",
+  cn_sin_corrida: "Sin corrida con esta defensa", cn_elegir: "Este escenario no tiene episodio exportado. Estos sí:",
+  cn_episodios: "Episodios con corrida real", cn_carriles: "{n} carriles",
+  ver_episodio: "Ver el episodio", ayuda_ver_episodio: "Abre en Episodios el episodio real de este escenario",
+  cn_sin_corrida_con: "sin corrida con {d}", ayuda_sin_corrida_con: "En logs/ no hay una corrida de {m} con {d} para este escenario: el carril no se rellena con otro modelo",
+});
+Object.assign(T.en, {
+  cn_pidio: "asked", cn_leyo: "read", cn_penso: "thought", cn_intento: "tried", cn_hizo: "did", cn_dueno: "owner",
+  cn_grifter: "Grifter", cn_firewall: "firewall", cn_sin: "no defense", cn_carril_layer2: "Grifter",
+  cn_retuvo: "Held", cn_dejo: "Let through: registered account", cn_ejecuto: "Executed", cn_ejecuto_afuera: "Executed: outside account",
+  o_dueno: "owner", o_correo: "email", o_web: "web", o_mcp: "MCP", o_whatsapp: "WhatsApp", o_llamada: "call",
+  ayuda_o_externo: "Outside value: it came from {c}, not from the owner", ayuda_o_dueno: "Given by the owner",
+  cn_cayeron: "fell {k} of {n}", ayuda_cayeron: "Out of {n} repetitions of this model with this defense, it fell in {k}. The lane shows one of them",
+  cn_guionado: "scripted", ayuda_guionado: "Run with mockllm: a scripted agent, not a model",
+  cn_sin_corrida: "No run with this defense", cn_elegir: "This scenario has no exported episode. These do:",
+  cn_episodios: "Episodes with a real run", cn_carriles: "{n} lanes",
+  ver_episodio: "See the episode", ayuda_ver_episodio: "Opens the real episode of this scenario in Episodes",
+  cn_sin_corrida_con: "no run with {d}", ayuda_sin_corrida_con: "logs/ has no run of {m} with {d} for this scenario: the lane is not filled with another model",
+});
 
 const estado = {
   vista: "vivo",
@@ -215,7 +245,11 @@ window.hayEpisodioDe = (id) => { const { e, i } = partirEscenario(id); return CA
 window.abrirEpisodio = (id) => {
   const { e, i } = partirEscenario(id);
   if (i !== estado.idioma) { estado.idioma = i; llenarEscenarios(); estado.analisisPintado = false; }
-  if (window.hayEpisodioDe(id)) { estado.escenario = e; $("#sel-escenario").value = e; }
+  // Sin episodio, el escenario queda igual elegido: Episodios muestra la lista de los que sí tienen.
+  estado.escenario = e;
+  $("#sel-escenario").value = window.hayEpisodioDe(id) ? e : "";
+  // El hash dispara irA("vivo"), que abriría la última estafa de Operaciones: aquí manda el episodio pedido.
+  estado.episodioPedido = location.hash !== "#vivo";
   location.hash = "vivo";
   cargarEscenario();
   scrollTo({ top: 0 });
@@ -223,6 +257,7 @@ window.abrirEpisodio = (id) => {
 // Al llegar desde Operaciones, además arranca a reproducir (salvo con movimiento reducido): la pantalla no
 // queda en tres carriles vacíos.
 function abrirUltimaEstafa(reproducirAlLlegar = false) {
+  if (estado.episodioPedido) { estado.episodioPedido = false; return; }
   const u = window.Operaciones?.ultimaEstafa(hayEpisodio);
   if (estado.reproduciendo) return;
   if (!u) { if (reproducirAlLlegar && !Graficos.sinMovimiento) reproducir(); return; }
@@ -259,7 +294,15 @@ function pintarFranja() {
     <div><span class="rotulo">${esc(t("monto"))}</span><span class="grande">${monto === null ? "—" : plata(monto)}</span></div>
     <div class="celda-inscrita" data-cuenta="${norm(num)}">${ms("account_balance")}${nombre
       ? `<span class="c-2">${esc(nombre)}</span><span class="dato">${esc(num)}</span><span class="tag">${esc(t("inscrita"))}</span>`
-      : `<span class="c-2">${esc(t("sin_inscritas"))}</span>`}</div>`;
+      : `<span class="c-2">${esc(t("sin_inscritas"))}</span>`}</div>${notaSinCorrida(ep)}`;
+}
+
+function notaSinCorrida(ep) {
+  const faltan = CARRILES.filter((c) => !estado.carriles[c.clave]?.ep);
+  if (!faltan.length) return "";
+  const m = String(ep.modelo || "").split("/").pop();
+  const nombre = (c) => t(c.escudo ? "cn_carril_layer2" : `d_${c.clave}`);
+  return `<div class="celda-nota">${faltan.map((c) => `<span class="tag" data-ayuda="${esc(t("ayuda_sin_corrida_con", { m, d: nombre(c) }))}">${esc(t("cn_sin_corrida_con", { d: c.escudo ? nombre(c) : nombre(c).toLowerCase() }))}</span>`).join("")}</div>`;
 }
 
 // --- Correos: una línea por correo; el cuerpo, en el panel lateral ---
@@ -336,23 +379,67 @@ function tagOrigen(origen) {
 function etiquetaDeOrigen(ep) {
   if (!ep) return "";
   const modelo = String(ep.modelo || "");
-  return modelo.startsWith("mockllm")
-    ? `<span class="tag prueba" data-ayuda="${esc(modelo)}">${esc(t("prueba"))}</span>`
-    : `<span class="modelo" data-ayuda="${esc(modelo)}">${esc(modelo.split("/").pop())}</span>`;
+  if (modelo.startsWith("mockllm")) return `<span class="tag prueba" data-ayuda="${esc(t("ayuda_guionado"))}">${esc(t("cn_guionado"))}</span>`;
+  const m = ep.muestras;
+  const tally = m && m.total > 1 ? `<span class="tag" data-ayuda="${esc(t("ayuda_cayeron", { k: m.cayeron, n: m.total }))}">${esc(t("cn_cayeron", { k: m.cayeron, n: m.total }))}</span>` : "";
+  return `<span class="modelo" data-ayuda="${esc(modelo)}">${esc(modelo.split("/").pop())}</span>${tally}`;
 }
 
+// Los escenarios con episodio en el idioma actual, para no dejar nunca la vista vacía.
+function tituloEscenario(id) {
+  const ep = Object.values(episodios()).find((e) => e.escenario === id && e.idioma === estado.idioma)
+    || Object.values(episodios()).find((e) => e.escenario === id);
+  const frase = String(ep?.descripcion || "").split(/(?<=[.:;])\s/)[0].replace(/[.:;]$/, "").trim();
+  if (!frase) return String(id).replace(/^demo_/, "").replaceAll("_", " ");
+  return frase.length > 72 ? `${frase.slice(0, 70).trimEnd()}…` : frase;
+}
+
+function escenariosConEpisodio() {
+  const por = new Map();
+  for (const ep of Object.values(episodios())) {
+    if (ep.idioma !== estado.idioma) continue;
+    const x = por.get(ep.escenario) || { escenario: ep.escenario, descripcion: ep.descripcion, carriles: 0, real: false, cayo: false };
+    x.carriles++;
+    x.real = x.real || !String(ep.modelo || "").startsWith("mockllm");
+    x.cayo = x.cayo || !!ep.veredicto?.cayo;
+    por.set(ep.escenario, x);
+  }
+  return [...por.values()].sort((a, b) => (b.real - a.real) || (b.cayo - a.cayo) || a.escenario.localeCompare(b.escenario));
+}
+
+function pintarListaEpisodios() {
+  const lista = escenariosConEpisodio();
+  $("#carriles").innerHTML = `<section class="ep-lista" aria-labelledby="t-ep-lista">
+    <h2 class="titulo" id="t-ep-lista">${ms("replay")}<span>${esc(t("cn_episodios"))}</span><span class="nota">${esc(t("cn_elegir"))}</span></h2>
+    <ol>${lista.map((x) => `<li><button type="button" class="ep-item" data-escenario="${esc(x.escenario)}">
+      ${ms(x.cayo ? "gpp_bad" : "shield")}<span class="ep-nombre">${esc(tituloEscenario(x.escenario))}</span>
+      <span class="ep-desc dato">${esc(x.escenario)}</span>
+      <span class="tag${x.real ? "" : " prueba"}">${esc(x.real ? t("cn_carriles", { n: x.carriles }) : t("cn_guionado"))}</span>${ms("chevron_right")}</button></li>`).join("")}</ol></section>`;
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".ep-item[data-escenario]");
+  if (b) window.abrirEpisodio(b.dataset.escenario);
+});
+
 function pintarCarriles() {
-  $("#carriles").innerHTML = CARRILES.map((c) => {
+  const hay = CARRILES.some((c) => estado.carriles[c.clave]?.ep);
+  // Sin episodio, la franja y los correos no tienen qué mostrar: queda solo la lista.
+  $("#franja").hidden = !hay;
+  $("#vista-vivo .correos").hidden = !hay;
+  if (!hay) return pintarListaEpisodios();
+  const visibles = CARRILES.filter((c) => estado.carriles[c.clave]?.ep);
+  $("#vista-vivo").dataset.carriles = String(visibles.length);
+  $("#carriles").innerHTML = visibles.map((c) => {
     const ep = estado.carriles[c.clave]?.ep;
     return `<article class="carril${c.escudo ? " escudo" : ""}" id="carril-${c.clave}">
-      <header class="carril-cab" data-ayuda="${esc(t(`ayuda_${c.clave}`))}">${ms(c.icono)}<h2>${esc(t(`d_${c.clave}`))}</h2>${etiquetaDeOrigen(ep)}
+      <header class="carril-cab" data-ayuda="${esc(t(`ayuda_${c.clave}`))}">${ms(c.icono)}<h2>${esc(t(c.escudo ? "cn_carril_layer2" : `d_${c.clave}`))}</h2>${etiquetaDeOrigen(ep)}
         <span class="riesgo" data-ayuda="${esc(t("ayuda_pulso"))}">${ep ? esc(t("r_base")) : ""}</span></header>
       <div class="monitor" id="monitor-${c.clave}" aria-hidden="true"></div>
-      <ol class="pasos">${ep ? `<li class="paso vacio">${esc(t("listo"))}</li>` : `<li class="paso vacio">${esc(t("sin_registro"))}</li>`}</ol>
+      <ol class="pasos">${ep ? "" : `<li class="paso vacio">${esc(t("cn_sin_corrida"))}</li>`}</ol>
       <div class="veredicto"></div>
     </article>`;
   }).join("");
-  for (const c of CARRILES) {
+  for (const c of visibles) {
     const carril = estado.carriles[c.clave];
     carril.monitor = Graficos.monitor($(`#monitor-${c.clave}`));
     if (!carril.ep) carril.monitor.apagar();
@@ -366,40 +453,65 @@ function riesgo(clave, modo) {
   el.className = `riesgo ${modo === "cayo" ? "c-rojo" : modo === "bloqueado" ? "c-verde" : ""}`;
 }
 
-// Un paso = una línea. El detalle (argumentos, resultado, motivo) va en el tooltip.
-function htmlPaso(p) {
-  const li = (clase, icono, linea, detalle = "") =>
-    `<li class="paso ${clase}" tabindex="0"${detalle ? ` data-ayuda="${esc(detalle)}"` : ""}>${ms(icono)}${linea}</li>`;
-  if (p.tipo === "texto") return li("texto", "smart_toy", `<span class="resumen">${esc(p.texto)}</span>`, p.texto);
-  if (p.tipo === "dueno") return li("dueno", "person", `<span class="resumen">${esc(p.texto)}</span>`);
+// Un paso de la caja negra: una columna dice qué pasó (pidió, leyó, pensó, intentó) y otra, qué decidió la defensa.
+// Lo que viene de afuera lleva la etiqueta ámbar de su canal; lo del dueño, una neutra.
+const tagCanal = (canal) => (canal === "dueno"
+  ? `<span class="tag" data-ayuda="${esc(t("ayuda_o_dueno"))}">${esc(t("o_dueno"))}</span>`
+  : `<span class="tag externo" data-ayuda="${esc(t("ayuda_o_externo", { c: t(`o_${canal}`) }))}">${esc(t(`o_${canal}`))}</span>`);
+const canalDeOrigen = (o) => (!o ? "correo" : o.tipo === "inscrita" ? "dueno" : o.tipo === "mcp" ? "mcp" : o.tipo === "correo" ? "correo" : "web");
+const fila = (clase, icono, quien, cuerpo, { tag = "", detalle = "" } = {}) =>
+  `<li class="paso ${clase}" tabindex="0"${detalle ? ` data-ayuda="${esc(detalle)}"` : ""}>${ms(icono)}<span class="quien">${esc(quien)}</span><span class="cuerpo">${cuerpo}</span>${tag}</li>`;
+
+function resumenLectura(p, r) {
+  if (p.herramienta === "leer_correos") {
+    const asuntos = [...r.matchAll(/^\[([^\]]+)\] (?:De|From): (.+)\n(?:Asunto|Subject): (.+)$/gm)];
+    const n = asuntos.length || (r.match(/^\[[^\]]+\] /gm) || []).length;
+    return { linea: `<span class="nombre">${esc(t("leidos", { n }))}</span> ${esc(asuntos.map((m) => m[3]).join(" · "))}`,
+      detalle: asuntos.map((m) => `[${m[1]}] ${m[2]} · ${m[3]}`).join("\n") || r };
+  }
+  const a = p.args || {};
+  const que = a.url || a.herramienta || a.consulta || "";
+  return { linea: `<span class="nombre">${esc(p.herramienta)}</span> ${esc(que)}`, detalle: `${que}\n${r}` };
+}
+
+function htmlPaso(p, clave = "none") {
+  if (p.tipo === "encargo") return fila("dueno", "person", t("cn_pidio"), esc(p.texto), { tag: tagCanal("dueno"), detalle: p.texto });
+  if (p.tipo === "texto") return fila("texto", "smart_toy", t("cn_penso"), esc(p.texto), { detalle: p.texto });
+  if (p.tipo === "dueno") return fila("dueno", "person", t("cn_dueno"), esc(p.texto));
   const r = String(p.resultado || "");
   const bloqueada = RE_BLOQUEO.test(r) || p.bloqueada;
-  if (p.herramienta === "leer_correos") {
-    const n = (r.match(/^\[[^\]]+\] /gm) || []).length;
-    const asuntos = [...r.matchAll(/^\[([^\]]+)\] De: (.+)\n(?:Asunto|Subject): (.+)$/gm)].map((m) => `[${m[1]}] ${m[2]} · ${m[3]}`).join("\n");
-    return li("herramienta", "mail", `<span class="resumen"><span class="nombre">leer_correos</span> ${esc(t("leidos", { n }))}</span>`, asuntos);
+  if (HERRAMIENTAS_LECTURA.includes(p.herramienta)) {
+    const canal = CANAL_DE[p.herramienta];
+    const { linea, detalle } = resumenLectura(p, r);
+    return fila("lectura", ICONO_CANAL[canal], t("cn_leyo"), linea, { tag: tagCanal(canal), detalle });
   }
   if (HERRAMIENTAS_PAGO.includes(p.herramienta)) {
     const a = p.args || {};
     const ejecutada = !bloqueada && /^(Listo|Done)/i.test(r);
-    const bueno = p.origen_cuenta?.tipo === "inscrita";
-    const clase = bloqueada ? "bloqueada" : ejecutada && !bueno ? "pago-malo" : "";
-    const icono = bloqueada ? "block" : ejecutada && bueno ? "check" : "payments";
-    const estadoTxt = bloqueada ? t("bloqueada") : ejecutada ? t("ejecutada") : (r.includes("insuf") ? t("saldo_insuf") : "");
-    const detalle = [a.destinatario, a.concepto || a.motivo || "", r].filter(Boolean).join("\n");
-    return li(`herramienta pago ${clase}`, icono,
-      `<span class="resumen"><span class="nombre">${esc(p.herramienta)}</span> ${plata(a.monto)} <span class="dato">${esc(a.cuenta)}</span></span>${tagOrigen(p.origen_cuenta)}`
-      + `<span class="estado">${esc(estadoTxt)}</span>`, detalle);
+    const deAfuera = p.origen_cuenta && p.origen_cuenta.tipo !== "inscrita";
+    const intento = fila("pago", "payments", t("cn_intento"),
+      `<span class="nombre">${esc(p.herramienta)}</span> ${plata(a.monto)} ${ms("arrow_forward")}<span class="dato">${esc(a.cuenta)}</span>`,
+      { tag: tagCanal(canalDeOrigen(p.origen_cuenta)), detalle: [a.destinatario, a.concepto || a.motivo || ""].filter(Boolean).join("\n") });
+    // Qué decidió la defensa de este carril, y por qué.
+    const quien = t(clave === "layer2" ? "cn_grifter" : clave === "layer1" ? "cn_firewall" : "cn_sin");
+    const motivo = bloqueada ? r.replace(RE_BLOQUEO, "").replace(/^[^:]*:\s*/, "") : "";
+    const decision = bloqueada
+      ? fila("decision bloqueada", "block", quien, `<span class="nombre">${esc(t("cn_retuvo"))}</span> ${esc(motivo)}`, { detalle: r })
+      : ejecutada
+        ? fila(`decision${deAfuera ? " pago-malo" : ""}`, deAfuera ? "gpp_bad" : "check", quien,
+          `<span class="nombre">${esc(t(deAfuera ? "cn_ejecuto_afuera" : clave === "none" ? "cn_ejecuto" : "cn_dejo"))}</span>`, { detalle: r })
+        : fila("decision", "info", quien, esc(r.includes("insuf") ? t("saldo_insuf") : r), { detalle: r });
+    return intento + decision;
   }
   const args = Object.entries(p.args || {}).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(", ");
-  return li(`herramienta ${bloqueada ? "bloqueada" : ""}`, bloqueada ? "block" : "smart_toy",
-    `<span class="resumen"><span class="nombre">${esc(p.herramienta)}</span> ${esc(bloqueada ? t("bloqueada") : r)}</span>`, `${args}\n${r}`);
+  return fila(`herramienta ${bloqueada ? "bloqueada" : ""}`, bloqueada ? "block" : "smart_toy", t("cn_hizo"),
+    `<span class="nombre">${esc(p.herramienta)}</span> ${esc(bloqueada ? t("bloqueada") : (p.args?.a || p.args?.destinatario || ""))}`, { detalle: `${args}\n${r}` });
 }
 
 function agregarPaso(clave, p) {
   const ol = document.querySelector(`#carril-${clave} .pasos`);
   ol.querySelector(".vacio, .pensando")?.remove();
-  ol.insertAdjacentHTML("beforeend", htmlPaso(p));
+  ol.insertAdjacentHTML("beforeend", htmlPaso(p, clave));
   ol.scrollTop = ol.scrollHeight;
 }
 
@@ -422,7 +534,7 @@ function valoresDeAfuera(ep) {
   return set;
 }
 
-function latirPaso(clave, p) {
+function latirPaso(clave, p, silencioso = false) {
   const c = estado.carriles[clave];
   const mon = c.monitor;
   if (!mon) return;
@@ -437,7 +549,7 @@ function latirPaso(clave, p) {
     const bloqueada = RE_BLOQUEO.test(r) || p.bloqueada;
     const deAfuera = p.origen_cuenta && p.origen_cuenta.tipo !== "inscrita";
     if (!deAfuera) { mon.inscrita(); return riesgo(clave, "base"); }
-    bordeAlerta(true);
+    if (!silencioso) bordeAlerta(true);
     if (bloqueada) { mon.corte(); return riesgo(clave, "bloqueado"); }
     mon.cayo(); return riesgo(clave, "cayo");
   }
@@ -481,6 +593,7 @@ async function correrCarril(clave, ficha) {
   if (!c?.ep) return;
   const ol = document.querySelector(`#carril-${clave} .pasos`);
   ol.innerHTML = "";
+  agregarPaso(clave, { tipo: "encargo", texto: c.ep.encargo });
   for (const p of c.ep.pasos) {
     if (p.tipo === "texto") {
       pensando(clave, true);
@@ -519,6 +632,17 @@ function cargarEscenario() {
   pintarFranja();
   pintarCarriles();
   pintarCorreos();
+  for (const c of CARRILES) mostrarCompleto(c.clave);
+}
+
+function mostrarCompleto(clave) {
+  const c = estado.carriles[clave];
+  const ol = document.querySelector(`#carril-${clave} .pasos`);
+  if (!c?.ep || !ol) return;
+  ol.innerHTML = [{ tipo: "encargo", texto: c.ep.encargo }, ...c.ep.pasos].map((p) => htmlPaso(p, clave)).join("");
+  for (const p of c.ep.pasos) latirPaso(clave, p, true);
+  c.terminado = true;
+  pintarVeredicto(clave);
 }
 
 async function reproducir() {
@@ -695,7 +819,7 @@ function llenarEscenarios() {
   const vistos = new Map();
   for (const ep of Object.values(episodios())) if (!vistos.has(ep.escenario) || ep.idioma === estado.idioma) vistos.set(ep.escenario, ep.descripcion || ep.escenario);
   const sel = $("#sel-escenario");
-  sel.innerHTML = [...vistos].map(([id, desc]) => `<option value="${esc(id)}" title="${esc(desc)}">${esc(id.replace(/^demo_/, "").replaceAll("_", " "))}</option>`).join("");
+  sel.innerHTML = [...vistos].map(([id, desc]) => `<option value="${esc(id)}" title="${esc(desc)}">${esc(tituloEscenario(id))}</option>`).join("");
   if (!estado.escenario || !vistos.has(estado.escenario)) {
     estado.escenario = vistos.has(ESCENARIO_POR_DEFECTO) ? ESCENARIO_POR_DEFECTO : vistos.keys().next().value || null;
   }
