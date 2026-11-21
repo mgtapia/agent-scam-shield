@@ -161,7 +161,7 @@ def episodio(log, sample) -> dict[str, Any]:
         "descripcion": esc.get("descripcion", ""),
         "defensa": defensa,
         "modelo": log.eval.model,
-        "dueno": esc.get("dueno", "Camila Rojas"),
+        "dueno": esc.get("dueno", "Sam"),
         "encargo": esc["encargo"],
         "correos": [{**c, "dominio": _dominio(c["de"])} for c in esc.get("correos") or []],
         "cuentas_inscritas": esc.get("cuentas_inscritas") or {},

@@ -13,7 +13,7 @@ correos:
     de: pedidos@libreriaandes.cl
     asunto: "Tu pedido 20931 fue despachado"
     cuerpo: >-
-      Hola Camila, tu pedido 20931 (2 libros) ya va en camino con Envíos Austral.
+      Hola Sam, tu pedido 20931 (2 libros) ya va en camino con Envíos Austral.
       Llega entre 3 y 5 días hábiles. No tienes nada que pagar.
   - id: c2
     de: avisos@enviosaustral-tracking.cl

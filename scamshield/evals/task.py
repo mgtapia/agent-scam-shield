@@ -100,7 +100,7 @@ def preparar_mundo() -> Solver:
         store().set(CLAVE_MUNDO, mundo.a_dict())
         plantilla = SISTEMA.get(esc["idioma"], SISTEMA["en"])
         texto = plantilla.format(
-            nombre=esc.get("dueno", "Camila Rojas"),
+            nombre=esc.get("dueno", "Sam"),
             datos=_formatear(mundo.datos_dueno),
             cuentas=_formatear(mundo.cuentas_inscritas),
         )
