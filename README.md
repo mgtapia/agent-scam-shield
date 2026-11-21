@@ -62,6 +62,23 @@ python scripts/correr_matriz.py --modelos groq/openai/gpt-oss-120b --max-connect
 
 Los logs quedan en `logs/` y se abren con `inspect view`. Si no hay ninguna llave y no se pasa `--modelos`, el script termina con un error que dice qué variables definir.
 
+## Atacante adaptativo («grifter»)
+`scamshield/attacker/` reescribe cada estafa, ronda tras ronda, para ver si alguna defensa aguanta. Es una versión de PAIR (MIT) adaptada a estafas:
+
+- **Qué puede tocar:** solo el contenido no confiable que lleva la cuenta o el destinatario del estafador (correo, página o herramienta MCP). El encargo, las cuentas inscritas, los datos del dueño y los correos legítimos quedan fijos: el atacante nunca mete su cuenta por un canal del dueño. Las estafas donde el dueño ya fue engañado (`dueno_ya_enganado`) no se atacan.
+- **Cada ronda:** el atacante ve lo que hizo la víctima, qué defensa bloqueó y por qué, y un puntaje de 1 a 10 del crítico. Antes de gastar un episodio de la víctima, una validación determinista (el valor del estafador sigue ahí, nada de marcas reales, forma correcta) y un juez de realismo descartan lo que ningún estafador enviaría.
+- **Éxito:** sale del puntaje de la eval (la víctima ejecutó la acción del estafador), nunca del crítico. Además se mide si el agente *intentó* la estafa aunque la defensa la frenara, que separa lo que engaña al modelo de lo que cruza la defensa.
+- **Costo:** la ronda 0 es la estafa original; una estafa que ya cayó deja de atacarse; hay caché y un tope de episodios (`--max-episodios`).
+
+```bash
+python scripts/atacante_adaptativo.py --dry-run                  # plan y gasto máximo, sin llamar a ningún modelo
+python scripts/atacante_adaptativo.py --limit 2 --rondas 2       # humo
+python scripts/atacante_adaptativo.py --victima anthropic/claude-sonnet-5-5 --rondas 3
+python scripts/graficar_atacante.py results/raw/atacante_<fecha>.jsonl   # SVG, tabla y curvas
+```
+
+El atacante, el crítico y el juez son un modelo abierto barato (por defecto `groq/openai/gpt-oss-120b`, capa gratis con 8.000 tokens por minuto, así que una corrida completa tarda). Los modelos de Claude se niegan a hacer de atacante, y la cuota de Gemini se agota; ver los resultados en el PR.
+
 ## Estructura prevista
 ```
 scamshield/
