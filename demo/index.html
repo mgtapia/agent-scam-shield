@@ -50,10 +50,6 @@
         <button type="button" data-ops-velocidad="2" aria-pressed="false">2x</button>
         <button type="button" data-ops-velocidad="4" aria-pressed="false">4x</button>
       </div>
-      <label class="campo solo-resultados">
-        <span class="oculto" data-t="modelo">Modelo</span>
-        <select id="sel-modelo"></select>
-      </label>
       <span class="fuente solo-resultados" id="fuente"></span>
       <div class="segmentado" role="group" aria-label="Idioma">
         <button type="button" data-idioma="es" aria-pressed="true">ES</button>
@@ -114,16 +110,18 @@
     </section>
 
     <section class="vista" id="vista-resultados" data-vista="resultados" aria-label="Resultados" hidden>
-      <div class="kpis" id="kpis"></div>
-      <div class="radares" id="radares" role="presentation"></div>
-      <figure class="grafico calor">
-        <figcaption class="titulo"><span data-t="calor_tactica">Táctica × defensa</span><span class="nota" id="nota-calor-tactica"></span><span class="leyenda" data-ayuda-t="ayuda_nbajo"><span class="muestra"></span><span data-t="n_bajo">n bajo</span></span></figcaption>
-        <div class="lienzo" id="calor-tactica"></div>
-      </figure>
-      <figure class="grafico calor">
-        <figcaption class="titulo"><span data-t="calor_modelo">Modelo × idioma</span><span class="nota" id="nota-calor-modelo"></span><span class="leyenda" data-ayuda-t="ayuda_nbajo"><span class="muestra"></span><span data-t="n_bajo">n bajo</span></span></figcaption>
-        <div class="lienzo" id="calor-modelo"></div>
-      </figure>
+      <section class="res-bloque res-bench" aria-labelledby="t-bench">
+        <h2 class="titulo" id="t-bench"><span class="ms" aria-hidden="true">table_rows</span><span data-t="r_bench">Agente que hace todo lo que lee</span><span class="dato c-2 res-cmd">grifter bench</span><span class="nota" id="n-bench"></span></h2>
+        <div id="res-bench"></div>
+      </section>
+      <section class="res-bloque res-reales" aria-labelledby="t-reales">
+        <h2 class="titulo" id="t-reales"><span class="ms" aria-hidden="true">fact_check</span><span data-t="r_reales">Modelos y firewall reales</span></h2>
+        <ol class="res-lista" id="res-reales"></ol>
+      </section>
+      <section class="res-bloque res-atacante" aria-labelledby="t-atacante">
+        <h2 class="titulo" id="t-atacante"><span class="ms" aria-hidden="true">swords</span><span data-t="r_atacante">Atacante adaptativo</span><span class="nota" id="n-atacante"></span></h2>
+        <div class="res-curva" id="res-atacante"></div>
+      </section>
     </section>
 
     <section class="vista" id="vista-probar" data-vista="probar" aria-label="Pruébalo" hidden>
@@ -161,5 +159,6 @@
   <script src="vivo_simulado.js"></script>
   <script src="operaciones.js"></script>
   <script src="probar.js"></script>
+  <script src="resultados_vista.js"></script>
 </body>
 </html>

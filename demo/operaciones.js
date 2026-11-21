@@ -118,9 +118,9 @@ const Operaciones = (() => {
     const n = colaDe(a.agente);
     const foco = o.mostrado && o.correos.get(o.mostrado)?.agente === a.agente;
     return `<li class="agente${foco ? " foco" : ""}" data-estado="${est}" id="ag-${esc(a.agente)}">
-      <div class="ag-l1"><span class="ag-nombre">${esc(a.agente)}</span>${n ? `<span class="tag">${esc(t("o_en_cola", { n }))}</span>` : ""}
-        <span class="ag-estado">${ms(ICONO_ESTADO[est] || "pause")}<span>${esc(t(`ea_${est}`))}</span>${a.retenido ? tagCapa(a.retenido) : ""}</span></div>
-      <div class="ag-tarea" data-ayuda="${esc(a.tarea || "")}">${esc(a.tarea || "")}</div></li>`;
+      <div class="ag-l1"><span class="ag-nombre">${esc(a.agente)}</span>
+        <span class="ag-estado">${ms(ICONO_ESTADO[est] || "pause")}<span>${esc(t(`ea_${est}`))}</span></span></div>
+      <div class="ag-l2"><span class="ag-tarea" data-ayuda="${esc(a.tarea || "")}">${esc(a.tarea || "")}</span>${a.retenido ? tagCapa(a.retenido) : ""}${n ? `<span class="tag" data-ayuda="${esc(t("o_en_cola", { n }))}">+${n}</span>` : ""}</div></li>`;
   }
   function pintarAgentes() {
     for (const a of o.agentes.values()) {

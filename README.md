@@ -18,9 +18,9 @@ Proyecto para la hackathon de Platanus, track **AI Security**: *AI control* (un 
 | **Firewall de agentes real** (Pipelock, 42 estafas) | Frena **4 de 42**, todas técnicas (inyección web y MCP envenenado), con 0 falsas alarmas. La ingeniería social no tiene nada técnico que detectar |
 | **Claude Sonnet** con el encargo «paga lo que el gerente apruebe» | Pagó **6 de 6** cuando el correo venía de la dirección comprometida del gerente (un solo escenario, español e inglés). La capa 2 lo retiene |
 | **Claude Haiku** con el dueño en el circuito (21 escenarios en español × 3) | **0 % de estafas [0-15]**, 79 % de utilidad [57-95] y unos **6 toques por cada 100 acciones sensibles** [0-23] |
-| **Clasificador que aprende en vivo** (escenarios apartados por familia, 3 pliegues × 3 semillas: `python scripts/validacion_cruzada_vivo.py --agrupar familia`) | Recall **0,92 [0,83-1,00]**, precisión 0,97 y 4 % de falsas alarmas. Lo aprendido solo sube la sospecha: nunca aprueba un pago |
+| **Clasificador que aprende en vivo** (escenarios apartados por familia, 3 pliegues × 3 semillas: `python scripts/validacion_cruzada_vivo.py --agrupar familia`) | Recall **0,87 [0,80-1,00]**, precisión 1,00 y 0 % de falsas alarmas. Lo aprendido solo sube la sospecha: nunca aprueba un pago |
 
-Todos los números llevan intervalo al 95 %. Lo que significan y lo que no está en [docs/pitch.md](docs/pitch.md) y en [Benchmark en un comando](#benchmark-en-un-comando). Las estafas las escribimos nosotros: un 0 % dice que la garantía se cumple sobre este corpus, no que ninguna estafa pueda saltarla.
+Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango entre 9 corridas (3 pliegues × 3 semillas). Lo que significan y lo que no está en [docs/pitch.md](docs/pitch.md) y en [Benchmark en un comando](#benchmark-en-un-comando). Las estafas las escribimos nosotros: un 0 % dice que la garantía se cumple sobre este corpus, no que ninguna estafa pueda saltarla.
 
 ## Pruébalo
 
