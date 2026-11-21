@@ -69,6 +69,8 @@ class ProcedenciaHistorial:
 
     leidos: list[tuple[str, str]] = field(default_factory=list)
     datos_dueno: Mapping[str, str] = field(default_factory=dict)
+    # Lo que escribió el dueño (mensajes de usuario), sin el perfil del mensaje de sistema.
+    encargo: str = ""
 
     def origenes_de(self, valor: str) -> set[str]:
         return origenes_en(self.leidos, valor)
@@ -81,13 +83,16 @@ def procedencia_desde_historial(
 ) -> ProcedenciaHistorial:
     origenes = ORIGEN_POR_HERRAMIENTA if origen_por_herramienta is None else origen_por_herramienta
     leidos: list[tuple[str, str]] = []
+    encargo: list[str] = []
     for m in history:
         if m.role in ("system", "user"):
             leidos.append((DUENO, m.text))
+            if m.role == "user":
+                encargo.append(m.text)
         elif m.role == "tool":
             leidos.append((origenes.get(m.function or "", HERRAMIENTA), m.text))
         # role == "assistant": no aporta procedencia.
-    return ProcedenciaHistorial(leidos=leidos, datos_dueno=dict(datos_dueno or {}))
+    return ProcedenciaHistorial(leidos=leidos, datos_dueno=dict(datos_dueno or {}), encargo="\n".join(encargo))
 
 
 def bloqueos_registrados() -> list[dict[str, Any]]:

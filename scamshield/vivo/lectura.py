@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import math
 import re
+import unicodedata
 from typing import Any, Mapping, Optional
 
 from ..defenses.layer1 import PATRONES_INYECCION
@@ -75,19 +76,26 @@ def monto_en(texto: str) -> list[tuple[int, int, int]]:
     return salida
 
 
+# Una cuenta puede venir con guiones, espacios, puntos o guiones largos entre sus tres trozos.
+CUENTA_FLEXIBLE = re.compile(r"(?<![\d.,\-\u2013\u2014])\d{2}[ .\-\u2013\u2014]?\d{4}[ .\-\u2013\u2014]?\d{4}(?!\d)")
+
+
 def cuentas_en(correo: Correo) -> list[tuple[int, int, str, bool]]:
     """(inicio, fin, cuenta, segura) de cada cuenta del cuerpo.
 
-    La cuenta se reconoce con el patrón `_TOKEN` del mundo (el mismo que usa `_tokens`) y su
-    procedencia con `origenes_en` sobre lo que el agente leyó, excluyendo este mismo correo.
+    La cuenta se reconoce aunque venga con espacios o puntos en vez de guiones, o con dígitos de ancho
+    completo (se normaliza con NFKC), y su procedencia sale de `origenes_en` sobre lo que el agente
+    leyó, excluyendo este mismo correo. Los offsets valen para `cuerpo` tal como se emitió.
     """
     previos = correo.mundo(con_extra=False).leidos[:-1]
+    cuerpo = unicodedata.normalize("NFKC", correo.cuerpo)
+    if len(cuerpo) != len(correo.cuerpo):   # una normalización que cambia el largo rompería los offsets
+        cuerpo = correo.cuerpo
     salida = []
-    for m in _TOKEN.finditer(correo.cuerpo):
-        for c in CUENTA.finditer(m.group(0)):
-            valor = c.group(0)
-            segura = bool(origenes_en(previos, valor) & ORIGENES_SEGUROS)
-            salida.append((m.start() + c.start(), m.start() + c.end(), valor, segura))
+    for c in CUENTA_FLEXIBLE.finditer(cuerpo):
+        valor = c.group(0)
+        segura = bool(origenes_en(previos, valor) & ORIGENES_SEGUROS)
+        salida.append((c.start(), c.end(), valor, segura))
     return salida
 
 

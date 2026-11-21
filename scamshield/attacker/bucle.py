@@ -38,11 +38,10 @@ class Config:
     reintentos: int = 2                   # reintentos de una reescritura rechazada, dentro de la ronda
     max_episodios: int | None = None      # tope de episodios de la víctima en toda la corrida
     cache: bool = True
+    retry_on_error: int | None = None     # reintentos de una muestra de la víctima que falla (cuota, red)
     log_dir: str = "logs/atacante"
     salida: Path | None = None            # JSONL con una fila por ronda
     nombre_victima: str = ""
-    max_connections_victima: int = 8      # episodios simultáneos de la víctima (1 con la cuota gratis de Groq)
-    retry_on_error_victima: int | None = None  # reintentos de un episodio que falla (por ejemplo, por cuota)
     al_terminar_ronda: Callable[[int, list[dict[str, Any]]], None] | None = None
 
 
@@ -250,8 +249,7 @@ async def correr_atacante(cfg: Config, semillas: list[dict[str, Any]]) -> dict[s
         episodios += sum(len(v) for v in a_correr.values())
 
         eps, usados = await correr(a_correr, cfg.victima, cfg.log_dir, cache=cfg.cache,
-                                      max_connections=cfg.max_connections_victima,
-                                      retry_on_error=cfg.retry_on_error_victima)
+                                   retry_on_error=cfg.retry_on_error)
         for m, n in usados.items():
             tokens[m] = tokens.get(m, 0) + n
 

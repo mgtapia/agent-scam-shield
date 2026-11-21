@@ -92,7 +92,7 @@ def resumir(acciones: list[dict[str, Any]], respuesta: str, limite: int = 900) -
 def episodio_de(muestra: Any, esc: dict[str, Any]) -> Episodio:
     """Convierte una muestra de un log de Inspect en un `Episodio`."""
     if muestra.error:
-        return Episodio(False, False, [], "", error=str(muestra.error.message)[:300])
+        return Episodio(False, False, [], "", error=" ".join(str(muestra.error.message).split())[-250:])
     score = muestra.scores[TAREA]
     # Los bloqueos del approver no pasan por el registro del mundo: se suman como acciones bloqueadas.
     del_approver = [{**b, "resultado": "bloqueada", "bloqueada": True}

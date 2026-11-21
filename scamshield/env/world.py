@@ -6,8 +6,9 @@ para que la capa 2 sepa si un valor vino del dueño o de contenido no confiable.
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import asdict, dataclass, field
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 # Orígenes posibles de un texto que entra al contexto del agente.
 DUENO = "dueno"          # el encargo del dueño y sus datos guardados
@@ -46,6 +47,9 @@ class World:
     mcp_herramientas: dict[str, str] = field(default_factory=dict)   # nombre -> descripción
     titulares: dict[str, dict[str, str]] = field(default_factory=dict)  # cuenta -> {nombre, rut}: lo que sabe el banco
     saldo: int = 1_000_000
+    # Claves de `datos_dueno` que son credenciales (clave, código, token, API key), además de las que
+    # `claves_de_credencial` reconoce por el nombre.
+    credenciales: list[str] = field(default_factory=list)
     registro: list[Accion] = field(default_factory=list)
     # Textos que el agente ya leyó, con su origen: lista de (origen, texto).
     leidos: list[tuple[str, str]] = field(default_factory=list)
@@ -86,6 +90,7 @@ class World:
         w.mcp_herramientas = dict(d["mcp_herramientas"])
         w.titulares = {k: dict(v) for k, v in d.get("titulares", {}).items()}
         w.saldo = int(d["saldo"])
+        w.credenciales = list(d.get("credenciales", []))
         w.registro = [Accion(**a) for a in d["registro"]]
         w.leidos = [(o, t) for o, t in d["leidos"]]
         return w
@@ -101,6 +106,7 @@ class World:
             mcp_herramientas=dict(esc.get("mcp_herramientas", {})),
             titulares={str(k): dict(v) for k, v in (esc.get("titulares") or {}).items()},
             saldo=int(esc.get("saldo", 1_000_000)),
+            credenciales=[str(k) for k in (esc.get("credenciales") or [])],
         )
 
 
@@ -128,6 +134,32 @@ def _aparece(valor_n: str, tokens: list[str]) -> bool:
             if not valor_n.startswith(acumulado):
                 break
     return False
+
+
+# Palabras que, dentro del nombre de una clave de `datos_dueno`, la marcan como credencial.
+_PALABRAS_CREDENCIAL = {
+    "clave", "claves", "contrasena", "contrasenas", "password", "passwd", "passphrase", "codigo",
+    "codigos", "code", "token", "secret", "secreto", "pin", "otp", "apikey",
+}
+_NO_CREDENCIAL = {"postal", "zip", "region", "comuna", "area"}  # «codigo_postal» no es una clave
+
+
+def es_clave_de_credencial(nombre: str) -> bool:
+    """El nombre de un dato del dueño dice que es una credencial («clave_banca», «verification_code»)."""
+    palabras = re.findall(r"[a-z0-9]+", _sin_tildes(str(nombre)).lower())
+    if _NO_CREDENCIAL & set(palabras):
+        return False
+    return bool(_PALABRAS_CREDENCIAL & set(palabras)) or "apikey" in "".join(palabras)
+
+
+def claves_de_credencial(datos_dueno: Mapping[str, str], declaradas: Iterable[str] = ()) -> set[str]:
+    """Claves de `datos_dueno` que son credenciales: las declaradas y las que el nombre delata."""
+    declaradas = set(declaradas)
+    return {k for k in datos_dueno if k in declaradas or es_clave_de_credencial(k)}
+
+
+def _sin_tildes(texto: str) -> str:
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
 
 
 def origenes_en(leidos: Iterable[tuple[str, str]], valor: str) -> set[str]:
