@@ -216,3 +216,12 @@ def test_el_precalentamiento_deja_modelo_boveda_e_historial():
     # Los ts quedan en el pasado reciente y en orden, nunca en el futuro.
     ts = [e["ts"] for _, e in m.eventos_desde(0)]
     assert ts == sorted(ts) and ts[-1] <= ahora[0] and ts[0] < ahora[0] - 60
+
+
+def test_los_eventos_dicen_de_que_escenario_vienen():
+    """La vista Episodios abre el escenario de la última estafa que vio Operaciones."""
+    m = _motor()
+    eventos = _correr(m, "demo_microprocesadores")
+    for tipo in ("correo_nuevo", "veredicto", "accion"):
+        assert {e["escenario"] for e in _de_tipo(eventos, tipo)} == {"demo_microprocesadores"}
+    assert {f["escenario"] for f in m.foto()["correos"]} == {"demo_microprocesadores"}

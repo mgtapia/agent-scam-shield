@@ -180,7 +180,7 @@ def _backend_capa1() -> str:
 def _publicar_en_vivo(motor: Any, correo: Correo, respuesta: dict[str, Any], veredicto: dict[str, Any]) -> None:
     """El correo del juez en la pantalla grande. Son eventos de lectura: no llaman a `aprender` ni a la bóveda."""
     motor.publicar({"tipo": "correo_nuevo", "id": correo.id, "agente": AGENTE, "de": correo.de,
-                    "asunto": correo.asunto, "cuerpo": correo.cuerpo, "juez": True})
+                    "asunto": correo.asunto, "cuerpo": correo.cuerpo, "juez": True, "escenario": correo.unidad})
     motor.publicar({"tipo": "lectura", "id": correo.id, "tramos": respuesta["lectura"]})
     motor.publicar({**veredicto, "id": correo.id})
     if correo.accion:
