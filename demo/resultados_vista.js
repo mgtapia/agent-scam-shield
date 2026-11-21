@@ -141,7 +141,12 @@ const ResultadosVista = (() => {
 
   // Copia con la API del portapapeles y, si no está (file://), con una selección y execCommand.
   async function alPortapapeles(texto) {
-    try { await navigator.clipboard.writeText(texto); return true; } catch (_) { /* sigue el respaldo */ }
+    // Sin foco, writeText puede quedar pendiente para siempre: con un tope de tiempo se pasa al respaldo.
+    try {
+      const tope = new Promise((_, no) => setTimeout(() => no(new Error("tope")), 800));
+      await Promise.race([navigator.clipboard.writeText(texto), tope]);
+      return true;
+    } catch (_) { /* sigue el respaldo */ }
     const area = document.createElement("textarea");
     area.value = texto; area.setAttribute("readonly", ""); area.style.position = "fixed"; area.style.opacity = "0";
     document.body.appendChild(area); area.select();
