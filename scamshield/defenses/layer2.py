@@ -123,10 +123,45 @@ def _sale_una_credencial(procedencia: Procedencia, args: Mapping, regla: AccionS
     encargo = str(getattr(procedencia, "encargo", "") or "")
     for clave in sorted(claves):
         valor = _norm(procedencia.datos_dueno[clave])
-        if len(valor) < 4 or not _lleva_credencial(args, regla, valor):
+        if len(valor) < MIN_CORTA:
+            continue
+        # Una credencial de 3 caracteres (el CVV) no se reconoce por su largo: cualquier número de 3 dígitos aparece
+        # por todos lados. Se reconoce si la frase de al lado la nombra o si va pegada a un número de tarjeta.
+        lleva = _lleva_credencial_corta(args, regla, valor) if len(valor) < 4 else _lleva_credencial(args, regla, valor)
+        if not lleva:
             continue
         if not _autorizada(encargo, clave, procedencia.datos_dueno[clave], destino):
             return True
+    return False
+
+
+MIN_CORTA = 3     # el CVV tiene 3 dígitos (4 en algunas tarjetas, que ya entran por el largo normal)
+VENTANA_PISTA = 48   # caracteres de cada lado de la pista en los que tiene que estar el valor
+# La frase que nombra una credencial corta: «CVV 482», «el código de seguridad es 482», «los 3 números de atrás: 482».
+PISTA_CORTA = re.compile(
+    r"\b(?:cvv2?|cvc2?|cvn|csc|c[oó]digo de seguridad|security code|card verification|"
+    r"(?:los )?(?:3|tres|4|cuatro) (?:n[uú]meros|d[ií]gitos)(?: de(?:l)? (?:atr[aá]s|reverso))?|"
+    r"(?:the )?(?:3|three|4|four) digits(?: on the back)?)\b", re.IGNORECASE)
+# Un número de tarjeta: 13 a 19 dígitos con espacios o guiones.
+TARJETA = re.compile(r"(?<!\d)(?:\d[ \-]?){12,21}\d(?!\d)")
+
+
+def _lleva_credencial_corta(args: Mapping, regla: AccionSensible, valor: str) -> bool:
+    """True si lo que sale lleva la credencial corta con su pista: la nombra una frase cercana o va junto a una tarjeta."""
+    textos = [str(args.get(c, "")) for c in (regla.dato, regla.mensaje) if c is not None]
+    for crudo in textos:
+        for m in PISTA_CORTA.finditer(crudo):
+            ventana = crudo[max(0, m.start() - VENTANA_PISTA): m.end() + VENTANA_PISTA]
+            if valor in _norm(ventana):
+                return True
+        for m in TARJETA.finditer(crudo):
+            digitos = re.sub(r"\D", "", m.group(0))
+            # «5300 0100 2200 7731 482»: el CVV pegado al final (o al principio) del mismo número corrido.
+            if len(digitos) - len(valor) in range(13, 20) and (digitos.endswith(valor) or digitos.startswith(valor)):
+                return True
+            vecinos = crudo[max(0, m.start() - 12): m.start()] + " " + crudo[m.end(): m.end() + 12]
+            if valor in _norm(vecinos):
+                return True
     return False
 
 
