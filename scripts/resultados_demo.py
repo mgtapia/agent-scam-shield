@@ -41,6 +41,7 @@ if str(RAIZ) not in sys.path:
 RESULTS = RAIZ / "results"
 DEMO = RAIZ / "demo"
 
+from scamshield.attacker.resultados import SEP_ATACANTE  # noqa: E402
 from scripts.resumen_resultados import intervalo_wilson  # noqa: E402
 
 # Sin archivo de origen: el número y de dónde sale. Ver el docstring. El intervalo es el de Wilson sobre las
@@ -260,15 +261,21 @@ def _series(curvas: dict[str, Any]) -> list[dict[str, Any]]:
     Cada estafa cuenta una vez por ronda (cayó o no hasta esa ronda), así que son unidades independientes.
     """
     series = []
-    for modelo, por_defensa in curvas.items():
+    for clave, por_defensa in curvas.items():
+        # Con varios atacantes la clave es «atacante → víctima» (scamshield/attacker/resultados.py): un panel por atacante.
+        atacante, _, modelo = clave.partition(f" {SEP_ATACANTE} ") if f" {SEP_ATACANTE} " in clave else ("", "", clave)
         for d, v in por_defensa.items():
             if isinstance(v.get("rondas"), list):
-                series.append(_serie_resumen(modelo, d, v))
-                continue
-            n = v.get("n") or 0
-            ic = [list(intervalo_wilson(e / n, n)) if n else [None, None] for e in v.get("exitos", [])]
-            series.append({"modelo": modelo, "defensa": d, "ic": ic,
-                           **{k: x for k, x in v.items() if not k.startswith("unidades_")}})
+                serie = _serie_resumen(modelo, d, v)
+            else:
+                n = v.get("n") or 0
+                ic = [list(intervalo_wilson(e / n, n)) if n else [None, None] for e in v.get("exitos", [])]
+                serie = {"modelo": modelo, "defensa": d, "ic": ic,
+                         **{k: x for k, x in v.items() if not k.startswith("unidades_")}}
+            if atacante:
+                serie["atacante"] = atacante
+                serie["rechazos"] = v.get("rechazos_atacante", 0)
+            series.append(serie)
     return series
 
 

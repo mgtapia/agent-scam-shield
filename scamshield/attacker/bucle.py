@@ -42,6 +42,7 @@ class Config:
     log_dir: str = "logs/atacante"
     salida: Path | None = None            # JSONL con una fila por ronda
     nombre_victima: str = ""
+    nombre_atacante: str = ""   # va en cada fila: con varios atacantes, las curvas se separan por él
     gasto: Gasto = field(default_factory=Gasto)   # uso real del atacante, el crítico y el juez; con tope
     effort: str = "high"                          # solo para modelos que piensan siempre (Claude 5.x)
     al_terminar_ronda: Callable[[int, list[dict[str, Any]]], None] | None = None
@@ -216,7 +217,8 @@ async def criticar(cfg: Config, f: Flujo, ep: Episodio) -> int:
 
 
 def _fila(cfg: Config, f: Flujo, ronda: int, **campos: Any) -> dict[str, Any]:
-    return {"modelo": cfg.nombre_victima or str(cfg.victima), "defensa": f.defensa, "escenario": f.semilla["id"],
+    return {"modelo": cfg.nombre_victima or str(cfg.victima), "atacante": cfg.nombre_atacante or str(cfg.atacante.name),
+            "defensa": f.defensa, "escenario": f.semilla["id"],
             "idioma": f.semilla["idioma"], "ronda": ronda, "valida": True, "exito": False,
             "intento": False, "se_nego": False, "puntaje": None, "realismo": None, "motivo_rechazo": "",
             "bloqueos": [], "mejora": "", "ataque": None, "error": "", **campos}

@@ -21,6 +21,9 @@ def leer(ruta: Path) -> list[dict[str, Any]]:
         return [json.loads(linea) for linea in fh if linea.strip()]
 
 
+SEP_ATACANTE = "→"
+
+
 def curvas(filas: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, Any]]]:
     """{modelo: {defensa: {"n", "rondas", "exitos", "intentos"}}}, acumulado por ronda.
 
@@ -29,8 +32,11 @@ def curvas(filas: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, Any]]]:
     las frenara: mide a la víctima sin la defensa, y la diferencia con `exitos` es lo que la defensa evitó.
     """
     por_celda: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    # Con más de un atacante en las filas, cada panel es «atacante → víctima»: las curvas quedan lado a lado.
+    varios = len({f.get("atacante") or "" for f in filas}) > 1
     for f in filas:
-        por_celda.setdefault((f["modelo"], f["defensa"]), []).append(f)
+        modelo = f"{f.get('atacante') or 'atacante sin nombre'} {SEP_ATACANTE} {f['modelo']}" if varios else f["modelo"]
+        por_celda.setdefault((modelo, f["defensa"]), []).append(f)
     salida: dict[str, dict[str, dict[str, Any]]] = {}
     for (modelo, defensa), fs in por_celda.items():
         rondas = max(f["ronda"] for f in fs)
