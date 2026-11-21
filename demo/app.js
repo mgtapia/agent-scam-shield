@@ -187,7 +187,7 @@ function pintarFranja() {
   const num = valor ? (String(valor).match(RE_CUENTA) || [valor])[0] : "";
   const monto = montoDe(ep);
   $("#franja").innerHTML = `
-    <div class="quien">${ms("person")}${esc(ep.dueno || t("dueno"))}</div>
+    <div class="quien">${ms("person")}${esc(ep.dueno || t("dueno"))}${String(ep.modelo || "").startsWith("mockllm") ? `<span class="tag prueba" data-ayuda="${esc(ep.modelo)}">${esc(t("prueba"))}</span>` : ""}</div>
     <div class="celda-tarea" data-ayuda="${esc(ep.encargo)}"><span class="tarea">${esc(ep.encargo)}</span></div>
     <div><span class="rotulo">${esc(t("monto"))}</span><span class="grande">${monto === null ? "—" : plata(monto)}</span></div>
     <div class="celda-inscrita" data-cuenta="${norm(num)}">${ms("account_balance")}${nombre

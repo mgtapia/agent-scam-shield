@@ -109,6 +109,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 .tag.externo { color: var(--ambar); }
+.tag.prueba { color: var(--texto); font-weight: var(--p-normal); }
 
 /* --- Barra: marca, pestañas, controles --- */
 .barra {
