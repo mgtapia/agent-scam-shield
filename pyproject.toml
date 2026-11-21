@@ -18,6 +18,8 @@ dev = ["pytest"]
 proveedores = ["google-genai>=3.3.0", "groq>=0.28.0"]
 # AgentDojo de inspect_evals, para scripts/agentdojo_banking.py.
 agentdojo = ["inspect-evals[agentdojo]"]
+# Servidor de la demo.
+demo = ["fastapi", "uvicorn"]
 
 [tool.setuptools.packages.find]
 include = ["scamshield*"]
@@ -27,3 +29,4 @@ scamshield = ["scenarios/*/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
