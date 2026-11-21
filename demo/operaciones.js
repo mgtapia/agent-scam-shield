@@ -773,6 +773,7 @@ const Operaciones = (() => {
     const sello = $("#ops-sello");
     sello.textContent = o.pausa ? `${t(`o_sello_${o.sello}`)} · ${t("o_en_pausa")}` : t(`o_sello_${o.sello}`);
     sello.dataset.estado = o.sello;
+    window.Duelo?.pintarVivo();   // la celda «En vivo» del Duelo dice de dónde salen sus números
     sello.dataset.pausa = String(o.pausa);
     const b = $("#ops-pausa");
     b.setAttribute("aria-pressed", String(o.pausa));

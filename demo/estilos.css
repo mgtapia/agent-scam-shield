@@ -654,6 +654,7 @@ mark.tramo { background: transparent; color: inherit; }
 .du-det { font-size: var(--t-1); line-height: var(--l-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .du-titular .du-num { padding-right: var(--e-1); }
 .du-vivo .dato { font-size: var(--t-1); line-height: var(--l-1); }
+.du-vivo .du-sello { justify-self: start; margin-top: 4px; }
 .du-bloque { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; border: var(--linea); background: var(--superficie); }
 .du-congelado { grid-column: 1 / span 6; }
 .du-aprende { grid-column: 7 / span 6; }

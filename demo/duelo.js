@@ -11,11 +11,11 @@ const Duelo = (() => {
     du_titular: "pagos que cruzan la capa 2", du_titular_det: "en {g} generaciones · {c} intentos del hacker",
     ayuda_du_titular: "La capa 2 exige que la cuenta venga del dueño, no de un correo. No se entrena: ninguna mutación la mueve.\nSuma de exitosas_capa2 en las seis corridas, con y sin entrenar.",
     du_sin_capa2: "Sin capa 2 habría cobrado", du_veces: "veces", du_de: "de {n} intentos · {m}",
-    ayuda_du_sin_capa2: "Correos mutados que el clasificador dejó pasar como seguros, sumados generación a generación (sin_capa2). Es un conteo de intentos: la misma cepa vuelve en varias generaciones.",
+    ayuda_du_sin_capa2: "Correos mutados que el clasificador y la bóveda dejaron pasar como seguros, sumados generación a generación (sin_capa2). Es un conteo de intentos: la misma cepa vuelve en varias generaciones.",
     du_congelado: "Escudo congelado", du_aprende: "Escudo que aprende",
     ayuda_du_congelado: "--sin-entrenar: el clasificador y la bóveda no se reentrenan. El hacker aprende y el escudo no responde.",
     ayuda_du_aprende: "El dueño simulado confirma las estafas de cada generación y el clasificador y la bóveda se reentrenan con ellas.",
-    du_evasion: "evasión del hacker contra el clasificador", du_sem: "sem. {s}",
+    du_evasion: "evasión del hacker contra el clasificador y la bóveda", du_sem: "sem. {s}",
     du_l_congelado: "{i} → {f}", du_l_aprende: "pico {p} → {f}",
     du_eje: "generación", du_gen: "Generación", du_capa2: "capa 2", du_capa2_fin: "capa 2: 0 pagos",
     du_ayuda: "El hacker es un atacante por mutaciones con Thompson sampling, sin API: aprende qué mutación le sirve contra cada señal del escudo. Parte de la recuperación del escudo que aprende la hace la guardia de deriva, que descarta las versiones que empeoran: {r} versiones revertidas en las semillas 0, 1 y 2 (Clasificador.revertidas).",
@@ -28,11 +28,11 @@ const Duelo = (() => {
     du_titular: "payments that cross layer 2", du_titular_det: "in {g} generations · {c} hacker attempts",
     ayuda_du_titular: "Layer 2 requires the account to come from the owner, not from an email. It is not trained: no mutation moves it.\nSum of exitosas_capa2 over the six runs, with and without training.",
     du_sin_capa2: "Without layer 2 it would have collected", du_veces: "times", du_de: "of {n} attempts · {m}",
-    ayuda_du_sin_capa2: "Mutated emails the classifier let through as safe, summed generation by generation (sin_capa2). It counts attempts: the same strain returns over several generations.",
+    ayuda_du_sin_capa2: "Mutated emails the classifier and the vault let through as safe, summed generation by generation (sin_capa2). It counts attempts: the same strain returns over several generations.",
     du_congelado: "Frozen shield", du_aprende: "Shield that learns",
     ayuda_du_congelado: "--sin-entrenar: the classifier and the vault are not retrained. The hacker learns and the shield does not respond.",
     ayuda_du_aprende: "The simulated owner confirms each generation's scams and the classifier and the vault retrain on them.",
-    du_evasion: "hacker evasion against the classifier", du_sem: "seed {s}",
+    du_evasion: "hacker evasion against the classifier and the vault", du_sem: "seed {s}",
     du_l_congelado: "{i} → {f}", du_l_aprende: "peak {p} → {f}",
     du_eje: "generation", du_gen: "Generation", du_capa2: "layer 2", du_capa2_fin: "layer 2: 0 payments",
     du_ayuda: "The hacker is a mutation attacker with Thompson sampling, no API: it learns which mutation works against each shield signal. Part of the learning shield's recovery comes from the drift guard, which discards versions that get worse: {r} versions rolled back in seeds 0, 1 and 2 (Clasificador.revertidas).",
@@ -44,7 +44,8 @@ const Duelo = (() => {
 
   const MODOS = ["congelado", "aprende"];
   const d = { historial: [], visible: false, cargado: false };
-  const datos = () => estado.resultados?.duelo || null;
+  // Hasta que llega resultados.json vale la copia de resultados.js, que ya está cargada: la vista no espera la red.
+  const datos = () => (d.cargado ? estado.resultados : window.RESULTADOS)?.duelo || null;
   const num = (n) => Number(n).toLocaleString(t("locale"));
   const pct = (x) => `${Math.round((x || 0) * 100)} %`;
   const lista = (xs) => (xs.length > 1 ? `${xs.slice(0, -1).join(", ")}${t("du_y")}${xs.at(-1)}` : xs.join(""));
@@ -69,7 +70,7 @@ const Duelo = (() => {
         <span class="c-2 du-det">${esc(t("du_titular_det", { g: D.generaciones, c: num(D.candidatos) }))}</span></div>
       ${celda("congelado")}${celda("aprende")}
       <div class="du-celda du-vivo" tabindex="0" data-ayuda="${esc(t("ayuda_du_vivo"))}"><span class="rotulo">${esc(t("du_vivo"))}</span>
-        <span class="dato" id="du-vivo"></span></div>`;
+        <span class="dato" id="du-vivo"></span><span class="tag du-sello" id="du-sello" hidden></span></div>`;
     pintarVivo();
   }
 
@@ -79,6 +80,10 @@ const Duelo = (() => {
     const e = d.historial.at(-1);
     el.classList.toggle("c-2", !e);
     el.textContent = e ? t("du_vivo_val", { g: e.generacion, e: pct(e.evasion), c: e.exitosas_capa2 }) : t("du_vivo_vacio");
+    // De dónde salen: el motor real o el emisor local (números de juguete), como el sello de Operaciones.
+    const fuente = $("#ops-sello")?.dataset.estado, sello = $("#du-sello");
+    sello.hidden = !e || !(fuente === "real" || fuente === "sim");
+    if (!sello.hidden) sello.textContent = t(`o_sello_${fuente}`);
   }
 
   function pintarModo(D, modo) {
@@ -110,11 +115,16 @@ const Duelo = (() => {
     return true;
   }
 
-  // `listo`: app.js avisa que resultados.json ya llegó (o que no está). Antes no se pinta, ni el estado vacío.
+  // `listo`: app.js avisa que resultados.json ya llegó (o que no está). Antes, sin copia en JS, no se pinta ni el estado vacío.
   function pintar(listo = false) {
-    if (listo === true) d.cargado = true;
-    if (!d.cargado) return;
+    if (listo === true) {
+      d.cargado = true;
+      // Ya se dibujó con la copia de resultados.js y es la misma corrida: no se vuelve a animar.
+      if (d.generado && d.generado === estado.resultados?.generado) return;
+    }
+    if (!d.cargado && !window.RESULTADOS) return;
     const D = datos();
+    d.generado = d.visible && D ? (d.cargado ? estado.resultados : window.RESULTADOS)?.generado : null;
     if (pintarVacio(D)) return;
     pintarFranja(D);
     for (const modo of MODOS) pintarModo(D, modo);
@@ -145,7 +155,7 @@ const Duelo = (() => {
   }
 
   document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => pintar()));
-  return { aplicar, cargar, alCambiarVista, pintar, _d: d };
+  return { aplicar, cargar, alCambiarVista, pintar, pintarVivo, _d: d };
 })();
 window.Duelo = Duelo;
 Duelo.alCambiarVista(estado.vista);
