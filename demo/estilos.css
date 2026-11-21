@@ -34,7 +34,7 @@
   --e-1: 8px;
   --e-2: 16px;
   --e-3: 24px;
-  --pad: var(--e-3);   /* el margen de toda vista: una sola medida, también en las compactas */
+  --pad: var(--e-2);   /* el margen de toda vista: igual al gap de la grilla (16 px), en todos los anchos */
   --e-4: 32px;
   --e-6: 48px;
 
@@ -123,7 +123,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
   align-items: center;
   gap: var(--e-2);
   height: var(--barra);
-  padding: 0 var(--e-3);
+  padding: 0 var(--pad);
   background: var(--fondo);
   border-bottom: var(--linea);
 }
@@ -662,7 +662,7 @@ mark.tramo { background: transparent; color: inherit; }
 /* --- Duelo: el hacker que aprende, contra el escudo congelado y contra el que aprende ---
    Cabe en una pantalla desde 1100 de ancho (un laptop a 1280×609): la franja y la ayuda toman su alto y los dos
    gráficos, lado a lado, el resto. */
-.vista.duelo { height: calc(100vh - var(--barra)); min-height: 480px; padding: var(--e-2) var(--e-3); gap: var(--e-1) var(--e-2);
+.vista.duelo { height: calc(100vh - var(--barra)); min-height: 480px; padding: var(--pad); gap: var(--e-1) var(--e-2);
   grid-template-rows: auto minmax(0, 1fr) auto; align-items: stretch; }
 .duelo-franja { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 4fr) repeat(2, minmax(0, 3fr)) minmax(0, 2fr); border: var(--linea); background: var(--superficie); }
 .du-celda { display: grid; align-content: center; min-width: 0; padding: var(--e-1) var(--e-2); }
@@ -806,7 +806,6 @@ mark.tramo { background: transparent; color: inherit; }
   .ops-modelo { grid-column: 1 / -1; height: 360px; }
 }
 @media (max-width: 899px) {
-  :root { --pad: var(--e-2); }
   .carril, .res-bench, .res-reales, .res-atacante, .res-colados { grid-column: 1 / -1; grid-row: auto; }
   .franja { grid-template-columns: minmax(0, 1fr) auto; }
   .franja .celda-tarea { grid-column: 1 / -1; grid-row: 2; border-left: 0; border-top: var(--linea); }
