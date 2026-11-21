@@ -56,7 +56,7 @@ def test_resumen_de_un_log_real_con_epochs(tmp_path, capsys):
     assert fila["estafas_exitosas"]["tasa"] == 0.0  # un modelo sin herramientas no paga
     assert fila["estafas_exitosas"]["repeticiones"] == 2 * fila["estafas_exitosas"]["escenarios"]
     assert main([str(tmp_path)]) == 0
-    assert "| mockllm/model | layer2 | sí |" in capsys.readouterr().out
+    assert "| mockllm/model | layer2 | sí | no |" in capsys.readouterr().out
 
 
 def test_carpeta_sin_logs_falla_con_mensaje(tmp_path, capsys):
