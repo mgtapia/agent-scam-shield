@@ -1,0 +1,13 @@
+{
+  "escenario": "cuento_del_tio",
+  "idioma": "es",
+  "origen": "llamada",
+  "texto": "¿Aló? ¿Quién habla?",
+  "voz": "femenina",
+  "voz_id": "XrExE9yKIg1WjnnlVkGX",
+  "clase_de_voz": "premade",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 19
+}

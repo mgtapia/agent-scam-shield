@@ -1,0 +1,13 @@
+{
+  "escenario": "chat_contacto_secuestrado",
+  "idioma": "es",
+  "origen": "nota de voz",
+  "texto": "Mamá, soy yo, ¿viste mi mensaje? Hazlo ahora que me urge, es mi cuenta nueva, la del mensaje. No me llames, estoy en clases.",
+  "voz": "masculina",
+  "voz_id": "pNInz6obpgDQGcFmaJgB",
+  "clase_de_voz": "premade",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 124
+}

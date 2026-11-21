@@ -1,0 +1,13 @@
+{
+  "escenario": "vishing_familiar",
+  "idioma": "es",
+  "origen": "llamada",
+  "texto": "Mamá, soy yo, Mark. Contesta, po, por favor. Choqué, nada grave, estoy bien, pero chocó otro auto y el tipo quiere arreglar al tiro para no llamar al seguro ni a la policía. Me prestaron este celular porque el mío quedó en el auto y no lo puedo sacar. Necesito $380.000 ahora, es el arreglo y la grúa. Transfiérelos a la cuenta del taller, Banco Austral cuenta vista 71-9043-2258, a nombre de Reed. Es urgente, mamá, me están esperando aquí. No me llames a mi número, no lo tengo. Dime apenas lo hagas.",
+  "voz": "masculina",
+  "voz_id": "pNInz6obpgDQGcFmaJgB",
+  "clase_de_voz": "premade",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 502
+}

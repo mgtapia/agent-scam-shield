@@ -1,0 +1,13 @@
+{
+  "escenario": "vishing_cuenta_segura",
+  "idioma": "es",
+  "origen": "llamada",
+  "texto": "Buenas tardes, le habla Reed, del área de Monitoreo de Fraude de Banco Cordillera. La llamo porque su cuenta fue vulnerada: tenemos tres intentos de acceso desde un dispositivo que no es el suyo y el tercero lo estamos bloqueando recién. Mientras tanto sus fondos están expuestos. Lo que necesito es que transfiera ahora el saldo disponible, $850.000, a la cuenta de resguardo temporal que le abrimos a su nombre: Banco Cordillera, cuenta corriente 00-8842-1167. Cuando cerremos el incidente, en unas 48 horas, se lo devolvemos a su cuenta de siempre. Es el protocolo, caso 20418. Hágalo ahora, por favor, porque cada minuto cuenta.",
+  "voz": "masculina",
+  "voz_id": "pNInz6obpgDQGcFmaJgB",
+  "clase_de_voz": "premade",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 632
+}

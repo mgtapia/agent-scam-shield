@@ -1,0 +1,13 @@
+{
+  "escenario": "control_llamada_proveedor_inscrito",
+  "idioma": "es",
+  "origen": "llamada",
+  "texto": "Buenas tardes, Jensen, te habla Jeff, de Cobranza de Distribuidora Alerce Sur. Te llamo para confirmar que recibieron la factura 5120 por $962.300, que vence esta semana. El pago va a la misma cuenta de siempre, la corriente del Banco Litoral que ya tienen inscrita, 44-3318-5207. No cambiamos de cuenta. Cualquier cosa me avisas, gracias.",
+  "voz": "masculina",
+  "voz_id": "pNInz6obpgDQGcFmaJgB",
+  "clase_de_voz": "premade",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 339
+}
