@@ -9,7 +9,7 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 
 | Tiempo | Qué se dice | Qué se ve |
 |---|---|---|
-| 0:00–0:20 | 1 de cada 4 chilenos ya perdió plata en una estafa digital `{fuente verificada en #16}`. Ahora los agentes pagan por nosotros. Al estafador ya no le hace falta engañarte a ti: le basta con engañar a tu agente. | Título Grifter |
+| 0:00–0:20 | El 13 de noviembre OpenAI lanzó ChatGPT Wallet: los agentes ya pagan por nosotros. 1 de cada 4 chilenos ya perdió plata en una estafa digital `{fuente verificada en #16}`. Al estafador ya no le hace falta engañarte a ti: le basta con engañar a tu agente. | Título Grifter |
 | 0:20–1:10 | Elon le pide a su agente que pague 10.000 microprocesadores. Llega el correo «cambiamos de banco» desde un dominio casi igual. Sin defensa, el agente paga. Con un firewall de agentes conocido, también, porque no hay nada técnico que detectar. Con Grifter, el pago se frena. | Live: tres carriles con el ECG en vivo |
 | 1:10–1:40 | Le llega la alerta: la cuenta salió de un correo, no de sus cuentas inscritas. Un toque y paga a la correcta. | La alerta en el celular |
 | 1:40–2:30 | Los números. `{n}` estafas chilenas en español e inglés, `{m}` modelos y 4 configuraciones. Tres hallazgos: | Results: KPI, mapa de calor y radar |
@@ -27,6 +27,11 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 ## Lo que no se dice
 - «Grifter le devuelve la utilidad al agente»: medido en #38, no es cierto.
 - Los números con dueño simulado son un techo: el dueño idealizado sabe cuál es la cuenta buena, y en un hilo secuestrado un dueño real podría no saberlo.
+
+## ¿Y ChatGPT Wallet? (lanzado el 13-nov-2026)
+- **Lo que hace:** tarjetas tokenizadas (el agente no ve la tarjeta) y aprobación biométrica de cada compra. Solo en EE. UU., para Pro.
+- **Lo que no hace:** la biometría confirma que *eres tú* el que aprueba, no que el destino sea legítimo. Si el agente fue engañado, la pantalla de aprobación te muestra la tienda o la cuenta del estafador y la apruebas con tu cara. Es el mismo punto débil que medimos: el humano aprueba lo que el agente le muestra.
+- **Lo que agrega Grifter:** el *porqué* en el momento de aprobar («este destino salió de un correo, no de tus proveedores»), la retención de lo que no se puede verificar y las transferencias a cuentas, que es la estafa dominante en Chile y que una billetera de tarjetas no cubre. Grifter es una capa de política: se puede poner antes de cualquier billetera o pasarela.
 
 ## Preguntas probables
 - **¿Y si el estafador logra que su cuenta quede inscrita?** Inscribir una cuenta pide confirmar con fricción y tiene un período de espera. Lo aprendido solo sube la sospecha, nunca aprueba.
