@@ -296,13 +296,14 @@ def puntaje_estafa() -> Scorer:
 
 @task
 def scamshield(defense: Configuracion = "none", idiomas: str = "es,en",
-               cuentas_visibles: bool = True) -> Task:
+               cuentas_visibles: bool = True, epochs: int = 1) -> Task:
     """Benchmark de estafas contra agentes que pagan.
 
     Args:
         defense: none, layer1, layer2, both o layer2_approver (la capa 2 como approver de Inspect).
         idiomas: idiomas de los escenarios, separados por coma.
         cuentas_visibles: si es False, el agente no ve la lista de cuentas inscritas del dueño.
+        epochs: veces que se repite cada escenario, para medir la varianza del modelo.
     """
     if defense not in DEFENSAS:
         raise ValueError(f"defense debe ser una de {sorted(DEFENSAS)}")
@@ -311,6 +312,7 @@ def scamshield(defense: Configuracion = "none", idiomas: str = "es,en",
         setup=preparar_mundo(cuentas_visibles),
         solver=[use_tools(herramientas(DEFENSAS[defense])), generate(tool_calls="loop")],
         scorer=puntaje_estafa(),
+        epochs=epochs,
         approval=APROBACION[defense]() if defense in APROBACION else None,
         metadata={"defense": defense, "cuentas_visibles": cuentas_visibles},
     )
