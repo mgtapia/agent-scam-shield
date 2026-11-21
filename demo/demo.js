@@ -634,6 +634,31 @@
   function callar() { timbre.forEach((o) => { try { o.stop(); } catch (_) { /* ya paró */ } }); timbre = []; Object.values(pistas).forEach((a) => a.pause()); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
 
   // --- Modo revisión (?revisar=1): muestra el segundo actual para decir «en t = 48,7 cambia esto». No sale en el pitch. ---
+  // Letra de los titulares, el logo y las cifras. Por defecto IBM Plex Sans; con ?letra= se prueba otra (vista previa).
+  const LETRAS = {
+    plex: ["IBM Plex Sans (actual)", "", ""],
+    space: ["Space Grotesk", "Space+Grotesk:wght@500;700", "-0.03em"],
+    sora: ["Sora", "Sora:wght@600;800", "-0.04em"],
+    bricolage: ["Bricolage Grotesque", "Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800", "-0.03em"],
+    serif: ["Instrument Serif", "Instrument+Serif:ital@0;1", "-0.01em"],
+    syne: ["Syne", "Syne:wght@700;800", "-0.03em"],
+    outfit: ["Outfit", "Outfit:wght@600;700", "-0.02em"],
+  };
+  function ponerLetra(clave) {
+    const [nombre, familia, espacio] = LETRAS[clave] || LETRAS.plex;
+    const raiz = document.documentElement;
+    if (!familia) { raiz.style.removeProperty("--titular"); raiz.style.removeProperty("--titular-esp"); delete raiz.dataset.letra; return; }
+    if (!document.getElementById(`md-letra-${clave}`)) {
+      const hoja = document.createElement("link");
+      Object.assign(hoja, { id: `md-letra-${clave}`, rel: "stylesheet", href: `https://fonts.googleapis.com/css2?family=${familia}&display=swap` });
+      document.head.append(hoja);
+    }
+    raiz.style.setProperty("--titular", `"${nombre}", var(--sans)`);
+    raiz.style.setProperty("--titular-esp", espacio);
+    raiz.dataset.letra = clave;
+  }
+  ponerLetra(params.get("letra") || "plex");
+
   // Una barra de controles abajo: retroceder, pausar, avanzar, arrastrar al segundo exacto y copiar el enlace del cuadro.
   let revisor = null;
   const saltar = (delta) => irA(Math.max(0, Math.min(DURACION, Math.round((tiempo + delta) * 10) / 10)), false);
@@ -663,6 +688,12 @@
     const reloj = document.createElement("output");
     reloj.textContent = "t = 0.0 s";
     caja.append(barra, reloj);
+    const letra = document.createElement("select");
+    letra.title = "Letra de titulares, logo y cifras (vista previa)";
+    for (const [clave, [nombre]] of Object.entries(LETRAS)) letra.append(new Option(nombre, clave));
+    letra.value = LETRAS[params.get("letra")] ? params.get("letra") : "plex";
+    letra.addEventListener("change", () => { ponerLetra(letra.value); letra.blur(); });
+    caja.append(letra);
     boton("Copiar enlace", "Copia el enlace de este cuadro", () => {
       const u = new URL(location.href);
       u.searchParams.set("t", tiempo.toFixed(1));

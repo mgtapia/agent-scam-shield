@@ -326,3 +326,12 @@ body.md-corriendo { cursor: none; }
 .md-revisor output { min-width: 96px; text-align: right; font-weight: var(--p-fuerte); }
 body.md-revisando .md-progreso { display: none; }
 body.md-revisando .md-marco { bottom: 48px; }
+
+/* Letra de titulares, logo y cifras: --titular (por defecto la sans de la interfaz). ?letra= la cambia para probar. */
+.md-frase, .md-logo, .md-gancho, .md-cifra-rot, .md-n.dato { font-family: var(--titular, var(--sans)); }
+:root[data-letra] :is(.md-frase, .md-logo, .md-gancho, .md-cifra-rot, .md-n) { letter-spacing: var(--titular-esp); font-weight: 700; }
+:root[data-letra="serif"] :is(.md-frase, .md-logo, .md-gancho, .md-cifra-rot, .md-n) { font-weight: 400; }
+:root[data-letra="serif"] .md-logo > span { font-style: italic; }
+.md-n.dato { font-variant-numeric: tabular-nums; }
+:root:not([data-letra]) .md-n.dato { font-family: var(--mono); }
+.md-revisor select { padding: 6px 8px; border: var(--linea); background: var(--fondo); color: var(--texto); font: inherit; cursor: pointer; }
