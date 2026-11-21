@@ -23,7 +23,7 @@ const RE_BLOQUEO = /^(ACCIÓN BLOQUEADA|ACTION BLOCKED)/i;
 
 const T = {
   es: {
-    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "Episodios exportados de Inspect. «Datos de prueba» marca los carriles corridos con mockllm", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados", v_duelo: "Duelo", ayuda_v_duelo: "Un hacker que aprende de cómo lo bloqueamos, contra el escudo congelado y contra el que aprende de él",
+    v_operaciones: "Operaciones", v_vivo: "Episodios", ayuda_v_vivo: "La caja negra de episodios reales de Inspect: qué leyó el agente, qué intentó y qué decidió cada defensa. «guionado» marca los carriles corridos con mockllm", desde_ops: "Visto en Operaciones", ayuda_desde_ops: "Este escenario es el de la última estafa con episodio que vio Operaciones ({id})", v_resultados: "Resultados", v_duelo: "Duelo", ayuda_v_duelo: "Un hacker que aprende de cómo lo bloqueamos, contra el escudo congelado y contra el que aprende de él",
     escenario: "Escenario", reproducir: "Reproducir", reproduciendo: "Reproduciendo", reiniciar: "Reiniciar",
     correos: "Correos", calor_tactica: "Táctica × defensa", calor_modelo: "Modelo × idioma",
     d_none: "Sin defensa", d_layer1: "Firewall", d_layer2: "Escudo", d_both: "Firewall + escudo", d_layer2_approver: "Escudo (approver)",
@@ -72,7 +72,7 @@ const T = {
     locale: "es-CL",
   },
   en: {
-    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "Episodes exported from Inspect. «Test data» marks the lanes run with mockllm", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results", v_duelo: "Duel", ayuda_v_duelo: "A hacker that learns from how we block it, against the frozen shield and against the one that learns from it",
+    v_operaciones: "Operations", v_vivo: "Episodes", ayuda_v_vivo: "The black box of real Inspect episodes: what the agent read, what it tried and what each defense decided. «scripted» marks the lanes run with mockllm", desde_ops: "Seen in Operations", ayuda_desde_ops: "This is the scenario of the latest scam with an episode seen in Operations ({id})", v_resultados: "Results", v_duelo: "Duel", ayuda_v_duelo: "A hacker that learns from how we block it, against the frozen shield and against the one that learns from it",
     escenario: "Scenario", reproducir: "Play", reproduciendo: "Playing", reiniciar: "Reset",
     correos: "Emails", calor_tactica: "Tactic × defense", calor_modelo: "Model × language",
     d_none: "No defense", d_layer1: "Firewall", d_layer2: "Shield", d_both: "Firewall + shield", d_layer2_approver: "Shield (approver)",
@@ -404,7 +404,11 @@ document.addEventListener("click", (e) => {
 });
 
 function pintarCarriles() {
-  if (!CARRILES.some((c) => estado.carriles[c.clave]?.ep)) return pintarListaEpisodios();
+  const hay = CARRILES.some((c) => estado.carriles[c.clave]?.ep);
+  // Sin episodio, la franja y los correos no tienen qué mostrar: queda solo la lista.
+  $("#franja").hidden = !hay;
+  $("#vista-vivo .correos").hidden = !hay;
+  if (!hay) return pintarListaEpisodios();
   $("#carriles").innerHTML = CARRILES.map((c) => {
     const ep = estado.carriles[c.clave]?.ep;
     return `<article class="carril${c.escudo ? " escudo" : ""}" id="carril-${c.clave}">

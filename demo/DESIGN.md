@@ -84,12 +84,17 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo despu
   - El estado «Inactivo» de un agente va con un círculo vacío dibujado en SVG.
   - El sello de la barra dice «Simulación · motor real» con el motor, y «Simulación · emisor local» con el respaldo. Al lado va la pausa.
 - **Un solo estado para todas las pestañas:** el idioma ES/EN y la velocidad 1x/2x/4x. La velocidad se ve en Operaciones y en Episodios, y mueve a la vez el flujo del motor y la reproducción del episodio.
-- **Episodios** (`#vivo`): episodios exportados de Inspect, en tres carriles. Un carril corrido con mockllm lleva la etiqueta «Datos de prueba».
+- **Episodios** (`#vivo`): la caja negra de un episodio real de Inspect, en tres carriles.
+  - Al abrir, cada carril muestra el episodio completo; «Reproducir» lo anima paso a paso.
+  - Cada paso dice quién actuó (pidió, leyó, pensó, intentó) y qué. Lo leído lleva la etiqueta de su canal: «dueño» en neutro; «correo», «web», «WhatsApp», «MCP» o «llamada» en `--ambar`, porque vienen de afuera.
+  - Bajo cada intento de pago va, sangrada, la decisión de la defensa del carril y su motivo: «Retuvo» en `--verde`, «Se ejecutó: cuenta de afuera» en `--rojo`.
+  - El encabezado del carril dice el modelo y, si hay varias repeticiones, en cuántas cayó. Un carril de mockllm lleva «guionado». Un carril sin corrida lo dice.
+  - Si el escenario no tiene episodio, la vista muestra la lista de los que sí tienen. Operaciones (panel Lectura) y las celdas de Resultados enlazan con «Ver el episodio».
   - Al entrar, abre el escenario de la estafa más reciente que vio Operaciones y que tenga episodio exportado, con la etiqueta «Visto en Operaciones».
   - Si se llega desde Operaciones, arranca a reproducir sola, salvo con `prefers-reduced-motion`. Desde otra pestaña espera a «Reproducir».
   - Elegir otro escenario en el selector manda sobre eso.
   - una franja con el escenario: dueño, tarea en una línea, monto y cuenta inscrita;
-  - los tres carriles («Sin defensa», «Firewall», «Escudo»), cada uno con ECG, pasos y veredicto;
+  - los tres carriles («Sin defensa», «Firewall», «Grifter»), cada uno con ECG, pasos y veredicto;
   - la lista de correos, de una línea por correo. El cuerpo se abre en un panel lateral, y ahí solo se resalta la cuenta que usó el agente.
   - La alerta del escudo es una capa propia sobre el carril, debajo de su ECG.
 - **Resultados:** los números de la tabla «Resultados» del README, cada uno con su intervalo.
@@ -142,7 +147,7 @@ Hay un solo nivel de contenedores. Dentro de un bloque solo hay filas separadas 
 
 - Resultados lee `resultados.json`, o `resultados.js` si la página se abre como archivo. Los genera `scripts/resultados_demo.py` desde los JSON de `results/`; cada bloque dice su `fuente` y su `comando`. La página no calcula ninguna tasa.
 - Una configuración sin datos se muestra como «—» y «Sin datos», nunca como 0.
-- En Episodios, un carril corrido con mockllm lleva la etiqueta «Datos de prueba».
+- En Episodios, un carril corrido con mockllm lleva la etiqueta «guionado». Los episodios reales salen de `logs/` con `scripts/exportar_episodios.py --elegir <escenario>__<idioma>`.
 - El escenario que abre Episodios está en `ESCENARIO_POR_DEFECTO`, en `app.js`. `?escenario=` en la URL manda sobre esa constante.
 - Operaciones lee la foto de `api/vivo/estado` y después el SSE de `api/vivo`, en el mismo origen. El contrato está en el motor (`scamshield/vivo`).
   - `?motor=http://host:puerto/` apunta a otro origen.
