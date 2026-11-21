@@ -32,6 +32,9 @@
     play_arrow: "M320-200v-560l440 280-440 280Z",
     smart_toy: "M180-380q-41.92 0-70.96-29.04Q80-438.08 80-480q0-41.92 29.04-70.96Q138.08-580 180-580v-160h200q0-41.92 29.04-70.96Q438.08-840 480-840q41.92 0 70.96 29.04Q580-781.92 580-740h200v160q41.92 0 70.96 29.04Q880-521.92 880-480q0 41.92-29.04 70.96Q821.92-380 780-380v240H180v-240Zm215.38-84.57Q410-479.14 410-499.95q0-20.82-14.57-35.43Q380.86-550 360.05-550q-20.82 0-35.43 14.57Q310-520.86 310-500.05q0 20.82 14.57 35.43Q339.14-450 359.95-450q20.82 0 35.43-14.57Zm240 0Q650-479.14 650-499.95q0-20.82-14.57-35.43Q620.86-550 600.05-550q-20.82 0-35.43 14.57Q550-520.86 550-500.05q0 20.82 14.57 35.43Q579.14-450 599.95-450q20.82 0 35.43-14.57ZM330-290h300v-60H330v60Zm-90 90h480v-480H240v480Zm240-240Z",
   };
+  // La marca de Grifter: el escudo en un solo trazo y un check en ámbar adentro. En la portada se dibuja sola al cargar
+  // (stroke-dashoffset, con pathLength 1); con ?t= o movimiento reducido aparece ya dibujada.
+  const marca = (cls = "") => `<svg class="md-marca ${cls}" viewBox="0 0 120 140" aria-hidden="true"><path class="md-marca-escudo" pathLength="1" d="M60 8 L108 26 V68 C108 100 88 122 60 132 C32 122 12 100 12 68 V26 Z"/><path class="md-marca-check" pathLength="1" d="M38 70 L54 86 L84 54"/></svg>`;
   const ic = (n, cls = "") => `<svg class="md-ic ${cls}" viewBox="0 -960 960 960" aria-hidden="true"><path d="${P[n]}"/></svg>`;
 
   // --- Textos. Los episodios salen de los escenarios; la transcripción en español es la del mp3 (#171), con la
@@ -39,7 +42,11 @@
   // la versión en inglés es una traducción hecha aquí, igual que la llamada, que en inglés no tiene mp3 ---
   const T = {
     es: {
-      locale: "es-CL", iniciar: "Iniciar demo", tecla: "Espacio inicia o pausa · R reinicia",
+      locale: "es-CL", iniciar: "Iniciar demo", tecla: "Espacio inicia o pausa · R reinicia", espacio: "Espacio",
+      evento: "Platanus Hack 26 · AI Security · Equipo 40",
+      // El gancho de la portada sale de docs/fuentes.md: la tendencia del Banco Central, verificada en la fuente primaria.
+      gancho1: "El fraude con pagos digitales sube en Chile desde 2024.", gancho2: "Ahora los agentes pagan por nosotros.",
+      fuente: "Banco Central de Chile · Informe de Sistemas de Pago 2026",
       lema: "Escudo para agentes que pagan",
       a1_rotulo: "El cuento del tío, la estafa telefónica más conocida de Chile",
       a1_frase: "Llama «tu nieto» y pide $650.000", a1_frase2: "La cuenta salió de una llamada, no de tu encargo.",
@@ -102,7 +109,10 @@
       url: "grifter.onrender.com",
     },
     en: {
-      locale: "en-US", iniciar: "Start demo", tecla: "Space starts or pauses · R restarts",
+      locale: "en-US", iniciar: "Start demo", tecla: "Space starts or pauses · R restarts", espacio: "Space",
+      evento: "Platanus Hack 26 · AI Security · Team 40",
+      gancho1: "Digital payment fraud in Chile has been rising since 2024.", gancho2: "Now agents pay for us.",
+      fuente: "Central Bank of Chile · Payment Systems Report 2026",
       lema: "A shield for agents that pay",
       a1_rotulo: "The «uncle's tale», Chile's best-known phone scam",
       a1_frase: "«Your grandson» calls and asks for $650,000", a1_frase2: "The account came from a call, not your request.",
@@ -263,8 +273,11 @@
     const f = (n) => num(n);
     $("#md-escenario").innerHTML = `
       <section class="md-acto md-intro" data-desde="0" data-hasta="3">
-        <div class="md-logo">${ic("shield", "grande")}<span>Grifter</span></div>
-        <p class="md-lema">${esc(t("lema"))}</p>
+        <p class="md-evento dato md-entra e0">${esc(t("evento"))}</p>
+        <div class="md-logo md-logo-portada">${marca("dibuja")}<span class="md-entra e1">Grifter</span></div>
+        <p class="md-lema md-entra e2">${esc(t("lema"))}</p>
+        <p class="md-gancho"><span class="md-entra e3">${esc(t("gancho1"))}</span><span class="md-entra e4">${esc(t("gancho2"))}</span></p>
+        <p class="md-fuente dato md-entra e5">${esc(t("fuente"))}</p>
       </section>
 
       <section class="md-acto md-comp md-a1" data-desde="3" data-hasta="${CL}">
@@ -399,13 +412,13 @@
 
       <section class="md-acto md-cierre" data-desde="${CI}" data-hasta="${DURACION}">
         <h1 class="md-frase"><span>${cinetica(t("cierre1"), NF.en, NF.frase.slice(0, 6), 0)}</span><span class="md-frase-2">${cinetica(t("cierre2"), NF.en, NF.frase.slice(6), 0)}</span></h1>
-        <div class="md-logo" data-v="${r2(NF.en + NF.dura + 0.5)}">${ic("shield", "grande")}<span>Grifter</span></div>
+        <div class="md-logo" data-v="${r2(NF.en + NF.dura + 0.5)}">${marca()}<span>Grifter</span></div>
         <p class="md-url dato" data-v="${r2(NF.en + NF.dura + 1)}">${esc(t("url"))}</p>
       </section>
 
       <div class="md-narrador" data-v="${CL}" data-h="${r2(NF.en + NF.dura + 0.5)}" aria-hidden="true">${ic("shield")}<span>${esc(t("narra"))}</span><span class="md-narrador-barras">${"<i></i>".repeat(5)}</span></div>
       <div class="md-progreso" aria-hidden="true"><i id="md-barra"></i></div>
-      <button type="button" class="md-inicio" id="md-inicio">${ic("play_arrow")}<span>${esc(t("iniciar"))}</span><small>${esc(t("tecla"))}</small></button>`;
+      <button type="button" class="md-inicio md-entra e5" id="md-inicio" aria-label="${esc(t("iniciar"))}" title="${esc(t("tecla"))}">${ic("play_arrow")}<span>${esc(t("espacio"))}</span></button>`;
     $("#md-inicio").addEventListener("click", alternar);
   }
 
