@@ -9,15 +9,19 @@ Origen de cada número:
 - `results/sonnet_jefe.json`: `python scripts/resumen_resultados.py logs/jefe --json results/sonnet_jefe.json`.
 - `results/haiku_dueno.json`: `python scripts/resumen_resultados.py logs/dueno --idioma es --json results/haiku_dueno.json`.
 - `results/clasificador.json`: `python scripts/validacion_cruzada_vivo.py --json results/clasificador.json`.
-- `results/atacante/*_curvas.json`: `python scripts/graficar_atacante.py <jsonl>`. Se usa el más reciente.
+- `results/atacante/*_curvas.json`: `python scripts/graficar_atacante.py <jsonl>`. Con `--atacante` se elige
+  el archivo; si no, el que tenga más rondas y estafas entre los que tienen a lo sumo un 10 % de muestras
+  con error. No se usa la fecha del archivo, que cambia con cada clon.
 - Pipelock (4 de 42): no hay archivo de origen en el repo; se corrió con `scripts/capa1_cobertura.py` y el
   binario real de Pipelock, que no está en este entorno. Va con su fuente escrita (`docs/pitch.md`).
 
 Uso:
     python scripts/resultados_demo.py
+    python scripts/resultados_demo.py --atacante results/atacante/<nombre>_curvas.json
 """
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import sys
@@ -121,30 +125,59 @@ def clasificador() -> dict[str, Any]:
     }
 
 
-def atacante() -> dict[str, Any]:
-    """La curva más reciente del atacante adaptativo, y en qué estado está para dibujarla."""
-    archivos = sorted((RESULTS / "atacante").glob("*_curvas.json"), key=lambda p: p.stat().st_mtime)
+MAX_ERRORES = 0.10   # una curva con más muestras con error que esto no se presenta como la curva del atacante
+
+
+def _series(curvas: dict[str, Any]) -> list[dict[str, Any]]:
+    """Una serie por modelo y defensa, sin las unidades crudas y con el intervalo de Wilson por ronda.
+
+    Cada estafa cuenta una vez por ronda (cayó o no hasta esa ronda), así que son unidades independientes.
+    """
+    series = []
+    for modelo, por_defensa in curvas.items():
+        for d, v in por_defensa.items():
+            n = v.get("n") or 0
+            ic = [list(intervalo_wilson(e / n, n)) if n else [None, None] for e in v.get("exitos", [])]
+            series.append({"modelo": modelo, "defensa": d, "ic": ic,
+                           **{k: x for k, x in v.items() if not k.startswith("unidades_")}})
+    return series
+
+
+def _puntaje(series: list[dict[str, Any]]) -> tuple[int, int, int]:
+    """(válida, rondas, estafas): la curva más completa entre las que tienen pocos errores."""
+    rondas = max((s.get("rondas", 0) for s in series), default=0)
+    n = max((s.get("n", 0) for s in series), default=0)
+    muestras = sum((s.get("n", 0) or 0) * ((s.get("rondas", 0) or 0) + 1) for s in series)
+    errores = sum(s.get("errores", 0) or 0 for s in series)
+    return int(muestras > 0 and errores / muestras <= MAX_ERRORES), rondas, n
+
+
+def atacante(carpeta: Path | None = None, elegida: Path | None = None) -> dict[str, Any]:
+    """La curva del atacante adaptativo y en qué estado está para dibujarla."""
+    carpeta = carpeta or RESULTS / "atacante"
+    archivos = [elegida] if elegida else sorted(carpeta.glob("*_curvas.json"))
     if not archivos:
-        return {"estado": "sin_archivo", "curvas": None, "fuente": None}
-    ruta = archivos[-1]
-    curvas = _leer(ruta)
-    series = [{"modelo": modelo, "defensa": d, **v} for modelo, porDefensa in curvas.items() for d, v in porDefensa.items()]
+        return {"estado": "sin_archivo", "series": None, "fuente": None,
+                "comando": "python scripts/graficar_atacante.py <jsonl> && python scripts/resultados_demo.py"}
+    ruta, series = max(((r, _series(_leer(r))) for r in archivos), key=lambda x: _puntaje(x[1]))
     if all(s.get("rondas", 0) < 1 for s in series):
         estado = "sin_rondas"
+    elif not _puntaje(series)[0]:
+        estado = "con_errores"
     elif all(not any(s.get("exitos") or []) for s in series):
         estado = "en_cero"
     else:
         estado = "ok"
-    return {"estado": estado, "series": series, "fuente": _rel(ruta),
-            "comando": f"python scripts/graficar_atacante.py <jsonl> && python scripts/resultados_demo.py"}
+    return {"estado": estado, "series": series, "fuente": _rel(ruta) if ruta.is_relative_to(RAIZ) else str(ruta),
+            "comando": "python scripts/graficar_atacante.py <jsonl> && python scripts/resultados_demo.py"}
 
 
-def armar() -> dict[str, Any]:
+def armar(curva: Path | None = None) -> dict[str, Any]:
     return _limpio({
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "readme": "README.md#resultados",
         "bench": bench(), "pipelock": PIPELOCK, "sonnet": sonnet(), "haiku": haiku(),
-        "clasificador": clasificador(), "atacante": atacante(),
+        "clasificador": clasificador(), "atacante": atacante(elegida=curva),
     })
 
 
@@ -158,8 +191,11 @@ def escribir(datos: dict[str, Any], salida: Path = DEMO) -> list[Path]:
     return [json_, js]
 
 
-def main() -> int:
-    datos = armar()
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--atacante", type=Path, help="el _curvas.json del atacante que se muestra")
+    a = p.parse_args(argv)
+    datos = armar(a.atacante)
     for ruta in escribir(datos):
         print(f"escrito {_rel(ruta)}")
     a = datos["atacante"]

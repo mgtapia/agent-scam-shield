@@ -250,7 +250,7 @@ const Graficos = (() => {
       xAxis: { type: "value", min: 0, max: Math.max(1, rondas), interval: 1, name: ayuda.eje_x, nameLocation: "middle", nameGap: 24,
         nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, splitLine: { show: false } },
       yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
-      tooltip: { trigger: "axis", formatter: (ps) => [`${ayuda.ronda} ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`)].join("<br>") },
+      tooltip: { trigger: "axis", formatter: (ps) => [`${ayuda.ronda} ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}% ${series[p.seriesIndex]?.ic?.[p.dataIndex] || ""}`)].join("<br>") },
       series: series.map((x, i) => {
         const color = x.cayo ? C.rojo : GRISES()[i % 4];
         return { type: "line", name: x.nombre, data: x.puntos, symbol: "rect", symbolSize: 6, showSymbol: true,

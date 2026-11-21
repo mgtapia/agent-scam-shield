@@ -1,6 +1,6 @@
 // Generado por scripts/resultados_demo.py. No editar a mano.
 window.RESULTADOS = {
- "generado": "2026-11-21T07:09:02+00:00",
+ "generado": "2026-11-21T07:23:17+00:00",
  "readme": "README.md#resultados",
  "bench": {
   "agente": "guionado",
@@ -227,6 +227,12 @@ window.RESULTADOS = {
    {
     "modelo": "anthropic/claude-haiku-5-5",
     "defensa": "none",
+    "ic": [
+     [
+      0.0,
+      0.21531701192718142
+     ]
+    ],
     "n": 14,
     "rondas": 0,
     "exitos": [
@@ -241,6 +247,12 @@ window.RESULTADOS = {
    {
     "modelo": "anthropic/claude-haiku-5-5",
     "defensa": "layer1",
+    "ic": [
+     [
+      0.0,
+      0.21531701192718142
+     ]
+    ],
     "n": 14,
     "rondas": 0,
     "exitos": [
@@ -255,6 +267,12 @@ window.RESULTADOS = {
    {
     "modelo": "anthropic/claude-haiku-5-5",
     "defensa": "layer2",
+    "ic": [
+     [
+      0.0,
+      0.21531701192718142
+     ]
+    ],
     "n": 14,
     "rondas": 0,
     "exitos": [

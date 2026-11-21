@@ -1,5 +1,5 @@
-// Grifter, demo: reproduce los episodios exportados de Inspect en tres carriles (vista En vivo) y dibuja
-// los resultados agregados de la eval (vista Resultados). Sin build: los episodios llegan en
+// Grifter, demo: reproduce los episodios exportados de Inspect en tres carriles (vista Episodios) y carga
+// los números de la vista Resultados (resultados.json, de scripts/resultados_demo.py; los dibuja resultados_vista.js). Sin build: los episodios llegan en
 // window.EPISODIOS (episodios/episodios.js, de scripts/exportar_episodios.py) y los resultados en
 // resultados.json (o window.RESULTADOS si la página se abre como archivo; scripts/exportar_resultados.py).
 "use strict";
@@ -661,7 +661,7 @@ function llenarEscenarios() {
   const vistos = new Map();
   for (const ep of Object.values(episodios())) if (!vistos.has(ep.escenario) || ep.idioma === estado.idioma) vistos.set(ep.escenario, ep.descripcion || ep.escenario);
   const sel = $("#sel-escenario");
-  sel.innerHTML = [...vistos].map(([id, desc]) => `<option value="${esc(id)}" title="${esc(desc)}">${esc(id.replaceAll("_", " "))}</option>`).join("");
+  sel.innerHTML = [...vistos].map(([id, desc]) => `<option value="${esc(id)}" title="${esc(desc)}">${esc(id.replace(/^demo_/, "").replaceAll("_", " "))}</option>`).join("");
   if (!estado.escenario || !vistos.has(estado.escenario)) {
     estado.escenario = vistos.has(ESCENARIO_POR_DEFECTO) ? ESCENARIO_POR_DEFECTO : vistos.keys().next().value || null;
   }

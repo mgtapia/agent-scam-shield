@@ -406,7 +406,7 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .r-estafas { display: flex; align-items: center; gap: var(--e-2); }
 .r-estafas .r-int { margin-left: calc(-1 * var(--e-1)); }
 .r-val { font-size: var(--t-3); line-height: var(--l-3); font-weight: var(--p-fuerte); }
-.r-int { margin-left: var(--e-1); color: var(--texto-2); font-size: var(--t-1); }
+.r-int { margin-left: var(--e-1); color: var(--texto-2); font-size: var(--t-2); line-height: var(--l-2); }
 .r-barra { position: relative; flex: none; width: 128px; height: 8px; background: var(--borde); }
 .r-barra .r-ic { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--rojo) 35%, transparent); }
 .r-barra .r-tasa { position: absolute; top: 0; bottom: 0; left: 0; background: var(--rojo); }
@@ -417,7 +417,7 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .r-que { display: flex; align-items: center; gap: var(--e-1); color: var(--texto-2); }
 .r-num { display: flex; align-items: baseline; flex-wrap: wrap; }
 .r-grande { font-size: var(--t-4); line-height: var(--l-4); font-weight: var(--p-fuerte); }
-.r-det { color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
+.r-det { color: var(--texto-2); font-size: var(--t-2); line-height: var(--l-2); }
 
 /* Curva del atacante, o su estado vacío */
 .res-curva .lienzo { height: 304px; }
@@ -425,7 +425,7 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .r-vacio > .ms { color: var(--texto-2); }
 .r-vacio p { margin: 0 0 var(--e-1); }
 .r-vacio-tit { font-size: var(--t-3); line-height: var(--l-3); font-weight: var(--p-fuerte); }
-.r-vacio code { display: inline-block; padding: var(--e-1); border: var(--linea); background: var(--fondo); font-size: var(--t-1); line-height: var(--l-1); overflow-wrap: anywhere; }
+.r-vacio code { display: block; color: var(--texto); font-size: var(--t-1); line-height: var(--l-1); overflow-wrap: anywhere; }
 
 /* --- Pruébalo (esqueleto, #21) --- */
 .probar { grid-column: 1 / span 5; border: var(--linea); background: var(--superficie); }
@@ -748,7 +748,14 @@ mark.tramo { background: transparent; color: inherit; }
   .ver-senales .mas { justify-self: start; }
   .pestanas a { padding: 0 var(--e-1); }
   .pestanas a .ms { display: none; }
-  #res-bench { overflow-x: auto; }
+  /* El bench en el móvil: cada configuración en dos líneas, sin scroll interno. */
+  .r-tabla thead { display: none; }
+  .r-tabla tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--e-2); padding: var(--e-1) 0; }
+  .r-tabla th[scope="row"], .r-tabla .r-estafas { grid-column: 1 / -1; padding-bottom: 0; }
+  .r-tabla td[data-et]::before { content: attr(data-et); display: block; color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
+  .r-tabla td { white-space: normal; }
+  .res-bloque .titulo { flex-wrap: wrap; }
+  .res-bloque .titulo .nota { white-space: normal; margin-left: 0; flex-basis: 100%; }
   .fuente, .res-cmd { display: none; }
   .r-barra { width: 64px; }
 }
