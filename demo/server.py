@@ -139,7 +139,7 @@ async def _conector_mcp():
 @asynccontextmanager
 async def _vida(_app: FastAPI):
     """Arranca el canal de Telegram si hay token y chat en el entorno (#20); si no, todo sigue como antes.
-    Con GRIFTER_MCP_TOKEN, también conecta a Grifter con sus MCP de abajo para servir /mcp."""
+    Con GRIFTER_MCP_TOKEN o GRIFTER_MCP_PUBLICO=1, también conecta a Grifter con sus MCP de abajo para servir /mcp."""
     canal = telegram.iniciar_desde_entorno(registrar_etiqueta)
     _app.state.whatsapp = whatsapp.iniciar_desde_entorno(registrar_etiqueta)   # #116: el webhook de Kapso entra por /api/whatsapp/webhook
     try:
