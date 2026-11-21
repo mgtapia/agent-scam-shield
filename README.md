@@ -305,6 +305,9 @@ Primeros resultados, con Haiku 5.5 de víctima, en `results/atacante/`: la ronda
 
 **Con una víctima que sí cae** (`groq/openai/gpt-oss-20b`; `llama-3.1-8b-instant` ya no existe en la cuenta de Groq; atacante `groq/qwen/qwen3.8-27b`; 5 estafas en español, 3 rondas; datos en `results/atacante/grifter_20b_*`): sin defensa cayeron 4 de 5 ya en la ronda 0 (80 % [38-96]) y la adaptación no sumó ninguna; con la capa 2 cayeron 0 de 5 (0 % [0-43]) aunque el agente intentó pagar en 4 de 5. En la capa 2, las rondas 2 y 3 quedaron incompletas (2 y 1 de 5 estafas con episodio puntuado) porque se agotó la cuota diaria de la víctima en Groq. El resumen sale de `python scripts/resumen_curva_atacante.py <jsonl>...`. Con n=5 es un humo, no una curva.
 
+## Duelo: el hacker que aprende y el escudo que aprende de él
+`grifter duelo --generaciones 20 --semilla 0` corre, sin llaves de API, un atacante por mutaciones (paráfrasis, sacar la urgencia, cambiar de autoridad, partir, deletrear o disfrazar la cuenta, homoglifos en el dominio, repartir el pedido en dos correos) que aprende con Thompson sampling contra qué señal le sirve cada una. Enfrente tiene el clasificador y la bóveda reales, que se reentrenan con lo que el dueño simulado confirma, con un conjunto apartado que nunca entrena. La capa 2 no se entrena: la tabla imprime, por generación, la evasión del hacker, el recall del escudo y los pagos que cruzan la capa 2, que quedan en 0. `--sin-entrenar` congela al escudo para ver al hacker solo. En el motor en vivo emite eventos `duelo`, y `/api/vivo/estado` trae `historial_duelo`.
+
 ## Estructura
 ```
 scamshield/
