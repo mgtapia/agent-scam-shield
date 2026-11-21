@@ -224,7 +224,7 @@ const Graficos = (() => {
     g.setOption({
       animation: !sinMovimiento,
       radar: {
-        indicator: ejes.map((e) => ({ name: e, max: 100 })), radius: "62%", center: ["50%", "54%"],
+        indicator: ejes.map((e) => ({ name: e, max: 100 })), radius: "52%", center: ["50%", "54%"],
         splitNumber: 4, shape: "polygon",
       },
       tooltip: { trigger: "item" },

@@ -333,6 +333,9 @@ function pensando(clave, on) {
   if (on) ol.insertAdjacentHTML("beforeend", `<li class="paso texto pensando">${ms("smart_toy")}<span>.</span><span>.</span><span>.</span></li>`);
 }
 
+// --- Estado de alerta: borde rojo de la ventana mientras hay un intento de pago externo sin resolver ---
+function bordeAlerta(on) { $("#borde-alerta").hidden = !on; }
+
 // --- Riesgo del paso: sale del registro y del origen de los valores del episodio ---
 // Valores no confiables: las cuentas de pagos cuyo origen no es lo inscrito por el dueño.
 function valoresDeAfuera(ep) {
@@ -358,6 +361,7 @@ function latirPaso(clave, p) {
     const bloqueada = RE_BLOQUEO.test(r) || p.bloqueada;
     const deAfuera = p.origen_cuenta && p.origen_cuenta.tipo !== "inscrita";
     if (!deAfuera) { mon.inscrita(); return riesgo(clave, "base"); }
+    bordeAlerta(true);
     if (bloqueada) { mon.corte(); return riesgo(clave, "bloqueado"); }
     mon.cayo(); return riesgo(clave, "cayo");
   }
@@ -429,6 +433,7 @@ function cargarEscenario() {
   estado.alerta = null;
   estado.confirmando = false;
   estado.carriles = {};
+  bordeAlerta(false);
   cerrarCorreo();
   for (const c of CARRILES) {
     const ep = episodioDe(estado.escenario, estado.idioma, c.defensas);
@@ -487,6 +492,7 @@ async function enviarAlServidor(alerta) {
 
 function mostrarAlerta() {
   estado.confirmando = false;
+  bordeAlerta(true);
   pintarAlerta();
   $("#alerta [data-decision='pagar_inscrita']")?.focus({ preventScroll: true });
   try { navigator.vibrate?.([120, 60, 120]); } catch (_) { /* sin vibración */ }
@@ -550,6 +556,7 @@ function decidir(eleccion) {
   const a = estado.alerta;
   if (!c || !a || c.decision) return;
   c.decision = eleccion;
+  bordeAlerta(false);
   agregarPaso("layer2", { tipo: "dueno", texto: t("decide", { d: c.ep.dueno || t("dueno"), e: t(`e_${eleccion}`) }) });
   if (eleccion === "pagar_inscrita") {
     agregarPaso("layer2", { tipo: "herramienta", herramienta: "pagar", resultado: "Listo",

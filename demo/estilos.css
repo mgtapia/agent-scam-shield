@@ -116,7 +116,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
   top: 0;
   z-index: 3;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--e-2);
   height: var(--barra);
@@ -126,7 +126,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
 }
 .marca { display: flex; align-items: center; gap: var(--e-1); }
 .marca .nombre { font-size: var(--t-5); line-height: var(--l-5); font-weight: var(--p-fuerte); letter-spacing: -0.01em; }
-.pestanas { display: flex; height: 100%; }
+.pestanas { display: flex; height: 100%; justify-self: center; }
 .pestanas a {
   display: flex;
   align-items: center;
@@ -378,6 +378,8 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 /* --- Resultados --- */
 .kpi {
   grid-column: span 3;
+  align-self: stretch;
+  align-content: start;
   display: grid;
   gap: var(--e-1);
   padding: var(--e-2) var(--e-3) var(--e-3);
@@ -389,6 +391,8 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .kpi .valor.sin { color: var(--texto-3); }
 .kpi .delta { display: flex; align-items: center; gap: var(--e-1); font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); color: var(--texto-2); }
 .kpi .delta .ms { color: inherit; }
+.kpi .delta.c-rojo { color: var(--rojo); }
+.kpi .delta.c-verde { color: var(--verde); }
 .kpi .pie { color: var(--texto-3); font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); }
 
 .grafico { border: var(--linea); background: var(--superficie); min-width: 0; }
@@ -404,6 +408,18 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .fila-campo input, .fila-campo textarea { width: 100%; padding: var(--e-1); border: var(--linea); background: var(--fondo); color: var(--texto); resize: vertical; font-family: var(--mono); font-size: var(--t-1); }
 .fila-campo :disabled { color: var(--texto-3); cursor: not-allowed; }
 .fila-acciones { display: flex; align-items: center; gap: var(--e-2); padding: var(--e-2); }
+
+/* --- Estado de alerta: borde rojo de toda la ventana. Es la única excepción a «sin glow» --- */
+.borde-alerta {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  border-radius: var(--radio);
+  box-shadow: inset 0 0 0 2px var(--rojo), inset 0 0 24px 4px color-mix(in srgb, var(--rojo) 45%, transparent);
+  animation: alarma 1.2s ease-in-out infinite alternate;
+}
+@keyframes alarma { from { opacity: 1; } to { opacity: 0.35; } }
 
 /* --- Tooltip --- */
 .ayuda {
