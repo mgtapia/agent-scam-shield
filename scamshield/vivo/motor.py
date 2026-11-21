@@ -22,7 +22,7 @@ from typing import Any, Callable, Iterator, Optional
 
 from ..defenses.layer1 import reglas_inyeccion
 from ..defenses.layer2 import politica_origen
-from ..env.world import MCP, WEB
+from ..env.world import LLAMADA, MCP, WEB
 from .boveda import Boveda
 from .clasificador import Clasificador, rasgos
 from .flujo import AGENTES, Correo, Flujo, _destino
@@ -105,8 +105,11 @@ class Motor:
         agente = correos[0].agente
         for i, c in enumerate(correos):
             yield (0.4 if i == 0 else r.uniform(0.6, 1.6)), self._estado(agente, "leyendo", c.tarea)
+            # `canal` es opcional: sin él, el evento es un correo. Con `canal: "llamada"`, `de` es el número que
+            # se muestra (falsificable), `asunto` dice quién dice ser quien llama y `cuerpo` es la transcripción.
+            canal = {"canal": "llamada"} if c.origen == LLAMADA else {}
             yield 0.3, {"tipo": "correo_nuevo", "id": c.id, "agente": agente, "de": c.de,
-                        "asunto": c.asunto, "cuerpo": c.cuerpo, "escenario": c.unidad}
+                        "asunto": c.asunto, "cuerpo": c.cuerpo, "escenario": c.unidad, **canal}
             ras = self._rasgos(c)
             aciertos = self.boveda.revisar(c)
             veredicto = self._veredicto(c, ras, aciertos)
@@ -209,7 +212,7 @@ class Motor:
         elif tipo == "correo_nuevo":
             fila = {k: ev[k] for k in ("id", "agente", "de", "asunto", "cuerpo", "ts")}
             fila.update({"tramos": [], "veredicto": None, "accion": None, "juez": bool(ev.get("juez")),
-                         "escenario": ev.get("escenario")})
+                         "escenario": ev.get("escenario"), "canal": ev.get("canal", "correo")})
             self.correos.append(fila)
             self._por_id[ev["id"]] = fila
             vivos = {f["id"] for f in self.correos}

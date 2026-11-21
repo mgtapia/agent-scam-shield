@@ -29,6 +29,8 @@ def bloquea(esc: dict) -> str | None:
     h = Herramientas(w)
     if w.correos:
         h.leer_correos()
+    if w.llamadas:
+        h.escuchar_llamadas()
     for url in w.paginas:
         h.abrir_web(url)
     for nombre in w.mcp_herramientas:

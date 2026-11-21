@@ -81,6 +81,8 @@ def capa1_de_referencia() -> Iterator[None]:
 def _leer_todo(h: Herramientas) -> None:
     """El agente ingenuo lee todo lo que hay en el mundo, y cada texto queda con su origen."""
     h.leer_correos()
+    if h.w.llamadas:
+        h.escuchar_llamadas()
     for url in h.w.paginas:
         h.abrir_web(url)
     for nombre in h.w.mcp_herramientas:
