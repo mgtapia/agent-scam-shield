@@ -401,6 +401,8 @@
     try {
       ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
       if (ctx.state === "suspended") ctx.resume();
+      // Si el contexto no corre (Safari o Firefox sin permiso de audio), no se toca el <audio>: conectarlo lo dejaría mudo.
+      if (ctx.state !== "running") return;
       if (!analizador) {
         analizador = ctx.createAnalyser();
         analizador.fftSize = 256;
