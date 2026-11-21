@@ -70,11 +70,12 @@
       <section class="ops-bloque ops-lectura" aria-labelledby="t-lectura" aria-live="off">
         <h2 class="titulo" id="t-lectura"><span class="ms" aria-hidden="true">document_scanner</span><span data-t="o_lectura">Lectura</span><span class="nota" id="n-lectura"></span></h2>
         <div class="lectura" id="ops-lectura"></div>
+        <p class="oculto" id="ops-anuncio" aria-live="polite"></p>
       </section>
 
       <section class="ops-bloque ops-registro" aria-labelledby="t-registro">
         <h2 class="titulo" id="t-registro"><span class="ms" aria-hidden="true">terminal</span><span data-t="o_registro">Registro</span><span class="nota" id="n-registro"></span></h2>
-        <ol class="registro" id="ops-registro"></ol>
+        <ol class="registro" id="ops-registro" role="log" aria-live="off"></ol>
       </section>
 
       <section class="ops-bloque ops-capas" aria-labelledby="t-capas">

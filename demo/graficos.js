@@ -281,23 +281,21 @@ const Graficos = (() => {
     const g = iniciar(el);
     if (!g) return null;
     const serie = (nombre, color, tipo) => ({
-      type: "line", name: nombre, showSymbol: false, symbol: "rect", symbolSize: 4, smooth: false,
+      type: "line", name: nombre, showSymbol: false,
+      endLabel: { show: true, color, fontFamily: MONO, fontSize: T1, formatter: (p) => `${Math.round(p.value[1])}%` }, symbol: "rect", symbolSize: 4, smooth: false,
       lineStyle: { color, width: 1.5, type: tipo }, itemStyle: { color }, emphasis: { disabled: true }, data: [],
     });
     g.setOption({
       animation: !sinMovimiento, animationDuration: 480, animationDurationUpdate: 480, animationEasingUpdate: "cubicOut",
-      grid: { left: 40, right: 16, top: 12, bottom: 24 },
-      xAxis: { type: "value", min: "dataMin", max: "dataMax", splitLine: { show: false }, axisLabel: { color: C.texto2, hideOverlap: true } },
+      grid: { left: 40, right: 48, top: 12, bottom: 24 },
+      xAxis: { type: "value", min: "dataMin", max: "dataMax", splitLine: { show: false }, axisLabel: { color: C.texto2, hideOverlap: true, showMaxLabel: false } },
       yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
       tooltip: { trigger: "axis", formatter: (ps) => [`n ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`)].join("<br>") },
-      series: [serie("P", C.texto, "solid"), serie("R", C.texto2, "solid"), serie("FA", C.texto3, [4, 3])],
+      series: [serie("", C.texto, "solid"), serie("", C.texto2, [6, 3]), serie("", C.texto3, [2, 3])],
     });
     return {
-      poner(datos, aviso = "") {
-        g.setOption({
-          series: datos.map((data) => ({ data, showSymbol: data.length < 3 })),
-          graphic: [{ type: "text", right: 24, top: 24, invisible: !aviso, style: { text: aviso, fill: C.texto2, font: `${T1}px ${MONO}` } }],
-        });
+      poner(datos, nombres = []) {
+        g.setOption({ series: datos.map((data, i) => ({ data, name: nombres[i] || "", showSymbol: data.length < 3 })) });
       },
     };
   }

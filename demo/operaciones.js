@@ -22,11 +22,11 @@ const Operaciones = (() => {
     fu_boveda: "Firma conocida", fu_origen: "Política de origen", fu_clasificador: "Clasificador {v}",
     ac_ejecutada: "Ejecutada", ac_retenida: "Retenida", ac_escalada: "Escalada",
     o_confianza: "confianza", o_leyendo_pct: "leyendo {p}%", o_indicadores: "{n} indicadores", o_ejemplos: "{n} ejemplos",
-    o_precision: "Precisión", o_recall: "Recall", o_falsas: "Falsas alarmas",
+    o_precision: "Precisión", o_recall: "Cobertura", o_falsas: "Falsas alarmas", o_en_pausa: "En pausa",
     ayuda_precision: "De lo que marcó como estafa, cuánto lo era. Evaluado en un conjunto apartado que nunca se usa para entrenar",
-    ayuda_recall: "De las estafas, cuántas marcó",
+    ayuda_recall: "Cobertura (recall): de las estafas, cuántas marcó",
     ayuda_falsas: "Correos legítimos marcados como estafa",
-    o_curva_una: "La curva suma un punto por versión", o_sin_correo: "Sin correos", o_bv_vacia: "Sin indicadores", o_sin_modelo: "Sin versión",
+    o_sin_correo: "Sin correos", o_bv_vacia: "Sin indicadores", o_sin_modelo: "Sin versión",
     bv_cuenta: "cuenta", bv_dominio: "dominio", bv_plantilla: "plantilla", bv_origen: "origen {o} · primera vez {h}",
     o_pesos: "Pesos",
     s_dominio_parecido: "dominio parecido", s_cambio_cuenta: "cambio de cuenta", s_pide_codigo: "pide código", s_pide_secreto: "pide secreto",
@@ -54,11 +54,11 @@ const Operaciones = (() => {
     fu_boveda: "Known signature", fu_origen: "Origin policy", fu_clasificador: "Classifier {v}",
     ac_ejecutada: "Executed", ac_retenida: "Held", ac_escalada: "Escalated",
     o_confianza: "confidence", o_leyendo_pct: "reading {p}%", o_indicadores: "{n} indicators", o_ejemplos: "{n} examples",
-    o_precision: "Precision", o_recall: "Recall", o_falsas: "False alarms",
+    o_precision: "Precision", o_recall: "Recall", o_falsas: "False alarms", o_en_pausa: "Paused",
     ayuda_precision: "Of what it flagged as a scam, how much was. Evaluated on a held-out set never used for training",
     ayuda_recall: "Of the scams, how many it flagged",
     ayuda_falsas: "Legitimate emails flagged as scams",
-    o_curva_una: "The curve adds a point per version", o_sin_correo: "No emails", o_bv_vacia: "No indicators", o_sin_modelo: "No version",
+    o_sin_correo: "No emails", o_bv_vacia: "No indicators", o_sin_modelo: "No version",
     bv_cuenta: "account", bv_dominio: "domain", bv_plantilla: "template", bv_origen: "source {o} · first seen {h}",
     o_pesos: "Weights",
     s_dominio_parecido: "lookalike domain", s_cambio_cuenta: "account change", s_pide_codigo: "asks for code", s_pide_secreto: "asks for secret",
@@ -83,7 +83,7 @@ const Operaciones = (() => {
     correos: new Map(), orden: [], filas: new Map(),
     lecturas: [], leyendo: null, mostrado: null, espera: null,
     boveda: new Map(), modelo: null, historial: [], pesos: {}, cambios: {},
-    bloqueos: {}, capas: {}, contadas: new Set(), desenlace: new Set(),
+    bloqueos: {}, desenlace: new Map(), retomar: false,
     alarma: null, curva: null, visible: false, iniciado: false,
   };
 
@@ -138,14 +138,19 @@ const Operaciones = (() => {
   }
 
   // --- Entrada: un correo por fila, el más nuevo arriba ---
+  function htmlRemitente(de = "") {
+    const i = de.lastIndexOf("@");
+    if (i < 0) return `<span class="de-local">${esc(de)}</span>`;
+    return `<span class="de-local">${esc(de.slice(0, i))}</span><span class="de-dom">${esc(de.slice(i))}</span>`;
+  }
   function htmlFila(c) {
     const v = c.veredicto;
     let icono = "schedule", etiqueta = t("o_estado_cola"), cls = "cola";
     if (c.fase === "leyendo") { icono = "document_scanner"; etiqueta = t("o_estado_leyendo"); cls = "leyendo"; }
     else if (v && c.fase === "leido") { icono = ICONO_DEC[v.decision] || "check"; etiqueta = t(`o_dec_${v.decision}`); cls = v.decision; }
     const a = c.accion;
-    const capaFila = a && a.resultado !== "ejecutada" ? a.capa : v && c.fase === "leido" && v.decision !== "seguro" ? v.capa : null;
-    return `${ms(icono)}<span class="f-agente">${esc(c.agente || "")}</span><span class="f-de">${esc(c.de || "")}</span>
+    const capaFila = c.fase !== "leido" ? null : a && a.resultado !== "ejecutada" ? a.capa : v && v.decision !== "seguro" ? v.capa : null;
+    return `${ms(icono)}<span class="f-agente">${esc(c.agente || "")}</span><span class="f-de">${htmlRemitente(c.de)}</span>
       <span class="f-dec">${esc(etiqueta)}</span><span class="f-asunto">${esc(c.asunto || "")}</span><span class="f-capa">${tagCapa(capaFila)}</span>`;
   }
   function pintarFila(id, nueva) {
@@ -207,7 +212,7 @@ const Operaciones = (() => {
     return `${esc(de.slice(0, i))}<mark class="tramo r-${riesgoClase(dom.riesgo)}" data-k="${dom.k}" data-desde="0" data-ayuda="${esc(dom.nota || "")}">${esc(dom.texto)}<span class="tramo-tag">${esc(clase(dom.clase))}</span></mark>${esc(de.slice(i + dom.texto.length))}`;
   }
   function htmlHallazgo(x) {
-    return `<li class="hallazgo r-${riesgoClase(x.riesgo)}" data-k="${x.k}">
+    return `<li class="hallazgo r-${riesgoClase(x.riesgo)}" data-k="${x.k}" tabindex="0" data-ayuda="${esc(x.nota || "")}">
       <span class="tag">${esc(clase(x.clase))}</span><span class="h-texto">${esc(x.texto)}</span>
       <span class="h-nota">${esc(x.nota || "")}</span><span class="h-riesgo"><span class="medidor"><span style="width:${Math.round(x.riesgo * 100)}%"></span></span><span class="dato">${x.riesgo.toFixed(2)}</span></span></li>`;
   }
@@ -243,6 +248,15 @@ const Operaciones = (() => {
     L.cursor?.classList.remove("cursor");
     L.cursor = fin ? null : tks[Math.min(n, tks.length - 1)] || null;
     L.cursor?.classList.add("cursor");
+    const cuerpo = L.vista.querySelector(".lec-cuerpo");
+    if (cuerpo && L.cursor) {
+      const y = L.cursor.offsetTop;
+      if (y + L.cursor.offsetHeight > cuerpo.scrollTop + cuerpo.clientHeight || y < cuerpo.scrollTop) cuerpo.scrollTop = Math.max(0, y - cuerpo.clientHeight / 3);
+    }
+    if (cuerpo && fin) {
+      const alto = cuerpo.querySelector(".tramo.r-alto");
+      if (alto) cuerpo.scrollTop = Math.max(0, alto.offsetTop - cuerpo.clientHeight / 3);
+    }
     for (const m of L.vista.querySelectorAll(".tramo:not(.visto)")) {
       if (Number(m.dataset.desde) <= n || fin) {
         m.classList.add("visto");
@@ -285,6 +299,31 @@ const Operaciones = (() => {
     L.raf = requestAnimationFrame(paso);
   }
 
+  function desenlaceBoveda(c, animar) {
+    contar(c.id, c.veredicto?.familia, "boveda", "retenida");
+    pintarCapas(animar ? "boveda" : null);
+  }
+  function desenlaceAccion(c, animar) {
+    const e = c.accion;
+    contar(e.id, e.familia || c.veredicto?.familia, e.capa, e.resultado);
+    const detenida = e.resultado !== "ejecutada";
+    pintarCapas(animar && detenida ? e.capa : null);
+    pintarFila(e.id);
+    pintarAccion(c);
+    if (!animar) return;
+    if (detenida && e.agente && e.capa) {
+      const a = o.agentes.get(e.agente);
+      if (a) { a.retenido = e.capa; pintarAgente(e.agente, true); }
+    }
+    if (e.resultado === "retenida") alarma();
+  }
+  function aplicarPendiente(c) {
+    if (!c.pendiente) return;
+    c.pendiente = false;
+    if (c.veredicto?.capa === "boveda") desenlaceBoveda(c, true);
+    if (c.accion) desenlaceAccion(c, true);
+  }
+
   function terminarLectura() {
     const L = o.leyendo;
     if (!L) return;
@@ -296,8 +335,9 @@ const Operaciones = (() => {
     pintarFila(L.id);
     if (c.agente) pintarAgente(c.agente);
     if (c.veredicto) pintarVeredicto(c);
-    // El veredicto queda a la vista un momento antes de abrir el siguiente.
-    o.espera = setTimeout(() => { o.espera = null; siguienteLectura(); }, escPausa(c.veredicto ? 1100 : 700));
+    aplicarPendiente(c);
+    // El veredicto queda a la vista un momento antes de abrir el siguiente. En pausa, espera a «Seguir».
+    o.espera = setTimeout(() => { o.espera = null; if (o.pausa) o.retomar = true; else siguienteLectura(); }, escPausa(c.veredicto ? 1100 : 700));
   }
 
   function pintarVeredicto(c, nuevo = true) {
@@ -318,6 +358,8 @@ const Operaciones = (() => {
       ${(v.senales || []).length ? `<ol class="ver-senales">${v.senales.map((s) => `<li><span>${esc(senal(s.nombre))}</span><span class="medidor"><span style="width:${Math.round((Math.abs(s.peso) / maxPeso) * 100)}%"></span></span><span class="dato">${s.peso.toFixed(2)}</span></li>`).join("")}</ol>` : ""}
       <div class="ver-accion"></div>`;
     if (nuevo) reanimar(caja, "entra");
+    const anuncio = $("#ops-anuncio");
+    if (anuncio && nuevo) anuncio.textContent = `${c.agente || ""}: ${t(`o_dec_${v.decision}`)} ${pct(v.confianza)}${v.capa && v.decision !== "seguro" ? ` · ${capa(v.capa)}` : ""}`;
     pintarAccion(c);
   }
 
@@ -369,32 +411,34 @@ const Operaciones = (() => {
   }
 
   // --- Defensa en capas: contadores por capa y una barra apilada por familia ---
-  // Contadores por capa como los cuenta el motor: «1» y «2», acciones retenidas; «boveda», veredictos atajados.
-  // La barra por familia lleva un desenlace por correo: la primera capa que lo detuvo, o «paso» si se ejecutó.
+  // Una sola unidad para contadores y barras: el desenlace de cada correo. Manda la capa que retuvo la
+  // acción (Firewall o Escudo); la bóveda cuenta cuando ninguna capa la retuvo; «paso» si se ejecutó.
+  // Así el número grande cuadra con las barras y se ve qué frena cada capa.
   function contar(id, familia, capa_, resultado) {
-    const clave = `${id}:${capa_}`;
-    if (capa_ && resultado !== "ejecutada" && !o.contadas.has(clave)) {
-      o.contadas.add(clave);
-      o.capas[capa_] = (o.capas[capa_] || 0) + 1;
-    }
     const k = resultado === "ejecutada" ? "paso" : capa_;
-    if (!k || o.desenlace.has(id)) return;
-    o.desenlace.add(id);
-    const f = (o.bloqueos[familia || "legitimo"] ||= {});
-    f[k] = (f[k] || 0) + 1;
+    if (!k) return;
+    const previo = o.desenlace.get(id);
+    if (previo) {
+      if (!(previo.k === "boveda" && (k === "1" || k === "2"))) return;
+      o.bloqueos[previo.f].boveda--;
+    }
+    const fam = previo?.f || familia || "legitimo";
+    o.desenlace.set(id, { f: fam, k });
+    const b = (o.bloqueos[fam] ||= {});
+    b[k] = (b[k] || 0) + 1;
   }
   function pintarCapas(golpe) {
-    const tot = (k) => o.capas[k] || 0;
+    const tot = (k) => FAMILIAS.reduce((s, f) => s + (o.bloqueos[f]?.[k] || 0), 0);
     const filas = FAMILIAS.map((f) => {
       const b = o.bloqueos[f] || {};
       const n = CAPAS.reduce((s, k) => s + (b[k] || 0), 0) + (b.paso || 0);
       const det = n - (b.paso || 0);
       const seg = (k, cls) => (b[k] ? `<span class="seg ${cls}" style="flex-grow:${b[k]}" data-ayuda="${esc(k === "paso" ? t("ac_ejecutada") : capa(k))}: ${b[k]}"></span>` : "");
-      return `<li class="familia" data-ayuda="${esc(t("ayuda_familia"))}">
+      return `<li class="familia" tabindex="0" data-ayuda="${esc(t("ayuda_familia"))}">
         <span class="fa-nombre">${esc(t(`f_${f}`))}</span><span class="dato c-2">${n ? esc(t(f === "legitimo" ? "o_retenidas" : "o_detenidas", { a: det, n })) : "—"}</span>
         <span class="apilada">${seg("1", "s-1")}${seg("2", "s-2")}${seg("boveda", "s-b")}${seg("paso", f === "legitimo" ? "s-ok" : "s-mal")}</span></li>`;
     }).join("");
-    $("#ops-capas").innerHTML = `<ul class="contadores">${CAPAS.map((k) => `<li data-capa="${k}" data-ayuda="${esc(t(`ayuda_capa_${k}`))}"><span class="muestra s-${k === "boveda" ? "b" : k}"></span><span>${esc(capa(k))}</span><span class="dato">${tot(k)}</span></li>`).join("")}</ul><ol class="familias">${filas}</ol>`;
+    $("#ops-capas").innerHTML = `<ul class="contadores">${CAPAS.map((k) => `<li data-capa="${k}" tabindex="0" data-ayuda="${esc(t(`ayuda_capa_${k}`))}"><span class="muestra s-${k === "boveda" ? "b" : k}"></span><span>${esc(capa(k))}</span><span class="dato">${tot(k)}</span></li>`).join("")}</ul><ol class="familias">${filas}</ol>`;
     if (golpe) reanimar($(`#ops-capas [data-capa="${golpe}"] .dato`), "golpe");
   }
 
@@ -469,8 +513,9 @@ const Operaciones = (() => {
     if (!o.visible || !Graficos.hay) return;
     const el = $("#ops-curva");
     if (!o.curva || !el.isConnected || !echarts.getInstanceByDom(el)) o.curva = Graficos.curvas(el);
-    const h = o.historial.slice(-MAX_CURVA);
-    o.curva?.poner([h.map((m) => [m.ejemplos, m.precision * 100]), h.map((m) => [m.ejemplos, m.recall * 100]), h.map((m) => [m.ejemplos, m.falsas_alarmas * 100])], h.length < 2 ? t("o_curva_una") : "");
+    // Una versión sin ejemplos no tiene métricas: no se grafica como 0 %.
+    const h = o.historial.filter((m) => m.ejemplos > 0 && m.precision !== null && m.precision !== undefined).slice(-MAX_CURVA);
+    o.curva?.poner([h.map((m) => [m.ejemplos, m.precision * 100]), h.map((m) => [m.ejemplos, m.recall * 100]), h.map((m) => [m.ejemplos, m.falsas_alarmas * 100])], [t("o_precision"), t("o_recall"), t("o_falsas")]);
   }
 
   // --- Estado de alerta: el borde rojo parpadea cuando la defensa retiene una acción ---
@@ -516,22 +561,14 @@ const Operaciones = (() => {
         if (o.leyendo?.id === e.id && e.fuente === "boveda") terminarLectura();
         else if (c.fase === "leido") { pintarFila(e.id); pintarVeredicto(c); }
         if (!c.cuerpo) { c.fase = "leido"; pintarFila(e.id); }
-        if (e.capa === "boveda") { contar(e.id, e.familia, "boveda", "retenida"); pintarCapas("boveda"); }
+        if (e.capa === "boveda") { if (c.fase === "leido") desenlaceBoveda(c, true); else c.pendiente = true; }
         break;
       }
       case "accion": {
         const c = correo(e.id);
         c.accion = e;
-        contar(e.id, e.familia || c.veredicto?.familia, e.capa, e.resultado);
-        const detenida = e.resultado !== "ejecutada";
-        pintarCapas(detenida ? e.capa : null);
-        pintarFila(e.id);
-        pintarAccion(c);
-        if (detenida && e.agente) {
-          const a = o.agentes.get(e.agente);
-          if (a && e.capa) { a.retenido = e.capa; pintarAgente(e.agente, true); }
-        }
-        if (e.resultado === "retenida") alarma();
+        // Si el correo todavía está en cola o en lectura, el desenlace espera a que Lectura lo termine.
+        if (c.fase === "leido" || !c.cuerpo) desenlaceAccion(c, true); else c.pendiente = true;
         break;
       }
       case "boveda": {
@@ -566,8 +603,6 @@ const Operaciones = (() => {
     if (o.modelo && !o.historial.some((m) => m.version === o.modelo.version)) o.historial.push(o.modelo);
     if (o.modelo?.pesos) Object.assign(o.pesos, o.modelo.pesos);
     else for (const m of o.historial) for (const c of m.cambios || []) o.pesos[c.senal] = c.peso_despues;
-    const b = f.bloqueos_por_capa;
-    const numerico = b && typeof b === "object" && Object.values(b).every((v) => typeof v === "number");
     for (const c of lista(f.correos)) {
       if (!c?.id) continue;
       const x = correo(c.id);
@@ -578,10 +613,9 @@ const Operaciones = (() => {
       if (!x.veredicto) x.fase = "cola";
       if (x.veredicto?.capa === "boveda") contar(c.id, x.veredicto.familia, "boveda", "retenida");
       if (x.accion) contar(c.id, x.accion.familia || x.veredicto?.familia, x.accion.capa, x.accion.resultado);
+      if (!x.veredicto && (x.accion || x.lectura)) x.pendiente = !!x.accion;
       if (!o.orden.includes(c.id)) o.orden.push(c.id);
     }
-    // Los contadores de la foto mandan: cubren también lo que pasó antes de los últimos 50 correos.
-    if (numerico) for (const k of CAPAS) o.capas[k] = Math.max(o.capas[k] || 0, b[k] || 0);
     if (typeof f.pausa === "boolean") o.pausa = f.pausa;
     if ([1, 2, 4].includes(Number(f.velocidad))) o.velocidad = Number(f.velocidad);
     pintarTodo();
@@ -617,11 +651,12 @@ const Operaciones = (() => {
   // --- Fuente: el motor real por SSE o el emisor local ---
   function pintarControles() {
     const sello = $("#ops-sello");
-    sello.textContent = t(`o_sello_${o.sello}`);
+    sello.textContent = o.pausa ? `${t(`o_sello_${o.sello}`)} · ${t("o_en_pausa")}` : t(`o_sello_${o.sello}`);
     sello.dataset.estado = o.sello;
+    sello.dataset.pausa = String(o.pausa);
     const b = $("#ops-pausa");
     b.setAttribute("aria-pressed", String(o.pausa));
-    b.setAttribute("aria-label", t(o.pausa ? "o_seguir" : "o_pausa"));
+    b.setAttribute("aria-label", t("o_pausa"));
     b.dataset.ayuda = t(o.pausa ? "o_seguir" : "o_pausa");
     b.querySelector(".ms").textContent = o.pausa ? "play_arrow" : "pause";
     document.querySelectorAll("[data-ops-velocidad]").forEach((x) => x.setAttribute("aria-pressed", String(Number(x.dataset.opsVelocidad) === o.velocidad)));
@@ -629,10 +664,18 @@ const Operaciones = (() => {
 
   async function control(accion, valor) {
     if (accion === "pausa" || accion === "seguir") o.pausa = accion === "pausa";
+    if (accion === "seguir" && o.retomar) { o.retomar = false; siguienteLectura(); }
     if (accion === "velocidad") o.velocidad = valor;
     pintarControles();
     try { await o.fuente?.control({ accion, ...(valor ? { valor } : {}) }); }
     catch (err) { console.warn("control del flujo falló", err); }
+  }
+
+  function reiniciar() {
+    if (o.leyendo) cancelAnimationFrame(o.leyendo.raf);
+    clearTimeout(o.espera);
+    Object.assign(o, { correos: new Map(), orden: [], filas: new Map(), lecturas: [], leyendo: null, mostrado: null, espera: null, retomar: false,
+      boveda: new Map(), historial: [], bloqueos: {}, desenlace: new Map() });
   }
 
   function usarSimulado() {
@@ -664,8 +707,18 @@ const Operaciones = (() => {
     };
     // El motor arranca en español; si la página está en inglés, se lo pide.
     if (o.idiomaMotor && o.idiomaMotor !== estado.idioma && o.idiomaMotor !== "ambos") control("idioma", estado.idioma);
-    es.onopen = () => { o.sello = "real"; pintarControles(); };
-    es.onerror = () => { o.sello = "reconectando"; pintarControles(); };
+    // Tras un corte, los eventos perdidos descuadran todo: se vuelve a pedir la foto y se reconstruye.
+    es.onopen = async () => {
+      if (o.sello === "reconectando") {
+        try { const r = await fetch(`${base}api/vivo/estado`, { cache: "no-store" }); if (r.ok) { reiniciar(); cargarFoto(await r.json()); } }
+        catch (_) { /* se queda con lo que tiene */ }
+      }
+      o.sello = "real"; pintarControles();
+    };
+    es.onerror = () => {
+      if (es.readyState === EventSource.CLOSED) { reiniciar(); return usarSimulado(); }
+      o.sello = "reconectando"; pintarControles();
+    };
     es.onmessage = (m) => { try { aplicar(JSON.parse(m.data)); } catch (err) { console.warn("evento ilegible", err); } };
   }
 
