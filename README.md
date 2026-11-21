@@ -428,6 +428,17 @@ Siete estafas, en español e inglés, y cuatro controles (`scamshield/scenarios/
 
 **Cifras de la corrida de referencia** (`--generaciones 20 --semilla 0`, 23 s en un computador normal, sin API): el hacker evade al clasificador y la bóveda un 3 % en la generación 1 y un 20 % en la 2, antes de que el escudo aprenda de lo que el dueño confirma; desde la generación 3 la evasión es 0 % y se queda ahí, con un recall de 87 % en el conjunto apartado, 100 % sobre las mutaciones y 0 % de falsas alarmas. Las mutaciones que más le sirven al hacker son `cuenta_con_letras`, `deletrear_cuenta` y `repartir_en_dos`; lo que más lo bloquea es la bóveda (dominio y plantilla). La capa 2 deja pasar **0 pagos a una cuenta de estafador en las 20 generaciones**; sin ella habrían salido 7, todos en las dos primeras. Es una simulación de un solo atacante por mutaciones con una semilla: sirve para ver la dinámica, no como tasa con intervalo.
 
+## Juez LLM para los casos dudosos
+`python scripts/juez_vivo.py` mide un juez LLM que solo ve lo que el clasificador deja en la banda dudosa (por defecto 0,2 a 0,5, con `--banda a,b`): lee el mensaje y responde estafa o legítimo en una línea. **Solo sube la sospecha:** no baja lo que el clasificador marcó, nunca aprueba un pago y la capa 2 sigue mandando. Si se cae, se niega o no se le entiende, el caso queda marcado (no hay «seguro» por defecto). El prompt (`scamshield/vivo/juez.py`) describe señales, no los escenarios, y una prueba lo verifica. Se mide sobre el mismo apartado por familia que la validación cruzada (3 pliegues × 3 semillas): cobertura, precisión y falsas alarmas con y sin juez, las familias que se siguen colando y el costo por 1.000 correos.
+
+```bash
+python scripts/juez_vivo.py --dry-run                     # costo estimado con Haiku 5.5, Sonnet 5.5, Fable 5.2 y Gemini, sin llamar a nada
+python scripts/juez_vivo.py --modelo haiku --tope-usd 2 --json results/juez_haiku.json
+python scripts/juez_vivo.py --modelo google/gemini-3.5-flash --banda 0,0.5
+```
+
+Sin `--modelo` corre con mockllm, que no da veredicto: todo dudoso queda marcado, así que la fila «con juez» es el techo de la banda (lo mejor que podría hacer un juez perfecto), no una medición. Con la banda 0,2-0,5, el 12 % de los correos apartados va al juez, y un juez perfecto subiría la cobertura de **0,85 a 0,96**; si marcara todo lo que ve, las falsas alarmas subirían de 4 % a 18 %. Lo que no alcanza a ver son las estafas a las que el clasificador da menos de 0,2. El `--dry-run` estima 32 llamadas (los textos se repiten entre semillas y se juzgan una sola vez): unos US$0,01 con Haiku 5.5, US$0,16 con Sonnet 5.5 y US$0,63 con Fable 5.2; por cada 1.000 correos, US$0,03, US$0,61 y US$2,44. La corrida con modelo se corta sola al llegar a `--tope-usd` (por defecto US$2), y las llaves se leen de `.env` sin imprimirlas. Todavía no se corrió con un modelo real.
+
 ## Estructura
 ```
 scamshield/
