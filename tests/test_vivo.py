@@ -129,7 +129,7 @@ def test_los_eventos_cumplen_el_esquema_del_contrato():
         vistos.add(t)
         assert isinstance(e["ts"], float)
         if t == "agente_estado":
-            assert e["agente"] in {"Elon", "Sam", "Jensen", "Whitney"}
+            assert e["agente"] in {"Elon", "Sam", "Jensen", "Jeff", "Sergey", "Steve"}
             assert e["estado"] in ESTADOS and isinstance(e["tarea"], str)
         elif t == "correo_nuevo":
             assert e["id"].startswith("m-") and len(e["id"]) == 8

@@ -1,6 +1,6 @@
 """El motor del modo «Centro de operaciones»: agentes simulados con defensas reales.
 
-Simulado: los agentes (Elon, Sam, Jensen, Whitney), sus bandejas y el flujo de correos, y el
+Simulado: los agentes (Elon, Sam, Jensen, Jeff, Sergey y Steve), sus bandejas y el flujo de correos, y el
 feedback del dueño (sale de la etiqueta del escenario).
 Real, sobre cada correo y cada acción:
 - la capa 1 (`reglas_inyeccion`) y la capa 2 (`politica_origen`), antes de cada pago, sobre el

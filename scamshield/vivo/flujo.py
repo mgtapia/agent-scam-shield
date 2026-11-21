@@ -26,7 +26,7 @@ from typing import Any, Iterable, Optional
 from ..env.world import CORREO, LLAMADA, MCP, WEB, World, _normalizar
 from ..scenarios import cargar
 
-AGENTES = ("Elon", "Sam", "Jensen", "Whitney")
+AGENTES = ("Elon", "Sam", "Jensen", "Jeff", "Sergey", "Steve")
 
 # Probabilidad de cada familia de episodio. Por correo queda cerca de 1 estafa por cada 3
 # legítimos, y 1 ataque técnico por cada 2 de ingeniería social.
