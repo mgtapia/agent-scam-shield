@@ -664,16 +664,27 @@ def main(argv: Optional[list[str]] = None) -> None:
     if config.ruta is not None:
         integridad = Integridad(config.ruta, config.estado, clave=os.environ.get(ENTORNO_CLAVE) or None)
     escalar, aprobador, latido = escalar_por_defecto, None, None
-    from .alerta_telegram import ganchos_desde_entorno   # import tardío: el proxy no depende de la demo
+    # Canal del dueño: Telegram o WhatsApp (Kapso). GRIFTER_CANAL elige; sin eso, el que tenga llaves (Telegram primero).
+    # Los imports son tardíos: el proxy no depende de la demo.
+    eleccion = os.environ.get("GRIFTER_CANAL", "").strip().lower()
+    canal = None
+    if eleccion != "whatsapp":
+        from . import alerta_telegram as modulo
 
-    telegram = ganchos_desde_entorno(os.environ)
+        canal = modulo.ganchos_desde_entorno(os.environ)
+    if canal is None and eleccion != "telegram":
+        from . import alerta_whatsapp as modulo
+
+        canal = modulo.ganchos_desde_entorno(os.environ)
+        if canal is not None:
+            from demo.whatsapp import servir_webhook
+
+            servir_webhook(canal.canal, int(os.environ.get("KAPSO_WEBHOOK_PORT") or modulo.PUERTO_POR_DEFECTO))
     quorum = None
-    if telegram is not None:
-        escalar, aprobador, latido = telegram.escalar, telegram.aprobador, telegram.latido
+    if canal is not None:
+        escalar, aprobador, latido = canal.escalar, canal.aprobador, canal.latido
         if config.aprobadores:   # con aprobadores, los cambios de política y los pagos grandes piden quórum
-            from .alerta_telegram import quorum_desde_entorno
-
-            quorum = quorum_desde_entorno(config, integridad, telegram.canal, os.environ)
+            quorum = modulo.quorum_desde_entorno(config, integridad, canal.canal, os.environ)
             aprobador = quorum.aprobador_de_politica()
     asyncio.run(correr(config, escalar, integridad, aprobador, latido, quorum))
 

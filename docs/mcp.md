@@ -58,6 +58,17 @@ python -m scamshield.mcp.aprobaciones codigo --nombre Sam --id 3fa91c07 --monto 
 
 La alerta muestra el avance («1 de 2 aprobaciones») y el pago sale con la segunda aprobación. **Límite honesto:** quien tenga a la vez los dos teléfonos y los dos digipass puede todo.
 
+## WhatsApp (Kapso) como canal del dueño (#116)
+Es lo mismo que Telegram con otro canal: la alerta del pago retenido llega con tres botones (pagar a la inscrita, no pagar, pagar igual con segunda confirmación), el latido avisa al arrancar y detenerse, y la doble autorización corre por WhatsApp: cada aprobador recibe la solicitud con «Aprobar» y «Rechazar», y para aprobar responde en el chat el código de su digipass.
+
+En el `.env` (los pone el dueño; los agentes no lo leen): `KAPSO_API_KEY`, `KAPSO_PHONE_NUMBER_ID` (el número de WhatsApp Business desde el que se manda), `KAPSO_OWNER_NUMBER` (el número del dueño, con código de país y sin «+») y `KAPSO_WEBHOOK_SECRET`. En `grifter.yaml`, el `canal` de cada aprobador es su número de WhatsApp. `GRIFTER_CANAL=whatsapp|telegram` elige el canal si hay llaves de los dos.
+
+**El webhook.** Telegram se consulta; WhatsApp empuja. Kapso llama a una URL pública con cada mensaje recibido: en el servidor de la demo es `POST /api/whatsapp/webhook`; en el proxy MCP, un servidor mínimo en `KAPSO_WEBHOOK_PORT` (8788) en la ruta `/webhook`. Hay que exponerlo (un túnel, por ejemplo) y registrar la URL en Kapso para el evento `whatsapp.message.received`, con el mismo secreto. Si el servidor de la demo y el proxy corren a la vez, cada uno necesita su webhook.
+
+**Falla cerrada.** Sin llaves, no hay canal y todo sigue como antes. Sin `KAPSO_WEBHOOK_SECRET`, o con una firma (`X-Webhook-Signature`, HMAC-SHA256 en hexadecimal del cuerpo crudo) mala o ausente, el webhook se rechaza y no cuenta nada. Solo el número del dueño responde la alerta y solo los números de los aprobadores votan. Una entrega repetida por reintento (`X-Idempotency-Key`) o un botón apretado dos veces no cuenta dos veces. Si Kapso falla o nadie responde, no se paga. Los errores dicen el estado, nunca la llave ni la URL.
+
+**Límite honesto.** WhatsApp Business solo deja mandar mensajes que no son plantilla dentro de la ventana de 24 horas desde el último mensaje del usuario: si el dueño no ha escrito al número en el último día, hace falta una plantilla aprobada (no incluida aquí) o que escriba primero. Los cambios de política sin aprobadores no tienen botón por WhatsApp; con aprobadores pasan por el quórum.
+
 ## Claude Code
 Desde la raíz del repo, con el Python del venv:
 ```bash
