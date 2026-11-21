@@ -1,6 +1,6 @@
 # Pitch de Grifter (3 minutos)
 
-Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}` salen de `demo/resultados.json` o de las corridas de Inspect: no se dice ningún número que no esté medido.
+Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}` salen de `demo/resultados.json` o de las corridas de Inspect: no se dice ningún número que no esté medido. **Siempre se da el intervalo, no solo el punto:** con 19 escenarios con tarea, los intervalos son de ±15 a 20 puntos.
 
 ## La frase
 **El agente no tiene que ser listo para no caer: la garantía vive fuera del modelo.**
@@ -14,13 +14,13 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 | 1:10–1:40 | Le llega la alerta: la cuenta salió de un correo, no de sus cuentas inscritas. Un toque y paga a la correcta. | La alerta en el celular |
 | 1:40–2:30 | Los números. `{n}` estafas chilenas en español e inglés, `{m}` modelos y 4 configuraciones. Tres hallazgos: | Results: KPI, mapa de calor y radar |
 | | 1. **Ni los modelos de punta se salvan de las estafas convincentes:** Sonnet cae en un correo del jefe desde su propia dirección `{tasa}`. | Mapa de calor táctica × defensa |
-| | 2. **Un agente sin libro de proveedores queda vulnerable o inútil:** sin la lista de cuentas, la utilidad cae de `{u1}` a `{u2}`. Grifter se la devuelve sin aflojar la seguridad, porque revisa el origen del valor, no el texto. | Seguridad contra utilidad |
+| | 2. **Un agente sin libro de proveedores queda vulnerable o inútil:** sin la lista de cuentas, cae en `{8 % [0-21]}` de las estafas y su utilidad baja de `{79 %}` a `{16 %}` (Haiku, 3 repeticiones, IC 95 %). Con Grifter cae en 0. **Qué pasa con la utilidad depende de la medición de `aviso_escudo` (#38): si vuelve, se dice «un agente que sabe que tiene escudo vuelve a ser útil»; si no vuelve, esta frase no va.** | Seguridad contra utilidad, con intervalos |
 | | 3. **El atacante adaptativo reescribe la estafa ronda tras ronda.** Contra el LLM sube `{asr}`; contra la capa 2 se queda en `{asr2}`. | Curva del atacante |
 | 2:30–3:00 | Todo es abierto: el primer dataset de estafas en español para agentes, la eval en Inspect y la capa que se suma a cualquier agente o firewall. Pruébenlo: escriban su estafa. | «Try it» |
 
 ## Por qué es distinto (si el jurado pregunta)
 - **SEA, AgentPhishing y FraudBench miden estafas contra agentes, pero en inglés.** Nosotros medimos español chileno contra inglés, con las mismas estafas.
-- **Pipelock, mcp-watchdog y Snyk Agent Scan frenan la inyección técnica.** La ingeniería social no tiene nada técnico que detectar. Pipelock marca la sesión completa como contaminada; Grifter revisa el valor concreto (la cuenta, el destinatario), y por eso no frena los pagos legítimos `{falsas alarmas}`.
+- **Pipelock, mcp-watchdog y Snyk Agent Scan frenan la inyección técnica.** La ingeniería social no tiene nada técnico que detectar. Pipelock marca la sesión completa como contaminada; Grifter revisa el valor concreto (la cuenta, el destinatario). Con la lista visible, casi no cuesta utilidad (de `{79 %}` a `{74 %}`, con intervalos que se solapan). Cuando la cuenta es nueva pero legítima, no la bloquea en silencio: le pide un toque al dueño `{tasa de confirmaciones}`.
 - **Hay una garantía que el texto no rompe:** una cuenta que no aparece completa en el encargo ni en las cuentas inscritas se bloquea siempre, por convincente que sea el correo. Hay una prueba de propiedad que lo demuestra.
 - **Límite honesto:** si al dueño ya lo engañaron y dicta él la cuenta, la regla la deja pasar. Para ese caso está el clasificador que aprende (#7).
 
