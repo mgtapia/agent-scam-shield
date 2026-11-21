@@ -294,7 +294,7 @@
           <div class="dn-al-botones">
             <span class="dn-b principal">Pagar a mi inscrita</span>
             <span class="dn-b">No pagar</span>
-            <span class="dn-b peligro">Pagar igual${dedo(TOQUE_MARTA, -420, 160)}</span>
+            <span class="dn-b peligro">Pagar igual${dedo(TOQUE_MARTA, 140, 220)}</span>
           </div>
         </div>`);
     const S7 = E.codigo;
@@ -314,7 +314,7 @@
             <div class="dn-burbuja ag dn-chica"${ap(S8 + 0.75, "pop")}>${ic("check")}1 de 2: Marta ya aprobó con su código</div>
             <div class="dn-wa-botones"${ap(S8 + 1.05, "sube", TOQUE_PABLO + 0.75)}>
               <span class="dn-b">Solicitar código</span>
-              <span class="dn-b rechazar">Rechazar${dedo(TOQUE_PABLO, -380, 220)}</span>
+              <span class="dn-b rechazar">Rechazar${dedo(TOQUE_PABLO, 140, 220)}</span>
             </div>
             <p class="dn-sistema dn-resultado"${ap(TOQUE_PABLO + 0.95, "sube")}>${ic("block")}<span>Pablo rechazó.</span><b>No se pagó nada.</b></p>
           </div>
@@ -367,23 +367,23 @@
 
     // 6. Cifras (docs/cifras.md: 150 estafas de 32 tipos, 0 pasan Grifter completo; 5.280 intentos, 0 cruzan la capa 2)
     // La cifra: las partículas la arman; el texto real aparece encima en «v» (y siempre está para lectores de pantalla).
-    const cifra = (txt, v, cls = "") => `<p class="dn-cifra dato ${cls}" data-ancla="cifra"><span class="oculto">${txt}</span><span aria-hidden="true"${ap(v, "nada")}>${txt}</span></p>`;
+    const cifra = (txt, v, cls = "") => `<p class="dn-cifra dato ${cls}" data-ancla="cifra"><span class="oculto">${txt}</span><span aria-hidden="true"${ap(v, "nada")} data-dura="0.12">${txt}</span></p>`;   // entra en 0,12 s: nítida apenas se arma
     const S15 = E.estafas, S16 = E.pasan, S17 = E.atacante, S18 = E.cruzan;
     esc_("estafas", `
-        ${cifra("150", S15 + 1.1)}
+        ${cifra("150", S15 + 0.75)}
         <p class="dn-cifra-txt"${ap(palabra("estafas", 2), "pop")}>estafas</p>
         <p class="dn-cifra-txt dn-2"${ap(S15 + 1.5, "sube")}>de <b class="dato">${cuenta(0, 32, S15 + 1.55, 0.5)}</b> tipos</p>
         <p class="dn-fuente dato"${ap(S15 + 1.7, "nada")}>Agente que hace todo lo que lee · grifter bench</p>`, "dn-centro");
     esc_("pasan", `
-        ${cifra("0", S16 + 1.3, "c-verde")}
+        ${cifra("0", S16 + 0.7, "c-verde")}
         <p class="dn-cifra-txt"${ap(palabra("estafas", 3), "pop")}>pasan con Grifter completo</p>
         <p class="dn-fuente dato"${ap(S16 + 0.8, "nada")}>150 de 150 frenadas · capas 2 y 3 · docs/cifras.md</p>`, "dn-centro");
     esc_("atacante", `
-        ${cifra("5.280", S17 + 1.3)}
+        ${cifra("5.280", S17 + 0.75)}
         <p class="dn-cifra-txt"${ap(palabra("atacante", 0), "pop")}>intentos de un atacante que aprende</p>
         <p class="dn-fuente dato"${ap(S17 + 1.6, "nada")}>120 generaciones · 6 corridas · grifter duelo</p>`, "dn-centro");
     esc_("cruzan", `
-        ${cifra("0", S18 + 1.2, "c-verde")}
+        ${cifra("0", S18 + 0.7, "c-verde")}
         <p class="dn-cifra-txt"${ap(palabra("atacante", 10), "pop")}>cruzan la capa 2</p>
         <p class="dn-fuente dato"${ap(S18 + 0.6, "nada")}>5.280 intentos contra la capa 2 · grifter duelo · docs/cifras.md</p>`, "dn-centro");
 
@@ -603,18 +603,18 @@
     [E.encargo, figEsfera(nube("encargo"), { habla: true }), 0.8, 60],
     [E.suena, figEsfera(ESQUINA), 0.8, 60],
     [E.paga, figEsfera(nube("paga"), { habla: true }), 0.8, 60],
-    [E.frena + 0.05, figEscudo(nube("frena")), 0.9, 50],
+    [E.frena + 0.05, figEscudo(nube("frena")), 0.6, 40],
     [E.motivo, figEscudo(ARRIBA), 0.7, 40],
     [E.alerta, figEsfera(ESQUINA), 0.8, 40],   // en espera vuelve a ser esfera: un escudo de partículas no convive con otro
     [E.banco, figEsfera(ESQUINA), 0.8, 50],
     [E.responde, figEsfera(nube("responde"), { habla: true }), 0.7, 60],
-    [E.clave + 0.05, figEscudo(nube("clave")), 0.9, 50],
+    [E.clave + 0.05, figEscudo(nube("clave")), 0.6, 40],
     [E.aprobaste, figEsfera(ESQUINA), 0.8, 50],
-    [E.calza + 0.05, figEscudo(nube("calza")), 0.9, 50],
-    [E.estafas + 0.05, figTexto("estafas", "150", "texto", { tenue: E.estafas + 1.1 }), 0.8, 90],
-    [E.pasan + 0.05, figTexto("pasan", "0", "verde", { tenue: E.pasan + 1.3 }), 1.0, 220],
-    [E.atacante + 0.05, figTexto("atacante", "5.280", "texto", { tenue: E.atacante + 1.3 }), 1.0, 160],
-    [E.cruzan + 0.05, figTexto("cruzan", "0", "verde", { tenue: E.cruzan + 1.2 }), 1.0, 220],
+    [E.calza + 0.05, figEscudo(nube("calza")), 0.55, 40],
+    [E.estafas + 0.05, figTexto("estafas", "150", "texto", { tenue: E.estafas + 0.75 }), 0.6, 80],
+    [E.pasan, figTexto("pasan", "0", "verde", { tenue: E.pasan + 0.7 }), 0.55, 140],
+    [E.atacante, figTexto("atacante", "5.280", "texto", { tenue: E.atacante + 0.75 }), 0.6, 120],
+    [E.cruzan, figTexto("cruzan", "0", "verde", { tenue: E.cruzan + 0.7 }), 0.55, 140],
     [E.remate, figEsfera(ARRIBA), 0.9, 120],
     [palabra("remate", 6), figEscudo(ARRIBA), 0.7, 40],
     [E.cierre + 0.05, figLogo, 0.8, 80],
@@ -670,8 +670,8 @@
       const e0 = salida(clamp((tt - desde) / dura));
       centro = { x: antes.centro.x + (ahora.centro.x - antes.centro.x) * e0, y: antes.centro.y + (ahora.centro.y - antes.centro.y) * e0, R: antes.centro.R + (ahora.centro.R - antes.centro.R) * e0 };
       pts = ahora.p.map((b, i) => {
-        const a = antes.p[i], r = RAND_M[i], e = vaiven(clamp((tt - desde - r.retraso) / dura)), abre = Math.sin(Math.PI * e) * disp;
-        return { x: a.x + (b.x - a.x) * e + r.dx * abre, y: a.y + (b.y - a.y) * e + r.dy * abre, c: mezcla(a.c, b.c, e), a: a.a + (b.a - a.a) * e, s: a.s + (b.s - a.s) * e };
+        const a = antes.p[i], r = RAND_M[i], e = vaiven(clamp((tt - desde - r.retraso * Math.min(1, dura / 0.9)) / dura)), abre = Math.sin(Math.PI * e) * disp;
+        return { x: a.x + (b.x - a.x) * e + r.dx * abre, y: a.y + (b.y - a.y) * e + r.dy * abre, c: mezcla(a.c, b.c, e), a: (a.a + (b.a - a.a) * e) * (1 - 0.65 * Math.sin(Math.PI * e)), s: a.s + (b.s - a.s) * e };
       });
     }
     const rojos = amenaza(tt, centro);
@@ -712,7 +712,7 @@
     let a;
     if (tt < v || tt >= h + 0.15) a = 0;
     else if (quieto) a = tt < h ? 1 : 0;
-    else a = Math.min(clamp((tt - v) / 0.35), tt >= h ? 1 - (tt - h) / 0.15 : 1);
+    else a = Math.min(clamp((tt - v) / (+el.dataset.dura || 0.35)), tt >= h ? 1 - (tt - h) / 0.15 : 1);
     el.classList.toggle("ve", a > 0);
     el.style.setProperty("--a", a.toFixed(3));
     el.style.setProperty("--b", (quieto ? +(a > 0) : rebote(a)).toFixed(3));
