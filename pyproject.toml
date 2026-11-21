@@ -16,6 +16,8 @@ dependencies = [
 dev = ["pytest"]
 # Clientes que Inspect pide para google/ y groq/. hf-inference-providers/ usa openai, que ya es dependencia.
 proveedores = ["google-genai>=3.3.0", "groq>=0.28.0"]
+# AgentDojo de inspect_evals, para scripts/agentdojo_banking.py.
+agentdojo = ["inspect-evals[agentdojo]"]
 
 [tool.setuptools.packages.find]
 include = ["scamshield*"]
