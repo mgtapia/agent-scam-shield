@@ -275,6 +275,31 @@ const Graficos = (() => {
     if (alClic) g.on("click", (p) => alClic(p.data));
   }
 
-  return { C, hay, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, radar, calor, redimensionar, sinMovimiento };
+  // Curvas del modelo (vista Operaciones): precisión, recall y falsas alarmas contra los ejemplos vistos.
+  // Tres grises que se distinguen por trazo; cada evento «modelo» agrega un punto y ECharts anima el tramo nuevo.
+  function curvas(el) {
+    const g = iniciar(el);
+    if (!g) return null;
+    const serie = (nombre, color, tipo) => ({
+      type: "line", name: nombre, showSymbol: false,
+      endLabel: { show: true, color, fontFamily: MONO, fontSize: T1, formatter: (p) => `${Math.round(p.value[1])}%` }, symbol: "rect", symbolSize: 4, smooth: false,
+      lineStyle: { color, width: 1.5, type: tipo }, itemStyle: { color }, emphasis: { disabled: true }, data: [],
+    });
+    g.setOption({
+      animation: !sinMovimiento, animationDuration: 480, animationDurationUpdate: 480, animationEasingUpdate: "cubicOut",
+      grid: { left: 40, right: 48, top: 12, bottom: 24 },
+      xAxis: { type: "value", min: "dataMin", max: "dataMax", splitLine: { show: false }, axisLabel: { color: C.texto2, hideOverlap: true, showMaxLabel: false } },
+      yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
+      tooltip: { trigger: "axis", formatter: (ps) => [`n ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`)].join("<br>") },
+      series: [serie("", C.texto, "solid"), serie("", C.texto2, [6, 3]), serie("", C.texto3, [2, 3])],
+    });
+    return {
+      poner(datos, nombres = []) {
+        g.setOption({ series: datos.map((data, i) => ({ data, name: nombres[i] || "", showSymbol: data.length < 3 })) });
+      },
+    };
+  }
+
+  return { C, hay, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, radar, calor, curvas, redimensionar, sinMovimiento };
 })();
 window.Graficos = Graficos;
