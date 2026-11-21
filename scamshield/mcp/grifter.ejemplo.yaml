@@ -8,7 +8,9 @@ servidores:
     args: ["-m", "scamshield.mcp.servidor_proveedor", "--envenenado"]
   banco:
     comando: python
-    args: ["-m", "scamshield.mcp.servidor_banco", "--registro", "banco_sandbox.jsonl"]
+    args: ["-m", "scamshield.mcp.servidor_banco", "--registro", "banco_sandbox.jsonl", "--clave-env", "BANCO_CLAVE"]
+    # La credencial del banco vive aquí, en el proxy, y no en el agente (#102). Sin ella el banco no paga.
+    env: {BANCO_CLAVE: "cambia-esto"}
 
 # Lo confiable: las cuentas que el dueño inscribió y sus datos (para no compartirlos con extraños).
 cuentas_inscritas:
@@ -19,6 +21,19 @@ datos_dueno:
 # Opcional: el encargo del dueño. Los clientes MCP no le pasan el mensaje del usuario al servidor,
 # así que sin esto solo vale como confiable lo inscrito.
 # encargo: "Paga la factura 8812 de Silicio Austral."
+
+# Capas encendidas. Apagar una es un cambio de política: se retiene todo y el dueño recibe el diff (#102).
+capas: {capa2: true}
+# Doble autorización (#102): dos personas distintas aprueban los cambios de política y los pagos grandes.
+# aprobadores:
+#   - {nombre: Sam, canal: "123456789"}    # chat de Telegram de cada uno
+#   - {nombre: Reed, canal: "987654321"}
+# quorum: 2
+# umbral_doble: 5000000
+# semillas: /ruta/fuera/del/repo/semillas.json    # o GRIFTER_SEMILLAS en el entorno
+
+# Dónde se guarda la política aprobada por el dueño. Ponlo fuera de lo que el agente puede escribir.
+# estado: /ruta/fuera/del/agente/grifter_aprobada.json
 
 # Opcional (#103): el mandato, lo que el dueño aprobó. Un pago, o una orden que devuelve el MCP, que se
 # desvía en cualquier campo (más monto, otro producto o cantidad, otra moneda o cuenta, cobro recurrente o

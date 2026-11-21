@@ -82,7 +82,7 @@ flowchart LR
 Un equipo rojo de caja blanca ([`tests/test_equipo_rojo.py`](tests/test_equipo_rojo.py), #90) atacó a Grifter con el código a la vista. Lo que resistió o se arregló queda en verde. Lo que sigue nos rompe y queda como prueba `xfail(strict=True)`:
 
 - **Fuente que el integrador declara confiable:** si esa fuente está envenenada (un ERP en `origen_por_herramienta`, el mensaje de sistema o las cuentas que carga desde ella), Grifter le cree.
-- **`grifter.yaml` reescrito:** un agente con una herramienta de archivos puede inscribir la cuenta del estafador desde el próximo arranque. El archivo tiene que ser de solo lectura para el agente.
+- **`grifter.yaml` reescrito:** ya no pasa en silencio (#102): Grifter guarda la huella de la política que aprobó el dueño y, si el archivo cambia, retiene todo lo sensible y le manda el diff al celular hasta que responde. Quien tenga la máquina *y* el teléfono del dueño sigue pudiendo todo: lo que se logra es que no ocurra sin que el dueño se entere.
 - **Credencial partida en varios mensajes:** cada `responder` se revisa solo, así que media clave en cada uno no calza.
 - **Credencial en otra herramienta:** una clave pegada en la URL de `abrir_web` (u otra herramienta que no es de pago ni de datos) sale igual.
 - **Pago por fuera:** si el agente le pasa al dueño un link de pago o la cuenta del estafador para que pague él, no hay herramienta de pago que revisar.
@@ -378,6 +378,8 @@ Primeros resultados, con Haiku 5.5 de víctima, en `results/atacante/`: la ronda
 
 ## Duelo: el hacker que aprende y el escudo que aprende de él
 `grifter duelo --generaciones 20 --semilla 0` corre, sin llaves de API, un atacante por mutaciones (paráfrasis, sacar la urgencia, cambiar de autoridad, partir, deletrear o disfrazar la cuenta, homoglifos en el dominio, repartir el pedido en dos correos) que aprende con Thompson sampling contra qué señal le sirve cada una. Enfrente tiene el clasificador y la bóveda reales, que se reentrenan con lo que el dueño simulado confirma, con un conjunto apartado que nunca entrena. La capa 2 no se entrena: la tabla imprime, por generación, la evasión del hacker, el recall del escudo y los pagos que cruzan la capa 2, que quedan en 0. `--sin-entrenar` congela al escudo para ver al hacker solo. En el motor en vivo emite eventos `duelo`, y `/api/vivo/estado` trae `historial_duelo`.
+
+**Cifras de la corrida de referencia** (`--generaciones 20 --semilla 0`, 23 s en un computador normal, sin API): el hacker evade al clasificador y la bóveda un 3 % en la generación 1 y un 20 % en la 2, antes de que el escudo aprenda de lo que el dueño confirma; desde la generación 3 la evasión es 0 % y se queda ahí, con un recall de 87 % en el conjunto apartado, 100 % sobre las mutaciones y 0 % de falsas alarmas. Las mutaciones que más le sirven al hacker son `cuenta_con_letras`, `deletrear_cuenta` y `repartir_en_dos`; lo que más lo bloquea es la bóveda (dominio y plantilla). La capa 2 deja pasar **0 pagos a una cuenta de estafador en las 20 generaciones**; sin ella habrían salido 7, todos en las dos primeras. Es una simulación de un solo atacante por mutaciones con una semilla: sirve para ver la dinámica, no como tasa con intervalo.
 
 ## Estructura
 ```

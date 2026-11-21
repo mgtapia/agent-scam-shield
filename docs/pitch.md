@@ -26,7 +26,7 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 - **Si al dueño ya lo engañaron y dicta él la cuenta:** la capa 2 la deja pasar por diseño, y ahí entra la **capa 3, confirmación de beneficiario**: el titular de la cuenta tiene que calzar con el RUT de la cuenta que el dueño inscribió, no con el de la factura, que se puede falsificar. Un beneficiario nuevo tiene un tope, que suma los pagos de la sesión a su RUT. Es una garantía probada con un agente guionado (3 de 3 retenidos, 2 controles que pasan), no una medición con modelo real. Frase: «para engañarte a ti, además tiene que pasar la confirmación de beneficiario».
 - **Límite honesto que queda:** un estafador con una cuenta a nombre de quien dice ser, o un dueño que decide pagar igual. Además, el equipo rojo de caja blanca (#90, `tests/test_equipo_rojo.py`) encontró ocho variantes de ataque que todavía nos rompen, y lo decimos antes de que pregunten:
   - Una fuente que el integrador declara confiable y está envenenada (un ERP).
-  - Un `grifter.yaml` que el agente reescribe con una herramienta de archivos.
+  - Un `grifter.yaml` que el agente reescribe con una herramienta de archivos: ya no pasa en silencio (huella de la política y aviso al dueño, #102), pero quien controla la máquina y el teléfono del dueño lo puede todo.
   - Una credencial partida en varios mensajes.
   - Una credencial pegada en la URL de una herramienta de lectura.
   - El pago por fuera: el agente le pasa al dueño un link o una cuenta para que pague él.

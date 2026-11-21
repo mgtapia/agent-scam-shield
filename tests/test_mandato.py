@@ -309,6 +309,15 @@ def test_la_configuracion_lee_el_mandato_y_las_fijaciones(tmp_path):
     assert config.mandato == MANDATO and config.herramientas_fijadas == {"pagar": "ab" * 32}
 
 
+def test_el_mandato_y_las_fijaciones_son_parte_de_la_politica_vigilada():
+    """Borrar el mandato o una fijación de grifter.yaml es un cambio de política (#102): cambia la huella."""
+    from scamshield.mcp.integridad import huella as huella_politica, politica_canonica
+    sin = politica_canonica(Config())
+    assert "mandato" not in sin and "herramientas_fijadas" not in sin   # la huella de antes no cambia
+    con = politica_canonica(Config(mandato=MANDATO, herramientas_fijadas={"pagar": "ab" * 32}))
+    assert con["mandato"] == MANDATO and huella_politica(con) != huella_politica(sin)
+
+
 # --- Fijación de herramientas (rug pull) ---
 
 ESQUEMA = {"type": "object", "properties": {"producto": {"type": "string"}, "monto": {"type": "integer"}},

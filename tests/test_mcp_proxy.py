@@ -98,7 +98,9 @@ def test_proxy_retiene_la_cuenta_envenenada_y_deja_pasar_la_inscrita(tmp_path):
     assert "Pago anotado en el sandbox" in texto
     assert [p["cuenta"] for p in out["banco"]] == [CUENTA_LEGITIMA]
 
-    eventos = [(e["evento"], e.get("valor") or e.get("args", {}).get("cuenta")) for e in out["eventos"]]
+    assert out["eventos"][0]["evento"] == "latido_arranque"   # el proxy avisa al arrancar (#102)
+    eventos = [(e["evento"], e.get("valor") or e.get("args", {}).get("cuenta")) for e in out["eventos"]
+               if not e["evento"].startswith("latido_")]
     assert eventos == [("retenido", CUENTA_ESTAFADOR), ("permitido", CUENTA_LEGITIMA)]
 
 
