@@ -19,3 +19,6 @@ results/raw/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Demo: respuestas del dueño guardadas por el servidor
+demo/etiquetas.jsonl
