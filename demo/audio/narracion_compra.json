@@ -1,0 +1,70 @@
+{
+  "escenario": "demo_narracion_compra",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "[warm] Aprobaste cuatrocientos doce mil y te cobran diez veces más. Grifter lo frena.",
+  "voz": "Ignacio - Natural Chilean, unhurried pace (biblioteca de ElevenLabs)",
+  "voz_id": "NDx3GTwfaeouBvRv4NrB",
+  "clase_de_voz": "professional",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "velocidad": 1.12,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca compartida de ElevenLabs, publicada por su autor para texto a voz. No imita a nadie del proyecto ni a ninguna persona de la demo.",
+  "caracteres": 85,
+  "duracion_s": 5.28,
+  "palabras": [
+    [
+      "Aprobaste",
+      0.14
+    ],
+    [
+      "cuatrocientos",
+      0.697
+    ],
+    [
+      "doce",
+      1.493
+    ],
+    [
+      "mil",
+      1.76
+    ],
+    [
+      "y",
+      2.12
+    ],
+    [
+      "te",
+      2.293
+    ],
+    [
+      "cobran",
+      2.46
+    ],
+    [
+      "diez",
+      3.02
+    ],
+    [
+      "veces",
+      3.433
+    ],
+    [
+      "más.",
+      3.68
+    ],
+    [
+      "Grifter",
+      4.133
+    ],
+    [
+      "lo",
+      4.613
+    ],
+    [
+      "frena.",
+      4.76
+    ]
+  ]
+}
