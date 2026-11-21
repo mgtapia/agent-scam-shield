@@ -64,7 +64,7 @@ const T = {
     fam_premio_falso: "Premio falso", fam_qr_falso: "QR falso", fam_robo_de_cuenta: "Robo de cuenta", fam_soporte_falso: "Soporte falso",
     fam_suplantacion_autoridad: "Falso regulador", fam_suplantacion_de_banco: "Falso banco", fam_suplantacion_de_familiar: "Falso familiar",
     fam_suplantacion_de_gobierno: "Falso gobierno", fam_suplantacion_de_jefe: "Falso jefe", fam_suplantacion_de_proveedor: "Falso proveedor",
-    fam_tienda_falsa: "Tienda falsa",
+    fam_tienda_falsa: "Tienda falsa", fam_mcp_malicioso: "MCP malicioso", fam_deposito_por_error: "Depósito por error", fam_infraestructura_legitima: "Desde infraestructura legítima",
     canal_correo: "correo", canal_llamada: "llamada", canal_whatsapp: "WhatsApp", canal_web: "web", canal_mcp: "MCP",
     locale: "es-CL",
   },
@@ -81,7 +81,7 @@ const T = {
     fam_premio_falso: "Fake prize", fam_qr_falso: "Fake QR", fam_robo_de_cuenta: "Account takeover", fam_soporte_falso: "Fake support",
     fam_suplantacion_autoridad: "Fake regulator", fam_suplantacion_de_banco: "Fake bank", fam_suplantacion_de_familiar: "Fake relative",
     fam_suplantacion_de_gobierno: "Fake government", fam_suplantacion_de_jefe: "Fake boss", fam_suplantacion_de_proveedor: "Fake vendor",
-    fam_tienda_falsa: "Fake shop",
+    fam_tienda_falsa: "Fake shop", fam_mcp_malicioso: "Malicious MCP", fam_deposito_por_error: "Mistaken deposit", fam_infraestructura_legitima: "From legitimate infrastructure",
     canal_correo: "email", canal_llamada: "call", canal_whatsapp: "WhatsApp", canal_web: "web", canal_mcp: "MCP",
     ayuda_none: "The agent does what it reads",
     ayuda_layer1: "Technical-injection rules, like Pipelock",
@@ -209,6 +209,17 @@ addEventListener("hashchange", () => irA(location.hash.slice(1)));
 
 // Episodios abre el escenario de la estafa más reciente que vio Operaciones y que tenga episodio exportado.
 const hayEpisodio = (escenario) => CARRILES.some((c) => episodioDe(escenario, estado.idioma, c.defensas));
+// Abrir un episodio desde otra vista (las celdas de Resultados): «escenario» o «escenario__idioma».
+const partirEscenario = (id) => { const [e, i] = String(id || "").split("__"); return { e, i: i === "en" || i === "es" ? i : estado.idioma }; };
+window.hayEpisodioDe = (id) => { const { e, i } = partirEscenario(id); return CARRILES.some((c) => episodioDe(e, i, c.defensas)); };
+window.abrirEpisodio = (id) => {
+  const { e, i } = partirEscenario(id);
+  if (i !== estado.idioma) { estado.idioma = i; llenarEscenarios(); estado.analisisPintado = false; }
+  if (window.hayEpisodioDe(id)) { estado.escenario = e; $("#sel-escenario").value = e; }
+  location.hash = "vivo";
+  cargarEscenario();
+  scrollTo({ top: 0 });
+};
 // Al llegar desde Operaciones, además arranca a reproducir (salvo con movimiento reducido): la pantalla no
 // queda en tres carriles vacíos.
 function abrirUltimaEstafa(reproducirAlLlegar = false) {

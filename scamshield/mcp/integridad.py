@@ -59,6 +59,7 @@ def politica_canonica(config: Any) -> dict[str, Any]:
         "encargo": str(config.encargo or ""),
         "sensibles": {str(k): {"destino": r.destino, "que": r.que} for k, r in sorted(config.sensibles.items())},
         "capas": {str(k): bool(v) for k, v in sorted(config.capas.items())},
+        "dominios": {str(k): sorted(str(d) for d in v) for k, v in sorted(config.dominios.items())},
         "aprobadores": [{"nombre": a.nombre, "canal": a.canal} for a in config.aprobadores],
         "quorum": int(config.quorum),
         "umbral_doble": int(config.umbral_doble),
@@ -116,6 +117,10 @@ def diferencias(antes: Mapping[str, Any], despues: Mapping[str, Any]) -> list[st
         if a.get(k) != b.get(k):
             estado = lambda v: "sin dato" if v is None else ("encendida" if v else "APAGADA")  # noqa: E731
             d.append(f"~ {k}: {estado(a.get(k))} → {estado(b.get(k))}")
+    a, b = antes.get("dominios", {}), despues.get("dominios", {})
+    for k in sorted(set(a) | set(b)):
+        if a.get(k) != b.get(k):
+            d.append(f"~ dominios oficiales de {k}: {', '.join(a.get(k, [])) or 'ninguno'} → {', '.join(b.get(k, [])) or 'ninguno'}")
     na = {x["nombre"]: x.get("canal", "") for x in antes.get("aprobadores", [])}
     nb = {x["nombre"]: x.get("canal", "") for x in despues.get("aprobadores", [])}
     for k in sorted(set(na) | set(nb)):

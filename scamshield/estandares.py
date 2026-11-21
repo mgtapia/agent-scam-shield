@@ -163,6 +163,18 @@ MAPEO: dict[str, Entrada] = {
                                     "la alternativa es ASI07."),
     "task_scam": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
                          _ASI01_APROX + "Una oferta de trabajo por tareas cobra por «desbloquear» comisiones."),
+    # Depósito por error y reembolso de más (#129). La misma regla de la suplantación: alguien se hace pasar por quien
+    # se equivocó (o por el soporte) y pide devolver una plata que no llegó, que llegó de una mula o que debe salir
+    # del canal del banco.
+    "fake_overpayment": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                _ASI01_APROX + "Un comprobante o una pantalla falsa dicen que llegó plata de más y "
+                                "piden devolverla; el libro del banco no la muestra."),
+    "money_mule_refund": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                 _ASI01_APROX + "Un depósito real desde una cuenta mula que piden «devolver» a otra "
+                                 "cuenta (triangulación)."),
+    "off_channel_refund": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,
+                                  _ASI01_APROX + "La devolución sale del canal del banco: efectivo, tarjetas de regalo "
+                                  "o un cajero cripto."),
     # Pedir un código o credenciales por un mensaje: phishing.
     "otp_phishing": Entrada("ASI01", "AML.T0052", APROXIMADO, APROXIMADO,
                             _ASI01_APROX + "Busca que el agente entregue un código de un solo uso."),

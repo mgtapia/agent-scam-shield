@@ -12,6 +12,12 @@ nombre y nombre ese destino. Un destino que apareció en el correo, o en las cue
 Mandato del dueño (#103, `mandato.py`): si la procedencia trae un `mandato` (lo que el dueño aprobó: producto,
 cantidad, monto máximo, moneda, beneficiario y si es único o recurrente), un pago que se desvía en cualquiera
 de esos campos se retiene, aunque vaya a la cuenta inscrita. Sin mandato no cambia nada.
+Las herramientas que mandan texto a la web (`escribir_formulario`, `enviar_formulario` y `abrir_web` con datos en la
+dirección) tienen su propia regla, en `dominios.py`: un dato del dueño atado a un dominio solo se escribe en ese
+dominio exacto, como un gestor de contraseñas (#128).
+
+Depósito por error (#129, `deposito.py`): con el libro del banco (`movimientos`), una «devolución» por
+transferencia se retiene y se explica contra lo que llegó de verdad; lo real se devuelve solo por reverso.
 
 No depende de que un LLM acierte: un estafador puede redactar el correo perfecto, pero no puede
 hacer que su cuenta aparezca en el encargo del dueño ni en sus cuentas inscritas.
@@ -30,6 +36,7 @@ from dataclasses import dataclass
 from typing import Mapping, Optional, Protocol
 
 from ..env.world import CONFIABLE, DUENO, NO_CONFIABLES, claves_de_credencial, origenes_en
+from .dominios import HERRAMIENTAS_WEB, revisar_web
 
 MOTIVO_CREDENCIAL = "La clave del dueño no sale sin su confirmación."
 
@@ -42,6 +49,7 @@ class Procedencia(Protocol):
     datos_dueno: Mapping[str, str]
     # Opcionales (se leen con getattr): `credenciales`, claves de `datos_dueno` declaradas como credencial,
     # y `encargo`, el texto que escribió el dueño. Sin `encargo`, ninguna credencial tiene permiso de salir.
+    # Para la web: `dominios` (clave -> dominios oficiales) y `pagina_actual`. Ver `dominios.py`.
 
     def origenes_de(self, valor: str) -> set[str]: ...
 
@@ -80,6 +88,8 @@ SENSIBLES_SCAMSHIELD: dict[str, AccionSensible] = {
 def politica_origen(procedencia: Procedencia, herramienta: str, args: Mapping,
                     sensibles: Mapping[str, AccionSensible] = SENSIBLES_SCAMSHIELD) -> Optional[str]:
     """Devuelve None si la acción puede seguir, o el motivo del bloqueo."""
+    if herramienta in HERRAMIENTAS_WEB:
+        return revisar_web(procedencia, herramienta, args)
     regla = sensibles.get(herramienta)
     if regla is None:
         return None
@@ -92,6 +102,13 @@ def politica_origen(procedencia: Procedencia, herramienta: str, args: Mapping,
         desvio = motivo_mandato(mandato, args)
         if desvio:
             return desvio
+    # Depósito por error (#129): la «devolución» se compara con el libro del banco, y lo que pide salir del canal
+    # (ir al banco, efectivo, tarjetas de regalo) se retiene. Solo si la procedencia trae el libro o un contacto.
+    if getattr(procedencia, "movimientos", None) is not None or getattr(procedencia, "contacto_confianza", None):
+        from .deposito import politica_deposito
+        motivo_deposito = politica_deposito(procedencia, herramienta, args)
+        if motivo_deposito:
+            return motivo_deposito
     if regla.dato is not None and not _es_dato_del_dueno(procedencia, args.get(regla.dato, "")):
         return None
     if regla.mensaje is not None and not _mensaje_lleva_dato(procedencia, args.get(regla.mensaje, "")):
@@ -113,10 +130,45 @@ def _sale_una_credencial(procedencia: Procedencia, args: Mapping, regla: AccionS
     encargo = str(getattr(procedencia, "encargo", "") or "")
     for clave in sorted(claves):
         valor = _norm(procedencia.datos_dueno[clave])
-        if len(valor) < 4 or not _lleva_credencial(args, regla, valor):
+        if len(valor) < MIN_CORTA:
+            continue
+        # Una credencial de 3 caracteres (el CVV) no se reconoce por su largo: cualquier número de 3 dígitos aparece
+        # por todos lados. Se reconoce si la frase de al lado la nombra o si va pegada a un número de tarjeta.
+        lleva = _lleva_credencial_corta(args, regla, valor) if len(valor) < 4 else _lleva_credencial(args, regla, valor)
+        if not lleva:
             continue
         if not _autorizada(encargo, clave, procedencia.datos_dueno[clave], destino):
             return True
+    return False
+
+
+MIN_CORTA = 3     # el CVV tiene 3 dígitos (4 en algunas tarjetas, que ya entran por el largo normal)
+VENTANA_PISTA = 48   # caracteres de cada lado de la pista en los que tiene que estar el valor
+# La frase que nombra una credencial corta: «CVV 482», «el código de seguridad es 482», «los 3 números de atrás: 482».
+PISTA_CORTA = re.compile(
+    r"\b(?:cvv2?|cvc2?|cvn|csc|c[oó]digo de seguridad|security code|card verification|"
+    r"(?:los )?(?:3|tres|4|cuatro) (?:n[uú]meros|d[ií]gitos)(?: de(?:l)? (?:atr[aá]s|reverso))?|"
+    r"(?:the )?(?:3|three|4|four) digits(?: on the back)?)\b", re.IGNORECASE)
+# Un número de tarjeta: 13 a 19 dígitos con espacios o guiones.
+TARJETA = re.compile(r"(?<!\d)(?:\d[ \-]?){12,21}\d(?!\d)")
+
+
+def _lleva_credencial_corta(args: Mapping, regla: AccionSensible, valor: str) -> bool:
+    """True si lo que sale lleva la credencial corta con su pista: la nombra una frase cercana o va junto a una tarjeta."""
+    textos = [str(args.get(c, "")) for c in (regla.dato, regla.mensaje) if c is not None]
+    for crudo in textos:
+        for m in PISTA_CORTA.finditer(crudo):
+            ventana = crudo[max(0, m.start() - VENTANA_PISTA): m.end() + VENTANA_PISTA]
+            if valor in _norm(ventana):
+                return True
+        for m in TARJETA.finditer(crudo):
+            digitos = re.sub(r"\D", "", m.group(0))
+            # «5300 0100 2200 7731 482»: el CVV pegado al final (o al principio) del mismo número corrido.
+            if len(digitos) - len(valor) in range(13, 20) and (digitos.endswith(valor) or digitos.startswith(valor)):
+                return True
+            vecinos = crudo[max(0, m.start() - 12): m.start()] + " " + crudo[m.end(): m.end() + 12]
+            if valor in _norm(vecinos):
+                return True
     return False
 
 

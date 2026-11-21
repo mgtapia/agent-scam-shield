@@ -35,6 +35,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Optional, Union
 
+from scamshield.defenses.dominios import HERRAMIENTAS_WEB, datos_llevados, hosts_en
 from scamshield.defenses.layer2 import AccionSensible
 from scamshield.defenses.layer3 import confirmacion_beneficiario
 from scamshield.env.world import World
@@ -96,13 +97,16 @@ class _Escudo:
                  titulares: Optional[Mapping[str, Mapping[str, str]]],
                  lectoras: Optional[Iterable[str]],
                  sensibles: Optional[Mapping[str, Union[AccionSensible, str, Mapping[str, Any]]]],
-                 registro: Optional[Union[str, Path]]):
+                 registro: Optional[Union[str, Path]],
+                 dominios: Optional[Mapping[str, Any]] = None):
         declaradas = {**SENSIBLES_POR_DEFECTO}
         for nombre, regla in (sensibles or {}).items():
             declaradas[str(nombre)] = _a_regla(regla)
         self.config = Config(
             cuentas_inscritas={str(k): str(v) for k, v in (cuentas_inscritas or {}).items()},
             datos_dueno={str(k): str(v) for k, v in (datos_dueno or {}).items()},
+            dominios={str(k): [str(d) for d in (v if isinstance(v, (list, tuple, set)) else [v])]
+                      for k, v in (dominios or {}).items()},
             encargo=str(encargo or ""),
             sensibles=declaradas,
             acciones=dict(ACCION_POR_DEFECTO),
@@ -133,10 +137,15 @@ class _Escudo:
                 self.config.acciones[nombre] = "el pago"
             else:
                 self.config.sensibles.pop(nombre, None)  # una detección anterior con otros argumentos
-        return nombre in self.config.sensibles
+        if nombre in self.config.sensibles:
+            return True
+        # Un dato del dueño atado a un dominio que va a una página (#128): formulario o dirección con la clave.
+        return (nombre in HERRAMIENTAS_WEB or bool(hosts_en(args))) and bool(datos_llevados(self.guardia, args))
 
     # --- revisión --------------------------------------------------------------------------
     def _revisar(self, nombre: str, args: Mapping[str, Any]) -> Optional[Alerta]:
+        if nombre not in self.config.sensibles:   # llegó por la regla web: la capa 3 no aplica
+            return self.guardia.revisar_web(nombre, args, SERVIDOR)
         alerta = self.guardia.revisar(nombre, args, SERVIDOR)  # capa 2
         if alerta is not None:
             return alerta
@@ -301,7 +310,8 @@ def escudo(herramientas: Herramientas, cuentas_inscritas: Optional[Mapping[str, 
            titulares: Optional[Mapping[str, Mapping[str, str]]] = None,
            lectoras: Optional[Iterable[str]] = None,
            sensibles: Optional[Mapping[str, Union[AccionSensible, str, Mapping[str, Any]]]] = None,
-           registro: Optional[Union[str, Path]] = None) -> Union[list[Callable[..., Any]], dict[str, Callable[..., Any]]]:
+           registro: Optional[Union[str, Path]] = None,
+           dominios: Optional[Mapping[str, Any]] = None) -> Union[list[Callable[..., Any]], dict[str, Callable[..., Any]]]:
     """Envuelve las herramientas de tu agente con Grifter. Devuelve una lista o un dict, como la recibió.
 
     Args:
@@ -318,10 +328,13 @@ def escudo(herramientas: Herramientas, cuentas_inscritas: Optional[Mapping[str, 
             que no son sensibles.
         sensibles: herramientas de dinero o datos a agregar o cambiar, `{nombre: AccionSensible | "argumento"}`.
         registro: ruta de un JSONL con cada llamada sensible (permitida, retenida o aprobada).
+        dominios: dónde puede escribirse cada dato del dueño, `{"clave_banca": ["banca.bancolitoral.cl"]}`. Una
+            credencial (o un dato con dominio) que una herramienta manda a una página solo sale al dominio exacto:
+            ni homoglifos, ni punycode, ni subdominios no declarados, ni un candado HTTPS válido cuentan (#128).
     """
     interno = _Escudo(cuentas_inscritas=cuentas_inscritas, encargo=encargo, avisar=avisar,
                       datos_dueno=datos_dueno, titulares=titulares, lectoras=lectoras,
-                      sensibles=sensibles, registro=registro)
+                      sensibles=sensibles, registro=registro, dominios=dominios)
     if isinstance(herramientas, Mapping):
         return {str(n): interno.envolver(str(n), f) for n, f in herramientas.items()}
     return [interno.envolver(f.__name__, f) for f in herramientas]

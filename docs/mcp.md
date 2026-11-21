@@ -72,6 +72,19 @@ En el `.env` (los pone el dueño; los agentes no lo leen): `KAPSO_API_KEY`, `KAP
 
 **Límite honesto.** WhatsApp Business solo deja mandar mensajes que no son plantilla dentro de la ventana de 24 horas desde el último mensaje del usuario: si el dueño no ha escrito al número en el último día, hace falta una plantilla aprobada (no incluida aquí) o que escriba primero. Los cambios de política sin aprobadores no tienen botón por WhatsApp; con aprobadores pasan por el quórum.
 
+## Credenciales atadas a su dominio (#128)
+Un agente que navega no «comparte» la clave: la escribe en el formulario de una página, y si la página es un clon (el banco clonado por mensaje de texto, un homoglifo con HTTPS válido, un anuncio patrocinado) la clave sale igual. Grifter se comporta como un gestor de contraseñas: declara en `grifter.yaml` dónde puede escribirse cada dato.
+
+```yaml
+datos_dueno: {clave_banca: "...", tarjeta: "..."}
+dominios_oficiales:
+  clave_banca: [banca.bancolitoral.cl, movil.bancolitoral.cl]   # solo estos hosts exactos
+  tarjeta: [pagos.tiendanorte.cl]
+```
+Toda herramienta que manda texto a la web (`escribir_formulario`, `enviar_formulario`, `abrir_web` con la clave en la dirección, o cualquier otra con una dirección en sus argumentos) se revisa: si lo que sale es una credencial (o un dato con dominio) y el destino no es **exactamente** uno de sus dominios, se retiene y la alerta lo explica («Tu agente intentó escribir clave banca en banca.bancoIitoral.cl, no en banca.bancolitoral.cl. Se parece al oficial, pero no es el mismo»). No cuentan como el oficial los homoglifos, el punycode, los dominios parecidos ni los subdominios no declarados, y **el candado HTTPS tampoco**: un clon con certificado válido se retiene igual. Una credencial sin dominio declarado no sale a ninguna página. La alerta y el registro no llevan el valor de la clave. Cambiar `dominios_oficiales` es un cambio de política (huella, diff y quórum, como cualquier otro).
+
+Límite honesto: se revisa lo que el agente manda por estas herramientas. No cubre un dato dictado por teléfono ni uno escrito en el camino de una dirección sin parámetros, y no sabe si el dominio declarado es el correcto: eso lo declara el dueño.
+
 ## Claude Code
 Desde la raíz del repo, con el Python del venv:
 ```bash
