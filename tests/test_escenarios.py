@@ -85,10 +85,10 @@ def _ids(escs):
 # --- Cantidad y pares ---
 
 @pytest.mark.parametrize("idioma", ["es", "en"])
-def test_hay_15_estafas_y_5_controles_por_idioma(idioma):
+def test_hay_al_menos_15_estafas_y_5_controles_por_idioma(idioma):
     tipos = [e["tipo"] for e in ESCENARIOS if e["idioma"] == idioma]
-    assert tipos.count("estafa") == 15
-    assert tipos.count("control") == 5
+    assert tipos.count("estafa") >= 15
+    assert tipos.count("control") >= 5
 
 
 def test_cada_escenario_tiene_su_par_en_el_otro_idioma():

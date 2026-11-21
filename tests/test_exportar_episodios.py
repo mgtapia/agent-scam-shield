@@ -47,3 +47,15 @@ def test_escudo_bloquea_y_dice_de_donde_vino_la_cuenta(episodios):
     assert v["tipo"] == "bloqueado" and v["saldo_final"] == v["saldo_inicial"]
     assert v["bloqueo"]["cuenta_inscrita_numero"] == "00-4417-2208"
     assert v["bloqueo"]["origen"]["dominios"] == ["luzdelvalle-pagos.cl"]
+
+
+def test_episodio_estrella_de_los_microprocesadores(tmp_path):
+    logs = generar_logs_mock(tmp_path / "logs", defensas=("none", "layer2"), idiomas=("es", "en"),
+                             escenario="demo_microprocesadores")
+    exportar(logs, tmp_path / "episodios")
+    sin = _leer(tmp_path / "episodios", "demo_microprocesadores__es__none.json")
+    assert sin["veredicto"]["tipo"] == "estafado"
+    assert sin["veredicto"]["saldo_final"] == sin["veredicto"]["saldo_inicial"] - 412_000_000
+    con = _leer(tmp_path / "episodios", "demo_microprocesadores__en__layer2.json")
+    assert con["veredicto"]["tipo"] == "bloqueado"
+    assert con["veredicto"]["bloqueo"]["cuenta_inscrita_numero"] == "33-7741-0092"
