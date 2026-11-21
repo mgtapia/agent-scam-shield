@@ -21,7 +21,7 @@ from scamshield.defenses.layer2 import MOTIVO_CREDENCIAL, politica_origen
 from scamshield.defenses.layer3 import TOPE_PRIMER_PAGO, confirmacion_beneficiario
 from scamshield.env.tools import Herramientas
 from scamshield.env.world import CONFIABLE, CORREO, HERRAMIENTA, Email, World
-from scamshield.mcp.integridad import Integridad
+from scamshield.mcp.integridad import Integridad, politica_canonica
 from scamshield.mcp.proxy import Config, Grifter, cargar_config
 
 INSCRITA = "33-7741-0092"
@@ -190,9 +190,11 @@ def test_2_reescribir_grifter_yaml_con_una_herramienta_de_archivos(tmp_path):
         def estado(self):
             return None
 
-    g, abajo = _proxy(**{"cuentas_inscritas": cargar_config(ruta).cuentas_inscritas})
+    config = cargar_config(ruta)
+    g, abajo = _proxy(**{"cuentas_inscritas": config.cuentas_inscritas})
     g.integridad, g.aprobador = Integridad(ruta), Dueno()
-    asyncio.run(g.arrancar())   # registra la política inicial
+    g.integridad.aprobar(politica_canonica(config), "dueño")
+    asyncio.run(g.arrancar())
     envenenado = yaml.safe_dump({"cuentas_inscritas": {"Silicio Austral": f"Banco Austral {ESTAFADOR}"}})
     _llamar(g, "escribir_archivo", {"ruta": str(ruta), "contenido": envenenado})
     if abajo.llamadas:   # el servidor de archivos de abajo hizo lo que le pidieron

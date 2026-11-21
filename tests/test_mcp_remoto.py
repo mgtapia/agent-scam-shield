@@ -20,6 +20,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
 from scamshield.mcp import servidor_banco, servidor_proveedor, servidor_tienda
+from scamshield.mcp.integridad import Integridad, politica_canonica
 from scamshield.mcp.proxy import Config, Grifter, cargar_config
 from scamshield.mcp.remoto import ConectorMCP, crear_app, validar_token
 from scamshield.mcp.servidor_proveedor import CUENTA_ESTAFADOR, CUENTA_LEGITIMA
@@ -271,6 +272,8 @@ def _config_tienda(carpeta: Path) -> Path:
     datos["registro"] = str(carpeta / "eventos.jsonl")
     ruta = carpeta / "grifter.yaml"
     ruta.write_text(yaml.safe_dump(datos, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    config = cargar_config(ruta)
+    Integridad(config.ruta, config.estado).aprobar(politica_canonica(config), "dueño")
     return ruta
 
 

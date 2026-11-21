@@ -9,6 +9,7 @@ import asyncio
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 import mcp.types as types
 import pytest
@@ -58,12 +59,15 @@ def _escribir(ruta, **cambios):
     ruta.write_text(yaml.safe_dump(datos, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
 
-def _montar(tmp_path, aprobador=None, latidos=None, clave=None, **cambios):
-    """Un proxy con la política del archivo, vigilada. Devuelve (grifter, sesión de abajo, integridad, ruta)."""
+def _montar(tmp_path, aprobador=None, latidos=None, clave=None, *, aprobada=True, **cambios):
+    """Una política ya aprobada salvo que el caso pruebe explícitamente su inicialización."""
     ruta = tmp_path / "grifter.yaml"
     _escribir(ruta, **cambios)
-    integridad = Integridad(ruta, clave=clave)
-    g = Grifter(cargar_config(ruta), escalar=lambda a: False, integridad=integridad, aprobador=aprobador,
+    config = cargar_config(ruta)
+    integridad = Integridad(ruta, config.estado, clave=clave)
+    if aprobada:
+        integridad.aprobar(politica_canonica(config), "dueño de prueba")
+    g = Grifter(config, escalar=lambda a: False, integridad=integridad, aprobador=aprobador,
                 latido=(lambda evento, datos: latidos.append((evento, datos))) if latidos is not None else None)
     abajo = SesionFalsa()
     g.sesiones["abajo"] = abajo
@@ -86,13 +90,63 @@ def _eventos(tmp_path):
 
 # --- El primer arranque y la política que no cambia -----------------------------------------------
 
-def test_el_primer_arranque_registra_la_politica_inicial_y_avisa(tmp_path):
+def test_el_primer_arranque_sin_aprobacion_retiene_y_pide_la_politica_inicial(tmp_path):
     latidos = []
-    g, _, integridad, _ = _montar(tmp_path, latidos=latidos)
-    assert _arrancar(g) == "inicial"
-    assert integridad.estado() is not None and integridad.estado().por == "primer arranque"
+    aprobador = AprobadorFalso()
+    g, abajo, integridad, _ = _montar(tmp_path, aprobador, latidos=latidos, aprobada=False)
+    assert _arrancar(g) == "cambio"
+    assert integridad.estado() is None and not integridad.ruta_estado.exists()
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    assert len(aprobador.pedidos) == 1 and "política inicial" in aprobador.pedidos[0].texto
+    assert not aprobador.pedidos[0].ilegible and aprobador.pedidos[0].huella_nueva
     evento, datos = latidos[0]
-    assert evento == "arranque" and datos["politica"] == "inicial" and datos["capas"] == {"capa2": True}
+    assert evento == "arranque" and datos["politica"] == "cambio" and datos["capas"] == {"capa2": True}
+
+
+@pytest.mark.parametrize("clave", [None, "clave-hmac-de-prueba"])
+@pytest.mark.parametrize("estado", [None, "privado/aprobada.json"])
+def test_el_dueno_puede_aprobar_la_primera_politica_por_el_flujo_normal(tmp_path, clave, estado):
+    aprobador = AprobadorFalso()
+    g, abajo, integridad, _ = _montar(tmp_path, aprobador, clave=clave, estado=estado, aprobada=False)
+    assert _arrancar(g) == "cambio" and integridad.estado() is None
+    aprobador.respuesta = True
+    assert not _pagar(g, INSCRITA).isError and len(abajo.llamadas) == 1
+    assert integridad.estado().por == "dueño" and integridad.cambio() is None
+    firma = json.loads(integridad.ruta_estado.read_text(encoding="utf-8"))["firma"]
+    assert bool(firma) is bool(clave)
+
+
+def test_rechazar_la_primera_politica_no_crea_estado_ni_ejecuta_pagos(tmp_path):
+    aprobador = AprobadorFalso(False)
+    g, abajo, integridad, _ = _montar(tmp_path, aprobador, aprobada=False)
+    assert _arrancar(g) == "cambio"
+    assert "rechazó" in _pagar(g, INSCRITA).content[0].text
+    assert abajo.llamadas == [] and not integridad.ruta_estado.exists()
+
+
+def test_sin_canal_el_primer_arranque_no_crea_estado_ni_ejecuta_pagos(tmp_path):
+    g, abajo, integridad, _ = _montar(tmp_path, aprobada=False)
+    assert _arrancar(g) == "cambio"
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    assert not integridad.ruta_estado.exists()
+
+
+def test_la_aprobacion_inicial_no_autoriza_otro_yaml_cambiado_durante_la_respuesta(tmp_path):
+    class DuenoConCambio(AprobadorFalso):
+        async def estado(self):
+            _escribir(tmp_path / "grifter.yaml", capas={"capa2": False})
+            return True
+
+    dueno = DuenoConCambio()
+    g, abajo, integridad, _ = _montar(tmp_path, dueno, aprobada=False)
+    assert _arrancar(g) == "cambio"
+    assert integridad.estado() is None and not integridad.ruta_estado.exists()
+    assert abajo.llamadas == [] and len(dueno.pedidos) == 1
+    # El siguiente pedido muestra la política nueva; el sí anterior no la aprobó en silencio.
+    dueno.respuesta = None
+    dueno.estado = lambda: None
+    assert _pagar(g, INSCRITA).isError and len(dueno.pedidos) == 2
+    assert integridad.estado() is None and abajo.llamadas == []
 
 
 def test_con_la_politica_aprobada_el_pago_a_la_cuenta_inscrita_pasa_y_a_otra_se_retiene(tmp_path):
@@ -108,6 +162,69 @@ def test_un_segundo_arranque_con_la_misma_politica_dice_igual(tmp_path):
     latidos = []
     g2 = Grifter(cargar_config(ruta), integridad=Integridad(ruta), latido=lambda e, d: latidos.append((e, d)))
     assert asyncio.run(g2.arrancar()) == "igual" and latidos[0][1]["politica"] == "igual"
+
+
+@pytest.mark.parametrize("clave", [None, "hmac-ficticio"])
+@pytest.mark.parametrize("original,ataque", [
+    (None, "cambiar"), ("aprobada.json", "cambiar"), ("aprobada.json", "quitar"),
+    (None, "borrar"), ("aprobada.json", "borrar"),
+])
+def test_reiniciar_con_estado_cambiado_quitado_o_borrado_no_reinicializa_confianza(tmp_path, clave, original, ataque):
+    g, _, aprobada, ruta = _montar(tmp_path, clave=clave, estado=original)
+    assert _arrancar(g) == "igual"
+    anterior = aprobada.ruta_estado.read_bytes()
+    datos = {"capas": {"capa2": False}, "estado": original}
+    if ataque == "cambiar":
+        datos["estado"] = "estado-nuevo.json"
+    elif ataque == "quitar":
+        datos.pop("estado")
+    else:
+        aprobada.ruta_estado.unlink()
+    _escribir(ruta, **datos)
+    config = cargar_config(ruta)
+    integridad = Integridad(ruta, config.estado, clave=clave)
+    dueno = AprobadorFalso()
+    reinicio = Grifter(config, integridad=integridad, aprobador=dueno)
+    abajo = SesionFalsa()
+    reinicio.sesiones["abajo"] = abajo
+    reinicio.rutas["pagar"] = ("abajo", "pagar")
+    assert _arrancar(reinicio) == "cambio"
+    assert _pagar(reinicio, ESTAFADOR).isError and abajo.llamadas == []
+    assert integridad.estado() is None and not integridad.ruta_estado.exists()
+    assert len(dueno.pedidos) == 1 and not dueno.pedidos[0].ilegible
+    dueno.respuesta = False
+    assert "rechazó" in _pagar(reinicio, ESTAFADOR).content[0].text
+    assert not integridad.ruta_estado.exists()
+    if ataque != "borrar":
+        assert aprobada.ruta_estado.read_bytes() == anterior
+
+
+def test_cambiar_estado_en_proceso_es_un_cambio_de_huella_que_retiene(tmp_path):
+    dueno = AprobadorFalso()
+    g, abajo, integridad, ruta = _montar(tmp_path, dueno)
+    antes = integridad.estado().politica
+    _escribir(ruta, estado="otro-estado.json")
+    _, despues, _ = integridad.leer_actual()
+    assert huella(antes) != huella(despues)
+    assert diferencias(antes, despues) == ["~ cambió la ruta del registro de la política aprobada"]
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+
+
+def test_una_migracion_de_estado_firmado_necesita_aprobar_la_nueva_ruta(tmp_path):
+    _, _, anterior, ruta = _montar(tmp_path, clave="hmac-ficticio", estado="antes.json")
+    destino = tmp_path / "despues.json"
+    destino.write_bytes(anterior.ruta_estado.read_bytes())
+    _escribir(ruta, estado="despues.json")
+    config = cargar_config(ruta)
+    integridad = Integridad(ruta, config.estado, clave="hmac-ficticio")
+    dueno = AprobadorFalso()
+    g = Grifter(config, integridad=integridad, aprobador=dueno)
+    assert _arrancar(g) == "cambio"
+    assert dueno.pedidos[0].lineas == ["~ cambió la ruta del registro de la política aprobada"]
+    dueno.respuesta = True
+    assert asyncio.run(g._politica_pendiente()) == ""
+    assert integridad.estado().por == "dueño" and integridad.cambio() is None
+    assert Integridad(ruta, destino, clave="hmac-ficticio").arrancar() == "igual"
 
 
 # --- Reescribir grifter.yaml -----------------------------------------------------------------------
@@ -297,6 +414,49 @@ def test_las_rutas_de_semillas_con_doble_punto_no_se_fusionan_con_la_ruta_direct
     assert diferencias(con_doble_punto, directa) == ["~ cambió la ruta de las credenciales de aprobación"]
 
 
+@pytest.mark.parametrize("nueva_ruta", ["privado/otras-aprobaciones.jsonl", None])
+def test_cambiar_o_quitar_la_ruta_del_registro_de_aprobaciones_cambia_la_huella_y_retiene(tmp_path, nueva_ruta):
+    aprobador = AprobadorFalso()
+    g, abajo, integridad, ruta = _montar(tmp_path, aprobador,
+                                       registro_aprobaciones="privado/aprobaciones.jsonl")
+    _arrancar(g)
+    antes = integridad.estado().politica
+    _escribir(ruta, registro_aprobaciones=nueva_ruta)
+    _, despues, error = integridad.leer_actual()
+    assert error == "" and huella(antes) != huella(despues)
+    assert diferencias(antes, despues) == ["~ cambió la ruta del registro de aprobaciones"]
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    assert "privado" not in aprobador.pedidos[0].texto
+
+
+def test_la_ruta_del_registro_de_aprobaciones_se_normaliza_sin_leer_sus_datos(tmp_path, monkeypatch):
+    leer = Path.read_text
+
+    def sin_registro(archivo, *a, **kw):
+        assert archivo.suffix != ".jsonl", "la huella no debe leer el registro de aprobaciones"
+        return leer(archivo, *a, **kw)
+
+    monkeypatch.setattr(Path, "read_text", sin_registro)
+    politicas = []
+    for carpeta in (tmp_path / "original", tmp_path / "movida"):
+        carpeta.mkdir()
+        ruta = carpeta / "grifter.yaml"
+        _escribir(ruta, registro_aprobaciones="privado/../votos/aprobaciones.jsonl")
+        politicas.append(politica_canonica(cargar_config(ruta)))
+    assert politicas[0]["registro_aprobaciones"] == "privado/../votos/aprobaciones.jsonl"
+    assert huella(politicas[0]) == huella(politicas[1])
+    directa = politica_canonica(_config({**BASE, "registro_aprobaciones": "votos/aprobaciones.jsonl"}))
+    assert huella(politicas[0]) != huella(directa)
+    assert diferencias(politicas[0], directa) == ["~ cambió la ruta del registro de aprobaciones"]
+
+
+def test_la_ruta_por_defecto_del_registro_de_aprobaciones_es_canonica():
+    implicita = politica_canonica(_config(BASE))
+    explicita = politica_canonica(_config({**BASE, "registro_aprobaciones": "grifter_aprobaciones.jsonl"}))
+    assert implicita["registro_aprobaciones"] == "grifter_aprobaciones.jsonl"
+    assert huella(implicita) == huella(explicita)
+
+
 @pytest.mark.parametrize("cambio,diff", [
     ({"url": "https://otro.example/mcp?token=otro-secreto"}, "URL"),
     ({"headers": {"Authorization": "Bearer otro-secreto"}}, "cabeceras HTTP"),
@@ -409,7 +569,7 @@ def test_si_el_latido_falla_el_proxy_sigue_funcionando(tmp_path):
 
     g, abajo, _, _ = _montar(tmp_path)
     g.latido = roto
-    assert _arrancar(g) == "inicial" and not _pagar(g, INSCRITA).isError
+    assert _arrancar(g) == "igual" and not _pagar(g, INSCRITA).isError
 
 
 # --- Solo Grifter tiene la credencial del banco ----------------------------------------------------
@@ -492,6 +652,33 @@ def telegram():
 
 def _entorno(telegram):
     return {"TELEGRAM_BOT_TOKEN": TOKEN, "TELEGRAM_CHAT_ID": CHAT, "TELEGRAM_API_BASE": telegram.url}
+
+
+@pytest.mark.parametrize("decision", ["ap", "re"])
+def test_el_dueno_puede_aprobar_o_rechazar_la_primera_politica_por_telegram(tmp_path, telegram, decision):
+    ganchos = ganchos_desde_entorno(_entorno(telegram))
+    g, abajo, integridad, _ = _montar(tmp_path, ganchos.aprobador, clave="hmac-ficticio", aprobada=False)
+    assert _arrancar(g) == "cambio" and integridad.estado() is None
+    envio = telegram.de("sendMessage")[-1]
+    assert envio["chat_id"] == CHAT and "política inicial" in envio["text"]
+    assert RUT not in envio["text"] and CLAVE_BANCO not in envio["text"]
+    telegram.apretar(decision)
+    resultado = _pagar(g, INSCRITA)
+    if decision == "ap":
+        assert not resultado.isError and len(abajo.llamadas) == 1
+        assert integridad.estado().por == "dueño" and integridad.cambio() is None
+    else:
+        assert resultado.isError and abajo.llamadas == [] and not integridad.ruta_estado.exists()
+
+
+def test_otro_chat_no_puede_aprobar_la_primera_politica(tmp_path, telegram):
+    ganchos = ganchos_desde_entorno(_entorno(telegram))
+    g, abajo, integridad, _ = _montar(tmp_path, ganchos.aprobador, aprobada=False)
+    _arrancar(g)
+    telegram.apretar("ap")
+    telegram.novedades[-1]["callback_query"]["message"]["chat"]["id"] = 999
+    assert _pagar(g, INSCRITA).isError and abajo.llamadas == []
+    assert not integridad.ruta_estado.exists()
 
 
 def test_el_cambio_de_politica_llega_a_telegram_con_el_diff_y_dos_botones(tmp_path, telegram):

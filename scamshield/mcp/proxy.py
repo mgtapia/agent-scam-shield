@@ -11,8 +11,8 @@ quiere, el texto del encargo. Los clientes MCP no exponen el mensaje del usuario
 que sin `encargo` la regla es conservadora: solo vale como confiable lo inscrito. Lo que escribe el
 agente en los argumentos nunca vuelve confiable un valor.
 
-Integridad (#102): Grifter guarda la huella de la política que aprobó el dueño. Si `grifter.yaml` cambia, retiene
-todo lo sensible y le manda el diff al dueño hasta que apruebe; y avisa (latido) al arrancar y al detenerse.
+Integridad (#102): Grifter guarda la huella de la política que aprobó el dueño. Si falta o `grifter.yaml` cambia,
+retiene las llamadas y le manda el diff al dueño hasta que apruebe; y avisa al arrancar y al detenerse.
 Ver `integridad.py`.
 
 Con `mandato` en `grifter.yaml` (#103), un pago que se desvía de lo que aprobó el dueño (monto, producto,
@@ -38,7 +38,7 @@ import re
 import sys
 import time
 from contextlib import AsyncExitStack
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Mapping, Optional, Protocol, Union
@@ -56,7 +56,8 @@ from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
 from .aprobaciones import (APROBADA, PENDIENTE, Aprobaciones, Aprobador, RegistroEncadenado, Solicitud,
                            aprobadores_de, cargar_semillas)
 from ..defenses.dominios import HERRAMIENTAS_WEB, datos_llevados, hosts_en, revisar_web
-from .integridad import ENTORNO_CLAVE, Cambio, Integridad, corta
+from .integridad import ENTORNO_CLAVE, Cambio, Integridad, IntegridadError, corta, politica_canonica
+from .integridad import huella as huella_politica
 from .cliente_http import conectar_remoto
 
 log = logging.getLogger("grifter")
@@ -248,6 +249,8 @@ class Quorum(Protocol):
 
     def reconfigurar(self, politica: Mapping[str, Any]) -> None:
         """Pasa a los aprobadores y el quórum de esa política (cuando el dueño aprobó un cambio)."""
+
+    def aprobador_de_politica(self) -> AprobadorPolitica: ...
 
 
 def _es_pago(herramienta: str, args: Mapping[str, Any]) -> bool:
@@ -491,11 +494,20 @@ def _error(mensaje: str) -> types.CallToolResult:
 class Grifter:
     def __init__(self, config: Config, escalar: Escalar = escalar_por_defecto,
                  integridad: Optional[Integridad] = None, aprobador: Optional[AprobadorPolitica] = None,
-                 latido: Optional[Latido] = None, quorum: Optional[Quorum] = None):
+                 latido: Optional[Latido] = None, quorum: Optional[Quorum] = None,
+                 crear_quorum: Optional[Callable[[], Optional[Quorum]]] = None):
         self.config = config
         self.guardia = Guardia(config)
         self.escalar = escalar
         self.integridad, self.aprobador, self.latido, self.quorum = integridad, aprobador, latido, quorum
+        self._aprobador_dueno, self._crear_quorum = aprobador, crear_quorum
+        self._quorum_pendiente = False
+        self._reinicio_necesario = False
+        self._conexion_iniciada = False
+        self._pedidos_conexion: Optional[asyncio.Queue] = None
+        self._tarea_conexiones: Optional[asyncio.Task] = None
+        if crear_quorum is not None and quorum is not None:
+            self.aprobador = quorum.aprobador_de_politica()
         self._pagos: dict[tuple[str, str, float], str] = {}   # pago grande pendiente -> id de su solicitud
         self._pedido: Optional[str] = None      # la huella cuyo cambio ya se le mandó al dueño
         self._rechazado: Optional[str] = None   # la huella que el dueño rechazó
@@ -508,7 +520,68 @@ class Grifter:
         self.bloqueadas: dict[str, str] = {}
 
     async def conectar(self, pila: AsyncExitStack, errlog=None) -> None:
-        """Conecta cada servidor de abajo (stdio o HTTP) y junta sus herramientas.
+        """Conecta solo una política aprobada; sin ella no inicia procesos ni envía credenciales.
+
+        La tarea conserva y cierra sus propios contextos MCP. Así un listado posterior puede reintentar
+        tras la aprobación sin abrir y cerrar los contextos de AnyIO desde tareas distintas.
+        """
+        if self._tarea_conexiones is None:
+            self._pedidos_conexion = asyncio.Queue()
+            self._tarea_conexiones = asyncio.create_task(self._gestionar_conexiones(errlog))
+            pila.push_async_callback(self._cerrar_conexiones)
+        await self._intentar_conexion()
+
+    async def _intentar_conexion(self) -> None:
+        if self._tarea_conexiones is None or self._conexion_iniciada:
+            return
+        if self._tarea_conexiones.done():
+            await self._tarea_conexiones
+            return
+        respuesta = asyncio.get_running_loop().create_future()
+        await self._pedidos_conexion.put(respuesta)
+        await respuesta
+
+    async def _gestionar_conexiones(self, errlog) -> None:
+        async with AsyncExitStack() as conexiones:
+            while True:
+                respuesta = await self._pedidos_conexion.get()
+                try:
+                    if not self._conexion_iniciada:
+                        retenida = await self._politica_pendiente(antes_de_conectar=True)
+                        if retenida:
+                            log.warning("no se conectan los servidores: %s", retenida)
+                        else:
+                            anteriores = (dict(self.sesiones), dict(self.rutas),
+                                          list(self.herramientas), dict(self.bloqueadas))
+                            try:
+                                async with AsyncExitStack() as intento:
+                                    await self._conectar_aprobados(intento, errlog)
+                                    conexiones.push_async_callback(intento.pop_all().aclose)
+                            except BaseException:
+                                # Un intento parcial no deja sesiones ni herramientas para el siguiente.
+                                self.sesiones, self.rutas, self.herramientas, self.bloqueadas = anteriores
+                                raise
+                            self._conexion_iniciada = True
+                except Exception as e:
+                    if not respuesta.done():
+                        respuesta.set_exception(e)
+                else:
+                    if not respuesta.done():
+                        respuesta.set_result(None)
+
+    async def _cerrar_conexiones(self) -> None:
+        if self._tarea_conexiones is not None:
+            self._tarea_conexiones.cancel()
+            try:
+                await self._tarea_conexiones
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self._tarea_conexiones = None
+                self._pedidos_conexion = None
+
+    async def _conectar_aprobados(self, pila: AsyncExitStack, errlog=None) -> None:
+        """Conecta cada servidor aprobado de abajo (stdio o HTTP) y junta sus herramientas.
 
         Un MCP remoto que no responde al arrancar queda fuera (falla cerrada: sus herramientas no se
         exponen y nada se le reenvía) y se anota en el registro. Un servidor stdio que no arranca sí
@@ -545,9 +618,20 @@ class Grifter:
             self._fijar(expuesto, tool)
 
     async def llamar(self, nombre: str, args: dict[str, Any]) -> types.CallToolResult:
+        await self._intentar_conexion()
         if nombre not in self.rutas:
             return _error(f"Grifter no conoce la herramienta {nombre}.")
         servidor, original = self.rutas[nombre]
+        # Las reglas de un YAML pendiente no pueden decidir qué llamadas evitan la revisión de integridad.
+        try:
+            retenida = await self._politica_pendiente()
+            if retenida:
+                self._registrar("retenido_por_politica", herramienta=original, servidor=servidor, args=args)
+                return _error(f"Grifter retuvo la llamada a {original}: {retenida}")
+        except Exception as e:
+            log.exception("error al verificar la política antes de %s", original)
+            return _error(f"Grifter retuvo la llamada a {original}: no pudo verificar la política "
+                          f"({type(e).__name__}). Por seguridad no se reenvía.")
         bloqueo = await self._herramienta_bloqueada(nombre, servidor, original)   # fijación (#103)
         if bloqueo is not None:
             return bloqueo
@@ -563,10 +647,6 @@ class Grifter:
         web = ((original in HERRAMIENTAS_WEB or bool(hosts_en(args))) and bool(datos_llevados(self.guardia, args)))
         if original in self.config.sensibles or anidados or web:
             try:
-                retenida = await self._politica_pendiente()
-                if retenida:
-                    self._registrar("retenido_por_politica", herramienta=original, servidor=servidor, args=args)
-                    return _error(f"Grifter retuvo la llamada a {original}: {retenida}")
                 alerta = None
                 if self.config.capas.get("capa2", True):
                     if original in self.config.sensibles:
@@ -718,7 +798,7 @@ class Grifter:
                       f"({ap.progreso(s.id)}).")
 
     # --- Integridad (#102) ---------------------------------------------------------------------------
-    async def _politica_pendiente(self) -> str:
+    async def _politica_pendiente(self, *, antes_de_conectar: bool = False) -> str:
         """Vacío si la política es la que aprobó el dueño; si no, el motivo de la retención.
 
         La primera vez que ve un cambio le manda el diff al dueño; después solo pregunta si ya respondió. Si
@@ -726,8 +806,30 @@ class Grifter:
         """
         if self.integridad is None:
             return ""
+        if self._reinicio_necesario:
+            return ("la configuración o las conexiones en memoria no coinciden con la política aprobada; "
+                    "reinicia el proxy para cargarla y usar sus conexiones.")
+        if self._quorum_pendiente:
+            try:
+                quorum = self._crear_quorum()
+            except Exception:
+                log.exception("no se pudo cargar el quórum de la política aprobada")
+                return "no se pudo cargar el quórum de la política aprobada; se retiene hasta recuperarlo."
+            self.quorum = quorum
+            self.aprobador = quorum.aprobador_de_politica() if quorum is not None else self._aprobador_dueno
+            self._quorum_pendiente = False
         cambio = self.integridad.cambio()
         if cambio is None:
+            if antes_de_conectar:
+                # Restaurar el YAML no cambia la configuración que se cargó al arrancar. Antes de
+                # abrir procesos o enviar cabeceras, verifica el objeto que usará la conexión contra
+                # el registro aprobado (incluida su firma), no solo el archivo restaurado.
+                aprobada = self.integridad.estado()
+                if aprobada is None:
+                    return "no se pudo verificar el registro de la política aprobada; se retienen las conexiones."
+                if huella_politica(politica_canonica(self.config)) != aprobada.huella:
+                    self._reinicio_necesario = True
+                    return await self._politica_pendiente()
             self._pedido = self._rechazado = None
             return ""
         clave = cambio.huella_nueva or f"ilegible:{cambio.ilegible}"
@@ -742,29 +844,46 @@ class Grifter:
         if decision is True and not cambio.ilegible:
             config, politica, _ = self.integridad.leer_actual()
             if config is not None and politica is not None:
+                if huella_politica(politica) != cambio.huella_nueva:
+                    self._pedido = None
+                    return "la política cambió mientras se aprobaba; necesita una nueva aprobación del dueño."
                 self.integridad.aprobar(politica, "dueño")
                 self.config.cuentas_inscritas = dict(config.cuentas_inscritas)
                 self.config.datos_dueno, self.config.encargo = dict(config.datos_dueno), config.encargo
+                self.config.dominios = {k: list(v) for k, v in config.dominios.items()}
+                if self.config.servidores != config.servidores:
+                    self._reinicio_necesario = self._conexion_iniciada or bool(self.sesiones)
+                    self.config.servidores = list(config.servidores)
                 self.config.sensibles, self.config.acciones = dict(config.sensibles), dict(config.acciones)
                 self.config.capas = dict(config.capas)
                 self.config.aprobadores, self.config.quorum = list(config.aprobadores), config.quorum
                 self.config.umbral_doble = config.umbral_doble
+                self.config.semillas = config.semillas
+                self.config.registro_aprobaciones = config.registro_aprobaciones
+                self.config.estado = config.estado
                 # #103: un mandato o unas fijaciones nuevas valen desde que el dueño las aprueba. Las herramientas
                 # bloqueadas se vuelven a revisar contra las fijaciones nuevas en la próxima llamada.
                 self.config.mandato = dict(config.mandato)
                 self.config.herramientas_fijadas = dict(config.herramientas_fijadas)
                 self.bloqueadas.clear()
                 self.guardia.actualizar(self.config)
-                if self.quorum is not None:
+                if self._crear_quorum is not None:
+                    self._quorum_pendiente = True
+                    self._pagos.clear()
+                elif self.quorum is not None:
                     self.quorum.reconfigurar(politica)
                 self._pedido = None
                 self._registrar("politica_aprobada", huella=corta(cambio.huella_nueva))
+                if antes_de_conectar or self._quorum_pendiente or self._reinicio_necesario:
+                    return await self._politica_pendiente(antes_de_conectar=antes_de_conectar)
                 return ""
         if decision is False:
             self._rechazado = clave
             self._registrar("politica_rechazada", huella=corta(cambio.huella_nueva))
             return "el dueño rechazó el cambio de la política; restaura grifter.yaml."
-        return ("la política (grifter.yaml) cambió desde la última que aprobó el dueño y espera su aprobación. "
+        motivo = ("no tiene un registro aprobado" if not cambio.huella_anterior
+                  else "cambió desde la última que aprobó el dueño")
+        return (f"la política (grifter.yaml) {motivo} y espera su aprobación. "
                 "Hasta entonces no sale ningún pago ni envío de datos.")
 
     def _datos_latido(self) -> dict[str, Any]:
@@ -827,6 +946,9 @@ class Grifter:
 
         @servidor.list_tools()
         async def listar() -> list[types.Tool]:
+            await self._intentar_conexion()
+            if self._reinicio_necesario:
+                return []
             return self.herramientas
 
         @servidor.call_tool(validate_input=False)
@@ -838,8 +960,9 @@ class Grifter:
 
 async def correr(config: Config, escalar: Escalar = escalar_por_defecto,
                  integridad: Optional[Integridad] = None, aprobador: Optional[AprobadorPolitica] = None,
-                 latido: Optional[Latido] = None, quorum: Optional[Quorum] = None) -> None:
-    grifter = Grifter(config, escalar, integridad, aprobador, latido, quorum)
+                 latido: Optional[Latido] = None, quorum: Optional[Quorum] = None,
+                 crear_quorum: Optional[Callable[[], Optional[Quorum]]] = None) -> None:
+    grifter = Grifter(config, escalar, integridad, aprobador, latido, quorum, crear_quorum)
     async with AsyncExitStack() as pila:
         await grifter.conectar(pila)
         await grifter.arrancar()
@@ -849,6 +972,31 @@ async def correr(config: Config, escalar: Escalar = escalar_por_defecto,
                 await servidor.run(read, write, servidor.create_initialization_options())
         finally:
             await grifter.detener()
+
+
+def _quorum_aprobado(config: Config, integridad: Optional[Integridad], modulo: Any,
+                     canal: Any, entorno: Mapping[str, str]) -> Optional[Quorum]:
+    """El YAML pendiente nunca elige quién aprueba ni las semillas que validan su aprobación."""
+    if integridad is None:
+        return None
+    try:
+        estado = integridad.estado()
+    except IntegridadError:
+        return None
+    if estado is None or not estado.politica.get("aprobadores"):
+        return None
+    lista, numero = aprobadores_de(estado.politica)
+    ruta_semillas = estado.politica.get("semillas", "")
+    semillas = Path(ruta_semillas) if ruta_semillas else None
+    if semillas is not None and not semillas.is_absolute():
+        semillas = integridad.ruta_config.parent / semillas
+    ruta_registro = estado.politica.get("registro_aprobaciones", "")
+    registro = Path(ruta_registro) if ruta_registro else None
+    if registro is not None and not registro.is_absolute():
+        registro = integridad.ruta_config.parent / registro
+    aprobada = replace(config, aprobadores=lista, quorum=numero, semillas=semillas,
+                       registro_aprobaciones=registro)
+    return modulo.quorum_desde_entorno(aprobada, integridad, canal, entorno)
 
 
 def main(argv: Optional[list[str]] = None) -> None:
@@ -867,12 +1015,17 @@ def main(argv: Optional[list[str]] = None) -> None:
         sys.stderr.reconfigure(encoding="utf-8")
     logging.basicConfig(level=logging.WARNING, stream=sys.stderr, format="grifter: %(message)s")
     log.setLevel(logging.INFO)
-    config = cargar_config(args.config)
-    if args.encargo:
-        config.encargo = args.encargo
+    def cargar_efectiva(ruta):
+        actual = cargar_config(ruta)
+        if args.encargo:
+            actual.encargo = args.encargo
+        return actual
+
+    config = cargar_efectiva(args.config)
     integridad = None
     if config.ruta is not None:
-        integridad = Integridad(config.ruta, config.estado, clave=os.environ.get(ENTORNO_CLAVE) or None)
+        integridad = Integridad(config.ruta, config.estado, cargar=cargar_efectiva,
+                                clave=os.environ.get(ENTORNO_CLAVE) or None)
     escalar, aprobador, latido = escalar_por_defecto, None, None
     # Canal del dueño: Telegram o WhatsApp (Kapso). GRIFTER_CANAL elige; sin eso, el que tenga llaves (Telegram primero).
     # Los imports son tardíos: el proxy no depende de la demo.
@@ -891,17 +1044,18 @@ def main(argv: Optional[list[str]] = None) -> None:
 
             servir_webhook(canal.canal, int(os.environ.get("KAPSO_WEBHOOK_PORT") or modulo.PUERTO_POR_DEFECTO))
     quorum = None
+    crear_quorum = None
     if canal is not None:
         escalar, aprobador, latido = canal.escalar, canal.aprobador, canal.latido
-        if config.aprobadores:   # con aprobadores, los cambios de política y los pagos grandes piden quórum
-            quorum = modulo.quorum_desde_entorno(config, integridad, canal.canal, os.environ)
-            aprobador = quorum.aprobador_de_politica()
+        def crear_quorum():
+            return _quorum_aprobado(config, integridad, modulo, canal.canal, os.environ)
+        quorum = crear_quorum()
     if args.http:   # el mismo Grifter, con sus ganchos, detrás de /mcp (#105)
         from .remoto import servir
         servir(config, host=args.host, puerto=args.puerto,
-               grifter=Grifter(config, escalar, integridad, aprobador, latido, quorum))
+               grifter=Grifter(config, escalar, integridad, aprobador, latido, quorum, crear_quorum))
         return
-    asyncio.run(correr(config, escalar, integridad, aprobador, latido, quorum))
+    asyncio.run(correr(config, escalar, integridad, aprobador, latido, quorum, crear_quorum))
 
 
 if __name__ == "__main__":
