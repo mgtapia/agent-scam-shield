@@ -30,6 +30,8 @@ body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--f
 /* La frase grande de cada acto: la primera se reemplaza por la segunda en el mismo lugar */
 .md-frase { display: grid; margin: 0; min-height: 72px; font-size: 64px; line-height: 72px; font-weight: var(--p-fuerte); letter-spacing: -0.02em; }
 .md-frase > span { grid-area: 1 / 1; max-width: 1640px; }
+/* Los titulares se parten en líneas parejas: sin una palabra sola abajo, con cualquier letra (?letra=) */
+.md-frase > span { text-wrap: balance; }
 .md-frase-2 { color: var(--texto); }
 
 .md-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 64px; align-items: start; }
@@ -178,7 +180,9 @@ body.md-aut .md-a1 .md-motivo span:not(.md-quien) { font-size: 20px; line-height
 .md-pablo .md-pantalla { border-radius: 36px; }
 .md-pablo .md-camara { top: 10px; width: 12px; height: 12px; margin-left: -6px; }
 .md-pablo .md-estado { height: 34px; padding: 0 20px; font-size: 13px; }
-.md-pablo-de { position: absolute; left: 0; right: 0; top: -44px; margin: 0; text-align: center; color: var(--texto-2); font-size: 22px; line-height: 28px; }
+.md-pablo-de { position: absolute; left: 0; right: 0; top: -54px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--texto-2); font-size: 22px; line-height: 28px; }
+/* La foto de Pablo junto a su nombre, redonda como la del nieto (si falta el archivo, se quita y queda el nombre) */
+.md-foto-pablo { width: 40px; height: 40px; flex: none; border-radius: 50%; object-fit: cover; display: block; }
 .md-wa { position: absolute; inset: 44px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
 .md-wa-cab { margin: 0 0 6px; display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: var(--linea); font-size: 17px; line-height: 22px; font-weight: var(--p-fuerte); }
 .md-wa-cab .md-ic { width: 22px; height: 22px; color: var(--verde); }
@@ -186,6 +190,9 @@ body.md-aut .md-a1 .md-motivo span:not(.md-quien) { font-size: 20px; line-height
 .md-wa-msg p { margin: 0; font-size: 16px; line-height: 22px; }
 .md-wa-botones { display: grid; gap: 6px; }
 .md-wa-b { position: relative; overflow: hidden; display: block; padding: 10px; text-align: center; border: var(--linea); background: var(--superficie); color: var(--verde); font-size: 15px; line-height: 20px; font-weight: var(--p-fuerte); }
+/* «Solicitar código» es el camino de aprobar: borde y fondo verdes y un check, frente a «Rechazar» */
+.md-wa-aprobar { display: flex; align-items: center; justify-content: center; gap: 6px; border-color: var(--verde); background: color-mix(in srgb, var(--verde) 12%, var(--superficie)); }
+.md-wa-aprobar .md-ic { width: 18px; height: 18px; }
 
 /* Acto 2: un caso a la vez. Tres líneas que se leen desde el fondo de la sala; lo clave, resaltado */
 .md-tres { margin: 0; padding: 0; list-style: none; display: grid; align-content: start; gap: 40px; }

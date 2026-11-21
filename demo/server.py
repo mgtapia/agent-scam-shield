@@ -52,8 +52,9 @@ ACTIVOS_PUBLICOS = frozenset({
     "index.html", "estilos.css", "favicon.svg", "app.js", "graficos.js", "duelo.js",
     "operaciones.js", "vivo_simulado.js", "resultados.js", "resultados_vista.js",
     "resultados.json", "instalar.js", "demo.html", "demo.css", "demo.js",
-    # El retrato del nieto que demo.js pone en la llamada del acto 1 (los mp3 van por el montaje /audio).
-    "img/nieto.svg", "img/nieto.jpg", "img/abuela.jpg", "img/abuela.svg",
+    # Los retratos que demo.js pone en el acto 1: el nieto y la abuela en la llamada y Pablo en su teléfono (los mp3 van
+    # por el montaje /audio).
+    "img/nieto.svg", "img/nieto.jpg", "img/abuela.jpg", "img/abuela.svg", "img/pablo.jpg",
 })
 
 

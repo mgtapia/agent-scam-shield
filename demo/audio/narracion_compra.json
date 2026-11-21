@@ -2,124 +2,69 @@
   "escenario": "demo_narracion_compra",
   "idioma": "es",
   "origen": "narración",
-  "texto": "[warm] Otra trampa, en una compra. Aprobaste cuatrocientos doce mil pesos… y la tienda cobra cuatro millones ciento veinte mil. Grifter retiene el pago. Solo lo que aprobaste.",
+  "texto": "[warm] Aprobaste cuatrocientos doce mil y te cobran diez veces más. Grifter lo frena.",
   "voz": "Ignacio - Natural Chilean, unhurried pace (biblioteca de ElevenLabs)",
   "voz_id": "NDx3GTwfaeouBvRv4NrB",
   "clase_de_voz": "professional",
   "modelo": "eleven_v3",
   "formato": "mp3_44100_64",
+  "velocidad": 1.12,
   "sintetica": true,
   "aviso": "Voz sintética de la biblioteca compartida de ElevenLabs, publicada por su autor para texto a voz. No imita a nadie del proyecto ni a ninguna persona de la demo.",
-  "caracteres": 175,
-  "duracion_s": 11.76,
+  "caracteres": 85,
+  "duracion_s": 5.28,
   "palabras": [
     [
-      "Otra",
+      "Aprobaste",
       0.14
     ],
     [
-      "trampa,",
-      0.293
-    ],
-    [
-      "en",
-      0.933
-    ],
-    [
-      "una",
-      1.1
-    ],
-    [
-      "compra.",
-      1.337
-    ],
-    [
-      "Aprobaste",
-      1.92
-    ],
-    [
       "cuatrocientos",
-      2.651
+      0.697
     ],
     [
       "doce",
-      3.787
+      1.493
     ],
     [
       "mil",
-      4.16
-    ],
-    [
-      "pesos…",
-      4.507
+      1.76
     ],
     [
       "y",
-      5.24
+      2.12
     ],
     [
-      "la",
-      5.333
+      "te",
+      2.293
     ],
     [
-      "tienda",
-      5.493
+      "cobran",
+      2.46
     ],
     [
-      "cobra",
-      5.88
+      "diez",
+      3.02
     ],
     [
-      "cuatro",
-      6.331
+      "veces",
+      3.433
     ],
     [
-      "millones",
-      6.924
-    ],
-    [
-      "ciento",
-      7.44
-    ],
-    [
-      "veinte",
-      7.973
-    ],
-    [
-      "mil.",
-      8.4
+      "más.",
+      3.68
     ],
     [
       "Grifter",
-      8.853
-    ],
-    [
-      "retiene",
-      9.44
-    ],
-    [
-      "el",
-      9.787
-    ],
-    [
-      "pago.",
-      9.92
-    ],
-    [
-      "Solo",
-      10.528
+      4.133
     ],
     [
       "lo",
-      10.747
+      4.613
     ],
     [
-      "que",
-      10.84
-    ],
-    [
-      "aprobaste.",
-      11.0
+      "frena.",
+      4.76
     ]
   ]
 }

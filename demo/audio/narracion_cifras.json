@@ -2,152 +2,93 @@
   "escenario": "demo_narracion_cifras",
   "idioma": "es",
   "origen": "narración",
-  "texto": "[warm] Y lo medimos. Ciento cincuenta estafas, de treinta y dos tipos. Con Grifter completo, no pasa ninguna. Un atacante que aprende lo intentó cinco mil doscientas ochenta veces… y ninguna cruzó la capa dos.",
+  "texto": "[warm] Lo medimos: ciento cincuenta estafas, pasan cero. Cinco mil doscientos ochenta intentos de un atacante que aprende: ninguno cruza.",
   "voz": "Ignacio - Natural Chilean, unhurried pace (biblioteca de ElevenLabs)",
   "voz_id": "NDx3GTwfaeouBvRv4NrB",
   "clase_de_voz": "professional",
   "modelo": "eleven_v3",
   "formato": "mp3_44100_64",
+  "velocidad": 1.12,
   "sintetica": true,
   "aviso": "Voz sintética de la biblioteca compartida de ElevenLabs, publicada por su autor para texto a voz. No imita a nadie del proyecto ni a ninguna persona de la demo.",
-  "caracteres": 209,
-  "duracion_s": 12.48,
+  "caracteres": 137,
+  "duracion_s": 8.64,
   "palabras": [
     [
-      "Y",
-      0.07
+      "Lo",
+      0.142
     ],
     [
-      "lo",
-      0.107
-    ],
-    [
-      "medimos.",
+      "medimos:",
       0.22
     ],
     [
-      "Ciento",
-      1.02
+      "ciento",
+      0.92
     ],
     [
       "cincuenta",
-      1.44
+      1.28
     ],
     [
       "estafas,",
-      1.98
+      1.84
     ],
     [
-      "de",
-      2.773
+      "pasan",
+      2.62
     ],
     [
-      "treinta",
-      2.9
+      "cero.",
+      3.12
     ],
     [
-      "y",
-      3.2
-    ],
-    [
-      "dos",
-      3.3
-    ],
-    [
-      "tipos.",
-      3.44
-    ],
-    [
-      "Con",
-      4.04
-    ],
-    [
-      "Grifter",
-      4.213
-    ],
-    [
-      "completo,",
-      4.613
-    ],
-    [
-      "no",
-      5.333
-    ],
-    [
-      "pasa",
-      5.504
-    ],
-    [
-      "ninguna.",
-      5.81
-    ],
-    [
-      "Un",
-      6.267
-    ],
-    [
-      "atacante",
-      6.507
-    ],
-    [
-      "que",
-      6.98
-    ],
-    [
-      "aprende",
-      7.097
-    ],
-    [
-      "lo",
-      7.6
-    ],
-    [
-      "intentó",
-      7.817
-    ],
-    [
-      "cinco",
-      8.32
+      "Cinco",
+      3.8
     ],
     [
       "mil",
-      8.78
+      4.12
     ],
     [
-      "doscientas",
-      9.04
+      "doscientos",
+      4.32
     ],
     [
       "ochenta",
-      9.66
+      4.86
     ],
     [
-      "veces…",
-      10.08
+      "intentos",
+      5.269
     ],
     [
-      "y",
-      10.68
+      "de",
+      5.92
     ],
     [
-      "ninguna",
-      10.78
+      "un",
+      6.133
     ],
     [
-      "cruzó",
-      11.296
+      "atacante",
+      6.293
     ],
     [
-      "la",
-      11.787
+      "que",
+      6.82
     ],
     [
-      "capa",
-      11.88
+      "aprende:",
+      6.937
     ],
     [
-      "dos.",
-      12.16
+      "ninguno",
+      7.648
+    ],
+    [
+      "cruza.",
+      8.2
     ]
   ]
 }

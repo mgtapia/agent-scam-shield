@@ -46,15 +46,15 @@ ETIQUETA = re.compile(r"\[[^\]]*\]")
 
 # Una pieza por escena. El texto es lo que se dice; las etiquetas entre corchetes son el tono para eleven_v3.
 NARRACION = {
-    "correo": "[warm] Ahora llega un correo que dice ser del banco. Hay un cargo raro, y piden el código del SMS. "
-              "El agente se lo iba a mandar… y Grifter lo frena. La clave no sale sin el dueño.",
-    "compra": "[warm] Otra trampa, en una compra. Aprobaste cuatrocientos doce mil pesos… "
-              "y la tienda cobra cuatro millones ciento veinte mil. Grifter retiene el pago. Solo lo que aprobaste.",
-    "cifras": "[warm] Y lo medimos. Ciento cincuenta estafas, de treinta y dos tipos. Con Grifter completo, "
-              "no pasa ninguna. Un atacante que aprende lo intentó cinco mil doscientas ochenta veces… "
-              "y ninguna cruzó la capa dos.",
+    "correo": "[warm] Un falso banco pide el código del SMS. El agente lo iba a mandar… y Grifter lo frena.",
+    "compra": "[warm] Aprobaste cuatrocientos doce mil y te cobran diez veces más. Grifter lo frena.",
+    "cifras": "[warm] Lo medimos: ciento cincuenta estafas, pasan cero. Cinco mil doscientos ochenta intentos "
+              "de un atacante que aprende: ninguno cruza.",
     "cierre": "[calm] Tu agente puede creerle a cualquiera. Tu plata, no.",
 }
+# Velocidad de la voz por escena (voice_settings.speed; 1 es la normal). Las escenas del acto 2 y las cifras van un
+# poco más rápido para que la demo quepa en unos 85 s; el cierre, a velocidad normal.
+VELOCIDAD = {"correo": 1.12, "compra": 1.12, "cifras": 1.12, "cierre": 1.0}
 
 
 def palabras(alineacion: dict[str, Any]) -> list[list[Any]]:
@@ -84,10 +84,14 @@ def clase_de_voz(cliente: Cliente, voz_id: str) -> str:
         return ""
 
 
-def sintetizar(cliente: Cliente, voz_id: str, texto: str, modelo: str = MODELO) -> tuple[bytes, dict[str, Any]]:
+def sintetizar(cliente: Cliente, voz_id: str, texto: str, modelo: str = MODELO,
+               velocidad: float = 1.0) -> tuple[bytes, dict[str, Any]]:
     """El mp3 y la alineación por carácter (`/with-timestamps`)."""
+    cuerpo: dict[str, Any] = {"text": texto, "model_id": modelo}
+    if velocidad != 1.0:
+        cuerpo["voice_settings"] = {"speed": velocidad}
     resp = json.loads(cliente._pedir("POST", f"/v1/text-to-speech/{voz_id}/with-timestamps",
-                                     {"text": texto, "model_id": modelo}, query=f"?output_format={FORMATO}"))
+                                     cuerpo, query=f"?output_format={FORMATO}"))
     return base64.b64decode(resp["audio_base64"]), resp["alignment"]
 
 
@@ -106,14 +110,15 @@ def generar(cliente: Cliente, ids: list[str], salida: Path, voz_id: str = VOZ, n
     hechos = []
     for i in pendientes:
         texto = NARRACION[i]
-        audio, alineacion = sintetizar(cliente, voz_id, texto, modelo)
+        velocidad = VELOCIDAD.get(i, 1.0)
+        audio, alineacion = sintetizar(cliente, voz_id, texto, modelo, velocidad)
         destino = salida / f"narracion_{i}.mp3"
         destino.write_bytes(audio)
         dichas = palabras(alineacion)
         duracion = round(alineacion["character_end_times_seconds"][-1], 3)
         destino.with_suffix(".json").write_text(json.dumps({
             "escenario": f"demo_narracion_{i}", "idioma": "es", "origen": "narración", "texto": texto,
-            "voz": nombre_voz, "voz_id": voz_id, "clase_de_voz": clase, "modelo": modelo, "formato": FORMATO,
+            "voz": nombre_voz, "voz_id": voz_id, "clase_de_voz": clase, "modelo": modelo, "formato": FORMATO, "velocidad": velocidad,
             "sintetica": True,
             "aviso": "Voz sintética de la biblioteca compartida de ElevenLabs, publicada por su autor para texto a voz. "
                      "No imita a nadie del proyecto ni a ninguna persona de la demo.",

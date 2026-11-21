@@ -2,164 +2,89 @@
   "escenario": "demo_narracion_correo",
   "idioma": "es",
   "origen": "narración",
-  "texto": "[warm] Ahora llega un correo que dice ser del banco. Hay un cargo raro, y piden el código del SMS. El agente se lo iba a mandar… y Grifter lo frena. La clave no sale sin el dueño.",
+  "texto": "[warm] Un falso banco pide el código del SMS. El agente lo iba a mandar… y Grifter lo frena.",
   "voz": "Ignacio - Natural Chilean, unhurried pace (biblioteca de ElevenLabs)",
   "voz_id": "NDx3GTwfaeouBvRv4NrB",
   "clase_de_voz": "professional",
   "modelo": "eleven_v3",
   "formato": "mp3_44100_64",
+  "velocidad": 1.12,
   "sintetica": true,
   "aviso": "Voz sintética de la biblioteca compartida de ElevenLabs, publicada por su autor para texto a voz. No imita a nadie del proyecto ni a ninguna persona de la demo.",
-  "caracteres": 179,
-  "duracion_s": 11.04,
+  "caracteres": 92,
+  "duracion_s": 6.0,
   "palabras": [
     [
-      "Ahora",
-      0.133
+      "Un",
+      0.142
     ],
     [
-      "llega",
-      0.272
+      "falso",
+      0.24
     ],
     [
-      "un",
-      0.507
+      "banco",
+      0.613
     ],
     [
-      "correo",
-      0.617
-    ],
-    [
-      "que",
-      1.0
-    ],
-    [
-      "dice",
-      1.168
-    ],
-    [
-      "ser",
-      1.42
-    ],
-    [
-      "del",
-      1.64
-    ],
-    [
-      "banco.",
-      1.827
-    ],
-    [
-      "Hay",
-      2.36
-    ],
-    [
-      "un",
-      2.507
-    ],
-    [
-      "cargo",
-      2.627
-    ],
-    [
-      "raro,",
-      3.0
-    ],
-    [
-      "y",
-      3.48
-    ],
-    [
-      "piden",
-      3.6
+      "pide",
+      0.96
     ],
     [
       "el",
-      3.893
+      1.227
     ],
     [
       "código",
-      4.08
+      1.349
     ],
     [
       "del",
-      4.64
+      1.8
     ],
     [
       "SMS.",
-      5.04
+      2.14
     ],
     [
       "El",
-      5.787
+      2.987
     ],
     [
       "agente",
-      5.92
-    ],
-    [
-      "se",
-      6.453
+      3.253
     ],
     [
       "lo",
-      6.587
+      3.733
     ],
     [
       "iba",
-      6.693
+      3.893
     ],
     [
       "a",
-      6.84
+      4.06
     ],
     [
       "mandar…",
-      6.928
+      4.112
     ],
     [
       "y",
-      7.52
+      4.68
     ],
     [
       "Grifter",
-      7.627
+      4.773
     ],
     [
       "lo",
-      8.187
+      5.333
     ],
     [
       "frena.",
-      8.48
-    ],
-    [
-      "La",
-      9.067
-    ],
-    [
-      "clave",
-      9.2
-    ],
-    [
-      "no",
-      9.653
-    ],
-    [
-      "sale",
-      9.84
-    ],
-    [
-      "sin",
-      10.24
-    ],
-    [
-      "el",
-      10.507
-    ],
-    [
-      "dueño.",
-      10.62
+      5.64
     ]
   ]
 }

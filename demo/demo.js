@@ -74,7 +74,7 @@
       pablo_de: "Pablo, su hijo", pablo_chat: "Grifter",
       pablo_msg: "Marta quiere pagar $650.000 a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser Tomás, su nieto.",
       pablo_avance: "1 de 2: Marta ya aprobó con su código",
-      pablo_aprobar: "Aprobar (pide tu código)", pablo_rechazar: "Rechazar",
+      pablo_aprobar: "Solicitar código", pablo_rechazar: "Rechazar",
       a1_frase3: "Si la abuela ya cayó, su hijo tiene que aprobar con su código.",
       al_titulo: "Grifter retuvo un pago", al_titular: "Titular según el banco", al_a: "Dice llamarse", al_cuenta: "Cuenta",
       al_de: "Apareció en", al_de_v: "Llamada de número privado",
@@ -90,10 +90,10 @@
       k_responder: "Respuesta del agente", k_respuesta: "Hola, el código de verificación es", k_no_salio: "Código 482 913 · no se envió",
       k_cinetica: "La clave no sale sin el dueño.", c_cinetica: "Solo lo que aprobaste.",
       // Lo que dice la narradora (el mp3 de cada escena; sin mp3, speechSynthesis lee esto mismo)
-      n_correo: "Ahora llega un correo que dice ser del banco. Hay un cargo raro, y piden el código del SMS. El agente se lo iba a mandar… y Grifter lo frena. La clave no sale sin el dueño.",
-      n_compra: "Otra trampa, en una compra. Aprobaste cuatrocientos doce mil pesos… y la tienda cobra cuatro millones ciento veinte mil. Grifter retiene el pago. Solo lo que aprobaste.",
+      n_correo: "Un falso banco pide el código del SMS. El agente lo iba a mandar… y Grifter lo frena.",
+      n_compra: "Aprobaste cuatrocientos doce mil y te cobran diez veces más. Grifter lo frena.",
       n_cierre: "Tu agente puede creerle a cualquiera. Tu plata, no.",
-      n_cifras: "Y lo medimos. Ciento cincuenta estafas, de treinta y dos tipos. Con Grifter completo, no pasa ninguna. Un atacante que aprende lo intentó cinco mil doscientas ochenta veces… y ninguna cruzó la capa dos.",
+      n_cifras: "Lo medimos: ciento cincuenta estafas, pasan cero. Cinco mil doscientos ochenta intentos de un atacante que aprende: ninguno cruza.",
       narra: "Grifter narra",
       c_rotulo: "Otra regla: solo lo que aprobaste",
       c_1: "Aprobaste [[$412.000]]",
@@ -140,7 +140,7 @@
       pablo_de: "Pablo, her son", pablo_chat: "Grifter",
       pablo_msg: "Marta wants to pay $650,000 to J. Contreras V. The account came from a call from a private number claiming to be Tomás, her grandson.",
       pablo_avance: "1 of 2: Marta already approved with her code",
-      pablo_aprobar: "Approve (asks for your code)", pablo_rechazar: "Reject",
+      pablo_aprobar: "Request code", pablo_rechazar: "Reject",
       a1_frase3: "If grandma already fell for it, her son has to approve with his code.",
       al_titulo: "Grifter held a payment", al_titular: "Account holder per the bank", al_a: "Says its name is", al_cuenta: "Account",
       al_de: "Appeared in", al_de_v: "Call from a private number",
@@ -155,10 +155,10 @@
       k_cuerpo: "Hello, we detected {{a $389,990 charge}} at Electro Online Store that does not match your usual purchases. To reverse it within 30 minutes, {{reply with the verification code you received by SMS}}. If you do not reply, the charge will be final and your card will be blocked.",
       k_responder: "Agent's reply", k_respuesta: "Hi, the verification code is", k_no_salio: "Code 482 913 · not sent",
       k_cinetica: "The code doesn't leave without the owner.", c_cinetica: "Only what you approved.",
-      n_correo: "Now an email arrives claiming to be from the bank. There's a strange charge, and they ask for the SMS code. The agent was about to send it… and Grifter stops it. The code doesn't leave without the owner.",
-      n_compra: "Another trap, in a purchase. You approved four hundred twelve thousand pesos… and the store charges four million one hundred twenty thousand. Grifter holds the payment. Only what you approved.",
+      n_correo: "A fake bank asks for the SMS code. The agent was about to send it… and Grifter stops it.",
+      n_compra: "You approved four hundred twelve thousand and they charge ten times more. Grifter stops it.",
       n_cierre: "Your agent can believe anyone. Your money can't.",
-      n_cifras: "And we measured it. One hundred fifty scams, of thirty-two types. With full Grifter, none get through. An attacker that learns tried five thousand two hundred eighty times… and none got past layer two.",
+      n_cifras: "We measured it: one hundred fifty scams, zero get through. Five thousand two hundred eighty attempts by an attacker that learns: none get past.",
       narra: "Grifter narrates",
       c_rotulo: "Another rule: only what you approved",
       c_1: "You approved [[$412,000]]",
@@ -175,40 +175,51 @@
     },
   };
 
-  // --- Línea de tiempo (segundos) ---
+  // --- Línea de tiempo (segundos). La demo dura unos 84 s: cada paso queda lo justo para leerse ---
   const r2 = (x) => Math.round(x * 100) / 100;
-  // Actos 2 y 3 y el cierre: la narradora (demo/audio/narracion_*.mp3). Cada escena dura lo que su audio más un
-  // respiro, y lo que aparece en pantalla sigue a la voz: los números son el segundo en que empieza cada palabra,
-  // medido en la ficha .json del mp3 (desde que empieza el audio), igual que FRASES en el acto 1.
-  const CL = 55;   // escena del correo del falso banco
-  const NK = { en: r2(CL + 0.4), dura: 11.04, cargo: 2.36, codigo: 3.6, agente: 5.787, frena: 7.52,
-    frase: [9.067, 9.2, 9.653, 9.84, 10.24, 10.507, 10.62] };   // «La clave no sale sin el dueño.»
-  const CO = r2(NK.en + NK.dura + 1.2);   // escena del checkout con el monto cambiado
-  const NC = { en: r2(CO + 0.4), dura: 11.76, aprobaste: 1.92, tienda: 5.24, retiene: 8.853,
-    frase: [10.528, 10.747, 10.84, 11] };   // «Solo lo que aprobaste.»
-  const A3 = r2(NC.en + NC.dura + 1.4);   // acto 3: las cifras, una por escena
-  const N3 = { en: r2(A3 + 0.3), dura: 12.48, ciento: 1.02, tipos: 2.773, completo: 4.04, ninguna: 5.333,
-    atacante: 6.267, intento: 7.6, veces: 10.08, cruzo: 10.68 };
-  // Cada cifra en su escena: aparece, cuenta hacia arriba mientras se nombra y cae a cero cuando la voz dice que no
-  // pasa ninguna (v: aparece, sube y ds: empieza a contar y cuánto dura, det y con: las líneas de abajo, cae y dc: la caída).
-  const C1 = { v: r2(N3.en + N3.ciento - 0.15), sube: r2(N3.en + N3.ciento), ds: 1.3, det: r2(N3.en + N3.tipos),
-    con: r2(N3.en + N3.completo), cae: r2(N3.en + N3.ninguna), dc: 0.5 };
-  const C2 = { v: r2(N3.en + N3.atacante - 0.15), sube: r2(N3.en + N3.intento), ds: r2(N3.veces - N3.intento),
-    det: r2(N3.en + N3.veces), con: r2(N3.en + N3.cruzo), cae: r2(N3.en + N3.cruzo), dc: 0.5 };
-  const CI = r2(N3.en + N3.dura + 1.2);   // cierre
-  const NF = { en: r2(CI + 0.3), dura: 3.12, frase: [0.147, 0.213, 0.627, 1, 1.44, 1.552, 2.188, 2.308, 2.961] };   // «Tu agente puede creerle a cualquiera. Tu plata, no.»
-  const DURACION = r2(NF.en + NF.dura + 4);
-  const NARRA = { correo: NK, compra: NC, cifras: N3, cierre: NF };
-  const ACTOS = [
-    { id: "intro", desde: 0 }, { id: "a1", desde: 3 }, { id: "a2", desde: CL }, { id: "a3", desde: A3 }, { id: "cierre", desde: CI },
-  ];
-  const LLAMADA = { suena: 4.4, contesta: 7, abuela: 7.3, nieto: 9.9, cuelga: 34.6 };
+  // Portada → acto 1 sin espera: el acto 1 empieza apenas el presentador da play.
+  const A1 = 0.4;
+  // La llamada: los mp3 de la abuela y el nieto (#171) y su sincronía no cambian; todo se corre junto desde A1.
+  const LLAMADA = { suena: r2(A1 + 1.4), contesta: r2(A1 + 4), abuela: r2(A1 + 4.3), nieto: r2(A1 + 6.9), cuelga: r2(A1 + 31.6) };
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
-  // Doble autorización con quórum 2: Marta toca «Pagar igual», le llega el código por correo y aprueba (1 de 2);
-  // Pablo recibe el pedido por WhatsApp y rechaza. Con ?whatsapp=1 su rechazo puede ser real (ver avisarEnVivo).
-  const AUT = { igual: 40.2, pide: 40.9, correo: 41.6, digitos: 42.6, uno: 44.6, pablo: 45.3, rechaza: 48.6, rechazado: 49.6, nada: 50.2, frase: 50.8 };
+  // Después de la llamada: Grifter retiene y muestra la alerta; Marta toca «Pagar igual», le llega el código por correo
+  // y aprueba (1 de 2); Pablo recibe el pedido por WhatsApp y rechaza. Con ?whatsapp=1 su rechazo puede ser real
+  // (ver avisarEnVivo). Cada línea nueva queda al menos ~0,6 s antes de la siguiente.
+  const AUT = (() => {
+    const c = LLAMADA.cuelga, igual = r2(c + 4.8), digitos = r2(igual + 1.8), uno = r2(digitos + 6 * 0.2 + 0.3);
+    const pablo = r2(uno + 0.6), rechaza = r2(pablo + 3), rechazado = r2(rechaza + 0.9), nada = r2(rechazado + 0.6);
+    return { escucho: r2(c + 0.3), intento: r2(c + 1), retuvo: r2(c + 1.8), alerta: r2(c + 2.3), igual, pide: r2(igual + 0.7),
+      correo: r2(igual + 1.2), digitos, digito: 0.2, uno, pablo, rechaza, rechazado, nada, frase: r2(nada + 0.6) };
+  })();
   const CODIGO = "482913";   // el código del correo de ejemplo: es un dibujo, no un código real
+  // Actos 2 y 3 y el cierre: la narradora (demo/audio/narracion_*.mp3). Cada escena dura lo que su audio más un
+  // respiro, y lo que aparece en pantalla sigue a la voz: los números son el segundo en que empieza cada palabra,
+  // medido en la ficha .json del mp3 (desde que empieza el audio), igual que FRASES en el acto 1. La regla de cada
+  // escena del acto 2 entra después de la voz, palabra por palabra, y queda 2 s a pantalla completa.
+  const REGLA = 2, PASO = 0.12;   // cuánto queda la regla y cada cuánto entra una palabra
+  const pasos = (n) => Array.from({ length: n }, (_, i) => r2(i * PASO));
+  const CL = r2(AUT.frase + 3.2);   // escena del correo del falso banco
+  const NK = { en: r2(CL + 0.3), dura: 6, cargo: 0.613, codigo: 1.349, agente: 2.987, frena: 4.68 };
+  NK.regla = r2(NK.en + NK.dura + 0.4);   // «La clave no sale sin el dueño.»
+  const CO = r2(NK.regla + REGLA);   // escena del checkout con el monto cambiado
+  const NC = { en: r2(CO + 0.3), dura: 5.28, aprobaste: 0.14, tienda: 2.12, retiene: 4.133 };
+  NC.regla = r2(NC.en + NC.dura + 0.4);   // «Solo lo que aprobaste.»
+  const A3 = r2(NC.regla + REGLA);   // acto 3: las cifras, una por escena
+  const N3 = { en: r2(A3 + 0.4), dura: 8.64, ciento: 0.92, estafas: 1.84, pasan: 2.62, cinco: 3.8, intentos: 5.269, ninguno: 7.648 };
+  // Cada cifra en su escena: aparece, cuenta hacia arriba mientras se nombra y cae a cero cuando la voz dice que no
+  // pasa ninguna (v: aparece, sube y ds: empieza a contar y cuánto dura, det y con: las líneas de abajo, cae y dc: la caída).
+  const C1 = { v: r2(N3.en + N3.ciento - 0.15), sube: r2(N3.en + N3.ciento), ds: r2(N3.estafas - N3.ciento), det: r2(N3.en + N3.estafas),
+    con: r2(N3.en + N3.pasan), cae: r2(N3.en + N3.pasan), dc: 0.5 };
+  const C2 = { v: r2(N3.en + N3.cinco - 0.15), sube: r2(N3.en + N3.cinco), ds: r2(N3.intentos - N3.cinco), det: r2(N3.en + N3.intentos),
+    con: r2(N3.en + N3.ninguno), cae: r2(N3.en + N3.ninguno), dc: 0.5 };
+  const CI = r2(N3.en + N3.dura + 1.5);   // cierre
+  const NF = { en: r2(CI + 0.3), dura: 3.12, frase: [0.147, 0.213, 0.627, 1, 1.44, 1.552, 2.188, 2.308, 2.961] };   // «Tu agente puede creerle a cualquiera. Tu plata, no.»
+  const DURACION = r2(NF.en + NF.dura + 4.5);
+  const NARRA = { correo: NK, compra: NC, cifras: N3, cierre: NF };
+  const ACTOS = [
+    { id: "intro", desde: 0 }, { id: "a1", desde: A1 }, { id: "a2", desde: CL }, { id: "a3", desde: A3 }, { id: "cierre", desde: CI },
+  ];
   // El toque de un dedo en un botón: se hunde un instante y suelta una onda. Dura lo que alcanza antes de que la
   // pantalla cambie (la alerta de Marta se va en AUT.pide).
   const TOQUE = { igual: r2(AUT.pide - AUT.igual - 0.05), rechaza: 0.9 };
@@ -272,7 +283,7 @@
   function construir() {
     const f = (n) => num(n);
     $("#md-escenario").innerHTML = `
-      <section class="md-acto md-intro" data-desde="0" data-hasta="3">
+      <section class="md-acto md-intro" data-desde="0" data-hasta="${A1}">
         <p class="md-evento dato md-entra e0">${esc(t("evento"))}</p>
         <div class="md-logo md-logo-portada">${marca("dibuja")}<span class="md-entra e1">Grifter</span></div>
         <p class="md-lema md-entra e2">${esc(t("lema"))}</p>
@@ -280,20 +291,20 @@
         <p class="md-fuente dato md-entra e5">${esc(t("fuente"))}</p>
       </section>
 
-      <section class="md-acto md-comp md-a1" data-desde="3" data-hasta="${CL}">
-        <p class="md-rotulo" data-v="3">${esc(t("a1_rotulo"))}</p>
-        <h1 class="md-frase"><span data-v="3.3" data-h="37">${esc(t("a1_frase"))}</span><span class="md-frase-2" data-v="37" data-h="${AUT.frase}">${esc(t("a1_frase2"))}</span><span class="md-frase-2 md-frase-3" data-v="${AUT.frase}">${esc(t("a1_frase3"))}</span></h1>
+      <section class="md-acto md-comp md-a1" data-desde="${A1}" data-hasta="${CL}">
+        <p class="md-rotulo" data-v="${A1}">${esc(t("a1_rotulo"))}</p>
+        <h1 class="md-frase"><span data-v="${r2(A1 + 0.3)}" data-h="${AUT.retuvo}">${esc(t("a1_frase"))}</span><span class="md-frase-2" data-v="${AUT.retuvo}" data-h="${AUT.frase}">${esc(t("a1_frase2"))}</span><span class="md-frase-2 md-frase-3" data-v="${AUT.frase}">${esc(t("a1_frase3"))}</span></h1>
         <div class="md-cols">
           <div class="md-consola">
-            <div class="md-encargo" data-v="4">${ic("person")}<div><p class="md-rot">${esc(t("encargo_de", { d: t("dueno") }))}</p><p>${esc(t("encargo"))}</p></div></div>
+            <div class="md-encargo" data-v="${r2(A1 + 1)}">${ic("person")}<div><p class="md-rot">${esc(t("encargo_de", { d: t("dueno") }))}</p><p>${esc(t("encargo"))}</p></div></div>
             <div class="md-subtitulos" data-v="${LLAMADA.abuela}" data-h="${LLAMADA.cuelga + 0.6}">
               <p class="md-sub md-sub-dueno" data-v="${LLAMADA.abuela}" data-h="${LLAMADA.nieto}"><span class="md-quien">${esc(t("dueno"))}</span>${esc(t("abuela"))}</p>
               ${t("nieto").map((s, i) => `<p class="md-sub" data-v="${LLAMADA.nieto + FRASES[i]}" data-h="${i < FRASES.length - 1 ? LLAMADA.nieto + FRASES[i + 1] : LLAMADA.cuelga + 0.6}"><span class="md-quien">${esc(t("privado"))}</span>${esc(s).replace(/48-2210-7735/, '<mark class="md-cuenta">48-2210-7735</mark>').replace(/\$650[.,]000/, (m) => `<mark class="md-cuenta">${m}</mark>`)}</p>`).join("")}
             </div>
             <ol class="md-pasos">
-              <li data-v="${LLAMADA.cuelga + 0.3}">${ic("call")}<span class="md-quien">${esc(t("escucho"))}</span><span>${esc(t("escucho_v"))}</span><span class="tag externo">${esc(t("llamada"))}</span></li>
-              <li data-v="${LLAMADA.cuelga + 1.3}">${ic("payments")}<span class="md-quien">${esc(t("intento"))}</span><span class="dato">${idioma === "en" ? "Pay" : "Pagar"} $${f(650000)} ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="tag externo">${esc(t("llamada"))}</span></li>
-              <li class="md-retuvo md-motivo" data-v="37">${ic("block")}<span class="md-quien">${esc(t("grifter"))}</span><span><b>${esc(t("retuvo"))}</b> ${esc(t("motivo1"))}</span></li>
+              <li data-v="${AUT.escucho}">${ic("call")}<span class="md-quien">${esc(t("escucho"))}</span><span>${esc(t("escucho_v"))}</span><span class="tag externo">${esc(t("llamada"))}</span></li>
+              <li data-v="${AUT.intento}">${ic("payments")}<span class="md-quien">${esc(t("intento"))}</span><span class="dato">${idioma === "en" ? "Pay" : "Pagar"} $${f(650000)} ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="tag externo">${esc(t("llamada"))}</span></li>
+              <li class="md-retuvo md-motivo" data-v="${AUT.retuvo}">${ic("block")}<span class="md-quien">${esc(t("grifter"))}</span><span><b>${esc(t("retuvo"))}</b> ${esc(t("motivo1"))}</span></li>
               <li data-v="${AUT.igual + 0.3}">${ic("person")}<span class="md-quien">${esc(t("eligio"))}</span><span>${esc(t("dueno"))}: ${esc(t("igual_v"))}</span></li>
               <li data-v="${AUT.pide}">${ic("gpp_good")}<span class="md-quien">${esc(t("grifter"))}</span><span>${esc(t("pide_v"))}</span></li>
               <li data-v="${AUT.correo}">${ic("mail")}<span class="md-quien">${esc(t("envio"))}</span><span>${esc(t("correo_v"))}</span></li>
@@ -324,7 +335,7 @@
                 <div class="md-ll-botones" data-h="${LLAMADA.contesta}"><span class="md-ll-b colgar">${ic("call_end")}</span><span class="md-ll-b contestar">${ic("call")}</span></div>
                 <div class="md-ll-botones" data-v="${LLAMADA.contesta}" data-h="${LLAMADA.cuelga}"><span class="md-ll-b colgar">${ic("call_end")}</span></div>
               </div>
-              <div class="md-alerta" data-v="38" data-h="${AUT.pide}">
+              <div class="md-alerta" data-v="${AUT.alerta}" data-h="${AUT.pide}">
                 <p class="md-al-titulo">${ic("gpp_good")}<span>${esc(t("al_titulo"))}</span></p>
                 <p class="md-al-motivo">${esc(t("motivo1"))}</p>
                 <dl class="md-al-datos">
@@ -341,7 +352,7 @@
               </div>
               <div class="md-espera md-codigo" data-v="${AUT.pide}" data-h="${AUT.uno}">
                 <p>${esc(t("codigo"))}</p>
-                <div class="md-digitos">${[...CODIGO].map((d, i) => `<span><b data-v="${AUT.digitos + i * 0.25}">${d}</b></span>`).join("")}</div>
+                <div class="md-digitos">${[...CODIGO].map((d, i) => `<span><b data-v="${r2(AUT.digitos + i * AUT.digito)}">${d}</b></span>`).join("")}</div>
                 <p class="dato md-esperando">${esc(t("quorum"))}</p>
               </div>
               <div class="md-notif" data-v="${AUT.correo}" data-h="${AUT.uno}">${ic("mail")}<div><p class="md-notif-de">${esc(t("mail_de"))}</p><p>${esc(t("mail_txt"))}</p></div></div>
@@ -351,7 +362,7 @@
           </div>
 
           <div class="md-celular md-pablo" data-v="${AUT.pablo}">
-            <p class="md-pablo-de">${esc(t("pablo_de"))}</p>
+            <p class="md-pablo-de"><img class="md-foto-pablo" src="img/pablo.jpg" onerror="this.remove()" alt="" width="40" height="40"><span>${esc(t("pablo_de"))}</span></p>
             <div class="md-pantalla">
               <i class="md-camara" aria-hidden="true"></i>
               <div class="md-estado"><span class="md-hora-real">16:08</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
@@ -359,7 +370,7 @@
                 <p class="md-wa-cab">${ic("shield")}<span>${esc(t("pablo_chat"))}</span></p>
                 <div class="md-wa-msg"><p>${esc(t("pablo_msg"))}</p><p class="md-wa-avance">${esc(t("pablo_avance"))}</p></div>
                 <div class="md-wa-botones">
-                  <span class="md-wa-b">${esc(t("pablo_aprobar"))}</span>
+                  <span class="md-wa-b md-wa-aprobar">${ic("check")}<span>${esc(t("pablo_aprobar"))}</span></span>
                   <span class="md-wa-b">${esc(t("pablo_rechazar"))}<span class="md-toque" data-toque="${AUT.rechaza}" data-dura="${TOQUE.rechaza}"></span></span>
                 </div>
               </div>
@@ -376,7 +387,7 @@
               <p class="md-correo-cuerpo">${subraya(t("k_cuerpo"), [r2(NK.en + NK.cargo), r2(NK.en + NK.codigo)])}</p>
               <div class="md-respuesta" data-v="${r2(NK.en + NK.agente)}"><p class="md-rot">${ic("smart_toy")}<span>${esc(t("k_responder"))}</span></p><p>${esc(t("k_respuesta"))} <b class="dato">482 913</b></p></div>
             </div>`, r2(NK.en + NK.frena), t("k_retenido"), esc(t("k_no_salio")))}
-        <div class="md-cinetica" data-v="${r2(NK.en + NK.frase[0] - 0.15)}"><p>${cinetica(t("k_cinetica"), NK.en, NK.frase)}</p></div>
+        <div class="md-cinetica" data-v="${r2(NK.regla - 0.1)}"><p>${cinetica(t("k_cinetica"), NK.regla, pasos(7))}</p></div>
       </section>
 
       <section class="md-acto md-comp md-a2" data-desde="${CO}" data-hasta="${A3}">
@@ -391,7 +402,7 @@
               </dl>
               <span class="md-b principal md-compra-b" data-h="${r2(NC.en + NC.retiene)}">${esc(t("c_pagar"))}</span>
             </div>`, r2(NC.en + NC.retiene), t("c_retenido"), esc(t("c_no_salio")))}
-        <div class="md-cinetica" data-v="${r2(NC.en + NC.frase[0] - 0.15)}"><p>${cinetica(t("c_cinetica"), NC.en, NC.frase)}</p></div>
+        <div class="md-cinetica" data-v="${r2(NC.regla - 0.1)}"><p>${cinetica(t("c_cinetica"), NC.regla, pasos(4))}</p></div>
       </section>
 
       <section class="md-acto md-a3" data-desde="${A3}" data-hasta="${CI}">
@@ -416,7 +427,7 @@
         <p class="md-url dato" data-v="${r2(NF.en + NF.dura + 1)}">${esc(t("url"))}</p>
       </section>
 
-      <div class="md-narrador" data-v="${CL}" data-h="${r2(NF.en + NF.dura + 0.5)}" aria-hidden="true">${ic("shield")}<span>${esc(t("narra"))}</span><span class="md-narrador-barras">${"<i></i>".repeat(5)}</span></div>
+      <div class="md-narrador" data-v="${CL}" data-h="${r2(NF.en + NF.dura)}" aria-hidden="true">${ic("shield")}<span>${esc(t("narra"))}</span><span class="md-narrador-barras">${"<i></i>".repeat(5)}</span></div>
       <div class="md-progreso" aria-hidden="true"><i id="md-barra"></i></div>
       <button type="button" class="md-inicio md-entra e5" id="md-inicio" aria-label="${esc(t("iniciar"))}" title="${esc(t("tecla"))}">${ic("play_arrow")}<span>${esc(t("espacio"))}</span></button>`;
     $("#md-inicio").addEventListener("click", alternar);
@@ -500,7 +511,7 @@
     const latidoN = narra && !Graficos.quieto ? (Math.sin(tt * 2 * Math.PI * 1.6) + 1) / 2 : 0;
     $(".md-narrador").style.setProperty("--md-latido", latidoN.toFixed(3));
     // El borde rojo de alerta, mientras el pago está retenido y nadie respondió (como en Episodios).
-    document.body.classList.toggle("md-alarma", tt >= 37 && tt < AUT.rechazado);
+    document.body.classList.toggle("md-alarma", tt >= AUT.retuvo && tt < AUT.rechazado);
     // Con el teléfono de Pablo a la vista, el texto de la izquierda le deja espacio.
     document.body.classList.toggle("md-con-pablo", tt >= AUT.pablo && tt < ACTOS[2].desde);
     document.body.classList.toggle("md-aut", tt >= AUT.igual && tt < ACTOS[2].desde);
