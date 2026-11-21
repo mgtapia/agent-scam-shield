@@ -106,7 +106,7 @@ class Motor:
         for i, c in enumerate(correos):
             yield (0.4 if i == 0 else r.uniform(0.6, 1.6)), self._estado(agente, "leyendo", c.tarea)
             yield 0.3, {"tipo": "correo_nuevo", "id": c.id, "agente": agente, "de": c.de,
-                        "asunto": c.asunto, "cuerpo": c.cuerpo}
+                        "asunto": c.asunto, "cuerpo": c.cuerpo, "escenario": c.unidad}
             ras = self._rasgos(c)
             aciertos = self.boveda.revisar(c)
             veredicto = self._veredicto(c, ras, aciertos)
@@ -157,7 +157,8 @@ class Motor:
         familia = "legitimo" if decision == "seguro" else ("tecnico" if tecnico else "ingenieria_social")
         return {"tipo": "veredicto", "id": c.id, "decision": decision,
                 "confianza": round(float(confianza), 3), "senales": senales, "fuente": fuente,
-                "version_modelo": self.clasificador.version, "capa": capa, "familia": familia}
+                "version_modelo": self.clasificador.version, "capa": capa, "familia": familia,
+                "escenario": c.unidad}
 
     def _accion(self, c: Correo, veredicto: dict[str, Any]) -> dict[str, Any]:
         """El agente ingenuo intenta la acción que pide el correo. Antes corren la capa 1 y la 2."""
@@ -180,7 +181,8 @@ class Motor:
             resultado, capa = "ejecutada", None
             motivo = "El destino viene del encargo o de las cuentas inscritas del dueño."
         return {"tipo": "accion", "id": c.id, "agente": c.agente, "herramienta": herramienta,
-                "args": args, "resultado": resultado, "motivo": motivo, "capa": capa}
+                "args": args, "resultado": resultado, "motivo": motivo, "capa": capa,
+                "escenario": c.unidad}
 
     # --- publicación y estado --------------------------------------------------------------
     def publicar(self, ev: dict[str, Any]) -> dict[str, Any]:
@@ -204,7 +206,8 @@ class Motor:
             self.agentes[ev["agente"]] = {k: ev[k] for k in ("agente", "estado", "tarea", "ts")}
         elif tipo == "correo_nuevo":
             fila = {k: ev[k] for k in ("id", "agente", "de", "asunto", "cuerpo", "ts")}
-            fila.update({"tramos": [], "veredicto": None, "accion": None, "juez": bool(ev.get("juez"))})
+            fila.update({"tramos": [], "veredicto": None, "accion": None, "juez": bool(ev.get("juez")),
+                         "escenario": ev.get("escenario")})
             self.correos.append(fila)
             self._por_id[ev["id"]] = fila
             vivos = {f["id"] for f in self.correos}
