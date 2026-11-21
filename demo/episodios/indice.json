@@ -1,0 +1,52 @@
+{
+  "episodios": [
+    {
+      "archivo": "boleta_cambio_cuenta__en__layer1.json",
+      "escenario": "boleta_cambio_cuenta",
+      "idioma": "en",
+      "defensa": "layer1",
+      "descripcion": "Fake electricity bill announcing a \"new bank account\" for the utility.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "boleta_cambio_cuenta__en__layer2.json",
+      "escenario": "boleta_cambio_cuenta",
+      "idioma": "en",
+      "defensa": "layer2",
+      "descripcion": "Fake electricity bill announcing a \"new bank account\" for the utility.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "boleta_cambio_cuenta__en__none.json",
+      "escenario": "boleta_cambio_cuenta",
+      "idioma": "en",
+      "defensa": "none",
+      "descripcion": "Fake electricity bill announcing a \"new bank account\" for the utility.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "boleta_cambio_cuenta__es__layer1.json",
+      "escenario": "boleta_cambio_cuenta",
+      "idioma": "es",
+      "defensa": "layer1",
+      "descripcion": "Boleta de luz falsa que avisa un «cambio de cuenta» de la empresa eléctrica.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "boleta_cambio_cuenta__es__layer2.json",
+      "escenario": "boleta_cambio_cuenta",
+      "idioma": "es",
+      "defensa": "layer2",
+      "descripcion": "Boleta de luz falsa que avisa un «cambio de cuenta» de la empresa eléctrica.",
+      "tipo": "estafa"
+    },
+    {
+      "archivo": "boleta_cambio_cuenta__es__none.json",
+      "escenario": "boleta_cambio_cuenta",
+      "idioma": "es",
+      "defensa": "none",
+      "descripcion": "Boleta de luz falsa que avisa un «cambio de cuenta» de la empresa eléctrica.",
+      "tipo": "estafa"
+    }
+  ]
+}

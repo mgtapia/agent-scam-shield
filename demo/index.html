@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Scam Shield · Demo</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header class="encabezado">
+    <div class="logo">
+      <div class="escudo" aria-hidden="true">🛡</div>
+      <div>
+        <h1>Agent Scam Shield</h1>
+        <p data-t="lema">La misma estafa contra el mismo agente, con tres defensas distintas</p>
+      </div>
+    </div>
+    <div class="control">
+      <label for="sel-escenario" data-t="escenario">Escenario</label>
+      <select id="sel-escenario"></select>
+    </div>
+    <div class="control">
+      <span class="grupo" role="group" aria-label="Idioma">
+        <button type="button" data-idioma="es" aria-pressed="true">ES</button>
+        <button type="button" data-idioma="en" aria-pressed="false">EN</button>
+      </span>
+    </div>
+    <div class="control">
+      <button type="button" class="boton principal" id="btn-reproducir" data-t="reproducir">▶ Reproducir</button>
+      <button type="button" class="boton" id="btn-reiniciar" data-t="reiniciar">↺ Reiniciar</button>
+      <span class="grupo" role="group" aria-label="Velocidad">
+        <button type="button" data-velocidad="1" aria-pressed="true">1x</button>
+        <button type="button" data-velocidad="2" aria-pressed="false">2x</button>
+      </span>
+    </div>
+  </header>
+
+  <main class="escenario">
+    <section class="panel bandeja" aria-labelledby="t-bandeja">
+      <h2 class="titulo-panel" id="t-bandeja" data-t="bandeja">Bandeja</h2>
+      <div id="encargo"></div>
+      <div>
+        <h3 class="titulo-panel" data-t="inscritas">Tus cuentas inscritas</h3>
+        <div class="inscritas" id="inscritas"></div>
+      </div>
+      <div>
+        <h3 class="titulo-panel" data-t="correos">Correos</h3>
+        <div id="correos" style="display:flex;flex-direction:column;gap:.7rem"></div>
+      </div>
+    </section>
+
+    <section class="carriles" id="carriles" aria-label="Carriles"></section>
+
+    <aside class="celular-columna">
+      <div class="celular" id="celular">
+        <div class="pantalla">
+          <div class="isla"></div>
+          <div class="barra"><span id="cel-hora">9:41</span><span>5G ▮▮▮</span></div>
+          <div id="cel-contenido" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
+        </div>
+      </div>
+      <p class="leyenda-celular" data-t="leyenda_celular">El celular del dueño</p>
+    </aside>
+  </main>
+
+  <script src="episodios/episodios.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
