@@ -75,3 +75,12 @@ def test_la_configuracion_base_es_la_de_la_tarea_por_defecto():
 ])
 def test_tacticas_de_un_escenario(anotaciones, esperadas):
     assert tacticas_de({"anotaciones": anotaciones}) == esperadas
+
+
+def test_corridas_de_idiomas_distintos_no_se_pisan(tmp_path):
+    es = _correr(tmp_path, defense="layer2")
+    [log_en] = inspect_eval(scamshield(idiomas="en", defense="layer2"), model="mockllm/model",
+                            log_dir=str(tmp_path), display="none", limit=6)
+    datos = exportar([es, Path(log_en.location)])
+    assert len(datos["registros"]) == 2 and not datos["omitidos"]
+    assert {f["idioma"] for f in datos["filas"]} == {"es", "en"}

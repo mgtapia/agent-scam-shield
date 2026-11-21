@@ -118,7 +118,8 @@ def exportar(rutas: list[Path], prueba: bool = False, todas: bool = False) -> di
             omitidos.append({"archivo": ruta.name, "modelo": modelo, "defensa": defensa,
                              "motivo": "configuración distinta de la base"})
             continue
-        clave = (modelo, defensa, *config.values())
+        # Los idiomas también cuentan: correr_matriz.py hace una corrida por idioma y no deben pisarse.
+        clave = (modelo, defensa, *config.values(), (log.eval.task_args or {}).get("idiomas", "es,en"))
         creado = log.eval.created
         if clave in elegidos and elegidos[clave][0] >= creado:
             omitidos.append({"archivo": ruta.name, "modelo": modelo, "defensa": defensa, "motivo": "repetido"})
