@@ -49,6 +49,8 @@ ACTIVOS_PUBLICOS = frozenset({
     "index.html", "estilos.css", "favicon.svg", "app.js", "graficos.js", "duelo.js",
     "operaciones.js", "vivo_simulado.js", "resultados.js", "resultados_vista.js",
     "resultados.json", "instalar.js", "demo.html", "demo.css", "demo.js",
+    # El retrato del nieto que demo.js pone en la llamada del acto 1 (los mp3 van por el montaje /audio).
+    "img/nieto.svg",
 })
 
 
@@ -66,6 +68,8 @@ class _ActivosPublicos(StaticFiles):
         return archivo, estado
 
     async def get_response(self, path: str, scope: dict[str, Any]) -> Response:
+        # Starlette arma la ruta con el separador del sistema: en Windows «img\nieto.svg». Se compara en posix.
+        path = path.replace(os.sep, "/")
         if path != "." and path not in ACTIVOS_PUBLICOS:
             raise HTTPException(404, "Not Found")
         return await super().get_response(path, scope)
