@@ -1,6 +1,6 @@
 // Gráficos de la demo. Los colores salen de los tokens CSS de :root (ver DESIGN.md).
 // - Monitor de signos vitales: canvas propio, un solo loop de requestAnimationFrame para todos los carriles.
-// - Radar y mapas de calor: Apache ECharts 5.5.1 con un tema hecho de los mismos tokens.
+// - Curvas (modelo en Operaciones, atacante en Resultados): Apache ECharts 5.5.1 con un tema hecho de los mismos tokens.
 "use strict";
 
 const Graficos = (() => {
@@ -189,11 +189,6 @@ const Graficos = (() => {
         axisLine: { lineStyle: { color: C.borde } }, axisLabel: { color: C.texto2 },
         splitLine: { lineStyle: { color: C.borde } },
       },
-      radar: {
-        axisName: { color: C.texto2, fontFamily: MONO, fontSize: T1 },
-        axisLine: { lineStyle: { color: C.borde } }, splitLine: { lineStyle: { color: C.borde } },
-        splitArea: { show: false },
-      },
       tooltip: {
         backgroundColor: C.superficie, borderColor: C.borde, borderWidth: 1, padding: [8, 16],
         textStyle: { color: C.texto, fontFamily: MONO, fontSize: T1 }, extraCssText: "border-radius:0;box-shadow:none;",
@@ -215,65 +210,6 @@ const Graficos = (() => {
     espera = setTimeout(() => instancias.forEach((g) => !g.isDisposed() && g.resize()), 120);
   });
   const redimensionar = () => instancias.forEach((g) => !g.isDisposed() && g.resize());
-
-  // Radar: una figura por configuración, ejes por táctica, en gris; la escala es el éxito de la estafa.
-  // `metricas` trae una métrica por eje; `linea(eje, m)` arma la línea del tooltip. Los ejes con n bajo
-  // llevan la etiqueta atenuada.
-  function radar(el, ejes, metricas, sinDatos, linea) {
-    const g = iniciar(el);
-    if (!g) return;
-    const algo = metricas.some((m) => hayTasa(m) && m.tasa > 0);
-    const color = algo ? C.rojo : C.texto2;
-    g.setOption({
-      animation: !sinMovimiento,
-      radar: {
-        indicator: ejes.map((e, i) => ({ name: e, max: 100, bajo: nBajo(metricas[i]) })), radius: "52%", center: ["50%", "54%"],
-        splitNumber: 4, shape: "polygon",
-        axisName: {
-          formatter: (nombre, ind) => (ind.bajo ? `{bajo|${nombre}}` : nombre),
-          rich: { bajo: { color: C.texto3, fontFamily: MONO, fontSize: T1 } },
-        },
-      },
-      tooltip: { trigger: "item" },
-      graphic: sinDatos ? [{ type: "text", left: "center", top: "middle",
-        style: { text: sinDatos, fill: C.texto2, font: `${T1}px ${MONO}` } }] : [],
-      series: sinDatos ? [] : [{
-        type: "radar", symbol: "rect", symbolSize: 4,
-        lineStyle: { color, width: 1.5 }, itemStyle: { color }, areaStyle: { color, opacity: 0.08 },
-        data: [{ value: metricas.map((m) => (hayTasa(m) ? pp(m.tasa) : 0)), name: "" }],
-        tooltip: { formatter: () => ejes.map((e, i) => linea(e, metricas[i])).join("<br>") },
-      }],
-    });
-  }
-
-  // Mapa de calor: de superficie a rojo según la tasa de éxito de la estafa. Cada celda trae `v` (0..100 o
-  // null), `texto` (tasa e intervalo) y `bajo` (n bajo: se atenúa).
-  function calor(el, { columnas, filas, celdas, alClic, tooltip }) {
-    const g = iniciar(el);
-    if (!g) return;
-    g.setOption({
-      animation: false,
-      grid: { left: 144, right: 16, top: 8, bottom: 32 },
-      xAxis: { type: "category", data: columnas, splitArea: { show: false }, axisLabel: { color: C.texto2, interval: 0 } },
-      yAxis: { type: "category", data: filas, inverse: true, axisLabel: { color: C.texto, width: 136, overflow: "truncate" } },
-      visualMap: {
-        show: false, min: 0, max: 100, dimension: 2, seriesIndex: 0,
-        inRange: { color: [C.superficie, C.rojo] }, outOfRange: { color: C.fondo },
-      },
-      tooltip: { trigger: "item", formatter: (p) => tooltip(p.data) },
-      series: [{
-        type: "heatmap",
-        data: celdas.map((c) => ({ value: [c.x, c.y, c.v === null ? -1 : c.v], ...c,
-          ...(c.bajo ? { itemStyle: { opacity: 0.35 }, label: { color: C.texto2 } } : {}) })),
-        label: { show: true, color: C.texto, fontFamily: MONO, fontSize: T1, formatter: (p) => p.data.texto },
-        itemStyle: { borderColor: C.borde, borderWidth: 1 },
-        emphasis: { itemStyle: { borderColor: C.texto, borderWidth: 1 } },
-        cursor: "pointer",
-      }],
-    });
-    g.off("click");
-    if (alClic) g.on("click", (p) => alClic(p.data));
-  }
 
   // Curvas del modelo (vista Operaciones): precisión, recall y falsas alarmas contra los ejemplos vistos.
   // Tres grises que se distinguen por trazo; cada evento «modelo» agrega un punto y ECharts anima el tramo nuevo.
@@ -300,6 +236,32 @@ const Graficos = (() => {
     };
   }
 
-  return { C, hay, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, radar, calor, curvas, redimensionar, sinMovimiento };
+  // Curva del atacante adaptativo (vista Resultados): estafas exitosas acumuladas por ronda, una línea por
+  // defensa. Grises que se distinguen por trazo; el rojo solo si una estafa le ganó a esa defensa.
+  // `series` trae { nombre, puntos: [[ronda, %], ...], cayo }.
+  const TRAZOS = ["solid", [6, 3], [2, 3], [10, 3, 2, 3]];
+  const GRISES = () => [C.texto, C.texto2, C.texto3, C.texto2];
+  function curvaAtacante(el, series, { rondas, ayuda }) {
+    const g = iniciar(el);
+    if (!g) return;
+    g.setOption({
+      animation: !sinMovimiento,
+      grid: { left: 40, right: 136, top: 16, bottom: 32 },
+      xAxis: { type: "value", min: 0, max: Math.max(1, rondas), interval: 1, name: ayuda.eje_x, nameLocation: "middle", nameGap: 24,
+        nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, splitLine: { show: false } },
+      yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
+      tooltip: { trigger: "axis", formatter: (ps) => [`${ayuda.ronda} ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`)].join("<br>") },
+      series: series.map((x, i) => {
+        const color = x.cayo ? C.rojo : GRISES()[i % 4];
+        return { type: "line", name: x.nombre, data: x.puntos, symbol: "rect", symbolSize: 6, showSymbol: true,
+          lineStyle: { color, width: 1.5, type: TRAZOS[i % 4] }, itemStyle: { color }, emphasis: { disabled: true },
+          // La etiqueta al final de cada línea nombra la defensa: no hace falta leyenda aparte.
+          endLabel: { show: true, color, fontFamily: MONO, fontSize: T1, formatter: (p) => `${p.seriesName} ${Math.round(p.value[1])}%` },
+          labelLayout: { moveOverlap: "shiftY" } };
+      }),
+    });
+  }
+
+  return { C, hay, N_BAJO, hayTasa, nBajo, pp, pct, intervalo, tasaIntervalo, separados, monitor, curvas, curvaAtacante, redimensionar, sinMovimiento };
 })();
 window.Graficos = Graficos;

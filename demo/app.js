@@ -165,13 +165,14 @@ document.addEventListener("scroll", ocultarAyuda, true);
 // --- Vistas ---
 function irA(vista) {
   if (!VISTAS.includes(vista)) vista = "operaciones";
+  const anterior = estado.vista;
   estado.vista = vista;
   document.body.dataset.vista = vista;
   for (const v of VISTAS) $(`#vista-${v}`).hidden = v !== vista;
   document.querySelectorAll("[role=tab]").forEach((a) => a.setAttribute("aria-selected", String(a.dataset.vista === vista)));
   if (vista !== "vivo") cerrarCorreo();
   window.Operaciones?.alCambiarVista(vista);
-  if (vista === "vivo") abrirUltimaEstafa();
+  if (vista === "vivo") abrirUltimaEstafa(anterior === "operaciones");
   if (vista === "resultados") {
     if (!estado.analisisPintado) pintarAnalisis();
     requestAnimationFrame(Graficos.redimensionar);
@@ -181,9 +182,12 @@ addEventListener("hashchange", () => irA(location.hash.slice(1)));
 
 // Episodios abre el escenario de la estafa más reciente que vio Operaciones y que tenga episodio exportado.
 const hayEpisodio = (escenario) => CARRILES.some((c) => episodioDe(escenario, estado.idioma, c.defensas));
-function abrirUltimaEstafa() {
+// Al llegar desde Operaciones, además arranca a reproducir (salvo con movimiento reducido): la pantalla no
+// queda en tres carriles vacíos.
+function abrirUltimaEstafa(reproducirAlLlegar = false) {
   const u = window.Operaciones?.ultimaEstafa(hayEpisodio);
-  if (!u || estado.reproduciendo) return;
+  if (estado.reproduciendo) return;
+  if (!u) { if (reproducirAlLlegar && !Graficos.sinMovimiento) reproducir(); return; }
   const cambia = u.escenario !== estado.escenario;
   estado.desdeOps = u;
   if (cambia) {
@@ -192,6 +196,7 @@ function abrirUltimaEstafa() {
     cargarEscenario();
     estado.analisisPintado = false;
   } else pintarFranja();
+  if (reproducirAlLlegar && !Graficos.sinMovimiento) reproducir();
 }
 
 // --- Franja del escenario: tarea, monto y cuenta inscrita ---
@@ -615,7 +620,7 @@ async function guardarEtiqueta(eleccion, alerta) {
   } catch (e) { console.warn("sin servidor para la etiqueta", e); }
 }
 
-// --- Resultados: KPI, radares y mapas de calor ---
+// --- Resultados: los números del README, desde resultados.json (scripts/resultados_demo.py) ---
 async function cargarResultados() {
   if (location.protocol !== "file:") {
     try {
@@ -626,170 +631,11 @@ async function cargarResultados() {
   return window.RESULTADOS || null;
 }
 
-const DEFENSAS_EJE = ["none", "layer1", "layer2"];
-const modeloCorto = (m) => m.split("/").pop();
-const G = Graficos;
-
-// La página no agrega nada: dibuja `agregados` de resultados.json (scripts/exportar_resultados.py, que usa
-// resumen_resultados.agregar). Solo entra la configuración base, que es la que miden los KPI.
-const esBase = (a) => a.lista_cuentas && !a.aviso_escudo && !a.dueno_simulado;
-const agregados = (R) => (R?.agregados || []).filter(esBase);
-const modelosDe = (R) => [...new Set(agregados(R).map((a) => a.modelo))].sort();
-const agregado = (R, modelo, defensa, idioma = "todos") =>
-  agregados(R).find((a) => a.modelo === modelo && a.defensa === defensa && a.idioma === idioma) || null;
-// La columna «Escudo» es layer2 o, si no hay, both.
-const escudoDe = (R, modelo) => (agregado(R, modelo, "layer2") ? "layer2" : "both");
-const defensaDe = (R, modelo, d) => (d === "layer2" ? escudoDe(R, modelo) : d);
-
-// n y muestras válidas de un conjunto de métricas: «n 21 · 63/63 válidas».
-function resumenN(metricas) {
-  const con = metricas.filter(Boolean);
-  const ns = con.map((m) => m.escenarios).filter((n) => n > 0);
-  if (!ns.length) return t("sin_datos");
-  const mn = Math.min(...ns), mx = Math.max(...ns);
-  const v = con.reduce((a, m) => a + m.repeticiones, 0), tot = con.reduce((a, m) => a + m.repeticiones_totales, 0);
-  return `n ${mn === mx ? mx : `${mn}-${mx}`} · ${v}/${tot} ${t("validas")}`;
-}
-
-// Tasa grande en blanco con su intervalo al lado; el delta en gris con flecha, y color solo si es bueno o
-// malo y los intervalos no se tocan.
-function htmlKpi(clave, m, delta, pie, menosEsMejor = true) {
-  let d = "";
-  if (delta) {
-    const r = delta.pp;
-    const clase = !delta.real || r === 0 ? "" : (r < 0) === menosEsMejor ? "c-verde" : "c-rojo";
-    d = `<span class="delta ${clase}">${ms(r > 0 ? "arrow_upward" : r < 0 ? "arrow_downward" : "arrow_forward")}${r > 0 ? "+" : ""}${r} pp <span class="c-2">${esc(t("vs"))}</span></span>`;
-  }
-  const hay = G.hayTasa(m);
-  return `<div class="kpi" data-ayuda="${esc(`${t(`ayuda_${clave}`)}\n${t("ayuda_n")}`)}">
-    <span class="etiqueta">${esc(t(clave))}</span>
-    <span class="valor ${hay ? "" : "sin"}">${esc(hay ? G.pct(m) : "—")}${hay ? `<span class="intervalo">${esc(G.intervalo(m))}</span>` : ""}</span>
-    ${d}<span class="pie">${pie}</span></div>`;
-}
-
-function pintarKpis(R) {
-  const caja = $("#kpis");
-  const modelo = estado.modelo;
-  if (!R || !modelo) { caja.innerHTML = `<div class="kpi"><span class="etiqueta">${esc(t("sin_resultados"))}</span></div>`; return; }
-  const esc2 = escudoDe(R, modelo);
-  const sin = agregado(R, modelo, "none"), con = agregado(R, modelo, esc2);
-  const kpi = (clave, metrica, menosEsMejor) => {
-    const a = con?.[metrica], b = sin?.[metrica];
-    const delta = G.hayTasa(a) && G.hayTasa(b) ? { pp: G.pp(a.tasa) - G.pp(b.tasa), real: G.separados(a, b) } : null;
-    const pie = `${esc(t(`d_${esc2}`))} · ${esc(resumenN([a]))}<br>${esc(t("d_none"))} · ${esc(G.hayTasa(b) ? G.tasaIntervalo(b) : t("sin_datos"))}`;
-    return htmlKpi(clave, a, delta, pie, menosEsMejor);
-  };
-  const es = agregado(R, modelo, "none", "es")?.estafas_exitosas, en = agregado(R, modelo, "none", "en")?.estafas_exitosas;
-  const hayBrecha = G.hayTasa(es) && G.hayTasa(en);
-  const brecha = hayBrecha ? G.pp(es.tasa) - G.pp(en.tasa) : null;
-  const lado = (rotulo, m) => `${rotulo} ${G.hayTasa(m) ? G.tasaIntervalo(m) : t("sin_datos").toLowerCase()}`;
-  caja.innerHTML = kpi("k_estafas", "estafas_exitosas", true)
-    + kpi("k_utilidad", "utilidad", false)
-    + kpi("k_falsas", "falsas_alarmas", true)
-    + `<div class="kpi" data-ayuda="${esc(`${t("ayuda_k_brecha")}\n${t("ayuda_n")}`)}">
-    <span class="etiqueta">${esc(t("k_brecha"))}</span>
-    <span class="valor ${hayBrecha ? "" : "sin"}">${esc(hayBrecha ? `${brecha > 0 ? "+" : ""}${brecha} pp` : "—")}</span>
-    <span class="pie">${esc(lado("ES", es))} · ${esc(resumenN([es]))}<br>${esc(lado("EN", en))} · ${esc(resumenN([en]))}</span></div>`;
-}
-
-function pintarFuente(R) {
-  const el = $("#fuente");
-  if (!R) { el.textContent = ""; return; }
-  el.classList.toggle("prueba", !!R.prueba);
-  const validas = R.filas.filter((x) => x.valida).length;
-  el.textContent = R.prueba ? t("prueba") : t("fuente", { m: new Set(R.filas.map((x) => x.modelo)).size, n: `${validas}/${R.filas.length}` });
-  el.dataset.ayuda = [R.generado, ...R.registros.map((r) => `${modeloCorto(r.modelo)} · ${r.defensa}`),
-    ...R.omitidos.map((o) => `${modeloCorto(o.modelo)} · ${o.defensa}: ${o.motivo}`)].join("\n");
-}
-
-// El selector de modelo se llena con los modelos de los agregados.
-function llenarModelos(R) {
-  const modelos = modelosDe(R);
-  if (!modelos.includes(estado.modelo)) estado.modelo = modelos[0] || null;
-  const sel = $("#sel-modelo");
-  sel.innerHTML = modelos.map((m) => `<option value="${esc(m)}">${esc(modeloCorto(m))}</option>`).join("");
-  sel.value = estado.modelo || "";
-}
-
-// Línea de tooltip: «Urgencia  8 % [0-21]  n 12 · n bajo». Sin escenarios, «sin datos».
-function lineaMetrica(rotulo, m) {
-  if (!G.hayTasa(m)) return `${esc(rotulo)}  ${esc(t("sin_datos"))}`;
-  return `${esc(rotulo)}  ${esc(G.tasaIntervalo(m))}  n ${m.escenarios}${G.nBajo(m) ? ` · ${esc(t("n_bajo"))}` : ""}`;
-}
-
-function pintarRadares(R) {
-  $("#radares").innerHTML = DEFENSAS_EJE.map((d) => `<figure class="grafico"><figcaption class="titulo">${ms(d === "none" ? "gpp_bad" : "shield")}<span>${esc(t(`d_${d}`))}</span><span class="nota" id="nota-radar-${d}"></span></figcaption><div class="lienzo" id="radar-${d}"></div></figure>`).join("");
-  if (!R) return;
-  const ejes = R.tacticas.map((x) => x[estado.idioma] || x.es);
-  for (const d of DEFENSAS_EJE) {
-    const a = estado.modelo ? agregado(R, estado.modelo, defensaDe(R, estado.modelo, d)) : null;
-    const total = a?.estafas_exitosas;
-    const hay = G.hayTasa(total);
-    const metricas = R.tacticas.map((x) => a?.tacticas?.[x.clave] || null);
-    $(`#nota-radar-${d}`).textContent = hay ? resumenN([total]) : "";
-    G.radar($(`#radar-${d}`), ejes, metricas, hay ? null : t("sin_datos"), lineaMetrica);
-  }
-}
-
-// Un escenario con esa táctica que tenga episodio exportado en el idioma actual.
-function escenarioPara(R, tactica) {
-  const conTactica = new Set(R.filas.filter((f) => f.tacticas.includes(tactica)).map((f) => f.escenario));
-  return [...conTactica].find((e) => CARRILES.some((c) => episodioDe(e, estado.idioma, c.defensas))) || null;
-}
-
-function abrirEnVivo(escenario, idioma) {
-  if (idioma && idioma !== estado.idioma) { estado.idioma = idioma; llenarEscenarios(); estado.analisisPintado = false; }
-  estado.escenario = escenario;
-  $("#sel-escenario").value = escenario;
-  location.hash = "vivo";
-  irA("vivo");
-  scrollTo({ top: 0 });
-  reproducir();
-}
-
-function pintarCalor(R) {
-  if (!R) return;
-  const modelo = estado.modelo;
-  const filasT = R.tacticas.map((x) => x[estado.idioma] || x.es);
-  const agregadoDe = (d) => (modelo ? agregado(R, modelo, defensaDe(R, modelo, d)) : null);
-  const celdasT = [];
-  R.tacticas.forEach((x, y) => DEFENSAS_EJE.forEach((d, xi) => {
-    const m = agregadoDe(d)?.tacticas?.[x.clave] || null;
-    celdasT.push({ x: xi, y, v: G.hayTasa(m) ? G.pp(m.tasa) : null, texto: G.tasaIntervalo(m), bajo: G.nBajo(m), m, defensa: d, escenario: escenarioPara(R, x.clave) });
-  }));
-  const pie = (c) => (c.escenario ? `${t("abrir")}: ${c.escenario}` : t("sin_episodio"));
-  const detalle = (m) => (G.hayTasa(m) ? `${esc(G.tasaIntervalo(m))} ${esc(t("t_exito"))}<br>${esc(resumenN([m]))}${G.nBajo(m) ? ` · ${esc(t("n_bajo"))}` : ""}` : esc(t("sin_datos")));
-  $("#nota-calor-tactica").textContent = `${t("t_exito")} · ${resumenN(DEFENSAS_EJE.map((d) => agregadoDe(d)?.estafas_exitosas))}`;
-  G.calor($("#calor-tactica"), {
-    columnas: DEFENSAS_EJE.map((d) => t(`d_${d}`)), filas: filasT, celdas: celdasT,
-    tooltip: (c) => `${esc(filasT[c.y])} · ${esc(t(`d_${c.defensa}`))}<br>${detalle(c.m)}<br>${esc(pie(c))}`,
-    alClic: (c) => c.escenario && abrirEnVivo(c.escenario),
-  });
-
-  const modelos = modelosDe(R);
-  const idiomas = ["es", "en"];
-  const celdasM = [];
-  modelos.forEach((mo, y) => idiomas.forEach((i, x) => {
-    const m = agregado(R, mo, "none", i)?.estafas_exitosas || null;
-    const escenario = CARRILES.some((c) => episodioDe(estado.escenario, i, c.defensas)) ? estado.escenario : null;
-    celdasM.push({ x, y, v: G.hayTasa(m) ? G.pp(m.tasa) : null, texto: G.tasaIntervalo(m), bajo: G.nBajo(m), m, modelo: mo, idioma: i, escenario });
-  }));
-  $("#nota-calor-modelo").textContent = `${t("t_modelo")} · ${resumenN(celdasM.map((c) => c.m))}`;
-  G.calor($("#calor-modelo"), {
-    columnas: idiomas.map((i) => i.toUpperCase()), filas: modelos.map(modeloCorto), celdas: celdasM,
-    tooltip: (c) => `${esc(modeloCorto(c.modelo))} · ${c.idioma.toUpperCase()}<br>${detalle(c.m)}<br>${esc(pie(c))}`,
-    alClic: (c) => c.escenario && abrirEnVivo(c.escenario, c.idioma),
-  });
-}
-
 // Los gráficos se dibujan cuando la vista está visible (ECharts necesita medir el contenedor).
 function pintarAnalisis() {
-  const R = estado.resultados;
-  pintarFuente(R);
+  window.ResultadosVista?.fuente(estado.resultados);
   if (estado.vista !== "resultados") { estado.analisisPintado = false; return; }
-  pintarKpis(R);
-  pintarRadares(R);
-  pintarCalor(R);
+  window.ResultadosVista?.pintar(estado.resultados);
   estado.analisisPintado = true;
 }
 
@@ -834,6 +680,5 @@ if (params.get("escenario")) estado.escenario = params.get("escenario");
 llenarEscenarios();
 irA(location.hash.slice(1) || "operaciones");
 cargarEscenario();
-$("#sel-modelo").addEventListener("change", (e) => { estado.modelo = e.target.value; pintarAnalisis(); });
-cargarResultados().then((R) => { estado.resultados = R; llenarModelos(R); pintarAnalisis(); });
+cargarResultados().then((R) => { estado.resultados = R; pintarAnalisis(); });
 if (params.has("auto")) reproducir();

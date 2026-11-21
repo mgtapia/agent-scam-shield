@@ -10,10 +10,12 @@ No usa ningún modelo ni API: el clasificador es propio y el corpus son los esce
 Uso:
     python scripts/validacion_cruzada_vivo.py
     python scripts/validacion_cruzada_vivo.py --episodios 300 --semillas 1,2,3,4,5
+    python scripts/validacion_cruzada_vivo.py --json results/clasificador.json
 """
 from __future__ import annotations
 
 import argparse
+import json
 import itertools
 import statistics as st
 import sys
@@ -63,6 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--episodios", type=int, default=300, help="episodios de entrenamiento por corrida")
     p.add_argument("--semillas", default="1,2,3", help="semillas separadas por coma")
+    p.add_argument("--json", type=Path, help="guarda además los números en este archivo")
     a = p.parse_args(argv)
     filas, total = validar(a.episodios, [int(s) for s in a.semillas.split(",")])
     print(f"| Pliegue | Escenarios apartados | Correos | Recall | Precisión | Falsas alarmas |\n|---|---|---|---|---|---|")
@@ -74,6 +77,10 @@ def main(argv: list[str] | None = None) -> int:
     for k, v in total.items():
         print(f"  {k:15} media {v['media']:.2f}  rango [{v['min']:.2f} - {v['max']:.2f}]")
     print(f"  recall antes de entrenar: {sorted({f['recall_antes'] for f in filas})}")
+    if a.json:
+        a.json.write_text(json.dumps({"episodios": a.episodios, "semillas": [int(s) for s in a.semillas.split(",")],
+                                      "pliegues": 3, "corridas": len(filas), "total": total, "filas": filas},
+                                     indent=2, ensure_ascii=False), encoding="utf-8")
     return 0
 
 
