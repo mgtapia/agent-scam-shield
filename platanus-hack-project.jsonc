@@ -1,0 +1,6 @@
+{
+  "project-name": "Grifter",
+  "project-oneliner-spanish": "Escudo para agentes de IA que pagan: frena estafas antes de mover dinero.",
+  "project-description-spanish": "Grifter revisa de dónde vienen los datos de pago de un agente de IA. Retiene destinos no verificados y pide confirmación al dueño; con un mandato, también compara el cobro con lo aprobado. Incluye un proxy MCP, integración Python y un benchmark de estafas en español chileno e inglés.",
+  "deploy-url": "https://grifter.onrender.com"
+}

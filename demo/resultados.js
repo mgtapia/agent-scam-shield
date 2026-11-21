@@ -1,7 +1,7 @@
 // Generado por scripts/resultados_demo.py. No editar a mano.
 window.RESULTADOS = {
  "generado": "2026-11-21T16:59:49+00:00",
- "readme": "README.md#resultados",
+ "readme": "GUIA.md#resultados",
  "bench": {
   "agente": "guionado",
   "aviso": "agente guionado: mide las defensas, no un modelo",
