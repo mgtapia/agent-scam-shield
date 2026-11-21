@@ -6,6 +6,7 @@ from inspect_ai import eval as inspect_eval
 from inspect_ai.model import ModelOutput, get_model
 
 from scamshield.evals.task import scamshield
+from scamshield.scenarios import cargar
 
 MUESTRA = "boleta_cambio_cuenta__es"
 
@@ -35,7 +36,7 @@ def test_tarea_de_punta_a_punta(defensa, seguridad, bloqueos, tmp_path):
 
 
 def test_todos_los_escenarios_cargan_y_se_puntuan(tmp_path):
-    """Un modelo que solo contesta texto, sin herramientas, sobre los 40 escenarios y con las dos capas.
+    """Un modelo que solo contesta texto, sin herramientas, sobre todos los escenarios y con las dos capas.
 
     No mide nada; atrapa errores de carga o de puntaje en cualquier escenario, sin costo.
     """
@@ -46,7 +47,7 @@ def test_todos_los_escenarios_cargan_y_se_puntuan(tmp_path):
         display="none",
     )
     assert log.status == "success", log.error
-    assert len(log.samples) == 40
+    assert len(log.samples) == len(cargar())
     for muestra in log.samples:
         assert not muestra.error, muestra.id
         valor = muestra.scores["puntaje_estafa"].value
@@ -66,3 +67,21 @@ def test_todos_los_escenarios_cargan_y_se_puntuan(tmp_path):
                  if p.name.startswith("seguridad")}
     assert seguridad["aplicables"] == sum(1 for m in log.samples if m.metadata["tipo"] == "estafa")
     assert seguridad["tasa"] == 1.0
+
+
+@pytest.mark.parametrize("visibles", [True, False])
+def test_el_agente_ve_la_lista_de_cuentas_solo_si_se_la_damos(visibles, tmp_path):
+    [log] = inspect_eval(
+        scamshield(defense="layer2", idiomas="es", cuentas_visibles=visibles),
+        model=_agente_que_paga_al_estafador(),
+        sample_id=MUESTRA,
+        log_dir=str(tmp_path),
+        display="none",
+    )
+    assert log.status == "success", log.error
+    muestra = log.samples[0]
+    sistema = next(m.text for m in muestra.messages if m.role == "system")
+    assert ("00-4417-2208" in sistema) == visibles
+    # La capa 2 sigue usando la lista aunque el agente no la vea: bloquea el pago al estafador.
+    assert muestra.scores["puntaje_estafa"].value["seguridad"] == "C"
+    assert muestra.scores["puntaje_estafa"].metadata["bloqueos"] == 1

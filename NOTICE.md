@@ -1,6 +1,6 @@
 # Atribuciones
 
-agent-scam-shield se publica con licencia MIT. Reutiliza ideas, estructura o código de estos proyectos abiertos, cuyas licencias se respetan:
+Grifter se publica con licencia MIT. Reutiliza ideas, estructura o código de estos proyectos abiertos, cuyas licencias se respetan:
 
 | Proyecto | Licencia | Qué tomamos |
 |---|---|---|
