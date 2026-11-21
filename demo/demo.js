@@ -649,30 +649,32 @@
   function callar() { timbre.forEach((o) => { try { o.stop(); } catch (_) { /* ya paró */ } }); timbre = []; Object.values(pistas).forEach((a) => a.pause()); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
 
   // --- Modo revisión (?revisar=1): muestra el segundo actual para decir «en t = 48,7 cambia esto». No sale en el pitch. ---
-  // Letra de los titulares, el logo y las cifras. Por defecto IBM Plex Sans; con ?letra= se prueba otra (vista previa).
+  // Letra de los titulares, el logo y las cifras. Por defecto Outfit, la familia del logo de MR (se carga en demo.html);
+  // con ?letra= se prueba otra (vista previa) y ?letra=plex vuelve a IBM Plex Sans. El texto chico sigue en IBM Plex.
+  const POR_DEFECTO = "outfit";
   const LETRAS = {
-    plex: ["IBM Plex Sans (actual)", "", ""],
+    plex: ["IBM Plex Sans", "", ""],
     space: ["Space Grotesk", "Space+Grotesk:wght@500;700", "-0.03em"],
     sora: ["Sora", "Sora:wght@600;800", "-0.04em"],
     bricolage: ["Bricolage Grotesque", "Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800", "-0.03em"],
     serif: ["Instrument Serif", "Instrument+Serif:ital@0;1", "-0.01em"],
     syne: ["Syne", "Syne:wght@700;800", "-0.03em"],
-    outfit: ["Outfit", "Outfit:wght@600;700", "-0.02em"],
+    outfit: ["Outfit (actual)", "Outfit:wght@600;700", "-0.02em"],
   };
   function ponerLetra(clave) {
-    const [nombre, familia, espacio] = LETRAS[clave] || LETRAS.plex;
+    const [nombre, familia, espacio] = LETRAS[clave] || LETRAS[POR_DEFECTO];
     const raiz = document.documentElement;
     if (!familia) { raiz.style.removeProperty("--titular"); raiz.style.removeProperty("--titular-esp"); delete raiz.dataset.letra; return; }
-    if (!document.getElementById(`md-letra-${clave}`)) {
+    if (clave !== "outfit" && !document.getElementById(`md-letra-${clave}`)) {
       const hoja = document.createElement("link");
       Object.assign(hoja, { id: `md-letra-${clave}`, rel: "stylesheet", href: `https://fonts.googleapis.com/css2?family=${familia}&display=swap` });
       document.head.append(hoja);
     }
-    raiz.style.setProperty("--titular", `"${nombre}", var(--sans)`);
+    raiz.style.setProperty("--titular", `"${nombre.replace(" (actual)", "")}", var(--sans)`);
     raiz.style.setProperty("--titular-esp", espacio);
     raiz.dataset.letra = clave;
   }
-  ponerLetra(params.get("letra") || "plex");
+  ponerLetra(LETRAS[params.get("letra")] ? params.get("letra") : POR_DEFECTO);
 
   // Una barra de controles abajo: retroceder, pausar, avanzar, arrastrar al segundo exacto y copiar el enlace del cuadro.
   let revisor = null;
@@ -706,7 +708,7 @@
     const letra = document.createElement("select");
     letra.title = "Letra de titulares, logo y cifras (vista previa)";
     for (const [clave, [nombre]] of Object.entries(LETRAS)) letra.append(new Option(nombre, clave));
-    letra.value = LETRAS[params.get("letra")] ? params.get("letra") : "plex";
+    letra.value = LETRAS[params.get("letra")] ? params.get("letra") : POR_DEFECTO;
     letra.addEventListener("change", () => { ponerLetra(letra.value); letra.blur(); });
     caja.append(letra);
     boton("Copiar enlace", "Copia el enlace de este cuadro", () => {
