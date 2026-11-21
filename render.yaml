@@ -1,0 +1,19 @@
+# Demo pública de Grifter en Render (#21). Un solo servicio: la página, el motor en vivo y «Intenta estafarlo».
+# Sin llaves de API: el motor y /api/probar no llaman a ningún modelo. Telegram queda apagado aquí a propósito:
+# un bot admite un solo long polling y ese lo usa la demo local.
+services:
+  - type: web
+    name: grifter
+    runtime: python
+    plan: free   # sin cobro; con el crédito de Render canjeado, pasar a starter (no se duerme)
+    region: oregon
+    buildCommand: pip install ".[demo]"
+    startCommand: python -m demo.server --host 0.0.0.0 --puerto $PORT
+    healthCheckPath: /api/salud
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # Detrás del proxy de Render, el tope por IP de /api/probar lee la última dirección de X-Forwarded-For.
+      - key: GRIFTER_PROXY_CONFIABLE
+        value: "1"

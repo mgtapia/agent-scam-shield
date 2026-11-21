@@ -71,6 +71,7 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--max-episodios", type=int, help="Tope de episodios de la víctima en toda la corrida.")
     p.add_argument("--realismo-min", type=int, default=5, help="Realismo mínimo (1 a 10). Por defecto %(default)s.")
     p.add_argument("--max-connections", type=int, default=2, help="Llamadas simultáneas. Por defecto %(default)s.")
+    p.add_argument("--retry-on-error", type=int, help="Reintentos de un episodio de la víctima que falla (cuota, red).")
     p.add_argument("--sin-cache", action="store_true", help="No reusa respuestas guardadas en caché.")
     p.add_argument("--salida", help="JSONL de salida. Por defecto results/raw/atacante_<fecha>.jsonl.")
     p.add_argument("--log-dir", default=str(RAIZ / "logs" / "atacante"))
@@ -119,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
         victima=args.victima,
         atacante=get_model(nombre_atacante, config=GenerateConfig(max_connections=args.max_connections, max_retries=40)),
         defensas=defensas, rondas=args.rondas, realismo_min=args.realismo_min,
-        max_episodios=args.max_episodios, cache=not args.sin_cache, log_dir=args.log_dir, salida=salida,
+        max_episodios=args.max_episodios, cache=not args.sin_cache, retry_on_error=args.retry_on_error, log_dir=args.log_dir, salida=salida,
         nombre_victima=args.victima,
         al_terminar_ronda=lambda r, filas: print(
             f"Ronda {r}: {len(filas)} episodios, {sum(f['exito'] for f in filas)} estafas cayeron, "
