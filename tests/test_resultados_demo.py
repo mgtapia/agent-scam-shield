@@ -143,3 +143,14 @@ def test_cobertura_por_tipo_de_ataque_esperada_contra_real(tmp_path):
                       encoding="utf-8")
     assert [l["razon"] for l in limites_conocidos(tmp_path)] == ["Hueco: no lo vemos."]
     assert "| **Total** |" in tabla_cobertura(c)
+
+
+def test_es_contra_en_trae_las_dos_tasas_por_configuracion():
+    e = armar()["bench"]["es_contra_en"]
+    assert {"none", "layer2", "layer23"} <= {c["clave"] for c in e["configuraciones"]}
+    for c in e["configuraciones"]:
+        for idioma in ("es", "en"):
+            m = c[idioma]["estafas_exitosas"]
+            assert 0 <= m["bajo"] <= m["tasa"] <= m["alto"] <= 1 and m["escenarios"] > 0
+    # Cada par es un escenario en los dos idiomas; los que difieren son un subconjunto de esos pares.
+    assert e["pares"] > 0 and len(e["difieren"]) <= e["pares"]

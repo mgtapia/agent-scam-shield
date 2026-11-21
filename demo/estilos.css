@@ -390,14 +390,62 @@ body:not([data-vista="operaciones"]):not([data-vista="vivo"]) .solo-flujo { disp
 .panel-lateral .cuerpo { color: var(--texto-2); max-width: 65ch; border-bottom: 0; overflow-y: auto; }
 mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--mono); padding: 0 var(--e-1); }
 
-/* --- Resultados: los números del README --- */
-.res-bloque { min-width: 0; border: var(--linea); background: var(--superficie); }
-.res-bench { grid-column: 1 / span 7; grid-row: 1; }
-.res-reales { grid-column: 8 / span 5; grid-row: 1 / span 2; align-self: stretch; }
-.res-atacante { grid-column: 1 / span 7; grid-row: 2; }
-.res-colados { grid-column: 1 / -1; grid-row: 3; }
-.res-cmd { font-weight: var(--p-normal); font-size: var(--t-1); }
+/* --- Resultados: la historia del benchmark de arriba abajo, en la grilla de 12 columnas --- */
+.res-bloque { min-width: 0; border: var(--linea); background: var(--superficie); align-self: stretch; }
+.res-cifras { display: contents; }
+.res-cifra { grid-column: span 3; display: grid; align-content: start; gap: var(--e-1); padding: var(--e-2) var(--e-3);
+  border: var(--linea); background: var(--superficie); min-width: 0; outline-offset: -1px; }
+.res-cifra .etiqueta { color: var(--texto-2); }
+.res-valor { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--e-1); }
+.res-grande { font-size: var(--t-5); line-height: var(--l-5); font-weight: var(--p-fuerte); }
+.res-cifra .res-grande { font-size: var(--t-kpi); line-height: var(--l-kpi); }
+.res-valor .r-int { margin-left: 0; }
+.res-linea { display: flex; align-items: center; flex-wrap: wrap; gap: 0 var(--e-1); font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); min-width: 0; }
+.res-delta { display: inline-flex; align-items: center; color: var(--texto-2); }
+.res-delta.c-verde { color: var(--verde); }
+.res-delta.c-rojo { color: var(--rojo); }
+.res-pie { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 var(--e-1); margin-left: auto; min-width: 0; }
+.res-fuente { color: var(--texto-2); font: var(--p-normal) var(--t-1) / var(--l-1) var(--mono); text-decoration: underline; text-decoration-color: var(--borde); text-underline-offset: 4px; overflow-wrap: anywhere; }
+.res-fuente:hover { color: var(--texto); }
+.res-copiar.boton { width: 32px; height: 32px; color: var(--texto-2); }
+.res-ir { display: inline-flex; align-items: center; gap: var(--e-1); color: var(--texto); text-decoration: underline; text-decoration-color: var(--borde); text-underline-offset: 4px; }
+.res-bench { grid-column: 1 / span 7; }
+.res-segutil { grid-column: 8 / span 5; display: flex; flex-direction: column; }
+.res-segutil .lienzo { flex: 1; min-height: 288px; }
+.res-colados { grid-column: 1 / -1; }
+.res-idiomas { grid-column: 1 / span 5; }
+.res-reales { grid-column: 6 / span 7; }
+.res-reales .res-reales-lista { grid-template-columns: minmax(0, 1fr); }
+.res-reales .res-real + .res-real { border-left: 0; border-top: var(--linea); }
+.res-reales .res-real { grid-template-columns: minmax(0, 1fr) auto; }
+.res-reales .res-real > .res-valor { grid-column: 2; grid-row: 1 / span 2; justify-content: flex-end; }
+.res-reales .res-real > .r-det, .res-reales .res-real > .res-pie { grid-column: 1; }
+.res-atacante { grid-column: 1 / span 8; }
+.res-duelo { grid-column: 9 / span 4; display: flex; flex-direction: column; }
+.res-clasif { grid-column: 1 / -1; }
+.res-cobertura { grid-column: 1 / -1; }
+.r-cobertura tbody th, .r-cobertura tbody td { padding-top: 0; padding-bottom: 0; height: 32px; }
+.r-cobertura tbody th .tag { margin-left: var(--e-1); font-weight: var(--p-normal); }
+.cob-par { display: inline-flex; align-items: center; gap: var(--e-1); }
+.cob-par .ms { color: var(--texto-3); }
+.cob-par .dato { min-width: 24px; text-align: right; }
+.r-barra.vacia { background: transparent; border: var(--linea); height: 8px; }
+.cob-par .r-barra { width: 96px; margin-left: var(--e-1); }
+.r-barra.gris .r-tasa { background: var(--texto-2); }
+.res-limites { border-top: var(--linea); }
+.res-limites summary { display: flex; align-items: center; gap: var(--e-1); min-height: 48px; padding: 0 var(--e-2); cursor: pointer; font-weight: var(--p-fuerte); list-style: none; }
+.res-limites summary::-webkit-details-marker { display: none; }
+.res-limites summary .ms { color: var(--texto-2); transition: transform var(--dur) ease-out; }
+.res-limites[open] summary .ms { transform: rotate(180deg); }
+.res-limites ol { border-top: var(--linea); }
+.res-limites li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: start; gap: var(--e-1) var(--e-2); padding: var(--e-1) var(--e-2); color: var(--texto-2); outline-offset: -1px; }
+.res-limites li + li { border-top: var(--linea); }
+.res-limites li .ms { color: var(--texto-3); }
+.res-bloque .titulo { flex-wrap: wrap; }
 .res-bloque .titulo .nota { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.res-bloque .titulo .res-pie { margin-left: var(--e-2); }
+.res-desliza { overflow-x: auto; }
+.res-desliza .r-colados tbody th, .res-desliza .r-cobertura tbody th { position: sticky; left: 0; z-index: 1; background: var(--superficie); }
 
 /* Tabla del bench: una fila por configuración; la tasa de estafas con barra e intervalo */
 .r-tabla { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
@@ -413,14 +461,35 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .r-barra { position: relative; flex: none; width: 128px; height: 8px; background: var(--borde); }
 .r-barra .r-ic { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--rojo) 35%, transparent); }
 .r-barra .r-tasa { position: absolute; top: 0; bottom: 0; left: 0; background: var(--rojo); }
-/* Qué se cuela: conteos n/de en mono; el 0 en gris, y en rojo solo lo que cruza el escudo completo */
+/* Qué se cuela: mapa de calor de superficie a rojo; el 0 en gris. Las celdas con episodio se abren con un clic */
 .r-colados td { text-align: right; }
+.r-colados tbody th, .r-colados tbody td { padding-top: 0; padding-bottom: 0; height: 32px; }
+.r-colados td.calor { color: var(--texto); }
+.r-colados td.con-ep { cursor: pointer; text-decoration: underline; text-decoration-color: var(--texto-2); text-underline-offset: 4px; outline-offset: -1px; }
+.r-colados td.con-ep:hover { color: var(--texto); background-color: var(--borde); }
+.r-idiomas td { white-space: nowrap; }
 .r-colados thead th + th { text-align: right; }
 .r-colados tbody th .tag { margin-left: var(--e-1); font-weight: var(--p-normal); }
 .r-colados .r-cero { color: var(--texto-3); }
 .r-colados tr.r-total { border-top: var(--linea); }
 .r-colados tr.r-total th, .r-colados tr.r-total td { font-weight: var(--p-fuerte); }
 
+/* Modelos reales y métricas del clasificador: celdas lado a lado, separadas por la línea */
+.res-reales-lista { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.res-real { display: grid; align-content: start; gap: var(--e-1); padding: var(--e-2); min-width: 0; outline-offset: -1px; }
+.res-real + .res-real { border-left: var(--linea); }
+.res-real .res-pie { margin-left: 0; }
+.res-modos { flex: 1; }
+.res-modo { display: grid; gap: var(--e-1); padding: var(--e-2); outline-offset: -1px; }
+.res-modo + .res-modo { border-top: var(--linea); }
+.res-modo .r-barra, .res-canal .r-barra { width: 100%; }
+.res-par { display: flex; justify-content: space-between; gap: var(--e-2); font-size: var(--t-1); line-height: var(--l-1); }
+.res-duelo .r-aviso { justify-content: space-between; }
+.res-clasif-cuerpo { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.res-canales { border-left: var(--linea); padding: var(--e-2); min-width: 0; }
+.res-canales > .r-que { margin: 0 0 var(--e-1); }
+.res-canal { display: grid; grid-template-columns: 80px minmax(0, 1fr) 56px 40px minmax(0, auto); align-items: center; gap: var(--e-2); min-height: 32px; outline-offset: -1px; }
+.res-corridas { font-size: var(--t-1); line-height: var(--l-1); white-space: nowrap; }
 /* Mediciones con modelos reales: una fila por medición, el número grande y su intervalo */
 .res-lista > li + li { border-top: var(--linea); }
 .r-fila { display: grid; gap: 0 var(--e-2); padding: var(--e-2); outline-offset: -1px; }
@@ -794,7 +863,8 @@ mark.tramo { background: transparent; color: inherit; }
 @media (max-width: 1099px) {
   .vista.duelo { height: auto; min-height: 0; grid-template-rows: none; }
   .du-congelado, .du-aprende { grid-column: 1 / -1; height: 360px; }
-  .res-bench, .res-reales, .res-atacante, .res-colados { grid-column: 1 / -1; grid-row: auto; }
+  .res-bench, .res-segutil, .res-colados, .res-idiomas, .res-reales, .res-atacante, .res-duelo { grid-column: 1 / -1; }
+  .res-cifra { grid-column: span 6; }
   .barra { grid-template-columns: auto minmax(0, 1fr); height: auto; padding: var(--e-1) var(--e-2); row-gap: var(--e-1); }
   .pestanas { grid-row: 2; grid-column: 1 / -1; height: 48px; margin-left: 0; }
   .panel-lateral { top: 0; }
@@ -806,7 +876,12 @@ mark.tramo { background: transparent; color: inherit; }
   .ops-modelo { grid-column: 1 / -1; height: 360px; }
 }
 @media (max-width: 899px) {
-  .carril, .res-bench, .res-reales, .res-atacante, .res-colados { grid-column: 1 / -1; grid-row: auto; }
+  .carril { grid-column: 1 / -1; grid-row: auto; }
+  .res-reales-lista, .res-clasif-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  .res-real + .res-real { border-left: 0; border-top: var(--linea); }
+  .res-canales { border-left: 0; border-top: var(--linea); }
+  .res-canal { grid-template-columns: 72px minmax(0, 1fr) 56px 40px; }
+  .res-corridas { display: none; }
   .franja { grid-template-columns: minmax(0, 1fr) auto; }
   .franja .celda-tarea { grid-column: 1 / -1; grid-row: 2; border-left: 0; border-top: var(--linea); }
   .franja .celda-inscrita { grid-column: 1 / -1; border-left: 0; border-top: var(--linea); }
@@ -843,15 +918,18 @@ mark.tramo { background: transparent; color: inherit; }
   .pestanas a { padding: 0 var(--e-1); }
   .pestanas a .ms { display: none; }
   /* El bench en el móvil: cada configuración en dos líneas, sin scroll interno. */
-  .r-tabla thead { display: none; }
-  .r-tabla tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--e-2); padding: var(--e-1) 0; }
-  .r-tabla th[scope="row"], .r-tabla .r-estafas { grid-column: 1 / -1; padding-bottom: 0; }
-  .r-tabla td[data-et]::before { content: attr(data-et); display: block; color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
-  .r-tabla td { white-space: normal; }
+  .r-tabla:not(.r-colados):not(.r-cobertura) thead { display: none; }
+  .r-tabla:not(.r-colados):not(.r-cobertura) tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--e-2); padding: var(--e-1) 0; }
+  .r-tabla:not(.r-colados):not(.r-cobertura) th[scope="row"], .r-tabla .r-estafas { grid-column: 1 / -1; padding-bottom: 0; }
+  .r-tabla:not(.r-colados):not(.r-cobertura) td[data-et]::before { content: attr(data-et); display: block; color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
+  .r-tabla:not(.r-colados):not(.r-cobertura) td { white-space: normal; }
   .res-bloque .titulo { flex-wrap: wrap; }
   .res-bloque .titulo .nota { white-space: normal; margin-left: 0; flex-basis: 100%; }
   .fuente, .res-cmd { display: none; }
   .r-barra { width: 64px; }
+}
+@media (max-width: 479px) {
+  .res-cifra { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
