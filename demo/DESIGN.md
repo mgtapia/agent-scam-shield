@@ -72,11 +72,16 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas al centro y
   - Arriba va una fila de agentes con su estado, su tarea y su cola. El agente cuyo correo está en Lectura se subraya como la pestaña activa.
   - Al medio van Entrada (un correo por fila, el más nuevo arriba), Lectura (el correo activo, sus tramos y el veredicto con señales y acción) y Registro (todos los eventos en mono, el más nuevo abajo).
   - Abajo van Defensa en capas (contadores y una barra apilada por familia), Bóveda (los indicadores, como una cuarentena) y Modelo (versión, métricas, curva y pesos).
-  - Defensa en capas cuenta una vez por correo, al terminar su lectura: la capa que retuvo la acción (Firewall o Escudo); Bóveda si la atajó la bóveda y ninguna capa retuvo la acción; o «ejecutada». Los contadores son la suma de las barras.
+  - En Defensa en capas, los contadores son los de `bloqueos_por_capa` del motor: Firewall y Escudo cuentan acciones retenidas, y Bóveda, veredictos atajados por la bóveda. Cada número va por su lado: no suman lo mismo que las barras.
+  - La barra por familia lleva un desenlace por correo, al terminar su lectura: la capa que retuvo la acción, la bóveda si ninguna capa la retuvo, o «ejecutada».
+  - El correo escrito en Pruébalo entra al flujo marcado con la etiqueta neutra «Juez» en lugar del agente. Su cuerpo se desplaza dentro de Lectura como cualquier otro.
   - Desde 1600 px de ancho y 900 de alto, todo cabe en una pantalla. Más bajo o más angosto, las filas pasan a alto fijo y la página se desplaza. Bajo 1600 px, Registro baja a la fila de Bóveda y Modelo ocupa el ancho.
   - Cada bloque recorta su contenido y desplaza lo suyo. En Lectura, el cuerpo y la lista de tramos ceden alto y el veredicto con la acción queda siempre visible abajo. Del veredicto se muestran las tres señales de más peso y un «+n».
-  - El sello de la barra dice «Simulación · motor real» con el motor, y «Simulación · emisor local» con el respaldo. Al lado van pausa y 1x/2x/4x.
-- **En vivo:**
+  - El sello de la barra dice «Simulación · motor real» con el motor, y «Simulación · emisor local» con el respaldo. Al lado va la pausa.
+- **Un solo estado para todas las pestañas:** el idioma ES/EN y la velocidad 1x/2x/4x. La velocidad se ve en Operaciones y en Episodios, y mueve a la vez el flujo del motor y la reproducción del episodio.
+- **Episodios** (`#vivo`): episodios exportados de Inspect, en tres carriles. Un carril corrido con mockllm lleva la etiqueta «Datos de prueba».
+  - Al entrar, abre el escenario de la estafa más reciente que vio Operaciones y que tenga episodio exportado, con la etiqueta «Visto en Operaciones».
+  - Elegir otro escenario en el selector manda sobre eso.
   - una franja con el escenario: dueño, tarea en una línea, monto y cuenta inscrita;
   - los tres carriles («Sin defensa», «Firewall», «Escudo»), cada uno con ECG, pasos y veredicto;
   - la lista de correos, de una línea por correo. El cuerpo se abre en un panel lateral, y ahí solo se resalta la cuenta que usó el agente.
@@ -84,8 +89,13 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas al centro y
 - **Resultados:**
   - KPI (estafas exitosas, utilidad, falsas alarmas y brecha entre ES y EN);
   - un radar por configuración;
-  - los mapas de calor táctica × defensa y modelo × idioma. Un clic en una celda abre ese episodio en En vivo.
-- **Pruébalo:** solo el esqueleto de «Intenta estafarlo» (#21).
+  - los mapas de calor táctica × defensa y modelo × idioma. Un clic en una celda abre ese episodio en Episodios.
+- **Pruébalo:** «Intenta estafarlo» (#21), conectado a `POST /api/probar`.
+  - A la izquierda va el formulario, con el encargo del dueño y su cuenta inscrita arriba para que el juez sepa a qué apunta. A la derecha va el resultado.
+  - El resultado lleva el veredicto («Frenada» en verde, «Pasó» en rojo o «Sin acción» en gris), la acción que intentó el agente y una fila por capa con su resultado («Retenida» o «Ejecutada», como en Operaciones) y su motivo. La fila del escudo completo no repite el motivo: dice qué partes la frenan.
+  - Debajo va el texto del juez con los tramos de la lectura resaltados, como en Operaciones. El cuerpo largo se desplaza por dentro.
+  - Los errores 413, 429 y de red van en una línea roja junto al botón, nunca en un `alert()`.
+  - El correo del juez solo se evalúa: no entrena el clasificador ni entra a la bóveda.
 
 Hay un solo nivel de contenedores. Dentro de un bloque solo hay filas separadas por `--linea`, nunca tarjetas.
 
@@ -125,7 +135,7 @@ Hay un solo nivel de contenedores. Dentro de un bloque solo hay filas separadas 
 - Los gráficos de Resultados leen `resultados.json`, o `resultados.js` si la página se abre como archivo. Ese archivo lo genera `scripts/exportar_resultados.py` desde los registros de Inspect.
 - Una configuración sin datos se muestra como «—» y «Sin datos», nunca como 0.
 - Si la fuente es mockllm, la barra muestra «Datos de prueba».
-- El escenario que abre En vivo está en `ESCENARIO_POR_DEFECTO`, en `app.js`. `?escenario=` en la URL manda sobre esa constante.
+- El escenario que abre Episodios está en `ESCENARIO_POR_DEFECTO`, en `app.js`. `?escenario=` en la URL manda sobre esa constante.
 - Operaciones lee la foto de `api/vivo/estado` y después el SSE de `api/vivo`, en el mismo origen. El contrato está en el motor (`scamshield/vivo`).
   - `?motor=http://host:puerto/` apunta a otro origen.
   - Si el motor no responde, o con `?sim`, usa `vivo_simulado.js`, que emite el mismo contrato con textos de los escenarios.
