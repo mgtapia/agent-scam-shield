@@ -40,6 +40,24 @@ En la demo:
 
 Con `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env`, la alerta de un pago retenido llega al celular del dueño con tres botones.
 
+## Úsalo en tu agente
+
+Tres líneas sobre las herramientas que ya tienes, sin proxy ni framework:
+
+```python
+from grifter import escudo
+
+herramientas = escudo(herramientas, cuentas_inscritas={"Silicio Austral": "Banco Litoral 33-7741-0092"},
+                      encargo="Paga la factura de Silicio Austral", avisar=None)
+```
+
+- `herramientas` es una lista de funciones o un dict nombre → función (síncronas o `async`). Devuelve lo mismo, envuelto.
+- Las que leen contenido externo (correo, web, MCP) anotan lo que devuelven como no confiable. Las de dinero o datos (`pagar`, `transferir`, `compartir_dato`, `responder`, o cualquiera con argumentos de pago como `cuenta` o `iban`) pasan por las capas 2 y 3 antes de ejecutarse.
+- Si una capa retiene, la función no corre: el modelo recibe «Grifter retuvo el pago: la cuenta apareció en…». Si pasas `avisar(alerta)`, el dueño recibe la alerta, y solo `True` (el toque del dueño) deja seguir. Si `avisar` revienta, la llamada queda retenida.
+- La clasificación se cambia con `lectoras=[...]` y `sensibles={...}`. La capa 3 necesita `titulares={cuenta: {"nombre", "rut"}}`, lo que sabe tu banco; sin eso no aplica.
+
+Ejemplos, sin llaves: [`examples/funciones_python.py`](examples/funciones_python.py) y [`examples/anthropic_tool_use.py`](examples/anthropic_tool_use.py) (`--mock`; sin él usa `claude-haiku-4-5` con `ANTHROPIC_API_KEY`).
+
 ## Cómo funciona
 
 ```mermaid
