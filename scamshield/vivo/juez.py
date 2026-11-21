@@ -17,12 +17,13 @@ el conjunto apartado.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import re
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Optional
 
-from inspect_ai.model import ChatMessageSystem, ChatMessageUser, Model, get_model
+from inspect_ai.model import ChatMessageSystem, ChatMessageUser, GenerateConfig, Model, get_model
 
 from ..attacker.costo import Gasto, PresupuestoAgotado, Rechazo, config_para
 
@@ -88,20 +89,40 @@ def mensaje(texto: str, canal: str) -> str:
     return f"Canal: {canal}\n\n{texto}"
 
 
+def huella(clave: str) -> str:
+    """La clave de la caché del juez: un hash corto del texto que lee."""
+    return hashlib.sha256(clave.encode("utf-8")).hexdigest()[:20]
+
+
 Pedir = Callable[..., Awaitable[str]]
 ESPERAS_S = (5, 20)   # reintentos cortos: un juez caído no puede frenar la medición minutos por caso
+REINTENTOS_PROVEEDOR, TIMEOUT_S = 2, 90   # sin esto, Inspect espera lo que pida el proveedor (en un 429 diario, horas)
+_CUOTA = ("resource_exhausted", "quota", "rate limit", "429")
+
+
+class CuotaAgotada(RuntimeError):
+    """El proveedor dice que se acabó la cuota (un 429 del plan gratis): se corta como con el tope de gasto."""
+
+
+def _es_cuota(e: BaseException) -> bool:
+    interna = getattr(getattr(e, "last_attempt", None), "exception", lambda: None)() or e.__cause__
+    texto = f"{e} {interna or ''}".lower()
+    return any(c in texto for c in _CUOTA)
 
 
 async def pedir(modelo: Model, sistema: str, mensajes: list, *, max_tokens: int, gasto: Gasto,
                 effort: str = EFFORT) -> str:
     """Una llamada al juez, con el tope de gasto y dos reintentos cortos. Una negativa lanza `Rechazo`."""
     nombre = str(modelo.name)
-    config = config_para(nombre, 0.0, max_tokens, False, effort)
+    config = config_para(nombre, 0.0, max_tokens, False, effort).merge(
+        GenerateConfig(max_retries=REINTENTOS_PROVEEDOR, timeout=TIMEOUT_S))
     for espera in (*ESPERAS_S, None):
         gasto.verificar(config.max_tokens or max_tokens)
         try:
             salida = await modelo.generate([ChatMessageSystem(content=sistema), *mensajes], config=config)
-        except Exception:
+        except Exception as e:
+            if _es_cuota(e):
+                raise CuotaAgotada(f"{nombre}: el proveedor dice que se acabó la cuota") from None
             if espera is None:
                 raise
             await asyncio.sleep(espera)
@@ -116,7 +137,11 @@ async def pedir(modelo: Model, sistema: str, mensajes: list, *, max_tokens: int,
 
 @dataclass
 class Juez:
-    """Un modelo que juzga los casos dudosos. Con `cache`, el mismo texto se juzga una sola vez."""
+    """Un modelo que juzga los casos dudosos. Con `cache`, el mismo texto se juzga una sola vez.
+
+    La caché va por huella del texto (`huella`), así se puede guardar en disco sin guardar los correos. `pausa` son los
+    segundos que espera después de cada llamada real: un plan gratis tiene cuota por minuto.
+    """
 
     modelo: str | Model = "mockllm/model"
     banda: tuple[float, float] = BANDA
@@ -126,6 +151,8 @@ class Juez:
     cache: dict[str, Veredicto] = field(default_factory=dict)
     llamadas: int = 0
     fallas: int = 0
+    pausa: float = 0.0
+    al_juzgar: Optional[Callable[[], None]] = None   # se llama tras cada veredicto nuevo (p. ej., guardar la caché)
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.banda[0] <= self.banda[1] <= 1.0:
@@ -142,14 +169,15 @@ class Juez:
 
     async def juzgar(self, texto: str, canal: str) -> Veredicto:
         clave = mensaje(texto, canal)
-        if clave in self.cache:
-            return self.cache[clave]
+        h = huella(clave)
+        if h in self.cache:
+            return self.cache[h]
         try:
             self.llamadas += 1
             salida = await self.pedir(self._modelo, SISTEMA, [ChatMessageUser(content=clave)],
                                       max_tokens=self.max_tokens, gasto=self.gasto)
             v = leer_respuesta(salida)
-        except PresupuestoAgotado:
+        except (PresupuestoAgotado, CuotaAgotada):
             raise
         except Rechazo as e:
             v = Veredicto(None, "", f"se negó: {e}")
@@ -157,7 +185,11 @@ class Juez:
             v = Veredicto(None, "", f"{type(e).__name__}")
         if v.estafa is None:
             self.fallas += 1
-        self.cache[clave] = v
+        self.cache[h] = v
+        if v.estafa is not None and self.al_juzgar:
+            self.al_juzgar()
+        if self.pausa:
+            await asyncio.sleep(self.pausa)
         return v
 
 

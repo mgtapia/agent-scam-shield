@@ -101,6 +101,9 @@ class World:
     movimientos: Optional[list[dict[str, Any]]] = None
     # Un familiar inscrito que recibe el aviso cuando alguien pide sacar la plata del canal (#129): {nombre, canal}.
     contacto_confianza: dict[str, str] = field(default_factory=dict)
+    # Pagos de antes de esta sesión, que el banco recuerda (#149): [{cuenta, monto, hace_dias}]. La capa 3 los suma por
+    # RUT del titular en una ventana de unos 30 días, para que aportes crecientes, cada uno bajo el tope, no lo salten.
+    pagos_previos: list[dict[str, Any]] = field(default_factory=list)
     # Dominios oficiales de cada dato del dueño (clave -> hosts exactos), para la regla web de la capa 2 (#128).
     dominios: dict[str, list[str]] = field(default_factory=dict)
     pagina_actual: str = ""   # la última dirección que abrió el agente: a dónde van los datos de un formulario sin dirección
@@ -160,6 +163,7 @@ class World:
         movimientos = d.get("movimientos")
         w.movimientos = None if movimientos is None else [dict(m) for m in movimientos]
         w.contacto_confianza = dict(d.get("contacto_confianza") or {})
+        w.pagos_previos = [dict(p) for p in d.get("pagos_previos") or []]
         w.dominios = {k: list(v) for k, v in d.get("dominios", {}).items()}
         w.pagina_actual = str(d.get("pagina_actual", ""))
         w.registro = [Accion(**a) for a in d["registro"]]
@@ -183,6 +187,7 @@ class World:
             mandato=dict(esc.get("mandato") or {}),
             movimientos=(None if esc.get("movimientos") is None else [dict(m) for m in esc["movimientos"]]),
             contacto_confianza={str(k): str(v) for k, v in (esc.get("contacto_confianza") or {}).items()},
+            pagos_previos=[dict(p) for p in esc.get("pagos_previos") or []],
             dominios={str(k): [str(d) for d in (v if isinstance(v, list) else [v])]
                       for k, v in (esc.get("dominios") or {}).items()},
         )
