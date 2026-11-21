@@ -76,7 +76,17 @@ def _texto(resultado: Any) -> str:
 
 
 def _entero(valor: Any) -> int:
-    digitos = re.sub(r"\D", "", str(valor).split(",")[0].split(".")[0]) if valor is not None else ""
+    """El monto en pesos. Si viene como texto, «1.500.000» y «1,500,000» son un millón y medio, no 1.
+
+    Solo se descartan los decimales (uno o dos dígitos al final); ante la duda se lee el monto mayor,
+    para que el tope del primer pago nunca vea menos de lo que se paga.
+    """
+    if valor is None or isinstance(valor, bool):
+        return 0
+    if isinstance(valor, (int, float)):
+        return abs(int(valor))
+    texto = re.sub(r"[.,]\d{1,2}$", "", str(valor).strip())
+    digitos = re.sub(r"\D", "", texto)
     return int(digitos) if digitos else 0
 
 
@@ -136,11 +146,7 @@ class _Escudo:
         regla = self.config.sensibles[nombre]
         if self.mundo is None or regla.dato is not None or regla.mensaje is not None:
             return None  # sin registro de titulares, o no es un pago
-        cuenta = args.get(regla.destino, "")
-        minusculas = {str(k).lower(): k for k in args}
-        destinatario = next((args[minusculas[c]] for c in CLAVES_DESTINO
-                             if c in minusculas and minusculas[c] != regla.destino), "")
-        monto = next((args[minusculas[c]] for c in CLAVES_DINERO if c in minusculas), 0)
+        cuenta, destinatario, monto = self._datos_de_pago(regla, args)
         motivo = confirmacion_beneficiario(
             self.mundo, "pagar", {"cuenta": cuenta, "destinatario": destinatario, "monto": _entero(monto)})
         if motivo is None:
@@ -150,6 +156,15 @@ class _Escudo:
                    "antes de reintentar.")
         return Alerta(herramienta=nombre, servidor=SERVIDOR, args=dict(args), valor=str(cuenta),
                       motivo=motivo, mensaje=mensaje, fuentes=[])
+
+    @staticmethod
+    def _datos_de_pago(regla: AccionSensible, args: Mapping[str, Any]) -> tuple[Any, Any, Any]:
+        cuenta = args.get(regla.destino, "")
+        minusculas = {str(k).lower(): k for k in args}
+        destinatario = next((args[minusculas[c]] for c in CLAVES_DESTINO
+                             if c in minusculas and minusculas[c] != regla.destino), "")
+        monto = next((args[minusculas[c]] for c in CLAVES_DINERO if c in minusculas), 0)
+        return cuenta, destinatario, monto
 
     def _evaluar(self, nombre: str, args: Mapping[str, Any]) -> tuple[Optional[str], Optional[Alerta]]:
         """(texto de retención, None) si no se puede seguir; (None, alerta) si hay que preguntar;
@@ -180,8 +195,9 @@ class _Escudo:
                 "Por seguridad no se ejecuta.")
 
     def _veredicto(self, alerta: Alerta, aprobada: Any) -> Optional[str]:
-        """None si el dueño aprobó; si no, el texto de retención. Solo True (o una verdad) aprueba."""
-        if aprobada:
+        """None si el dueño aprobó; si no, el texto de retención. Solo True aprueba: «no», 1 o una lista
+        no son el toque del dueño."""
+        if aprobada is True:
             self._registrar("aprobado_por_dueno", alerta=alerta)
             return None
         self._registrar("retenido", alerta=alerta)
@@ -216,6 +232,14 @@ class _Escudo:
         if self._es_lectora(nombre):
             self.guardia.anotar_resultado(SERVIDOR, nombre, _texto(resultado))
 
+    def _anotar_pago(self, nombre: str, args: Mapping[str, Any]) -> None:
+        """Un pago que sí se ejecutó queda en el registro de la capa 3, que suma lo pagado a cada titular."""
+        regla = self.config.sensibles.get(nombre)
+        if self.mundo is None or regla is None or regla.dato is not None or regla.mensaje is not None:
+            return
+        cuenta, _, monto = self._datos_de_pago(regla, args)
+        self.mundo.registrar("pagar", {"cuenta": str(cuenta), "monto": _entero(monto)}, "ejecutada")
+
     # --- envoltura -------------------------------------------------------------------------
     def envolver(self, nombre: str, funcion: Callable[..., Any]) -> Callable[..., Any]:
         try:
@@ -242,6 +266,7 @@ class _Escudo:
                     return retenido
                 resultado = await funcion(*a, **kw)
                 self._anotar(nombre, resultado)
+                self._anotar_pago(nombre, args)
                 return resultado
         else:
             @functools.wraps(funcion)
@@ -254,6 +279,7 @@ class _Escudo:
                     return retenido
                 resultado = funcion(*a, **kw)
                 self._anotar(nombre, resultado)
+                self._anotar_pago(nombre, args)
                 return resultado
 
         envuelta.__grifter__ = True  # type: ignore[attr-defined]

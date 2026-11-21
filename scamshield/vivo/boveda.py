@@ -27,7 +27,7 @@ import unicodedata
 from dataclasses import asdict, dataclass
 from typing import Any, Iterable
 
-from ..env.world import CORREO, origenes_en
+from ..env.world import _aparece, _normalizar, _tokens
 from .flujo import AGENTES, CUENTA, Correo, Libreta, dominio_de
 from .lectura import dominios_en
 
@@ -81,15 +81,16 @@ class Boveda:
     def revisar(self, correo: Correo) -> list[Indicador]:
         """Los indicadores de la bóveda que trae el correo (verificación inmediata)."""
         aciertos = []
-        leido = [(CORREO, _nfkc(correo.texto))]
+        # El correo se tokeniza una sola vez: con miles de cuentas guardadas, hacerlo por indicador
+        # volvía lento al duelo (la regla de aparición es la de `origenes_en`, la de la capa 2).
+        tokens = _tokens(_nfkc(correo.texto))
+        dominios, huella = self._dominios(correo), plantilla(correo.cuerpo)
         for (tipo, valor), ind in self.indicadores.items():
-            if tipo == "cuenta" and origenes_en(leido, valor):
+            if tipo == "cuenta" and _aparece(_normalizar(valor), tokens):
                 aciertos.append(ind)
-            elif tipo == "dominio" and valor in self._dominios(correo) \
-                    and valor not in self.vistos_legitimos["dominio"]:
+            elif tipo == "dominio" and valor in dominios and valor not in self.vistos_legitimos["dominio"]:
                 aciertos.append(ind)
-            elif tipo == "plantilla" and valor == plantilla(correo.cuerpo) \
-                    and valor not in self.vistos_legitimos["plantilla"]:
+            elif tipo == "plantilla" and valor == huella and valor not in self.vistos_legitimos["plantilla"]:
                 aciertos.append(ind)
         return aciertos
 

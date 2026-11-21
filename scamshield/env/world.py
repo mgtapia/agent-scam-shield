@@ -129,8 +129,19 @@ _TOKEN = re.compile(r"[0-9A-Za-zÀ-ÿ@._+\-]+")
 
 
 def _tokens(texto: str) -> list[str]:
-    """Trozos del texto separados por espacios o puntuación, normalizados (sin signos ni mayúsculas)."""
-    return [t for t in (_normalizar(m) for m in _TOKEN.findall(str(texto))) if t]
+    """Trozos del texto separados por espacios o puntuación, normalizados (sin signos ni mayúsculas).
+
+    Lo leído pasa antes por `_simple` (ancho completo y dígitos de otros alfabetos a 0-9) para que una
+    cuenta escrita así se reconozca donde apareció. El valor que se usa no pasa por ahí: una cuenta o un
+    destino con caracteres raros no calza con lo confiable y se retiene.
+    """
+    return [t for t in (_normalizar(m) for m in _TOKEN.findall(_simple(str(texto)))) if t]
+
+
+def _simple(texto: str) -> str:
+    texto = unicodedata.normalize("NFKC", texto)
+    return "".join(str(unicodedata.decimal(ch)) if ch.isdecimal() and not "0" <= ch <= "9" else ch
+                   for ch in texto)
 
 
 def _aparece(valor_n: str, tokens: list[str]) -> bool:
