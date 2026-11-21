@@ -18,6 +18,10 @@ Inspect (`approver.py`) la arma desde el historial de mensajes.
 """
 from __future__ import annotations
 
+import base64
+import binascii
+import re
+import unicodedata
 from dataclasses import dataclass
 from typing import Mapping, Optional, Protocol
 
@@ -107,11 +111,16 @@ def _sale_una_credencial(procedencia: Procedencia, args: Mapping, regla: AccionS
 
 def _lleva_credencial(args: Mapping, regla: AccionSensible, valor: str) -> bool:
     if regla.dato is not None:
-        dato = _norm(args.get(regla.dato, ""))
+        crudo = args.get(regla.dato, "")
+        dato = _norm(crudo)
         if len(dato) >= 4 and (valor in dato or dato in valor):
             return True
-    if regla.mensaje is not None and valor in _norm(args.get(regla.mensaje, "")):
-        return True
+        if any(valor in v for v in _variantes(crudo)):
+            return True
+    if regla.mensaje is not None:
+        crudo = args.get(regla.mensaje, "")
+        if valor in _norm(crudo) or any(valor in v for v in _variantes(crudo)):
+            return True
     return False
 
 
@@ -158,4 +167,75 @@ def _es_dato_del_dueno(procedencia: Procedencia, dato: str) -> bool:
 
 
 def _norm(texto: object) -> str:
-    return "".join(ch for ch in str(texto).lower() if ch.isalnum())
+    """Solo letras y dígitos, en minúsculas, con el Unicode llevado a su forma simple.
+
+    NFKC (ancho completo), los dígitos de cualquier alfabeto a 0-9 y las letras cirílicas o griegas que
+    se ven como latinas, a la latina. Solo sirve para reconocer un dato del dueño en lo que sale: leer de
+    más solo puede retener de más. El origen de una cuenta o un destino no usa esta tabla.
+    """
+    salida = []
+    for ch in unicodedata.normalize("NFKC", str(texto)).lower():
+        if not ch.isalnum():
+            continue
+        if ch.isdecimal() and not ("0" <= ch <= "9"):
+            ch = str(unicodedata.decimal(ch))
+        salida.append(_CONFUSABLES.get(ch, ch))
+    return "".join(salida)
+
+
+# Letras cirílicas y griegas (en minúscula) que se ven como una latina.
+_CONFUSABLES = {
+    "а": "a", "в": "b", "е": "e", "ё": "e", "к": "k", "м": "m", "н": "h", "о": "o", "р": "p", "с": "c",
+    "т": "t", "у": "y", "х": "x", "ѕ": "s", "і": "i", "ї": "i", "ј": "j", "ԁ": "d", "ԛ": "q", "ԝ": "w",
+    "α": "a", "β": "b", "ε": "e", "η": "n", "ι": "i", "κ": "k", "ν": "v", "ο": "o", "ρ": "p", "τ": "t",
+    "υ": "u", "χ": "x",
+}
+
+# Dígitos en palabras, en español e inglés: «dos siete cuatro cero» es 2740.
+_DIGITOS_EN_PALABRAS = {
+    "cero": "0", "uno": "1", "una": "1", "dos": "2", "tres": "3", "cuatro": "4", "cinco": "5", "seis": "6",
+    "siete": "7", "ocho": "8", "nueve": "9", "zero": "0", "one": "1", "two": "2", "three": "3",
+    "four": "4", "five": "5", "six": "6", "seven": "7", "eight": "8", "nine": "9",
+}
+_PALABRA = re.compile(r"\w+")
+_BASE64 = re.compile(r"[A-Za-z0-9+/_-]{8,}={0,2}")
+
+
+def _variantes(texto: object) -> list[str]:
+    """Otras lecturas del texto donde puede ir escondida una credencial, ya normalizadas.
+
+    Los dígitos escritos en palabras y los trozos que son base64 (estándar o de URL) de un texto legible.
+    """
+    crudo = str(texto)
+    en_digitos = _PALABRA.sub(lambda m: _DIGITOS_EN_PALABRAS.get(_sin_tildes(m.group()).lower(), m.group()), crudo)
+    variantes = [_norm(en_digitos)]
+    for trozo in _BASE64.findall(crudo):
+        decodificado = _de_base64(trozo)
+        if decodificado:
+            variantes.append(_norm(decodificado))
+    return variantes
+
+
+def _de_base64(trozo: str) -> str:
+    """El texto legible que esconde un trozo en base64 (estándar o de URL, con o sin relleno), o ""."""
+    limpio = trozo.rstrip("=").replace("-", "+").replace("_", "/")
+    try:
+        texto = base64.b64decode(limpio + "=" * (-len(limpio) % 4), validate=True).decode("utf-8")
+    except (binascii.Error, ValueError, UnicodeDecodeError):
+        return ""
+    return texto if texto.isprintable() else ""
+
+
+def _sin_tildes(texto: str) -> str:
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
+
+
+def visible(texto: object, largo: int = 48) -> str:
+    """Un valor que puso el agente, listo para ir dentro de un aviso al dueño sin poder escribir en él.
+
+    Escapa los saltos de línea, los caracteres de control y los de dirección (U+202E), y corta lo largo:
+    un destino no puede agregarle a la alerta líneas como «Inscrita: ... verificada».
+    """
+    salida = "".join(f"\\u{ord(ch):04x}" if unicodedata.category(ch) in ("Cc", "Cf", "Zl", "Zp", "Co", "Cs")
+                     else ch for ch in str(texto))
+    return salida if len(salida) <= largo else salida[:largo - 1] + "…"

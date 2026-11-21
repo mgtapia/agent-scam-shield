@@ -37,7 +37,7 @@ from mcp.client.stdio import stdio_client
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
-from ..defenses.layer2 import MOTIVO_CREDENCIAL, SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen
+from ..defenses.layer2 import MOTIVO_CREDENCIAL, SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen, visible
 from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
 
 log = logging.getLogger("grifter")
@@ -198,14 +198,15 @@ class Guardia:
         credencial = motivo == MOTIVO_CREDENCIAL
         fuentes = [] if credencial else self._fuentes_de(valor)
         accion = self.config.acciones.get(herramienta, f"la llamada a {herramienta}")
+        dicho = visible(valor)   # lo escribió el agente: no puede agregarle líneas al aviso del dueño
         if credencial:
             mensaje = f"Grifter retuvo {accion}: {MOTIVO_CREDENCIAL[:-1].lower()}."
         elif fuentes:
             donde = ", ".join(fuentes)
-            mensaje = (f"Grifter retuvo {accion}: {regla.que} {valor} apareció en {donde}, "
+            mensaje = (f"Grifter retuvo {accion}: {regla.que} {dicho} apareció en {donde}, "
                        "no en tus cuentas inscritas.")
         else:
-            mensaje = (f"Grifter retuvo {accion}: {regla.que} {valor} no aparece en tus cuentas "
+            mensaje = (f"Grifter retuvo {accion}: {regla.que} {dicho} no aparece en tus cuentas "
                        "inscritas ni en el encargo.")
         mensaje += " Confírmala con el dueño por un canal conocido antes de reintentar."
         return Alerta(herramienta=herramienta, servidor=servidor, args=dict(args), valor=valor,
@@ -315,6 +316,7 @@ class Grifter:
                     aprobada = self.escalar(alerta)
                     if inspect.isawaitable(aprobada):
                         aprobada = await aprobada
+                    aprobada = aprobada is True   # solo True es el toque del dueño; «no» o 1 no aprueban
                     self._registrar("aprobado_por_dueno" if aprobada else "retenido", alerta=alerta)
                     if not aprobada:
                         return _error(alerta.mensaje)

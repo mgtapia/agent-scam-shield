@@ -10,9 +10,10 @@ Es la «confirmación de beneficiario» de los bancos: antes de pagar, el titula
 - **Beneficiario conocido** (el dueño ya inscribió una cuenta a su nombre): el RUT del titular de la
   cuenta de destino tiene que ser el mismo que el del titular de la cuenta inscrita. El RUT esperado no
   sale de la factura, que un estafador puede falsificar, sino de lo que el dueño inscribió antes.
-- **Beneficiario nuevo:** el nombre tiene que calzar con el titular de la cuenta, y el primer pago tiene
-  un tope (`TOPE_PRIMER_PAGO`). Por encima del tope queda retenido hasta que el dueño lo confirme por
-  un canal conocido.
+- **Beneficiario nuevo:** el nombre tiene que calzar con el titular de la cuenta, y lo que se le paga tiene
+  un tope (`TOPE_PRIMER_PAGO`). El tope suma los pagos ya hechos en la sesión al mismo titular (por RUT,
+  en cualquiera de sus cuentas), así que partir un monto grande en varios chicos no lo salta. Por encima
+  del tope queda retenido hasta que el dueño lo confirme por un canal conocido.
 - Una cuenta que el banco no conoce no se puede confirmar, y se retiene.
 
 Límites honestos:
@@ -27,6 +28,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from ..env.world import World
+from .layer2 import visible
 
 # El primer pago a un beneficiario nuevo no pasa de esto sin confirmación del dueño (pesos chilenos).
 TOPE_PRIMER_PAGO = 150_000
@@ -75,16 +77,30 @@ def _nombre_coincide(declarado: str, titular: str) -> bool:
     return bool(d) and bool(t) and (d in t or t in d)
 
 
+def _pagado_antes(world: World, rut: str) -> int:
+    """Lo que ya se le pagó en la sesión a ese titular (por RUT), en pagos que sí se ejecutaron."""
+    total = 0
+    for accion in world.registro:
+        if accion.herramienta not in ACCIONES or accion.bloqueada or accion.resultado != "ejecutada":
+            continue
+        titular = _titular(world, str(accion.args.get("cuenta", "")))
+        if titular is not None and _norm(titular["rut"]) == _norm(rut):
+            total += int(accion.args.get("monto", 0) or 0)
+    return total
+
+
 def confirmacion_beneficiario(world: World, herramienta: str, args: dict) -> Optional[str]:
     """None si el titular de la cuenta confirma al beneficiario; si no, el motivo para retener el pago."""
     if herramienta not in ACCIONES or not world.titulares:
         return None
-    cuenta = str(args.get("cuenta", ""))
-    titular = _titular(world, cuenta)
+    cuenta_real = str(args.get("cuenta", ""))
+    cuenta = visible(cuenta_real)   # va en el aviso al dueño: sin saltos de línea ni texto largo
+    titular = _titular(world, cuenta_real)
     if titular is None:
         return (f"la cuenta {cuenta} no figura en el registro de titulares del banco: no se puede confirmar "
                 "a nombre de quién está.")
     declarado = str(args.get("destinatario" if herramienta == "pagar" else "beneficiario", "") or "").strip()
+    dicho = visible(declarado)
     monto = int(args.get("monto", 0))
     quien = f"{titular['nombre']} (RUT {titular['rut']})"
 
@@ -100,9 +116,14 @@ def confirmacion_beneficiario(world: World, herramienta: str, args: dict) -> Opt
         return (f"no se indicó a quién se le paga, y la cuenta {cuenta} está a nombre de {quien}: no se puede "
                 "confirmar el beneficiario.")
     if not _nombre_coincide(declarado, titular["nombre"]):
-        return (f"la cuenta {cuenta} está a nombre de {quien}, no de {declarado}. Verifica con un contacto "
+        return (f"la cuenta {cuenta} está a nombre de {quien}, no de {dicho}. Verifica con un contacto "
                 "que ya conocías, no con el que vino en el mensaje.")
-    if monto > TOPE_PRIMER_PAGO:
-        return (f"primer pago a {declarado}, un beneficiario nuevo, por {_pesos(monto)}: pasa el tope de "
+    pagado = _pagado_antes(world, titular["rut"])
+    if pagado == 0 and monto > TOPE_PRIMER_PAGO:
+        return (f"primer pago a {dicho}, un beneficiario nuevo, por {_pesos(monto)}: pasa el tope de "
                 f"{_pesos(TOPE_PRIMER_PAGO)} y queda retenido hasta que el dueño lo confirme por un canal conocido.")
+    if pagado + monto > TOPE_PRIMER_PAGO:
+        return (f"a {dicho}, un beneficiario nuevo, ya se le pagaron {_pesos(pagado)} en esta sesión, y con "
+                f"{_pesos(monto)} más pasa el tope de {_pesos(TOPE_PRIMER_PAGO)}: queda retenido hasta que el "
+                "dueño lo confirme por un canal conocido.")
     return None
