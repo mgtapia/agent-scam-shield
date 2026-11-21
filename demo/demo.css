@@ -1,3 +1,5 @@
+/* Escala tipográfica del escenario (1920×1080), cuatro tamaños: 24/32 etiquetas (.md-rot, .md-quien), 28/36 cuerpo
+   (.md-rotulo, .md-encargo, .md-pasos), 36/48 subtítulos de la llamada (.md-sub) y 52/64 título (.md-frase). No sumar otro. */
 /* Grifter, modo demo (demo.html): un escenario fijo de 1920×1080 que se escala a la ventana (--md-k).
    Usa los tokens de estilos.css. Los tamaños grandes son propios de este modo, que se proyecta o se graba:
    están pensados para leerse desde el fondo de una sala. La única excepción a «radio 0» es el celular dibujado,
@@ -32,18 +34,18 @@ body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--f
 
 .md-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 64px; align-items: start; }
 .md-consola { display: grid; gap: 24px; min-width: 0; }
-.md-rot { margin: 0; color: var(--texto-2); font-size: var(--t-3); line-height: var(--l-3); display: flex; align-items: center; gap: var(--e-1); }
+.md-rot { margin: 0; color: var(--texto-2); font-size: 24px; line-height: 32px; display: flex; align-items: center; gap: var(--e-1); }
 .md-encargo { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 16px; padding: 24px; font-size: 28px; line-height: 36px; border: var(--linea); background: var(--superficie); }
 .md-encargo p { margin: 0; }
 .md-encargo .md-ic { color: var(--texto-2); }
 
 /* Rótulo neutro sobre la frase del acto */
-.md-rotulo { margin: 0 0 -24px; color: var(--texto-2); font-size: 32px; line-height: 40px; }
+.md-rotulo { margin: 0 0 -24px; color: var(--texto-2); font-size: 28px; line-height: 36px; }
 /* Subtítulos de la llamada: una frase a la vez, en el mismo lugar */
 .md-subtitulos:not(.ve) { display: none; }
 .md-subtitulos { position: relative; min-height: 200px; padding: 24px; border: var(--linea); background: var(--superficie); }
 .md-sub { position: absolute; inset: 24px; margin: 0; font-size: 36px; line-height: 48px; }
-.md-sub .md-quien { display: block; margin-bottom: 8px; font-size: 22px; line-height: 28px; }
+.md-sub .md-quien { display: block; margin-bottom: 8px; font-size: 24px; line-height: 32px; }
 .md-sub-dueno { color: var(--texto-2); }
 .md-cuenta { white-space: nowrap; background: transparent; color: var(--ambar); font-family: var(--mono); text-decoration: underline; text-decoration-color: var(--ambar); text-underline-offset: 6px; }
 .md-contacto { margin: 0; display: flex; align-items: center; gap: 12px; font-weight: var(--p-fuerte); }
@@ -55,7 +57,7 @@ body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--f
 .md-pasos li { display: grid; grid-template-columns: 32px 140px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 16px 24px; font-size: 28px; line-height: 36px; }
 .md-pasos li + li { border-top: var(--linea); }
 .md-pasos li .md-ic { color: var(--texto-2); }
-.md-quien { color: var(--texto-3); font-size: 22px; }
+.md-quien { color: var(--texto-3); font-size: 24px; line-height: 32px; }
 .md-pasos .tag { font-size: var(--t-2); height: auto; padding: 2px 12px; }
 .md-retuvo .md-ic, .md-retuvo b, .md-retuvo .md-quien { color: var(--verde); }
 .md-retuvo b { font-weight: var(--p-fuerte); }
