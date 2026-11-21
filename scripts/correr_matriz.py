@@ -6,7 +6,7 @@ variable está definida y no vacía, y su valor no se imprime nunca.
 Uso:
     python scripts/correr_matriz.py --dry-run
     python scripts/correr_matriz.py --defensas none,layer2 --idiomas es --limit 5
-    python scripts/correr_matriz.py --modelos google/gemini-3.8-flash,groq/llama-3.3-70b-versatile
+    python scripts/correr_matriz.py --modelos google/gemini-3.8-flash,groq/openai/gpt-oss-120b
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ if str(RAIZ) not in sys.path:
 # (y en la capa gratis, si es el caso): los catálogos cambian seguido.
 MODELOS_POR_LLAVE: dict[str, list[str]] = {
     "GOOGLE_API_KEY": ["google/gemini-3.8-flash"],
-    "GROQ_API_KEY": ["groq/llama-3.3-70b-versatile"],
+    "GROQ_API_KEY": ["groq/openai/gpt-oss-120b"],
     "HF_TOKEN": ["hf-inference-providers/meta-llama/Llama-3.3-70B-Instruct"],
     "ANTHROPIC_API_KEY": ["anthropic/claude-sonnet-5-5"],
     "OPENAI_API_KEY": ["openai/gpt-6.2-sol"],

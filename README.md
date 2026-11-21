@@ -46,7 +46,7 @@ La primera tabla se corre con Gemini y Groq, que tienen capa gratis. Claude y GP
 pip install -e ".[dev,proveedores]"   # agrega google-genai y groq, que Inspect necesita
 # En .env: GOOGLE_API_KEY, GROQ_API_KEY y/o HF_TOKEN (ver .env.example)
 inspect eval scamshield/evals/task.py --model google/gemini-3.8-flash -T defense=layer2
-inspect eval scamshield/evals/task.py --model groq/llama-3.3-70b-versatile -T defense=layer2
+inspect eval scamshield/evals/task.py --model groq/openai/gpt-oss-120b -T defense=layer2
 inspect eval scamshield/evals/task.py --model hf-inference-providers/meta-llama/Llama-3.3-70B-Instruct -T defense=layer2
 ```
 
@@ -57,7 +57,7 @@ Para Hugging Face se usa `hf-inference-providers/`, que llama a la API de Infere
 ```bash
 python scripts/correr_matriz.py --dry-run                        # muestra la matriz sin correr nada
 python scripts/correr_matriz.py --defensas none,layer2 --idiomas es --limit 5
-python scripts/correr_matriz.py --modelos groq/llama-3.3-70b-versatile --max-connections 1
+python scripts/correr_matriz.py --modelos groq/openai/gpt-oss-120b --max-connections 1
 ```
 
 Los logs quedan en `logs/` y se abren con `inspect view`. Si no hay ninguna llave y no se pasa `--modelos`, el script termina con un error que dice qué variables definir.
