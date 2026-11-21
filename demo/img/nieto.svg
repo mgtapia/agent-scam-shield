@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="22 26 156 156" role="img" aria-label="Retrato ilustrado del nieto">
+  <!-- Retrato ilustrado y ficticio (no es una persona real ni una foto de stock), para la llamada del acto 1 de la
+       demo. Para cambiarlo, reemplaza este archivo por otro de forma cuadrada con el mismo nombre. -->
+  <rect x="0" y="0" width="200" height="200" fill="#2B2F38"/>
+  <!-- Polerón -->
+  <path d="M28 200c4-38 30-58 72-58s68 20 72 58Z" fill="#3E5C76"/>
+  <path d="M74 146c6 14 16 21 26 21s20-7 26-21c-8-3-17-5-26-5s-18 2-26 5Z" fill="#33506A"/>
+  <path d="M92 160v40M108 160v40" stroke="#D7DEE6" stroke-width="2" stroke-linecap="round"/>
+  <!-- Cuello -->
+  <path d="M86 122h28v24c-4 6-9 9-14 9s-10-3-14-9Z" fill="#B97E5C"/>
+  <!-- Orejas -->
+  <ellipse cx="61" cy="96" rx="7" ry="11" fill="#C98C68"/>
+  <ellipse cx="139" cy="96" rx="7" ry="11" fill="#C98C68"/>
+  <!-- Cara -->
+  <path d="M100 46c22 0 39 16 39 42 0 30-17 50-39 50s-39-20-39-50c0-26 17-42 39-42Z" fill="#D69C76"/>
+  <!-- Pelo: corto, con chasquilla hacia un lado -->
+  <path d="M60 86c-3-30 16-48 42-48 24 0 41 14 40 42-6-12-15-18-26-20 4 6 5 11 3 16-10-11-25-17-45-15-6 6-10 15-14 25Z" fill="#2A1C13"/>
+  <!-- Cejas -->
+  <path d="M77 82c6-4 13-5 19-3M104 79c6-2 13-1 19 3" stroke="#2A1C13" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Ojos -->
+  <ellipse cx="86" cy="94" rx="4.2" ry="5" fill="#241811"/>
+  <ellipse cx="114" cy="94" rx="4.2" ry="5" fill="#241811"/>
+  <circle cx="87.4" cy="92.4" r="1.3" fill="#FFFFFF" opacity=".8"/>
+  <circle cx="115.4" cy="92.4" r="1.3" fill="#FFFFFF" opacity=".8"/>
+  <!-- Mejillas -->
+  <ellipse cx="78" cy="110" rx="8" ry="5" fill="#E08A6E" opacity=".28"/>
+  <ellipse cx="122" cy="110" rx="8" ry="5" fill="#E08A6E" opacity=".28"/>
+  <!-- Nariz -->
+  <path d="M100 98c-2 7-4 11-6 13 3 2 8 2 11 0" stroke="#B57A57" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Sonrisa -->
+  <path d="M88 120c7 6 17 6 24 0" stroke="#8A4636" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+</svg>

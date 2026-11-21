@@ -117,11 +117,12 @@
     { id: "intro", desde: 0 }, { id: "a1", desde: 3 }, { id: "a2", desde: 44 }, { id: "a3", desde: 53 }, { id: "cierre", desde: 64 },
   ];
   const DURACION = 72;
-  const LLAMADA = { suena: 5, contesta: 7, abuela: 7.3, nieto: 9.3, cuelga: 34.6 };
+  const LLAMADA = { suena: 4.4, contesta: 7, abuela: 7.3, nieto: 9.3, cuelga: 34.6 };
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
   const TOQUE = 41.5;                      // el dedo toca «No pagar»
 
+  const Graficos = { quieto: matchMedia("(prefers-reduced-motion: reduce)").matches };
   const params = new URLSearchParams(location.search);
   const idioma = params.get("idioma") === "en" ? "en" : "es";
   const t = (k, v = {}) => { let s = T[idioma][k] ?? T.es[k] ?? k; if (typeof s !== "string") return s; for (const [a, b] of Object.entries(v)) s = s.replaceAll(`{${a}}`, b); return s; };
@@ -184,10 +185,11 @@
 
           <div class="md-celular" data-v="${LLAMADA.suena}">
             <div class="md-pantalla">
-              <div class="md-estado"><span>16:07</span><span>5G</span></div>
+              <i class="md-camara" aria-hidden="true"></i>
+              <div class="md-estado"><span>16:07</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
               <div class="md-llamada" data-h="${LLAMADA.cuelga + 2}">
                 <p class="md-ll-estado"><span data-h="${LLAMADA.contesta}" class="ve">${esc(t("entrante"))}</span><span data-v="${LLAMADA.contesta}" data-h="${LLAMADA.cuelga}">${esc(t("en_llamada"))} · <span class="dato" id="md-reloj">0:00</span></span></p>
-                <div class="md-avatar">${ic("person", "grande")}</div>
+                <div class="md-avatar"><i class="md-pulso"></i><i class="md-pulso dos"></i><img src="img/nieto.svg" alt="" width="160" height="160"></div>
                 <p class="md-ll-nombre">${esc(t("privado"))}</p>
                 <div class="md-ll-botones" data-h="${LLAMADA.contesta}"><span class="md-ll-b colgar">${ic("call_end")}</span><span class="md-ll-b contestar">${ic("call")}</span></div>
                 <div class="md-ll-botones" data-v="${LLAMADA.contesta}" data-h="${LLAMADA.cuelga}"><span class="md-ll-b colgar">${ic("call_end")}</span></div>
@@ -257,7 +259,20 @@
       const h = el.dataset.h === undefined ? Infinity : +el.dataset.h;
       el.classList.toggle("ve", tt >= v && tt < h);
     });
-    document.body.classList.toggle("md-suena", tt >= LLAMADA.suena && tt < LLAMADA.contesta);
+    const suena = tt >= LLAMADA.suena && tt < LLAMADA.contesta;
+    document.body.classList.toggle("md-suena", suena);
+    document.body.classList.toggle("md-contestada", tt >= LLAMADA.contesta);
+    const fase = (tt - LLAMADA.suena) % 1;
+    const vibra = suena && !Graficos.quieto && fase < 0.4;
+    const cel = $(".md-celular");
+    cel.style.setProperty("--md-vib", vibra ? `${(Math.sin(tt * 2 * Math.PI * 22) * 3).toFixed(2)}px` : "0px");
+    cel.style.setProperty("--md-vib-r", vibra ? `${(Math.sin(tt * 2 * Math.PI * 17) * 0.5).toFixed(2)}deg` : "0deg");
+    for (const [i, el] of [...document.querySelectorAll(".md-pulso")].entries()) {
+      const p = suena ? ((tt - LLAMADA.suena + i * 0.6) % 1.2) / 1.2 : 0;
+      el.style.setProperty("--md-p", p.toFixed(3));
+    }
+    const latido = suena ? (Math.sin((tt - LLAMADA.suena) * 2 * Math.PI) + 1) / 2 : 0;
+    document.querySelectorAll(".md-ll-b.contestar").forEach((b) => b.style.setProperty("--md-latido", latido.toFixed(3)));
     const s = Math.max(0, Math.floor(tt - LLAMADA.contesta));
     $("#md-reloj").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
     if (cifras.estafas !== null) $("#md-n1").textContent = num(sube(54.1, 1.8, cifras.estafas, tt));
@@ -294,7 +309,27 @@
     speechSynthesis.speak(u);
   }
   // Los momentos en que suena algo. `hecho` evita repetirlos; al saltar en el tiempo se reinicia.
+  let ctx = null, timbre = [];
+  function sonarTimbre(desde) {
+    try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { return; }
+    const t0 = ctx.currentTime;
+    const rafagas = Math.ceil(LLAMADA.contesta - desde);
+    for (let r = 0; r < rafagas; r++) {
+      for (const [desfase, hz] of [[0, 659.25], [0.2, 523.25]]) {   // dos notas por ráfaga: mi y do
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        const ini = t0 + r + desfase;
+        o.type = "sine"; o.frequency.value = hz;
+        g.gain.setValueAtTime(0, ini);
+        g.gain.linearRampToValueAtTime(0.06, ini + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0005, ini + 0.19);
+        o.connect(g).connect(ctx.destination);
+        o.start(ini); o.stop(ini + 0.2);
+        timbre.push(o);
+      }
+    }
+  }
   const SONIDOS = [
+    { en: LLAMADA.suena, hacer: () => sonarTimbre(LLAMADA.suena) },
     { en: LLAMADA.abuela, hacer: () => (pistas.abuela ? reproducir(pistas.abuela, () => sintetica(t("abuela"), true)) : sintetica(t("abuela"), true)) },
     { en: LLAMADA.nieto, hacer: () => { if (pistas.nieto) reproducir(pistas.nieto, () => sintetica(t("nieto")[0])); else sintetica(t("nieto")[0]); } },
     ...FRASES.slice(1).map((d, i) => ({ en: LLAMADA.nieto + d, hacer: () => { if (!pistas.nieto) sintetica(t("nieto")[i + 1]); } })),
@@ -305,7 +340,7 @@
     if (mudo) return;
     SONIDOS.forEach((s, i) => { if (!hecho.has(i) && antes < s.en && ahora >= s.en) { hecho.add(i); s.hacer(); } });
   }
-  function callar() { Object.values(pistas).forEach((a) => a.pause()); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
+  function callar() { timbre.forEach((o) => { try { o.stop(); } catch (_) { /* ya paró */ } }); timbre = []; Object.values(pistas).forEach((a) => a.pause()); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
 
   // --- Reloj: un solo requestAnimationFrame; el tiempo avanza solo mientras corre ---
   let tiempo = 0, corriendo = false, previo = 0;
