@@ -145,3 +145,17 @@ def test_el_acto_3_de_la_demo_lee_sus_cifras_de_resultados_json_y_no_las_escribe
     resultados_js = (RAIZ / "demo" / "resultados.js").read_text(encoding="utf-8")
     assert json.loads(resultados_js[resultados_js.index("{"):resultados_js.rindex("}") + 1])["cobertura"]["totales"] == TOT, (
         "demo/resultados.js no es la copia de resultados.json")
+
+
+# --- La corrida de referencia del duelo (README) ------------------------------------------------------------------------
+
+def test_el_readme_cita_la_corrida_de_referencia_del_duelo_como_la_dicen_los_archivos():
+    eventos = json.loads((RAIZ / "results" / "duelo" / "aprende_s0.json").read_text(encoding="utf-8"))
+    parrafo = next(l for l in README.splitlines() if l.startswith("**Cifras de la corrida de referencia**"))
+    evasion = [round(e["evasion"] * 100) for e in eventos]
+    assert f"un {evasion[0]} % en la generación 1 y llega a {max(evasion)} % en la 3" in parrafo and evasion.index(max(evasion)) == 2
+    assert f"sin ella habrían salido {sum(e['sin_capa2'] for e in eventos)}, {eventos[0]['sin_capa2'] + eventos[1]['sin_capa2']} de ellos" in parrafo
+    ultimo = eventos[-1]
+    assert f"recall de {round(ultimo['recall'] * 100)} %" in parrafo and f"{round(ultimo['falsas_alarmas'] * 100)} % de falsas alarmas" in parrafo
+    assert f"en la 20 es {round(ultimo['evasion'] * 100)} %" in parrafo
+    assert sum(e["exitosas_capa2"] for e in eventos) == 0 and "**0 pagos a una cuenta de estafador en las 20 generaciones**" in parrafo

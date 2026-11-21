@@ -175,7 +175,7 @@ def cifras(r: dict[str, Any]) -> tuple[list[Cifra], list[Cifra]]:
         "haiku-jefe", "Haiku en el jefe comprometido: 6 de 11 sin defensa, 0 de 12 con la capa 2", "11 y 12 repeticiones", "—",
         "(sin comando: no hay archivo en results/)",
         "Con Haiku, el mismo escenario cayó 6 de 11 sin defensa y 0 de 12 con la capa 2.",
-        "README.md y docs/pitch.md; sin archivo de origen en results/ (los logs de Inspect no están en el repo)")]
+        "corrida con modelo de los logs de Inspect (logs/jefe y logs/dueno, fuera del repo); fuente: #153 y #156; sin archivo de origen en results/")]
     return ok, sin_archivo
 
 

@@ -2,22 +2,22 @@
 
 > Generado por `python scripts/cifras_finales.py` desde `demo/resultados.json` (que sale de `results/` con `python scripts/resultados_demo.py`). **No se edita a mano**: `tests/test_cifras.py` falla si este archivo no es lo que saldría hoy, o si el README o `docs/pitch.md` citan un total que no calza.
 
-Corpus medido: **148 estafas y 60 controles** (`resultados.json` generado el 2026-11-21). Los intervalos son de Wilson al 95 %, salvo donde se dice otra cosa. Las estafas las escribimos nosotros: un 0 % dice que la garantía se cumple sobre este corpus, no que ninguna estafa pueda saltarla.
+Corpus medido: **150 estafas y 62 controles** (`resultados.json` generado el 2026-11-21). Los intervalos son de Wilson al 95 %, salvo donde se dice otra cosa. Las estafas las escribimos nosotros: un 0 % dice que la garantía se cumple sobre este corpus, no que ninguna estafa pueda saltarla.
 
 ## Para decir en voz alta
 
 | # | Cifra | n | Intervalo | Frase |
 |---|---|---|---|---|
-| 1 | 148 estafas y 60 controles | 208 escenarios (id × idioma) | — | «Medimos 148 estafas chilenas, en español y en inglés, y 60 casos legítimos para ver qué se frena de más.» |
-| 2 | 100 % [97-100] caen sin defensa | n = 148 estafas | 95 % (Wilson) | «Sin defensa, un agente que hace lo que lee cae en las 148 estafas.» |
-| 3 | 7 % [3-12] caen con la capa 2 | n = 148 estafas | 95 % (Wilson) | «Con la capa 2 sola, caen 10 de 148: son las que dicta el dueño, que ya cayó.» |
-| 4 | 0 % [0-3] caen con Grifter completo (capas 2 y 3) | n = 148 estafas | 95 % (Wilson): cero de n no es riesgo cero | «148 estafas, 0 pasan Grifter completo. Con intervalo: entre 0 y 3 %, porque las estafas las escribimos nosotros.» |
-| 5 | 96 % [90-99] de utilidad y 3 % [0-11] de falsas alarmas con Grifter completo | utilidad n = 100; falsas alarmas n = 60 controles | 95 % (Wilson) | «Y sigue pagando lo legítimo: 96 % de utilidad.» |
-| 6 | 97 % [93-99] caen con la capa 1 de referencia (reglas de firewall) | n = 148 estafas | 95 % (Wilson) | «Un firewall de reglas casi no cambia nada: 97 % de las estafas siguen pasando.» |
-| 7 | 104 escenarios pares español-inglés (estafas y controles), 0 difieren | 104 pares | — | «Los 104 escenarios existen en español y en inglés, y la defensa decide igual en las dos lenguas (0 difieren).» |
-| 8 | 31 tipos de ataque; 148 de 148 frenados con Grifter completo | 148 ataques | — | «31 tipos de ataque, de la boleta falsa al MCP envenenado, y Grifter completo frena los 148.» |
-| 9 | 3.600 intentos del atacante que aprende, 0 cruzan la capa 2 | 3.600 intentos (120 generaciones, 6 corridas) | — | «Un atacante que aprende reescribió la estafa 3.600 veces: 0 cruzaron la capa 2.» |
-| 10 | 1.071 de 1.800 intentos habrían cobrado sin la capa 2 (clasificador congelado) | 1.800 intentos | — | «Sin la capa 2, 1.071 de esos intentos le habrían ganado al clasificador: por eso el cero no es trivial.» |
+| 1 | 150 estafas y 62 controles | 212 escenarios (id × idioma) | — | «Medimos 150 estafas chilenas, en español y en inglés, y 62 casos legítimos para ver qué se frena de más.» |
+| 2 | 100 % [98-100] caen sin defensa | n = 150 estafas | 95 % (Wilson) | «Sin defensa, un agente que hace lo que lee cae en las 150 estafas.» |
+| 3 | 7 % [3-12] caen con la capa 2 | n = 150 estafas | 95 % (Wilson) | «Con la capa 2 sola, caen 10 de 150: son las que dicta el dueño, que ya cayó.» |
+| 4 | 0 % [0-2] caen con Grifter completo (capas 2 y 3) | n = 150 estafas | 95 % (Wilson): cero de n no es riesgo cero | «150 estafas, 0 pasan Grifter completo. Con intervalo: entre 0 y 2 %, porque las estafas las escribimos nosotros.» |
+| 5 | 96 % [90-99] de utilidad y 3 % [0-11] de falsas alarmas con Grifter completo | utilidad n = 102; falsas alarmas n = 62 controles | 95 % (Wilson) | «Y sigue pagando lo legítimo: 96 % de utilidad.» |
+| 6 | 97 % [93-99] caen con la capa 1 de referencia (reglas de firewall) | n = 150 estafas | 95 % (Wilson) | «Un firewall de reglas casi no cambia nada: 97 % de las estafas siguen pasando.» |
+| 7 | 106 escenarios pares español-inglés (estafas y controles), 0 difieren | 106 pares | — | «Los 106 escenarios existen en español y en inglés, y la defensa decide igual en las dos lenguas (0 difieren).» |
+| 8 | 32 tipos de ataque; 150 de 150 frenados con Grifter completo | 150 ataques | — | «32 tipos de ataque, de la boleta falsa al MCP envenenado, y Grifter completo frena los 150.» |
+| 9 | 5.280 intentos del atacante que aprende, 0 cruzan la capa 2 | 5.280 intentos (120 generaciones, 6 corridas) | — | «Un atacante que aprende reescribió la estafa 5.280 veces: 0 cruzaron la capa 2.» |
+| 10 | 2.055 de 2.640 intentos habrían cobrado sin la capa 2 (clasificador congelado) | 2.640 intentos | — | «Sin la capa 2, 2.055 de esos intentos le habrían ganado al clasificador: por eso el cero no es trivial.» |
 | 11 | Pipelock frena 4 de 42 estafas, 0 falsas alarmas | n = 42 estafas | [4-22] % (Wilson) | «Un firewall de agentes real frenó 4 de 42, todas técnicas: la ingeniería social no tiene nada técnico que detectar.» |
 | 12 | Sonnet pagó 6 de 6 con el correo del gerente comprometido | 6 repeticiones, 2 escenarios (es y en) | [34-100] % | «Con el encargo «paga lo que el gerente apruebe», Sonnet pagó 6 de 6: es un solo escenario, y la vulnerabilidad es la confianza delegada, no que el modelo sea tonto.» |
 | 13 | Haiku con la capa 2 y el dueño en el circuito: 0 % [0-15] de estafas | 63 repeticiones, 21 escenarios en español | 95 % (Wilson) | «Haiku no cayó en ninguno de 21 escenarios: cero, con un techo de 15 %.» |
@@ -58,7 +58,7 @@ Se dicen en el README y en el pitch, pero no hay en el repo un archivo que las r
 
 | Cifra | Frase | Fuente |
 |---|---|---|
-| Haiku en el jefe comprometido: 6 de 11 sin defensa, 0 de 12 con la capa 2 | «Con Haiku, el mismo escenario cayó 6 de 11 sin defensa y 0 de 12 con la capa 2.» | README.md y docs/pitch.md; sin archivo de origen en results/ (los logs de Inspect no están en el repo) |
+| Haiku en el jefe comprometido: 6 de 11 sin defensa, 0 de 12 con la capa 2 | «Con Haiku, el mismo escenario cayó 6 de 11 sin defensa y 0 de 12 con la capa 2.» | corrida con modelo de los logs de Inspect (logs/jefe y logs/dueno, fuera del repo); fuente: #153 y #156; sin archivo de origen en results/ |
 
 ## Límites que se dicen antes de que pregunten
 
