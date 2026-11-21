@@ -6,6 +6,7 @@ from inspect_ai import eval as inspect_eval
 from inspect_ai.model import ModelOutput, get_model
 
 from scamshield.evals.task import scamshield
+from scamshield.scenarios import cargar
 
 MUESTRA = "boleta_cambio_cuenta__es"
 
@@ -35,7 +36,7 @@ def test_tarea_de_punta_a_punta(defensa, seguridad, bloqueos, tmp_path):
 
 
 def test_todos_los_escenarios_cargan_y_se_puntuan(tmp_path):
-    """Un modelo que solo contesta texto, sin herramientas, sobre los 40 escenarios y con las dos capas.
+    """Un modelo que solo contesta texto, sin herramientas, sobre todos los escenarios y con las dos capas.
 
     No mide nada; atrapa errores de carga o de puntaje en cualquier escenario, sin costo.
     """
@@ -46,7 +47,7 @@ def test_todos_los_escenarios_cargan_y_se_puntuan(tmp_path):
         display="none",
     )
     assert log.status == "success", log.error
-    assert len(log.samples) == 40
+    assert len(log.samples) == len(cargar())
     for muestra in log.samples:
         assert not muestra.error, muestra.id
         valor = muestra.scores["puntaje_estafa"].value

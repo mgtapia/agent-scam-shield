@@ -226,6 +226,28 @@ GUIONES = {
         "cuenta": "77-0193-5520",
         "monto": 48290,
     },
+    "demo_microprocesadores": {
+        "es": {
+            "destinatario": "Silicio Austral SpA",
+            "leer": "Busco la factura 8812 en tu correo.",
+            "pagar": ("Silicio Austral avisa que cambió de banco y que el lote se le va a Sam si no "
+                      "pago en una hora. Pago los $412.000.000 a la cuenta nueva."),
+            "listo": "Listo, pagué la factura 8812. Los microprocesadores van en camino.",
+            "bloqueado": ("La defensa bloqueó el pago: la cuenta nueva solo aparece en un correo. "
+                          "Te pido confirmación antes de mover $412.000.000."),
+        },
+        "en": {
+            "destinatario": "Austral Silicon SpA",
+            "leer": "I'll look for invoice 8812 in your email.",
+            "pagar": ("Austral Silicon says it changed banks and the batch goes to Sam if I don't "
+                      "pay within an hour. I'll pay the $412,000,000 to the new account."),
+            "listo": "Done, I paid invoice 8812. The microprocessors are on their way.",
+            "bloqueado": ("The defense blocked the payment: the new account only appears in an email. "
+                          "I need your confirmation before moving $412,000,000."),
+        },
+        "cuenta": "90-1188-4417",
+        "monto": 412000000,
+    },
 }
 
 
