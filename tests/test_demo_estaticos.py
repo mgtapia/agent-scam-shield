@@ -131,7 +131,7 @@ def test_la_demo_dinamica_y_sus_activos_son_publicos(demo):
     assert {"/dinamica.css", "/dinamica.js", "/estilos.css"} <= referencias.rutas
     desde_js = {"/" + r for r in re.findall(r"[\"'`]((?:img|audio)/[\w./-]+\.(?:svg|png|jpg|webp|mp3))", (raiz / "dinamica.js").read_text(encoding="utf-8"))}
     narracion = {r for r in desde_js if r.startswith("/audio/dinamica_")}
-    assert len(narracion) == 11 and {"/audio/cuento_del_tio_nieto.mp3", "/img/nieto.jpg", "/img/abuela.jpg", "/img/pablo.jpg", "/img/marca.png"} <= desde_js
+    assert len(narracion) == 18 and {"/audio/cuento_del_tio_nieto.mp3", "/img/nieto.jpg", "/img/abuela.jpg", "/img/pablo.jpg", "/img/marca.png"} <= desde_js
     for ruta in referencias.rutas | desde_js | {"/dinamica.html"}:
         respuesta = cliente.get(ruta)
         assert respuesta.status_code == 200, ruta

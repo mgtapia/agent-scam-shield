@@ -59,18 +59,18 @@
     ["n1", 13.1, "der"], ["n2", 17.85, "golpe"], ["n3", 19.8, "izq"], ["fianza", 23.8, "zoom"],
     ["n4", 26.75, "der"], ["cuenta", 29.8, "zoom"], ["n5", 34.55, "abajo"],
     // 3. El agente va a pagar y Grifter retiene
-    ["paga", 38.1, "abajo"], ["sin", 40.2, "corte"], ["frena", 42.6, "golpe"], ["motivo", 43.9, "zoom"],
+    ["paga", 38.1, "abajo"], ["sin", 40.2, "corte"], ["frena", 42.6, "golpe"], ["motivo", 45.0, "zoom"],
     // 4. Pagar igual: doble autorización, Marta aprueba con su código y Pablo rechaza
-    ["alerta", 47.5, "abajo"], ["codigo", 49.7, "der"], ["pablo", 52.3, "der"],
-    // 5. Dos estafas más, de ~5 s cada una
-    ["banco", 56.1, "abajo"], ["responde", 58.5, "der"], ["clave", 60.25, "golpe"],
-    ["aprobaste", 62.7, "zoom"], ["cobra", 64.8, "golpe"], ["calza", 67.1, "zoom"],
+    ["alerta", 48.0, "abajo"], ["codigo", 50.4, "der"], ["pablo", 53.3, "der"],
+    // 5. Dos estafas más
+    ["banco", 56.9, "abajo"], ["responde", 59.3, "der"], ["clave", 61.3, "golpe"],
+    ["aprobaste", 63.75, "zoom"], ["cobra", 65.85, "golpe"], ["calza", 68.15, "zoom"],
     // 6. Cifras
-    ["estafas", 69.1, "zoom"], ["pasan", 71.2, "corte"], ["atacante", 72.9, "der"], ["cruzan", 77.4, "corte"],
+    ["estafas", 70.15, "zoom"], ["pasan", 72.25, "corte"], ["atacante", 73.95, "der"], ["cruzan", 78.45, "corte"],
     // 7. Cierre: la frase final y la marca que se arma
-    ["remate", 78.9, "zoom"], ["cierre", 82.7, "zoom"],
+    ["remate", 79.95, "zoom"], ["cierre", 83.75, "zoom"],
   ];
-  const DURACION = 86.5;
+  const DURACION = 87.6;
   const E = Object.fromEntries(ESCENAS.map(([id, desde]) => [id, desde]));   // el inicio de cada escena
   const PASOS = [0, E.encargo, E.paga, E.alerta, E.banco, E.estafas, E.remate];   // teclas 1 a 7
 
@@ -78,17 +78,24 @@
   // de /with-timestamps: el texto de pantalla se escribe al ritmo de la voz, sin cargar audio (sirve para ?t=N).
   // Ninguna se pisa con la siguiente ni con la llamada.
   const NARR = {
-    gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,  dur: 4.08, pal: [0.07, 0.36, 0.53, 0.7, 1.01, 1.33, 1.95, 2.2, 2.71, 2.91, 3, 3.16, 3.59] },
-    agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.6,  dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
-    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 42.7, dur: 4.64, pal: [0.13, 0.51, 0.64, 1.28, 1.82, 2.22, 2.51, 2.6, 2.77, 3.55, 3.81, 3.95, 4.06] },
-    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 56.3, dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
-    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 60.35, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
-    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 62.8, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
-    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 67.2, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
-    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 69.2, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
-    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 73.0, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
-    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 79.0, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
-    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 83.2, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
+    gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,   dur: 4.08, pal: [0.07, 0.36, 0.53, 0.7, 1.01, 1.33, 1.95, 2.2, 2.71, 2.91, 3, 3.16, 3.59] },
+    agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.6,   dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
+    encargo:  { src: "audio/dinamica_12_encargo.mp3",  en: 7.45,  dur: 2.8,  pal: [0, 0.37, 0.54, 0.76, 0.83, 0.93, 1.4, 1.57, 2.04, 2.21] },
+    paga:     { src: "audio/dinamica_13_paga.mp3",     en: 37.55,  dur: 2.24, pal: [0, 0.13, 0.51, 0.64, 1.32, 1.49, 1.64, 1.76] },
+    sin:      { src: "audio/dinamica_14_sin.mp3",      en: 40.25, dur: 1.84, pal: [0, 0.27, 1.01, 1.17, 1.49, 1.65] },
+    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 42.65, dur: 5.28, pal: [0, 0.13, 0.77, 0.94, 1.24, 1.49, 2.53, 2.7, 3.08, 3.39, 3.48, 3.65, 4.32, 4.51, 4.61, 4.76] },
+    alerta:   { src: "audio/dinamica_15_alerta.mp3",   en: 48.05, dur: 2.24, pal: [0, 0.21, 0.52, 1.15, 1.76] },
+    codigo:   { src: "audio/dinamica_16_codigo.mp3",   en: 50.4,  dur: 3.04, pal: [0, 0.2, 1.22, 2.04, 2.29, 2.48] },
+    pablo:    { src: "audio/dinamica_17_pablo.mp3",    en: 53.5,  dur: 3.28, pal: [0, 0.15, 0.61, 0.77, 1.2, 1.97, 2.48, 2.7, 2.94] },
+    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 57.0,  dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
+    responde: { src: "audio/dinamica_18_responde.mp3", en: 59.1,  dur: 2.08, pal: [0, 0.21, 0.72, 1.09, 1.49, 1.67] },
+    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 61.35, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
+    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 63.85, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
+    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 68.25, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
+    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 70.25, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
+    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 74.05, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
+    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 80.05, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
+    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 84.25, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
   };
   // Cuándo empieza la palabra i de una narración, en segundos de la demo.
   const palabra = (n, i) => NARR[n].en + NARR[n].pal[i];
@@ -96,11 +103,11 @@
   const desdePalabra = (n, i) => ({ t0: palabra(n, i), pal: NARR[n].pal.slice(i).map((x) => x - NARR[n].pal[i]) });
 
   // La llamada: los mp3 de la versión A. FRASES son los inicios de cada frase del nieto en su mp3 (demo.js).
-  const LL = { suena: 9.3, contesta: 11.0, abuela: 11.2, nieto: 13.1, cuelga: 37.8 };
+  const LL = { suena: 9.3, contesta: 11.0, abuela: 11.2, nieto: 13.1, cuelga: 36.7 };   // el mp3 del nieto dura 23,52 s (medido)
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];
   const frase = (i) => LL.nieto + FRASES[i];
   // Los toques: «Pagar igual» de Marta y «Rechazar» de Pablo.
-  const TOQUE_MARTA = E.alerta + 1.7, TOQUE_PABLO = E.pablo + 2.1;
+  const TOQUE_MARTA = E.alerta + 1.7, TOQUE_PABLO = E.pablo + 1.65;
   // Cuándo «habla» el agente (su nube pulsa en ámbar) y cuándo suena cada voz de la llamada.
   const HABLA_AGENTE = [[E.encargo + 0.6, E.encargo + 1.7], [E.paga + 0.05, E.paga + 1.6], [E.responde + 0.05, E.responde + 1.5]];
   const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7]], nieto: [[LL.nieto, LL.cuelga]] };
@@ -282,7 +289,7 @@
         <h1 class="dn-titular dn-enorme"${ap(S5 + 0.3, "sube")}>Pago retenido</h1>
         <p class="dn-tachado dato"${ap(S5 + 0.55, "sube")}><span>$650.000 → 48-2210-7735</span><i${ap(S5 + 0.8, "raya")}></i></p>`, "dn-centro");
     esc_("motivo", `
-        <h1 class="dn-titular">${escribe("La cuenta salió de [[una llamada]], no de tu encargo.", 0, desdePalabra("retiene", 3))}</h1>
+        <h1 class="dn-titular">${escribe("La cuenta salió de [[una llamada]], no de tu encargo.", 0, desdePalabra("retiene", 6))}</h1>
         <div class="dn-versus">
           <span class="dn-tag"${ap(E.motivo + 2.2, "izq")}>${ic("person")}Encargo de Marta: contestar sus llamadas</span>
           <span class="dn-tag ext"${ap(E.motivo + 2.5, "der")}>${ic("call")}Cuenta 48-2210-7735 · llamada</span>
@@ -319,14 +326,14 @@
           <div class="dn-chat-cab dn-de-pablo"><span class="dn-chat-av foto"><img src="img/pablo.jpg" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{className:'dn-sin-pablo',textContent:'P'}))" alt="" width="88" height="88"></span><p><b>Pablo, su hijo</b><span class="dn-estado"><span>WhatsApp · chat con Grifter</span></span></p></div>
           <div class="dn-msgs">
             <p class="dn-sistema dn-remitente"${ap(S8 + 0.05, "nada")}>${ic("shield")}Grifter</p>
-            ${puntos(S8 + 0.05, S8 + 0.4)}
-            <div class="dn-burbuja ag"${ap(S8 + 0.4, "pop")}>Marta quiere pagar <b class="dato">$650.000</b> a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser Tomás, su nieto.</div>
-            <div class="dn-burbuja ag dn-chica"${ap(S8 + 0.75, "pop")}>${ic("check")}1 de 2: Marta ya aprobó con su código</div>
-            <div class="dn-wa-botones"${ap(S8 + 1.05, "sube", TOQUE_PABLO + 0.75)}>
+            ${puntos(S8 + 0.05, S8 + 0.3)}
+            <div class="dn-burbuja ag"${ap(S8 + 0.3, "pop")}>Marta quiere pagar <b class="dato">$650.000</b> a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser Tomás, su nieto.</div>
+            <div class="dn-burbuja ag dn-chica"${ap(S8 + 0.55, "pop")}>${ic("check")}1 de 2: Marta ya aprobó con su código</div>
+            <div class="dn-wa-botones"${ap(S8 + 0.75, "sube", TOQUE_PABLO + 0.45)}>
               <span class="dn-b">Solicitar código</span>
               <span class="dn-b rechazar">Rechazar${dedo(TOQUE_PABLO, 140, 220)}</span>
             </div>
-            <p class="dn-sistema dn-resultado"${ap(TOQUE_PABLO + 0.95, "sube")}>${ic("block")}<span>Pablo rechazó.</span><b>No se pagó nada.</b></p>
+            <p class="dn-sistema dn-resultado"${ap(TOQUE_PABLO + 0.6, "sube")}>${ic("block")}<span>Pablo rechazó.</span><b>No se pagó nada.</b></p>
           </div>
         </div>`);
 
