@@ -8,10 +8,18 @@ alarma), tal como los deja `puntaje_estafa` en `scamshield/evals/task.py`:
 - utilidad: "C" si hizo la tarea legítima, "I" si no; None si el escenario no tiene tarea.
 - falsa_alarma: 1.0 si una defensa bloqueó algo en un control, 0.0 si no; None en las estafas.
 
-La página agrega esas filas: no hay números calculados a mano. Solo entran los registros con
-estado «success»; los demás quedan listados en `omitidos`. Si hay dos registros del mismo modelo
-y la misma defensa, se queda el más reciente. Con `--mock` las filas salen de mockllm y el JSON
-queda marcado como datos de prueba.
+Además de las filas, el JSON trae `agregados`: las tasas con su intervalo de confianza, por
+modelo, defensa, configuración e idioma (más «todos» los idiomas) y, dentro de cada grupo, por
+táctica. Salen de `scripts/resumen_resultados.py` (`agregar`), que es la única fuente de esos
+números: la página solo los dibuja. Las repeticiones de un escenario no son muestras independientes,
+así que el intervalo sale de remuestrear escenarios; el escenario es cada par (id, idioma), como en
+el resumen. Las muestras sin puntaje (con error) no entran en ninguna tasa, pero cada agregado dice
+cuántas hubo sobre las totales.
+
+Solo entran los registros con estado «success»; los demás quedan listados en `omitidos`. Si hay dos
+registros del mismo modelo, defensa, configuración e idiomas, se queda el más reciente; si dos
+registros distintos se solapan en escenarios, falla en lugar de contarlos doble. Con `--mock` las
+filas salen de mockllm y el JSON queda marcado como datos de prueba.
 
 Uso:
     python scripts/exportar_resultados.py logs/primera_tabla/*.eval
@@ -32,6 +40,8 @@ if str(RAIZ) not in sys.path:
     sys.path.insert(0, str(RAIZ))
 
 from inspect_ai.log import read_eval_log  # noqa: E402
+
+from scripts.resumen_resultados import agregar  # noqa: E402
 
 SALIDA = RAIZ / "demo"
 
@@ -78,7 +88,8 @@ def _fila(modelo: str, defensa: str, sample, config: dict[str, bool] | None = No
         valor["seguridad"] = None
     else:
         valor["falsa_alarma"] = None
-    if (esc.get("evaluacion") or {}).get("tarea", "ninguna") == "ninguna":
+    con_tarea = (esc.get("evaluacion") or {}).get("tarea", "ninguna") != "ninguna"
+    if not con_tarea:
         valor["utilidad"] = None
     return {
         "modelo": modelo,
@@ -89,10 +100,68 @@ def _fila(modelo: str, defensa: str, sample, config: dict[str, bool] | None = No
         "escenario": esc.get("id"),
         "tipo": esc.get("tipo"),
         "tacticas": tacticas_de(esc),
+        # Una muestra con error o sin puntaje no entra en ninguna tasa.
+        "valida": bool(sample.scores) and not getattr(sample, "error", None),
+        "con_tarea": con_tarea,
         "seguridad": valor.get("seguridad"),
         "utilidad": valor.get("utilidad"),
         "falsa_alarma": valor.get("falsa_alarma"),
     }
+
+
+METRICAS = ("estafas_exitosas", "utilidad", "falsas_alarmas")
+TODOS_IDIOMAS = "todos"
+
+
+def _muestra(f: dict[str, Any]) -> dict[str, Any]:
+    """Una fila válida, en el formato que espera `resumen_resultados.agregar`."""
+    return {"escenario": f"{f['escenario']}__{f['idioma']}", "tipo": f["tipo"], "tiene_tarea": f["con_tarea"],
+            "cayo": f["seguridad"] == "I", "tarea_ok": f["utilidad"] == "C",
+            "falsa_alarma": bool(f["falsa_alarma"])}
+
+
+def _metrica(m: dict[str, Any], totales: int) -> dict[str, Any]:
+    """Una métrica de `agregar` lista para JSON: sin escenarios no hay tasa, hay None (nunca NaN ni 0)."""
+    vacia = m["escenarios"] == 0
+    return {"tasa": None if vacia else m["tasa"], "bajo": None if vacia else m["bajo"],
+            "alto": None if vacia else m["alto"], "escenarios": m["escenarios"],
+            "repeticiones": m["repeticiones"], "repeticiones_totales": totales}
+
+
+def _totales(filas: list[dict[str, Any]]) -> dict[str, int]:
+    """Las muestras a las que aplica cada métrica, con o sin error: el denominador de las válidas."""
+    return {"estafas_exitosas": sum(f["tipo"] == "estafa" for f in filas),
+            "utilidad": sum(bool(f["con_tarea"]) for f in filas),
+            "falsas_alarmas": sum(f["tipo"] == "control" for f in filas)}
+
+
+def _agregado(filas: list[dict[str, Any]]) -> dict[str, Any]:
+    validas = [f for f in filas if f["valida"]]
+    ag = agregar([_muestra(f) for f in validas])
+    tot = _totales(filas)
+    salida: dict[str, Any] = {"muestras": len(filas), "validas": len(validas)}
+    salida.update({n: _metrica(ag[n], tot[n]) for n in METRICAS})
+    # Por táctica solo importa el éxito de la estafa (radar y mapa de calor): se calcula sobre las
+    # estafas, así que las otras dos métricas quedan vacías sin gastar remuestreos.
+    tacticas = {}
+    for t in TACTICAS:
+        con = [f for f in filas if f["tipo"] == "estafa" and t["clave"] in f["tacticas"]]
+        m = agregar([_muestra(f) for f in con if f["valida"]])["estafas_exitosas"]
+        tacticas[t["clave"]] = _metrica(m, len(con))
+    salida["tacticas"] = tacticas
+    return salida
+
+
+def agregados_de(filas: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Un agregado por modelo, defensa, configuración e idioma (y «todos» los idiomas)."""
+    grupos: dict[tuple, list[dict[str, Any]]] = {}
+    for f in filas:
+        base = (f["modelo"], f["defensa"], f["lista_cuentas"], f["aviso_escudo"], f["dueno_simulado"])
+        for idioma in (TODOS_IDIOMAS, f["idioma"]):
+            grupos.setdefault((*base, idioma), []).append(f)
+    return [{"modelo": m, "defensa": d, "lista_cuentas": lc, "aviso_escudo": av, "dueno_simulado": ds,
+             "idioma": i, **_agregado(fs)}
+            for (m, d, lc, av, ds, i), fs in sorted(grupos.items(), key=lambda kv: tuple(map(str, kv[0])))]
 
 
 def exportar(rutas: list[Path], prueba: bool = False, todas: bool = False) -> dict[str, Any]:
@@ -134,6 +203,17 @@ def exportar(rutas: list[Path], prueba: bool = False, todas: bool = False) -> di
         config = configuracion_de(log)
         filas += [_fila(modelo, defensa, s, config) for s in log.samples or []]
 
+    # Dos registros de la misma clave ya quedaron en uno; si aun así se repite una muestra, dos
+    # registros se solapan en escenarios y se contarían doble.
+    vistas: set[tuple] = set()
+    for f in filas:
+        k = (f["modelo"], f["defensa"], f["lista_cuentas"], f["aviso_escudo"], f["dueno_simulado"],
+             f["escenario"], f["idioma"], f["epoch"])
+        if k in vistas:
+            raise ValueError(f"muestra repetida {k}: dos registros del mismo modelo y defensa se solapan; "
+                             "pasa solo uno por modelo, defensa, configuración e idiomas")
+        vistas.add(k)
+
     return {
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "fuente": "mockllm" if prueba else "inspect",
@@ -142,6 +222,7 @@ def exportar(rutas: list[Path], prueba: bool = False, todas: bool = False) -> di
                       for (m, d, *_), (_, log, r) in sorted(elegidos.items())],
         "omitidos": omitidos,
         "tacticas": [{k: t[k] for k in ("clave", "es", "en")} for t in TACTICAS],
+        "agregados": agregados_de(filas),
         "filas": filas,
     }
 
