@@ -258,6 +258,10 @@ def construir_resumen(resultados: dict[str, list[dict[str, Any]]], escenarios: l
             {"escenario": f"{e['id']}__{e['idioma']}", "idioma": e["idioma"], "tipo": e["tipo"],
              "owasp": estandares.clasificar(e).owasp, "atlas": estandares.clasificar(e).atlas,
              "mecanismo": estandares.mecanismo_de(e),
+             # La familia de estafa (`anotaciones.familia`) y si el dueño ya cayó y dicta la cuenta: con eso se arma
+             # qué se cuela por cada capa (scripts/resultados_demo.py).
+             "familia": e["anotaciones"].get("familia") or e["id"],
+             "dueno_dicta": bool(e["anotaciones"].get("dueno_ya_enganado")),
              "resultados": {c: {k: resultados[c][i][k] for k in ("cayo", "tarea_ok", "falsa_alarma")}
                             for c in resultados}}
             for i, e in enumerate(escenarios)],

@@ -15,6 +15,12 @@ Integridad (#102): Grifter guarda la huella de la política que aprobó el dueñ
 todo lo sensible y le manda el diff al dueño hasta que apruebe; y avisa (latido) al arrancar y al detenerse.
 Ver `integridad.py`.
 
+Con `mandato` en `grifter.yaml` (#103), un pago que se desvía de lo que aprobó el dueño (monto, producto,
+cantidad, moneda, cuenta, recurrencia o cargos extra) se retiene, y una orden que devuelve el MCP con un
+desvío no llega al agente. Con `herramientas_fijadas` (nombre -> SHA-256 de la descripción y el esquema),
+una herramienta que cambió o que no se aprobó queda bloqueada; sin fijaciones, el log deja la huella de
+cada herramienta al conectar, para copiarla.
+
 Uso: python -m scamshield.mcp.proxy --config grifter.yaml            # stdio (Claude Desktop, Claude Code)
      GRIFTER_MCP_TOKEN=... python -m scamshield.mcp.proxy --http   # HTTP en /mcp, con token (ver docs/mcp.md)
 Los MCP de abajo pueden ser procesos stdio (`comando`) o remotos por HTTP (`url`, `headers`).
@@ -45,6 +51,7 @@ from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
 from ..defenses.layer2 import MOTIVO_CREDENCIAL, SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen, visible
+from ..defenses.mandato import huella, motivo as motivo_mandato, parece_orden, revisar_fijacion
 from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
 from .aprobaciones import (APROBADA, PENDIENTE, Aprobaciones, Aprobador, RegistroEncadenado, Solicitud,
                            aprobadores_de, cargar_semillas)
@@ -104,6 +111,10 @@ class Config:
     registro_aprobaciones: Optional[Path] = None
     ruta: Optional[Path] = None      # el grifter.yaml del que salió, para vigilar que no cambie
     estado: Optional[Path] = None    # dónde se guarda la política aprobada (por defecto, junto al yaml)
+    # Mandato del dueño (#103): lo que aprobó para el pago. Vacío, sin mandato.
+    mandato: dict[str, Any] = field(default_factory=dict)
+    # Fijación de herramientas (#103): nombre -> huella (SHA-256) de la descripción y el esquema aprobados.
+    herramientas_fijadas: dict[str, str] = field(default_factory=dict)
 
 
 def _con_entorno(valor: str, entorno: Mapping[str, str]) -> str:
@@ -147,6 +158,8 @@ def cargar_config(ruta: Union[str, Path]) -> Config:
         datos_dueno={str(k): str(v) for k, v in (datos.get("datos_dueno") or {}).items()},
         encargo=str(datos.get("encargo") or ""),
         ruta=ruta,
+        mandato=dict(datos.get("mandato") or {}),
+        herramientas_fijadas={str(k): str(v) for k, v in (datos.get("herramientas_fijadas") or {}).items()},
     )
     config.capas.update({str(k): bool(v) for k, v in (datos.get("capas") or {}).items()})
     if datos.get("estado"):
@@ -269,6 +282,7 @@ class Guardia:
         self.config = config
         self.datos_dueno: dict[str, str] = dict(config.datos_dueno)
         self.encargo: str = config.encargo
+        self.mandato: dict[str, Any] = dict(config.mandato)
         # Lista paralela: (origen, texto) para la política y la fuente para el aviso.
         self.leidos: list[tuple[str, str]] = []
         self.fuentes: list[Optional[Fuente]] = []
@@ -282,6 +296,7 @@ class Guardia:
         pares = [(l, f) for l, f in zip(self.leidos, self.fuentes) if f is not None]
         self.leidos, self.fuentes = [l for l, _ in pares], [f for _, f in pares]
         self.config, self.datos_dueno, self.encargo = config, dict(config.datos_dueno), config.encargo
+        self.mandato = dict(config.mandato)
         if config.encargo:
             self._anotar(DUENO, config.encargo, None)
         for nombre, cuenta in config.cuentas_inscritas.items():
@@ -308,6 +323,13 @@ class Guardia:
         regla = regla or self.config.sensibles.get(herramienta)
         if regla is None:
             return None
+        desvio = self._fuera_del_mandato(regla, args)
+        if desvio:
+            accion = self.config.acciones.get(herramienta, f"la llamada a {herramienta}")
+            return Alerta(herramienta=herramienta, servidor=servidor, args=dict(args),
+                          valor=str(args.get(regla.destino, "")), motivo=desvio, fuentes=[],
+                          mensaje=(f"Grifter retuvo {accion}. {desvio} Confírmalo con el dueño por un canal "
+                                   "conocido antes de reintentar."))
         motivo = politica_origen(self, herramienta, args, {herramienta: regla})
         if motivo is None:
             return None
@@ -339,10 +361,40 @@ class Guardia:
                 vistas.append(etiqueta)
         return vistas
 
+    def _fuera_del_mandato(self, regla: Optional[AccionSensible], args: Mapping[str, Any]) -> Optional[str]:
+        """El desvío de un pago respecto del mandato del dueño (#103), o None. Solo en pagos, no en datos."""
+        if not self.mandato or regla is None or regla.dato is not None or regla.mensaje is not None:
+            return None
+        return motivo_mandato(self.mandato, args, quien="el MCP")
+
+    def revisar_orden(self, resultado: types.CallToolResult) -> Optional[str]:
+        """Si el MCP devolvió una orden (#103) y se desvía del mandato, el motivo; si no, None."""
+        if not self.mandato:
+            return None
+        orden = _orden_de(resultado)
+        return motivo_mandato(self.mandato, orden, quien="el MCP") if orden is not None else None
+
 
 # ---------------------------------------------------------------------------------------------
 # El proxy MCP
 # ---------------------------------------------------------------------------------------------
+
+def _orden_de(resultado: types.CallToolResult) -> Optional[dict[str, Any]]:
+    """La orden que devolvió el MCP (contenido estructurado o un JSON en el texto), o None si no hay."""
+    candidatos: list[Any] = [resultado.structuredContent]
+    for c in resultado.content:
+        if isinstance(c, types.TextContent):
+            try:
+                candidatos.append(json.loads(c.text))
+            except (ValueError, TypeError):
+                continue
+    for c in candidatos:
+        if isinstance(c, dict) and isinstance(c.get("orden"), dict):
+            c = c["orden"]
+        if parece_orden(c):
+            return dict(c)
+    return None
+
 
 def _texto_de(resultado: types.CallToolResult) -> str:
     partes = [c.text for c in resultado.content if isinstance(c, types.TextContent)]
@@ -413,6 +465,8 @@ class Grifter:
         self.rutas: dict[str, tuple[str, str]] = {}
         self.herramientas: list[types.Tool] = []
         self._alertas_recientes: list[float] = []
+        # Herramientas que no calzan con su fijación (#103): nombre expuesto -> motivo. Quedan bloqueadas.
+        self.bloqueadas: dict[str, str] = {}
 
     async def conectar(self, pila: AsyncExitStack, errlog=None) -> None:
         """Conecta cada servidor de abajo (stdio o HTTP) y junta sus herramientas.
@@ -449,11 +503,15 @@ class Grifter:
             self.herramientas.append(tool.model_copy(update={"name": expuesto}))
             # La descripción también es contenido del servidor de abajo.
             self.guardia.anotar_resultado(servidor, f"la descripción de {tool.name}", tool.description or "")
+            self._fijar(expuesto, tool)
 
     async def llamar(self, nombre: str, args: dict[str, Any]) -> types.CallToolResult:
         if nombre not in self.rutas:
             return _error(f"Grifter no conoce la herramienta {nombre}.")
         servidor, original = self.rutas[nombre]
+        bloqueo = await self._herramienta_bloqueada(nombre, servidor, original)   # fijación (#103)
+        if bloqueo is not None:
+            return bloqueo
         if original not in self.config.sensibles:
             regla = regla_por_argumentos(args)
             if regla is not None:
@@ -517,7 +575,58 @@ class Grifter:
             return _error(f"Grifter no pudo llegar a {servidor} para {original} ({type(e).__name__}). "
                           "La llamada no se completó; no la reintentes con otro destino.")
         self.guardia.anotar_resultado(servidor, original, _texto_de(resultado))
-        return resultado
+        return self._orden_retenida(servidor, original, resultado) or resultado   # mandato (#103)
+
+    # --- Mandato y fijación de herramientas (#103) ---------------------------------------------
+
+    def _fijar(self, expuesto: str, tool: types.Tool) -> None:
+        """Compara la herramienta con su fijación. Sin fijaciones, deja su huella en el log para copiarla."""
+        if not self.config.herramientas_fijadas:
+            log.info("huella de %s: %s", tool.name, huella(tool.description, tool.inputSchema))
+            return
+        motivo = revisar_fijacion(self.config.herramientas_fijadas, tool.name, tool.description, tool.inputSchema)
+        if motivo:
+            log.warning("Grifter bloqueó %s: %s", tool.name, motivo)
+            self.bloqueadas[expuesto] = motivo
+
+    async def _herramienta_bloqueada(self, nombre: str, servidor: str,
+                                     original: str) -> Optional[types.CallToolResult]:
+        """Error si la herramienta no calza con su fijación, ahora o al conectar; None si puede seguir.
+
+        Con fijaciones, antes de cada llamada se vuelve a listar la herramienta: un servidor que la cambia a
+        mitad de la sesión (rug pull) no se salta la revisión. Si no se puede listar, falla cerrada.
+        """
+        if not self.config.herramientas_fijadas:
+            return None
+        motivo = self.bloqueadas.get(nombre)
+        if motivo is None:
+            try:
+                vigentes = (await self.sesiones[servidor].list_tools()).tools
+                tool = next((t for t in vigentes if t.name == original), None)
+                motivo = (f"la herramienta {visible(original, 40)} ya no está en el servidor." if tool is None
+                          else revisar_fijacion(self.config.herramientas_fijadas, original, tool.description,
+                                                tool.inputSchema))
+            except Exception as e:
+                motivo = f"no pudo revisar la herramienta {visible(original, 40)} ({type(e).__name__})."
+            if motivo:
+                self.bloqueadas[nombre] = motivo
+        if not motivo:
+            return None
+        self._registrar("herramienta_bloqueada", herramienta=original, servidor=servidor, motivo=motivo)
+        return _error(f"Grifter bloqueó la llamada a {original}: {motivo} Pídele al dueño que la revise.")
+
+    def _orden_retenida(self, servidor: str, original: str,
+                        resultado: types.CallToolResult) -> Optional[types.CallToolResult]:
+        """Si la orden que devolvió el MCP se desvía del mandato, el error que la reemplaza; si no, None."""
+        try:
+            motivo = self.guardia.revisar_orden(resultado)
+        except Exception as e:  # falla cerrada: una orden que no se pudo comparar no llega al agente
+            motivo = f"Grifter no pudo comparar la orden con el mandato ({type(e).__name__})."
+        if not motivo:
+            return None
+        log.warning("Alerta para el dueño: %s", motivo)
+        self._registrar("orden_retenida", herramienta=original, servidor=servidor, motivo=motivo)
+        return _error(f"Grifter retuvo la orden de {original}. {motivo} No la pagues: confírmala con el dueño.")
 
     def _regla_para(self, herramienta: str, args: Mapping[str, Any]) -> Optional[AccionSensible]:
         """La regla con la que revisar un diccionario anidado: la de la herramienta si trae su destino, o la que delatan sus claves."""
@@ -597,6 +706,11 @@ class Grifter:
                 self.config.capas = dict(config.capas)
                 self.config.aprobadores, self.config.quorum = list(config.aprobadores), config.quorum
                 self.config.umbral_doble = config.umbral_doble
+                # #103: un mandato o unas fijaciones nuevas valen desde que el dueño las aprueba. Las herramientas
+                # bloqueadas se vuelven a revisar contra las fijaciones nuevas en la próxima llamada.
+                self.config.mandato = dict(config.mandato)
+                self.config.herramientas_fijadas = dict(config.herramientas_fijadas)
+                self.bloqueadas.clear()
                 self.guardia.actualizar(self.config)
                 if self.quorum is not None:
                     self.quorum.reconfigurar(politica)

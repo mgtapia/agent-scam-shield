@@ -113,8 +113,14 @@ class Clasificador:
     DERIVA_MAX = 0.1   # cuánta probabilidad media en las estafas apartadas puede perder una versión nueva
 
     def __init__(self, apartado: list[tuple[Rasgos, int]], cada: int = 6, tasa: float = 0.5,
-                 l2: float = 1e-3, sesgo: float = -1.5, semilla: int = 3):
+                 l2: float = 1e-3, sesgo: float = -1.5, semilla: int = 3,
+                 meta: Optional[list[dict[str, Any]]] = None):
         self.apartado = apartado
+        # Lo que se sabe de cada correo apartado (escenario, familia, mecanismo, canal), en el mismo orden. Sirve para
+        # decir qué estafas se colaron; sin él, `colados` sale vacío.
+        if meta is not None and len(meta) != len(apartado):
+            raise ValueError("meta tiene que traer una entrada por correo apartado")
+        self.meta = meta
         self.cada = cada
         self.tasa = tasa
         self.l2 = l2
@@ -213,23 +219,46 @@ class Clasificador:
         return self.evento_modelo(cambios)
 
     def evaluar(self) -> dict[str, Any]:
-        """Precisión, recall y falsas alarmas (FP / (FP + TN)) en el conjunto apartado."""
+        """Precisión, recall y falsas alarmas (FP / (FP + TN)) en el conjunto apartado, y las estafas que se colaron.
+
+        `colados` son las estafas apartadas que el modelo dejó bajo el umbral (los falsos negativos del recall),
+        agrupadas por escenario y canal: cuántos correos se colaron (`n`) de cuántos había (`de`) y la probabilidad
+        media y máxima que les dio. Lo que se cuela aquí no se paga solo: la capa 1 y la capa 2 corren igual.
+        """
         tp = fp = tn = fn = 0
-        for r, y in self.apartado:
-            pred = self.probabilidad(r) > self.UMBRAL
+        colados: dict[tuple[str, str], dict[str, Any]] = {}
+        estafas: dict[tuple[str, str], int] = {}
+        for i, (r, y) in enumerate(self.apartado):
+            p = self.probabilidad(r)
+            pred = p > self.UMBRAL
+            m = self.meta[i] if self.meta is not None else None
+            clave = (str(m.get("escenario")), str(m.get("canal"))) if m else None
+            if y and clave:
+                estafas[clave] = estafas.get(clave, 0) + 1
             if pred and y:
                 tp += 1
             elif pred:
                 fp += 1
             elif y:
                 fn += 1
+                if clave:
+                    c = colados.setdefault(clave, {**m, "n": 0, "_ps": []})
+                    c["n"] += 1
+                    c["_ps"].append(p)
             else:
                 tn += 1
+        lista = []
+        for clave, c in colados.items():
+            ps = c.pop("_ps")
+            lista.append({**c, "de": estafas[clave], "probabilidad": round(sum(ps) / len(ps), 3),
+                          "probabilidad_max": round(max(ps), 3)})
+        lista.sort(key=lambda c: (-c["n"], c["probabilidad"], c["escenario"], c["canal"]))
         return {
             "precision": round(tp / (tp + fp), 3) if tp + fp else 0.0,
             "recall": round(tp / (tp + fn), 3) if tp + fn else 0.0,
             "falsas_alarmas": round(fp / (fp + tn), 3) if fp + tn else 0.0,
             "evaluado_en": len(self.apartado),
+            "colados": lista,
         }
 
     def evento_modelo(self, cambios: Optional[list[dict[str, Any]]] = None) -> dict[str, Any]:

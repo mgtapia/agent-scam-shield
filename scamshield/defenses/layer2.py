@@ -9,6 +9,10 @@ Garantía aparte: una credencial del dueño (clave, código, token o API key, ve
 nunca sale en `compartir_dato` ni en `responder`, a ningún destino, salvo que el encargo del dueño la
 nombre y nombre ese destino. Un destino que apareció en el correo, o en las cuentas inscritas, no basta.
 
+Mandato del dueño (#103, `mandato.py`): si la procedencia trae un `mandato` (lo que el dueño aprobó: producto,
+cantidad, monto máximo, moneda, beneficiario y si es único o recurrente), un pago que se desvía en cualquiera
+de esos campos se retiene, aunque vaya a la cuenta inscrita. Sin mandato no cambia nada.
+
 No depende de que un LLM acierte: un estafador puede redactar el correo perfecto, pero no puede
 hacer que su cuenta aparezca en el encargo del dueño ni en sus cuentas inscritas.
 
@@ -81,6 +85,13 @@ def politica_origen(procedencia: Procedencia, herramienta: str, args: Mapping,
         return None
     if _sale_una_credencial(procedencia, args, regla):
         return MOTIVO_CREDENCIAL
+    mandato = getattr(procedencia, "mandato", None)
+    if mandato and regla.dato is None and regla.mensaje is None:
+        # Un pago con mandato del dueño (#103): lo que se cobra tiene que calzar con lo que aprobó.
+        from .mandato import motivo as motivo_mandato
+        desvio = motivo_mandato(mandato, args)
+        if desvio:
+            return desvio
     if regla.dato is not None and not _es_dato_del_dueno(procedencia, args.get(regla.dato, "")):
         return None
     if regla.mensaje is not None and not _mensaje_lleva_dato(procedencia, args.get(regla.mensaje, "")):

@@ -55,6 +55,17 @@ const T = {
     sin_resultados: "Sin resultados", sin_episodio: "Sin episodio exportado", abrir: "Clic: abrir en Episodios",
     t_exito: "éxito de la estafa", t_modelo: "sin defensa",
     p_asunto: "Asunto",
+    // Familias de estafa (`anotaciones.familia`) y canales: los usan «Se colaron» (Operaciones) y «Qué se cuela» (Resultados).
+    fam_arriendo_falso: "Arriendo falso", fam_boleta_falsa: "Boleta falsa", fam_cambio_de_cuenta: "Cambio de cuenta",
+    fam_comercio_entre_agentes: "Agente vendedor", fam_consentimiento_falso: "Consentimiento falso", fam_credito_falso: "Crédito falso",
+    fam_deepfake: "Deepfake", fam_empleo_falso: "Empleo falso", fam_encomienda_falsa: "Encomienda falsa",
+    fam_espionaje_industrial: "Espionaje industrial", fam_fuga_de_secretos: "Fuga de secretos", fam_inversion_falsa: "Inversión falsa",
+    fam_inyeccion_tecnica: "Inyección técnica", fam_multa_falsa: "Multa falsa", fam_portal_falso: "Portal falso",
+    fam_premio_falso: "Premio falso", fam_qr_falso: "QR falso", fam_robo_de_cuenta: "Robo de cuenta", fam_soporte_falso: "Soporte falso",
+    fam_suplantacion_autoridad: "Falso regulador", fam_suplantacion_de_banco: "Falso banco", fam_suplantacion_de_familiar: "Falso familiar",
+    fam_suplantacion_de_gobierno: "Falso gobierno", fam_suplantacion_de_jefe: "Falso jefe", fam_suplantacion_de_proveedor: "Falso proveedor",
+    fam_tienda_falsa: "Tienda falsa",
+    canal_correo: "correo", canal_llamada: "llamada", canal_whatsapp: "WhatsApp", canal_web: "web", canal_mcp: "MCP",
     locale: "es-CL",
   },
   en: {
@@ -62,6 +73,16 @@ const T = {
     escenario: "Scenario", reproducir: "Play", reproduciendo: "Playing", reiniciar: "Reset",
     correos: "Emails", calor_tactica: "Tactic × defense", calor_modelo: "Model × language",
     d_none: "No defense", d_layer1: "Firewall", d_layer2: "Shield", d_both: "Firewall + shield", d_layer2_approver: "Shield (approver)",
+    fam_arriendo_falso: "Fake rental", fam_boleta_falsa: "Fake bill", fam_cambio_de_cuenta: "Account change",
+    fam_comercio_entre_agentes: "Seller agent", fam_consentimiento_falso: "Fake consent", fam_credito_falso: "Fake loan",
+    fam_deepfake: "Deepfake", fam_empleo_falso: "Fake job", fam_encomienda_falsa: "Fake parcel",
+    fam_espionaje_industrial: "Industrial espionage", fam_fuga_de_secretos: "Secret leak", fam_inversion_falsa: "Fake investment",
+    fam_inyeccion_tecnica: "Technical injection", fam_multa_falsa: "Fake fine", fam_portal_falso: "Fake portal",
+    fam_premio_falso: "Fake prize", fam_qr_falso: "Fake QR", fam_robo_de_cuenta: "Account takeover", fam_soporte_falso: "Fake support",
+    fam_suplantacion_autoridad: "Fake regulator", fam_suplantacion_de_banco: "Fake bank", fam_suplantacion_de_familiar: "Fake relative",
+    fam_suplantacion_de_gobierno: "Fake government", fam_suplantacion_de_jefe: "Fake boss", fam_suplantacion_de_proveedor: "Fake vendor",
+    fam_tienda_falsa: "Fake shop",
+    canal_correo: "email", canal_llamada: "call", canal_whatsapp: "WhatsApp", canal_web: "web", canal_mcp: "MCP",
     ayuda_none: "The agent does what it reads",
     ayuda_layer1: "Technical-injection rules, like Pipelock",
     ayuda_layer2: "Checks where each account came from before paying",
@@ -123,6 +144,9 @@ const t = (clave, vars = {}) => {
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const norm = (s) => String(s ?? "").toLowerCase().replace(/[^a-z0-9ñáéíóúü]/gi, "");
 const plata = (n) => "$" + Number(n || 0).toLocaleString(t("locale"));
+// El nombre de una familia de estafa o de un canal; si no está en el diccionario, el slug legible.
+const nombreFamilia = (f) => (T[estado.idioma]?.[`fam_${f}`] || T.es[`fam_${f}`] || String(f ?? "").replaceAll("_", " "));
+const nombreCanal = (c) => (T[estado.idioma]?.[`canal_${c}`] || T.es[`canal_${c}`] || String(c ?? ""));
 const ms = (nombre, grande = false) => `<span class="ms${grande ? " grande" : ""}" aria-hidden="true">${nombre}</span>`;
 const RE_CUENTA = /\b\d{2}-\d{4}-\d{4}\b/g;
 

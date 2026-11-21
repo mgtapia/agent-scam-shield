@@ -40,6 +40,23 @@ capas: {capa2: true}
 # Dónde se guarda la política aprobada por el dueño. Ponlo fuera de lo que el agente puede escribir.
 # estado: /ruta/fuera/del/agente/grifter_aprobada.json
 
+# Opcional (#103): el mandato, lo que el dueño aprobó. Un pago, o una orden que devuelve el MCP, que se
+# desvía en cualquier campo (más monto, otro producto o cantidad, otra moneda o cuenta, cobro recurrente o
+# cargos extra) se retiene y se le explica la diferencia al dueño.
+# mandato:
+#   producto: "microprocesador de 3 nm"
+#   cantidad: 10000
+#   monto_maximo: 412000000
+#   moneda: CLP
+#   beneficiario: "33-7741-0092"
+#   recurrencia: unica
+
+# Opcional (#103): fijación de herramientas. Nombre -> SHA-256 de la descripción y el esquema aprobados
+# (sin esta sección, el log deja la huella de cada herramienta al conectar). Si una cambia (rug pull),
+# o aparece una que no está aquí, queda bloqueada hasta que el dueño la revise.
+# herramientas_fijadas:
+#   pagar: "<sha256 del log>"
+
 # JSONL con cada llamada sensible: permitida, retenida o aprobada por el dueño.
 registro: grifter_eventos.jsonl
 

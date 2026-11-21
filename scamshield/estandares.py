@@ -28,7 +28,9 @@ regla que se aplica a todos los mecanismos por igual es esta:
 - el atacante pide un código o credenciales por un mensaje electrónico (OTP, clave): AML.T0052 Phishing,
   calce aproximado;
 - el atacante deja instrucciones en lo que el agente lee (página, correo): AML.T0051.001, calce exacto;
-- el atacante envenena la descripción de una herramienta MCP: AML.T0011.002, calce exacto;
+- el atacante envenena la descripción de una herramienta MCP: AML.T0011.002, calce exacto (también cuando
+  la cambia después de que el dueño la aprobó, el rug pull);
+- un servidor MCP de checkout cobra otra cosa que lo aprobado: AML.T0011.002, calce aproximado;
 - el dueño ya fue engañado y dicta la cuenta: `por confirmar` (el engaño está en la persona, no en el agente).
 
 La técnica «Financial Harm» (AML.T0048.000) describe el daño, no el cómo, y serviría para todos por igual,
@@ -107,6 +109,18 @@ MAPEO: dict[str, Entrada] = {
     # ASI04 cita de forma explícita los componentes MCP envenenados en tiempo de ejecución.
     "tool_poisoning": Entrada("ASI04", "AML.T0011.002",
                               nota="La descripción de una herramienta MCP trae las instrucciones."),
+    # El MCP que cambia lo aprobado después del sí (#103). El rug pull es el mismo envenenamiento de la
+    # herramienta, solo que llega después de que el dueño la aprobó: ASI04 y AML.T0011.002 calzan igual.
+    "tool_rug_pull": Entrada("ASI04", "AML.T0011.002",
+                             nota="La descripción y el esquema de una herramienta MCP aprobada cambian después "
+                                  "(rug pull) y agregan una cuenta de destino por defecto."),
+    # Un servidor MCP de checkout que altera la orden aprobada (monto, producto, cargos, moneda, recurrencia).
+    # ASI04 cubre el componente MCP malicioso en tiempo de ejecución; ATLAS no tiene una técnica para alterar una
+    # orden, y la más cercana de las verificadas es la herramienta envenenada. Las dos, aproximadas.
+    "order_tampering": Entrada("ASI04", "AML.T0011.002", APROXIMADO, APROXIMADO,
+                               "Un checkout MCP cobra otra cosa que lo aprobado: un cero de más, otro producto, "
+                               "cargos extra, otra moneda o un cobro mensual. ATLAS no tiene una técnica para "
+                               "alterar una orden: AML.T0011.002 es la más cercana."),
     # Suplantación: AML.T0073 incluye autoridades, colegas, proveedores de servicios y personas inventadas.
     "ceo_fraud": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO, _ASI01_APROX + "Se hace pasar por el jefe."),
     "business_email_compromise": Entrada("ASI01", "AML.T0073", APROXIMADO, APROXIMADO,

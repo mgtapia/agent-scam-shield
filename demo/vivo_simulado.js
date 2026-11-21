@@ -165,6 +165,10 @@ const VivoSimulado = (() => {
     ["remitente_conocido", "primer_contacto"], ["repartir_en_dos", "cambio_cuenta"], ["reenviar", "dominio_parecido"],
   ];
 
+  // Lo que se cuela en el conjunto apartado (`colados` del evento `modelo`): menos cuanto más cobertura tiene el modelo.
+  const COLADOS_SIM = [["chat_codigo_por_error", "robo_de_cuenta", "whatsapp"], ["soporte_falso_buscador", "soporte_falso", "correo"],
+    ["jefe_mismo_dominio", "suplantacion_de_jefe", "correo"], ["mcp_envenenado", "inyeccion_tecnica", "mcp"]];
+
   function crear(alEvento) {
     const s = {
       pausa: false, velocidad: 1, reloj: 0, cola: [], n: 0, etiquetas: 0, version: 0,
@@ -274,7 +278,8 @@ const VivoSimulado = (() => {
         }
         const m = metricas(s.etiquetas);
         const ev = { tipo: "modelo", version: ver(), ejemplos: s.etiquetas, precision: +m.precision.toFixed(3), recall: +m.recall.toFixed(3),
-          falsas_alarmas: +m.falsas_alarmas.toFixed(3), evaluado_en: 120, cambios, pesos: { ...s.pesos } };
+          falsas_alarmas: +m.falsas_alarmas.toFixed(3), evaluado_en: 120, cambios, pesos: { ...s.pesos },
+          colados: COLADOS_SIM.slice(0, Math.round((1 - m.recall) * 9)).map(([escenario, familia, canal]) => ({ escenario, familia, canal, n: 3, de: 3, probabilidad: +entre(0.05, 0.45).toFixed(3) })) };
         s.historial.push(ev);
         fuera.push(ev);
       }
