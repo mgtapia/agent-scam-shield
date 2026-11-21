@@ -121,7 +121,7 @@ def test_la_capa_1_no_ve_la_ingenieria_social(resultados):
 
 
 def test_la_capa_2_deja_pasar_al_dueno_enganado_y_la_capa_3_lo_retiene(resultados):
-    assert len(ENGANADOS) == 8   # 4 escenarios, en los dos idiomas
+    assert len(ENGANADOS) == 10  # cinco pares es/en: la inversión en escalada (#149) y el contacto secuestrado dictado (#117)
     for cfg, cae in (("none", True), ("layer2", True), ("layer3", False), ("layer23", False)):
         por_clave = _por_clave(resultados[cfg])
         assert all(por_clave[k]["cayo"] is cae for k in ENGANADOS), cfg
