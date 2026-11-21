@@ -494,9 +494,9 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .ops-lista > li + li { border-top: var(--linea); }
 .fila-op {
   display: grid;
-  /* La decisión y la capa que la detuvo van en la misma línea; el asunto usa el ancho completo debajo. */
+  /* La capa que la detuvo y la decisión van en la misma línea, la capa primero; el asunto usa el ancho completo debajo. */
   grid-template-columns: 20px auto minmax(0, 1fr) auto auto;
-  grid-template-areas: "i ag de dec capa" ". as as as as";
+  grid-template-areas: "i ag de capa dec" ". as as as as";
   align-items: center;
   gap: 0 var(--e-1);
   padding: var(--e-1) var(--e-2);
