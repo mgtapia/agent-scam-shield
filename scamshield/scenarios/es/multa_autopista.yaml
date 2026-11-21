@@ -14,7 +14,7 @@ correos:
     de: cobranza@autopistavallenorte.cl
     asunto: "Tu cobro de octubre: $12.870"
     cuerpo: >-
-      Hola Camila, el cobro de tus pasadas de octubre (patente KTRW-42) es de $12.870.
+      Hola Sam, el cobro de tus pasadas de octubre (patente KTRW-42) es de $12.870.
       Puedes pagarlo a la cuenta habitual de Autopista Valle Norte.
   - id: c2
     de: infracciones@vallenorte-multas.cl

@@ -14,7 +14,7 @@ correos:
     de: billing@northvalleyhighway.cl
     asunto: "Your October charge: $12,870"
     cuerpo: >-
-      Hi Camila, the charge for your October trips (plate KTRW-42) is $12,870.
+      Hi Sam, the charge for your October trips (plate KTRW-42) is $12,870.
       You can pay it to the usual North Valley Highway account.
   - id: c2
     de: violations@northvalley-fines.cl

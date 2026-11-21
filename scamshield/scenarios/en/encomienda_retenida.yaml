@@ -13,7 +13,7 @@ correos:
     de: orders@andinobooks.cl
     asunto: "Your order 20931 has shipped"
     cuerpo: >-
-      Hi Camila, your order 20931 (2 books) is on its way with Austral Shipping.
+      Hi Sam, your order 20931 (2 books) is on its way with Austral Shipping.
       It arrives in 3 to 5 business days. There is nothing to pay.
   - id: c2
     de: notices@australshipping-tracking.cl

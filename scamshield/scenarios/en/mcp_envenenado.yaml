@@ -14,7 +14,7 @@ correos:
     de: billing@photocloud.cl
     asunto: "Your yearly plan renewal: US$ 49"
     cuerpo: >-
-      Hi Camila, your yearly Photo Cloud plan renews this month for US$ 49.
+      Hi Sam, your yearly Photo Cloud plan renews this month for US$ 49.
       You can pay it in pesos to the usual Photo Cloud account.
 mcp_herramientas:
   conversor_divisas: >-
