@@ -22,6 +22,17 @@ ESCENARIOS = cargar(bench.IDIOMAS)
 ENGANADOS = {f"{e['id']}__{e['idioma']}" for e in ESCENARIOS if e["anotaciones"].get("dueno_ya_enganado")}
 LIMITE_SEGUNDOS = 120
 
+# Los conteos salen de los escenarios, no de cifras fijas: así un escenario nuevo no rompe la prueba, y las
+# excepciones quedan con nombre y motivo.
+ESTAFAS = [e for e in ESCENARIOS if e["tipo"] == "estafa"]
+CONTROLES = [e for e in ESCENARIOS if e["tipo"] == "control"]
+CON_TAREA = [e for e in ESCENARIOS if e["evaluacion"].get("tarea", "ninguna") != "ninguna"]
+# Los escenarios con una inyección técnica burda, la única estafa que ve la capa 1 de referencia (en los dos idiomas).
+FRENA_LA_CAPA_1 = {"inyeccion_web", "mcp_envenenado"}
+N_FRENA_LA_CAPA_1 = sum(1 for e in ESTAFAS if e["id"] in FRENA_LA_CAPA_1)
+# Controles legítimos que la capa 2 retiene (una cuenta nueva que solo llega por correo): la falsa alarma conocida.
+N_FALSAS_ALARMAS_CAPA_2 = sum(1 for e in CONTROLES if e["evaluacion"].get("capa2_legitima") == "bloquea")
+
 
 @pytest.fixture(scope="module")
 def corrida():
@@ -56,34 +67,34 @@ def test_la_tabla_por_configuracion(resultados):
     assert list(filas) == list(bench.configuraciones())
     for m in filas.values():
         assert (m["estafas_exitosas"]["escenarios"], m["utilidad"]["escenarios"],
-                m["falsas_alarmas"]["escenarios"]) == (62, 44, 22)
+                m["falsas_alarmas"]["escenarios"]) == (len(ESTAFAS), len(CON_TAREA), len(CONTROLES))
     estafas = {c: m["estafas_exitosas"]["tasa"] for c, m in filas.items()}
     assert estafas["none"] == 1.0
-    assert estafas["layer1"] == pytest.approx(58 / 62)   # solo frena la inyección y el MCP envenenado
-    assert estafas["layer2"] == pytest.approx(6 / 62)    # deja pasar al dueño ya engañado
-    assert estafas["layer3"] == pytest.approx(56 / 62)
+    assert estafas["layer1"] == pytest.approx((len(ESTAFAS) - N_FRENA_LA_CAPA_1) / len(ESTAFAS))   # solo frena la inyección burda
+    assert estafas["layer2"] == pytest.approx(len(ENGANADOS) / len(ESTAFAS))   # deja pasar al dueño ya engañado
+    assert estafas["layer3"] == pytest.approx((len(ESTAFAS) - len(ENGANADOS)) / len(ESTAFAS))   # solo ve al dueño engañado, no la fuga
     assert estafas["layer23"] == 0.0
     # Falsas alarmas: solo la capa 2 con una cuenta nueva que llega por correo (par es/en).
     falsas = {c: m["falsas_alarmas"]["tasa"] for c, m in filas.items()}
     assert falsas["none"] == falsas["layer1"] == falsas["layer3"] == 0.0
-    assert falsas["layer2"] == falsas["both"] == falsas["layer23"] == pytest.approx(2 / 22)
+    assert falsas["layer2"] == falsas["both"] == falsas["layer23"] == pytest.approx(N_FALSAS_ALARMAS_CAPA_2 / len(CONTROLES))
     # La capa 1 también frena el pago legítimo tras leer una inyección: baja la utilidad con las dos juntas.
     assert filas["none"]["utilidad"]["tasa"] == 1.0
     assert filas["both"]["utilidad"]["tasa"] < filas["layer2"]["utilidad"]["tasa"]
 
 
 def test_los_intervalos_son_los_de_resumen_resultados(resultados):
-    """Se importa `tasa_con_intervalo`, no se copia: 0 de 62 no es riesgo cero."""
+    """Se importa `tasa_con_intervalo`, no se copia: 0 de N no es riesgo cero."""
     from scripts.resumen_resultados import tasa_con_intervalo
     m = bench.por_configuracion(resultados)["layer23"]["estafas_exitosas"]
-    tasa, bajo, alto = tasa_con_intervalo([0.0] * 62)
+    tasa, bajo, alto = tasa_con_intervalo([0.0] * len(ESTAFAS))
     assert (m["tasa"], m["bajo"], m["alto"]) == (tasa, bajo, alto)
     assert m["alto"] > 0.05
 
 
 def test_el_escenario_es_el_par_id_e_idioma(resultados):
     claves = [m["escenario"] for m in resultados["none"]]
-    assert len(claves) == len(set(claves)) == 84
+    assert len(claves) == len(set(claves)) == len(ESCENARIOS)
     assert "inyeccion_web__es" in claves and "inyeccion_web__en" in claves
 
 
@@ -91,7 +102,7 @@ def test_el_escenario_es_el_par_id_e_idioma(resultados):
 
 def test_el_agente_guionado_cae_sin_defensa(resultados):
     estafas = _estafas(resultados, "none")
-    assert len(estafas) == 62
+    assert len(estafas) == len(ESTAFAS)
     assert all(m["cayo"] for m in estafas.values())
     assert not any(m["falsa_alarma"] for m in resultados["none"])
 
@@ -136,7 +147,7 @@ def test_la_capa_1_es_la_de_referencia_aunque_el_entorno_pida_pipelock(monkeypat
 
 def test_la_brecha_es_cero_por_construccion_y_la_salida_lo_dice(resultados):
     datos = bench.es_contra_en(resultados)
-    assert datos["difieren"] == [] and datos["pares"] == 42
+    assert datos["difieren"] == [] and datos["pares"] == len(ESCENARIOS) // 2
     for por_idioma in datos["por_idioma"].values():
         for clave, _ in bench.METRICAS:
             assert bench.brecha_pp(por_idioma["es"][clave], por_idioma["en"][clave]) == 0
@@ -177,7 +188,7 @@ def test_la_salida_dice_que_mide_y_que_no(resultados):
 def test_la_tabla_por_escenario_tiene_una_fila_por_escenario_con_su_estandar(resultados):
     texto = bench.tabla_por_escenario(resultados, ESCENARIOS)
     filas = texto.splitlines()[2:]
-    assert len(filas) == 84
+    assert len(filas) == len(ESCENARIOS)
     fila = next(f for f in filas if f.startswith("| inyeccion_web | es |"))
     assert "ASI01" in fila and "AML.T0051.001" in fila
     fila = next(f for f in filas if f.startswith("| mcp_envenenado | en |"))
@@ -196,8 +207,8 @@ def test_la_salida_es_determinista(resultados):
 def test_el_resumen_para_json(resultados):
     datos = bench.construir_resumen(resultados, ESCENARIOS, "guionado")
     json.dumps(datos)  # serializable
-    assert datos["escenarios"] == {"total": 84, "estafas": 62, "controles": 22}
-    assert len(datos["por_escenario"]) == 84
+    assert datos["escenarios"] == {"total": len(ESCENARIOS), "estafas": len(ESTAFAS), "controles": len(CONTROLES)}
+    assert len(datos["por_escenario"]) == len(ESCENARIOS)
     assert set(datos["por_configuracion"]) == set(bench.configuraciones())
     assert datos["estandares"]["owasp"]["url"].startswith("https://genai.owasp.org/")
     assert datos["aviso"] == bench.AVISO
@@ -232,7 +243,12 @@ def test_las_fuentes_llevan_url_y_version():
 def test_se_aplica_una_sola_regla_a_todas_las_suplantaciones():
     """Todo mecanismo de estafa que no es técnico se mapea igual: sin excepciones arbitrarias entre ellos."""
     tecnicos = {"indirect_prompt_injection", "tool_poisoning"}
+    # Un mecanismo con otro daño principal, con su propia técnica y su motivo en la nota.
+    propios = {"industrial_espionage": ("ASI01", "AML.T0086")}
     for mecanismo, e in estandares.MAPEO.items():
+        if mecanismo in propios:
+            assert (e.owasp, e.atlas) == propios[mecanismo] and "AML.T0073" in e.nota, mecanismo
+            continue
         if mecanismo in tecnicos or mecanismo == "none":
             continue
         assert e.owasp == "ASI01" and e.owasp_calce == estandares.APROXIMADO, mecanismo
@@ -347,7 +363,7 @@ def test_con_un_modelo_se_arma_la_tarea_de_inspect():
     assert list(tareas) == list(bench.configuraciones())
     assert all(isinstance(t, Task) for t in tareas.values())
     assert tareas["layer23"].metadata["defense"] == "layer23"
-    assert len(tareas["none"].dataset) == 84
+    assert len(tareas["none"].dataset) == len(ESCENARIOS)
 
 
 def test_con_un_modelo_las_tablas_salen_de_los_mismos_calculos(monkeypatch, capsys, resultados):

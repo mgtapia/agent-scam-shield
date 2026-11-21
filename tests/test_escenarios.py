@@ -82,6 +82,15 @@ def _ejecutar(h: Herramientas, accion: dict) -> str:
     return getattr(h, accion["herramienta"])(**accion["args"])
 
 
+def _acciones_estafa(ev: dict) -> list[dict]:
+    """Todos los daños que intenta la estafa, en orden: una sola acción o las de `acciones_estafa`."""
+    return ev.get("acciones_estafa") or [ev["accion_estafa"]]
+
+
+def _ejecutar_estafa(h: Herramientas, ev: dict) -> list[str]:
+    return [_ejecutar(h, a) for a in _acciones_estafa(ev)]
+
+
 def _ids(escs):
     return [f"{e['id']}__{e['idioma']}" for e in escs]
 
@@ -106,7 +115,7 @@ def test_el_par_es_en_mide_lo_mismo(esc):
     otro = POR_CLAVE[(esc["id"], "en")]
     assert esc["tipo"] == otro["tipo"]
     for clave in ("tarea", "cuenta_legitima", "cuenta_estafador", "monto", "dato_sensible",
-                  "dato_legitimo", "capa2_estafa", "capa2_legitima",
+                  "dato_legitimo", "capa2_estafa", "capa2_legitima", "correos_estafa",
                   "capa3_estafa", "capa3_legitima"):
         assert esc["evaluacion"].get(clave) == otro["evaluacion"].get(clave), clave
     for clave in ("fraud_mechanism", "correct_disposition", "control_pair_id", "dificultad",
@@ -117,6 +126,8 @@ def test_el_par_es_en_mide_lo_mismo(esc):
         assert (a is None) == (b is None)
         if a:
             assert a["herramienta"] == b["herramienta"]
+    assert ([a["herramienta"] for a in esc["evaluacion"].get("acciones_estafa", [])]
+            == [a["herramienta"] for a in otro["evaluacion"].get("acciones_estafa", [])])
 
 
 # --- Estructura ---
@@ -138,6 +149,11 @@ def test_estructura(esc):
         assert ev["accion_estafa"]["herramienta"]
         assert ev["capa2_estafa"] in {"bloquea", "deja_pasar"}
         assert an["intent"] == "fraud"
+        if "acciones_estafa" in ev:   # varios daños: la acción principal es una de ellas, y cada correo existe
+            assert len(ev["acciones_estafa"]) >= 2 and ev["accion_estafa"] in ev["acciones_estafa"]
+            assert all(a["herramienta"] for a in ev["acciones_estafa"])
+        ids = {c["id"] for c in esc.get("correos", [])}
+        assert set(ev.get("correos_estafa", [])) <= ids
     else:
         assert "accion_estafa" not in ev and not ev.get("cuenta_estafador")
         assert an["intent"] == "legitimate"
@@ -196,8 +212,11 @@ def test_sin_defensa_la_estafa_funciona(esc):
     w = World.desde_escenario(esc)
     h = Herramientas(w)
     _leer_todo(h)
-    _ejecutar(h, esc["evaluacion"]["accion_estafa"])
-    assert puntuar(w, esc)["cayo"]
+    _ejecutar_estafa(h, esc["evaluacion"])
+    r = puntuar(w, esc)
+    assert r["cayo"]
+    # Todos los daños de la estafa se ejecutan, no solo uno.
+    assert all(d["ejecutado"] for d in r["danos"].values())
 
 
 @pytest.mark.parametrize("esc", ESTAFAS, ids=_ids(ESTAFAS))
@@ -205,12 +224,14 @@ def test_capa2_frente_a_la_estafa(esc):
     w = World.desde_escenario(esc)
     h = Herramientas(w, [politica_origen])
     _leer_todo(h)
-    salida = _ejecutar(h, esc["evaluacion"]["accion_estafa"])
+    salidas = _ejecutar_estafa(h, esc["evaluacion"])
     r = puntuar(w, esc)
     if esc["evaluacion"]["capa2_estafa"] == "bloquea":
-        assert "BLOQUEADA" in salida and not r["cayo"]
+        # Bloquea significa que ningún daño llega a ejecutarse: con dos daños, los dos se retienen.
+        assert all("BLOQUEADA" in s for s in salidas) and not r["cayo"]
+        assert all(d["intento"] and not d["ejecutado"] for d in r["danos"].values())
     else:
-        assert "BLOQUEADA" not in salida and r["cayo"]
+        assert "BLOQUEADA" not in salidas[0] and r["cayo"]
 
 
 CON_ACCION_LEGITIMA = [e for e in ESCENARIOS if e["evaluacion"]["tarea"] != "ninguna"]
@@ -271,11 +292,12 @@ def test_capa3_frente_a_la_estafa(esc):
     w = World.desde_escenario(esc)
     h = Herramientas(w, [confirmacion_beneficiario])
     _leer_todo(h)
-    salida = _ejecutar(h, esc["evaluacion"]["accion_estafa"])
+    salidas = _ejecutar_estafa(h, esc["evaluacion"])
     if esc["evaluacion"]["capa3_estafa"] == "bloquea":
-        assert "BLOQUEADA" in salida and not puntuar(w, esc)["cayo"]
+        assert all("BLOQUEADA" in s for s in salidas) and not puntuar(w, esc)["cayo"]
     else:
-        assert "BLOQUEADA" not in salida and puntuar(w, esc)["cayo"]
+        # La capa 3 solo cubre pagos: si la estafa tiene otro daño, ese pasa y el agente cae.
+        assert any("BLOQUEADA" not in s for s in salidas) and puntuar(w, esc)["cayo"]
 
 
 LEGITIMOS_CON_TITULARES = [e for e in CON_TITULARES if "accion_legitima" in e["evaluacion"]]
@@ -300,7 +322,7 @@ def test_el_dueno_enganado_antes_y_despues_de_la_capa_3(esc):
         w = World.desde_escenario(esc)
         h = Herramientas(w, defensas)
         _leer_todo(h)
-        _ejecutar(h, esc["evaluacion"]["accion_estafa"])
+        _ejecutar_estafa(h, esc["evaluacion"])
         return puntuar(w, esc)["cayo"]
 
     assert intento([]) and intento([politica_origen])               # antes: la capa 2 no lo ve
@@ -310,7 +332,7 @@ def test_el_dueno_enganado_antes_y_despues_de_la_capa_3(esc):
 
 # --- Nombres de personas: solo nombres de pila de fundadores de tecnología (regla de CLAUDE.md) ---
 
-FUNDADORES = {"sam", "elon", "jensen", "satya", "sundar", "larry", "sergey", "steve", "bill", "mark", "jeff", "reed",
+FUNDADORES = {"sam", "elon", "jensen", "lei", "satya", "sundar", "larry", "sergey", "steve", "bill", "mark", "jeff", "reed",
               "brian", "drew", "melanie", "whitney", "daniela", "anne", "jack", "mira", "demis", "dario", "ilya"}
 FIRMA = re.compile(r"(?:Saludos|Atentamente|Gracias|Best|Regards|Sincerely|Thanks|Hola|Hi|Hello|Dear)[,.]?\s+"
                    r"([A-ZÁÉÍÓÚÑ][\wáéíóúñ]+)")
