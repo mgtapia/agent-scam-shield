@@ -22,7 +22,7 @@ const T = {
     de_correo: "de un correo", tu_inscrita: "tu cuenta inscrita", desconocida: "no aparece en ningún lado",
     aviso_dominio: "⚠ dominio distinto de {d}", aviso_cuenta: "⚠ cuenta nueva",
     destinatario: "a", cuenta: "cuenta", leidos: "{n} correos leídos",
-    bloqueada: "⛔ Bloqueada por la defensa", ejecutada: "Pago ejecutado", saldo_insuf: "Saldo insuficiente",
+    bloqueada: "Bloqueado por la defensa", ejecutada: "Pagado", ver_alerta: "📱 Ver la alerta", saldo_insuf: "Saldo insuficiente",
     v_estafado: "❌ Pagaste al estafador",
     v_bloqueado: "⛔ Bloqueado: la cuenta venía de un correo, no de tus cuentas",
     v_inscrita: "✅ Pagaste a la cuenta inscrita",
@@ -58,7 +58,7 @@ const T = {
     de_correo: "from an email", tu_inscrita: "your registered account", desconocida: "doesn't appear anywhere",
     aviso_dominio: "⚠ different domain from {d}", aviso_cuenta: "⚠ new account",
     destinatario: "to", cuenta: "account", leidos: "{n} emails read",
-    bloqueada: "⛔ Blocked by the defense", ejecutada: "Payment sent", saldo_insuf: "Insufficient funds",
+    bloqueada: "Blocked by the defense", ejecutada: "Paid", ver_alerta: "📱 See the alert", saldo_insuf: "Insufficient funds",
     v_estafado: "❌ You paid the scammer",
     v_bloqueado: "⛔ Blocked: the account came from an email, not from your accounts",
     v_inscrita: "✅ You paid your registered account",
@@ -160,9 +160,7 @@ function resaltar(cuentaNorm, on) {
     m.classList.toggle("activa", on);
     m.closest(".correo")?.classList.toggle("resaltado", on);
   });
-  document.querySelectorAll(`.inscritas [data-cuenta="${cuentaNorm}"]`).forEach((e) => {
-    e.style.boxShadow = on ? "0 0 0 4px rgba(34,197,94,.4)" : "";
-  });
+  document.querySelectorAll(`.inscritas [data-cuenta="${cuentaNorm}"]`).forEach((e) => e.classList.toggle("activa", on));
 }
 document.addEventListener("mouseover", (e) => { const el = e.target.closest("[data-cuenta]"); if (el && !el.matches("mark")) resaltar(el.dataset.cuenta, true); });
 document.addEventListener("mouseout", (e) => { const el = e.target.closest("[data-cuenta]"); if (el && !el.matches("mark")) resaltar(el.dataset.cuenta, false); });
@@ -191,38 +189,42 @@ function pintarCarriles() {
   }).join("");
 }
 
+// Un paso = una línea. El detalle (argumentos, resultado, motivo) aparece al pasar el mouse.
 function htmlPaso(p) {
-  if (p.tipo === "texto") return `<li class="paso texto"><span aria-hidden="true">🤖</span><div class="burbuja">${esc(p.texto)}</div></li>`;
-  if (p.tipo === "dueno") return `<li class="paso dueno">${esc(p.texto)}</li>`;
+  const li = (clase, linea, detalle = "") =>
+    `<li class="paso ${clase}" tabindex="0"><div class="linea">${linea}</div>${detalle ? `<div class="detalle">${detalle}</div>` : ""}</li>`;
+  if (p.tipo === "texto") return li("texto", `<span class="icono">🤖</span><span class="resumen">${esc(p.texto)}</span>`);
+  if (p.tipo === "dueno") return li("dueno", `<span class="resumen">${esc(p.texto)}</span>`);
   const r = String(p.resultado || "");
   const bloqueada = /^(ACCIÓN BLOQUEADA|ACTION BLOCKED)/i.test(r) || p.bloqueada;
   if (p.herramienta === "leer_correos") {
     const n = (r.match(/^\[[^\]]+\] /gm) || []).length;
-    return `<li class="paso herramienta"><span class="nombre">📥 leer_correos()</span><div class="resultado ok">${esc(t("leidos", { n }))}</div></li>`;
+    const asuntos = [...r.matchAll(/^\[([^\]]+)\] De: (.+)\n(?:Asunto|Subject): (.+)$/gm)].map((m) => `[${m[1]}] ${m[2]} · ${m[3]}`).join("\n");
+    return li("herramienta", `<span class="icono">📥</span><span class="resumen"><span class="nombre">leer_correos</span> · ${esc(t("leidos", { n }))}</span>`, esc(asuntos));
   }
   if (p.herramienta === "pagar" || p.herramienta === "transferir") {
     const a = p.args || {};
     const ejecutada = !bloqueada && /^(Listo|Done)/i.test(r);
     const bueno = p.origen_cuenta?.tipo === "inscrita";
     const clase = bloqueada ? "bloqueada" : ejecutada ? (bueno ? "pago-bueno" : "pago-malo") : "";
-    const resultado = bloqueada ? `<div class="resultado bloqueada">${esc(t("bloqueada"))}</div>`
-      : ejecutada ? `<div class="resultado ejecutada${bueno ? " buena" : ""}">${bueno ? "✓" : "✗"} ${esc(t("ejecutada"))}</div>`
-      : `<div class="resultado ok">${esc(r.includes("insuf") ? t("saldo_insuf") : r)}</div>`;
-    return `<li class="paso herramienta ${clase}"><span class="nombre">💸 ${esc(p.herramienta)}()</span>
-      <div class="datos">
-        <div class="fila"><span class="monto">${plata(a.monto)}</span>${a.destinatario ? `<span>${esc(t("destinatario"))} <strong>${esc(a.destinatario)}</strong></span>` : ""}</div>
-        <div class="fila">${etiquetaCuenta(a.cuenta, p.origen_cuenta)}</div>
-      </div>${resultado}</li>`;
+    const icono = bloqueada ? "⛔" : ejecutada ? (bueno ? "✅" : "💸") : "💸";
+    const estadoTxt = bloqueada ? t("bloqueada") : ejecutada ? t("ejecutada") : (r.includes("insuf") ? t("saldo_insuf") : r);
+    const detalle = [a.destinatario ? `${t("destinatario")} ${a.destinatario}` : "", a.concepto || a.motivo || "", r].filter(Boolean).join("\n");
+    return li(`herramienta pago ${clase}`,
+      `<span class="icono">${icono}</span><span class="nombre">${esc(p.herramienta)}</span><span class="monto">${plata(a.monto)}</span>`
+      + `${etiquetaCuenta(a.cuenta, p.origen_cuenta)}<span class="estado">${esc(estadoTxt)}</span>`, esc(detalle));
   }
   const args = Object.entries(p.args || {}).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(", ");
-  return `<li class="paso herramienta"><span class="nombre">🔧 ${esc(p.herramienta)}(${esc(args)})</span>
-    <div class="resultado ${bloqueada ? "bloqueada" : "ok"}">${esc(bloqueada ? t("bloqueada") : r.slice(0, 140))}</div></li>`;
+  return li(`herramienta ${bloqueada ? "bloqueada" : ""}`,
+    `<span class="icono">🔧</span><span class="resumen"><span class="nombre">${esc(p.herramienta)}</span> · ${esc(bloqueada ? t("bloqueada") : r)}</span>`,
+    esc(`${args}\n${r}`));
 }
 
 function agregarPaso(clave, p) {
   const ol = document.querySelector(`#carril-${clave} .pasos`);
   ol.querySelector(".escribiendo")?.remove();
   ol.insertAdjacentHTML("beforeend", htmlPaso(p));
+  ol.scrollTop = ol.scrollHeight;
 }
 
 function escribiendo(clave, on) {
@@ -248,7 +250,7 @@ function pintarVeredicto(clave) {
   } else if (v.tipo === "bloqueado") {
     html = htmlVeredicto("verde", t("v_bloqueado"), `${esc(t("saldo_intacto"))}: <strong>${plata(v.saldo_final)}</strong>`);
     const b = v.bloqueo || {};
-    if (!c.decision) html += htmlVeredicto("gris", t("v_esperando"));
+    if (!c.decision) html += htmlVeredicto("gris chico", t("v_esperando"));
     else if (c.decision === "pagar_inscrita") html += htmlVeredicto("verde", t("v_inscrita"), `−${plata(b.monto)} → ${esc(b.cuenta_inscrita_numero)} · ${saldo(v.saldo_final - b.monto)}`);
     else if (c.decision === "no_pagar") html += htmlVeredicto("gris", t("v_no_pago"), saldo(v.saldo_final));
     else if (c.decision === "pagar_igual") html += htmlVeredicto("rojo", t("v_estafado"), `${esc(t("v_confirmado"))} · −${plata(b.monto)} → ${esc(b.cuenta)} · ${saldo(v.saldo_final - b.monto)}`);
@@ -348,6 +350,8 @@ async function enviarAlServidor(alerta) {
 
 function mostrarEnCelular(alerta) {
   pintarCelular();
+  $("#celular-columna").classList.add("activa");
+  $("#celular-columna").classList.remove("minimizado");
   const cel = $("#celular");
   cel.classList.remove("vibra"); void cel.offsetWidth; cel.classList.add("vibra");
   try { navigator.vibrate?.([120, 60, 120]); } catch (_) { /* sin vibración */ }
@@ -358,6 +362,7 @@ function pintarCelular(confirmando = false) {
   const a = estado.alerta;
   const escudo = estado.carriles.layer2;
   if (!a) {
+    $("#celular-columna").classList.remove("activa", "minimizado");
     const ahora = new Date();
     caja.innerHTML = `<div class="reposo"><div class="hora">${ahora.getHours()}:${String(ahora.getMinutes()).padStart(2, "0")}</div><div class="sub">${esc(t("cel_reposo"))}</div></div>`;
     return;
@@ -416,7 +421,9 @@ function decidir(eleccion) {
   pintarCelular();
   pintarVeredicto("layer2");
   guardarEtiqueta(eleccion, a);
+  setTimeout(() => { if (estado.alerta === a) $("#celular-columna").classList.add("minimizado"); }, 2200);
 }
+$("#cel-pastilla").addEventListener("click", () => $("#celular-columna").classList.remove("minimizado"));
 
 async function guardarEtiqueta(eleccion, alerta) {
   const etiqueta = { ts: new Date().toISOString(), eleccion, ...alerta };

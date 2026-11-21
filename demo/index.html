@@ -45,18 +45,19 @@
       </div>
       <div>
         <h3 class="titulo-panel" data-t="correos">Correos</h3>
-        <div id="correos" style="display:flex;flex-direction:column;gap:.7rem"></div>
+        <div id="correos" class="lista-correos"></div>
       </div>
     </section>
 
     <section class="carriles" id="carriles" aria-label="Carriles"></section>
 
-    <aside class="celular-columna">
+    <aside class="celular-columna" id="celular-columna">
+      <button type="button" class="pastilla" id="cel-pastilla" data-t="ver_alerta">📱 Ver la alerta</button>
       <div class="celular" id="celular">
         <div class="pantalla">
           <div class="isla"></div>
           <div class="barra"><span id="cel-hora">9:41</span><span>5G ▮▮▮</span></div>
-          <div id="cel-contenido" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
+          <div id="cel-contenido"></div>
         </div>
       </div>
       <p class="leyenda-celular" data-t="leyenda_celular">El celular del dueño</p>
