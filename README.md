@@ -28,7 +28,7 @@ Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango en
 
 **Esperada** es lo que Grifter promete por diseño: la capa 2 frena todo destino que salió de contenido externo, y la capa 3, lo que dicta el dueño cuando ya cayó. **Real** es lo que midió `grifter bench` con un agente que siempre intenta pagar, así que mide las defensas, no lo crédulo de un modelo. El clasificador va aparte: solo sube la sospecha y no promete nada. Se regenera con `python scripts/resultados_demo.py --tabla-cobertura`.
 
-31 tipos de ataque, 142 ataques en el bench, 3600 intentos del atacante que aprende (Duelo) y 558 correos para el clasificador.
+31 tipos de ataque, 148 ataques en el bench, 3600 intentos del atacante que aprende (Duelo) y 558 correos para el clasificador.
 
 | Tipo de ataque | Ataques | Grifter completo: esperada → real | Capa 2 sola: esperada → real | Clasificador detecta |
 |---|---|---|---|---|
@@ -36,14 +36,15 @@ Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango en
 | portal falso | 12 | 12 → 12 | 12 → 12 | 9/9 (100%) |
 | suplantacion de banco (2 dictadas por el dueño) | 12 | 12 → 12 | 10 → 10 | 45/45 (100%) |
 | infraestructura legitima | 10 | 10 → 10 | 10 → 10 | 45/45 (100%) |
+| suplantacion de familiar (4 dictadas por el dueño) | 10 | 10 → 10 | 6 → 6 | 18/18 (100%) |
 | suplantacion de proveedor | 10 | 10 → 10 | 10 → 10 | 45/45 (100%) |
 | deposito por error | 8 | 8 → 8 | 8 → 8 | 36/36 (100%) |
 | inyeccion tecnica | 8 | 8 → 8 | 8 → 8 | 54/54 (100%) |
 | suplantacion de jefe | 8 | 8 → 8 | 8 → 8 | 32/36 (89%) |
 | espionaje industrial | 6 | 6 → 6 | 6 → 6 | 63/63 (100%) |
-| suplantacion de familiar (2 dictadas por el dueño) | 6 | 6 → 6 | 4 → 4 | 18/18 (100%) |
 | encomienda falsa | 4 | 4 → 4 | 4 → 4 | 9/18 (50%) |
 | fuga de secretos | 4 | 4 → 4 | 4 → 4 | 18/18 (100%) |
+| inversion falsa (4 dictadas por el dueño) | 4 | 4 → 4 | 0 → 0 | — |
 | suplantacion de gobierno | 4 | 4 → 4 | 4 → 4 | 18/18 (100%) |
 | tienda falsa | 4 | 4 → 4 | 4 → 4 | 9/9 (100%) |
 | arriendo falso | 2 | 2 → 2 | 2 → 2 | 9/9 (100%) |
@@ -55,7 +56,6 @@ Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango en
 | credito falso | 2 | 2 → 2 | 2 → 2 | 9/9 (100%) |
 | deepfake | 2 | 2 → 2 | 2 → 2 | 9/9 (100%) |
 | empleo falso | 2 | 2 → 2 | 2 → 2 | 9/9 (100%) |
-| inversion falsa (2 dictadas por el dueño) | 2 | 2 → 2 | 0 → 0 | — |
 | multa falsa | 2 | 2 → 2 | 2 → 2 | 9/9 (100%) |
 | pago por intermediario | 2 | 2 → 2 | 2 → 2 | 0/9 (0%) |
 | premio falso | 2 | 2 → 2 | 2 → 2 | 0/9 (0%) |
@@ -63,7 +63,7 @@ Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango en
 | robo de cuenta | 2 | 2 → 2 | 2 → 2 | 0/9 (0%) |
 | soporte falso | 2 | 2 → 2 | 2 → 2 | 0/9 (0%) |
 | suplantacion autoridad | 2 | 2 → 2 | 2 → 2 | 9/9 (100%) |
-| **Total** | **142** | **142 → 142** | | |
+| **Total** | **148** | **148 → 148** | | |
 
 **Límites conocidos (10):** ataques que todavía nos rompen, cada uno con una prueba `xfail(strict=True)`. Esperada: 0 %.
 
