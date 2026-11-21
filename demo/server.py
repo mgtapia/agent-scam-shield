@@ -40,7 +40,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from demo import en_vivo, telegram, whatsapp
-from demo.limite import LimitePorIP, ip_cliente
+from demo.limite import LimitePorIP, ip_cliente, limite_de, modo_evento
 from demo.notificar import notificar
 
 DEMO = Path(__file__).resolve().parent
@@ -83,7 +83,7 @@ CONFIG_MCP_POR_DEFECTO = DEMO.parent / "scamshield" / "mcp" / "grifter.tienda.ya
 # ofrece OAuth o nada. Acotado: solo la tienda ficticia detrás, tope por IP y cuerpo chico.
 MODULO_TIENDA = "scamshield.mcp.servidor_tienda"
 MAX_BYTES_MCP = 16_384
-limite_mcp = LimitePorIP(por_minuto=60, por_hora=600, global_por_hora=6000)
+limite_mcp = limite_de("mcp")   # con GRIFTER_EVENTO=1 sube el tope por IP, no el global
 
 
 def mcp_publico(entorno=None) -> bool:
@@ -190,7 +190,7 @@ _candado = threading.Lock()
 @app.get("/api/salud")
 def salud() -> dict[str, Any]:
     episodios = sorted(p.name for p in (DEMO / "episodios").glob("*.json") if p.name != "indice.json")
-    return {"ok": True, "episodios": len(episodios)}
+    return {"ok": True, "episodios": len(episodios), "evento": modo_evento()}
 
 
 def registrar_etiqueta(etiqueta: dict[str, Any]) -> None:
@@ -279,7 +279,7 @@ def vivo_estado() -> dict[str, Any]:
 # --- «Intenta estafarlo» (#21) --------------------------------------------------------------------
 # Un juez escribe su estafa y ve qué capa la frena. Sin API: el agente es guionado y las capas son las reales.
 MAX_BYTES_PROBAR = 16_384
-limite_probar = LimitePorIP()
+limite_probar = limite_de("probar")
 
 
 class CorreoJuez(BaseModel):
