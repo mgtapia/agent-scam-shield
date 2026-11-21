@@ -8,7 +8,9 @@ servidores:
     args: ["-m", "scamshield.mcp.servidor_proveedor", "--envenenado"]
   banco:
     comando: python
-    args: ["-m", "scamshield.mcp.servidor_banco", "--registro", "banco_sandbox.jsonl"]
+    args: ["-m", "scamshield.mcp.servidor_banco", "--registro", "banco_sandbox.jsonl", "--clave-env", "BANCO_CLAVE"]
+    # La credencial del banco vive aquí, en el proxy, y no en el agente (#102). Sin ella el banco no paga.
+    env: {BANCO_CLAVE: "cambia-esto"}
 
 # Lo confiable: las cuentas que el dueño inscribió y sus datos (para no compartirlos con extraños).
 cuentas_inscritas:
@@ -19,6 +21,11 @@ datos_dueno:
 # Opcional: el encargo del dueño. Los clientes MCP no le pasan el mensaje del usuario al servidor,
 # así que sin esto solo vale como confiable lo inscrito.
 # encargo: "Paga la factura 8812 de Silicio Austral."
+
+# Capas encendidas. Apagar una es un cambio de política: se retiene todo y el dueño recibe el diff (#102).
+capas: {capa2: true}
+# Dónde se guarda la política aprobada por el dueño. Ponlo fuera de lo que el agente puede escribir.
+# estado: /ruta/fuera/del/agente/grifter_aprobada.json
 
 # JSONL con cada llamada sensible: permitida, retenida o aprobada por el dueño.
 registro: grifter_eventos.jsonl

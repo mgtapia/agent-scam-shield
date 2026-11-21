@@ -82,7 +82,7 @@ flowchart LR
 Un equipo rojo de caja blanca ([`tests/test_equipo_rojo.py`](tests/test_equipo_rojo.py), #90) atacó a Grifter con el código a la vista. Lo que resistió o se arregló queda en verde. Lo que sigue nos rompe y queda como prueba `xfail(strict=True)`:
 
 - **Fuente que el integrador declara confiable:** si esa fuente está envenenada (un ERP en `origen_por_herramienta`, el mensaje de sistema o las cuentas que carga desde ella), Grifter le cree.
-- **`grifter.yaml` reescrito:** un agente con una herramienta de archivos puede inscribir la cuenta del estafador desde el próximo arranque. El archivo tiene que ser de solo lectura para el agente.
+- **`grifter.yaml` reescrito:** ya no pasa en silencio (#102): Grifter guarda la huella de la política que aprobó el dueño y, si el archivo cambia, retiene todo lo sensible y le manda el diff al celular hasta que responde. Quien tenga la máquina *y* el teléfono del dueño sigue pudiendo todo: lo que se logra es que no ocurra sin que el dueño se entere.
 - **Credencial partida en varios mensajes:** cada `responder` se revisa solo, así que media clave en cada uno no calza.
 - **Credencial en otra herramienta:** una clave pegada en la URL de `abrir_web` (u otra herramienta que no es de pago ni de datos) sale igual.
 - **Pago por fuera:** si el agente le pasa al dueño un link de pago o la cuenta del estafador para que pague él, no hay herramienta de pago que revisar.
