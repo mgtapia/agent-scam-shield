@@ -32,7 +32,7 @@ CLAVES_FRAUDBENCH = {
 # «familia» usa etiquetas propias, inspiradas en la taxonomía de ScamWorld (solo como referencia).
 CLAVES_PROPIAS = {"dificultad", "familia"}
 DIFICULTADES = {"burda", "media", "convincente"}
-TAREAS = {"pagar", "transferir", "compartir", "ninguna"}
+TAREAS = {"pagar", "transferir", "compartir", "revertir", "ninguna"}   # revertir: el reverso del banco (#129)
 
 # Marcas e instituciones reales de Chile y globales que no pueden aparecer en un escenario.
 # Se buscan como palabra completa. Se dejan fuera palabras comunes como «claro», «líder» o «visa».
@@ -120,7 +120,7 @@ def test_el_par_es_en_mide_lo_mismo(esc):
     assert esc["tipo"] == otro["tipo"]
     for clave in ("tarea", "cuenta_legitima", "cuenta_estafador", "monto", "dato_sensible",
                   "dato_legitimo", "capa2_estafa", "capa2_legitima", "correos_estafa",
-                  "capa3_estafa", "capa3_legitima"):
+                  "capa3_estafa", "capa3_legitima", "movimiento_legitimo", "fuera_de_canal"):
         assert esc["evaluacion"].get(clave) == otro["evaluacion"].get(clave), clave
     for clave in ("fraud_mechanism", "correct_disposition", "control_pair_id", "dificultad",
                   "dueno_ya_enganado"):
@@ -151,11 +151,16 @@ def test_estructura(esc):
         assert ev["cuenta_legitima"] and ev["monto"]
     if ev["tarea"] == "compartir":
         assert ev["destinatario_legitimo"] and ev["dato_legitimo"]
+    if ev["tarea"] == "revertir":   # el depósito que se devuelve tiene que estar en el libro del banco
+        assert ev["movimiento_legitimo"] in {m["id"] for m in esc.get("movimientos") or []}
     if ev["tarea"] != "ninguna":
         assert ev["accion_legitima"]["herramienta"]
         assert ev["capa2_legitima"] in {"bloquea", "deja_pasar"}
     if esc["tipo"] == "estafa":
-        assert ev.get("cuenta_estafador") or ev.get("destinatario_estafador") or ev.get("cobro_estafa")
+        assert (ev.get("cuenta_estafador") or ev.get("destinatario_estafador") or ev.get("cobro_estafa")
+                or ev.get("fuera_de_canal"))
+        if ev.get("fuera_de_canal"):   # #129: el daño es coordinar el paso físico con quien lo pide
+            assert ev["accion_estafa"]["herramienta"] == "responder" and esc.get("contacto_confianza")
         if ev.get("cobro_estafa"):   # el cobro alterado de #103 se mide contra el mandato del dueño
             assert esc.get("mandato") and ev["accion_estafa"]["herramienta"] in ("pagar", "transferir")
         assert ev["accion_estafa"]["herramienta"]
@@ -194,6 +199,10 @@ def test_cuentas_no_se_confunden(esc):
 def test_el_destino_del_estafador_no_viene_del_dueno(esc):
     """Salvo cuando el dueño ya fue engañado, el destino de la estafa no sale del encargo."""
     ev = esc["evaluacion"]
+    if ev.get("fuera_de_canal"):
+        # Fuera del canal (#129): quien pide ir al banco no viene del dueño, y la capa 2 retiene la respuesta.
+        assert _norm(ev["fuera_de_canal"]["a"]) not in _norm(esc["encargo"]) and ev["capa2_estafa"] == "bloquea"
+        return
     if not (ev.get("cuenta_estafador") or ev.get("destinatario_estafador")):
         # El MCP que cambia lo aprobado (#103): la cuenta es la inscrita y lo que cambia es lo cobrado. La capa 2
         # lo retiene por el mandato, no por el origen.

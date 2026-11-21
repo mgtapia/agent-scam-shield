@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from typing import Callable, Optional
 
-from .world import CORREO, LLAMADA, MCP, WEB, WHATSAPP, World
+from ..defenses.deposito import FUERA_DE_CANAL, es_motivo_fuera_de_canal
+from .world import CORREO, HERRAMIENTA, LLAMADA, MCP, WEB, WHATSAPP, World
 
 # Una defensa recibe (mundo, herramienta, args) y devuelve None si deja pasar, o el motivo si bloquea.
 Defensa = Callable[[World, str, dict], Optional[str]]
@@ -84,22 +85,70 @@ class Herramientas:
 
     def responder(self, a: str, mensaje: str) -> str:
         args = {"a": a, "mensaje": mensaje}
-        for defensa in self.defensas:
-            motivo = defensa(self.w, "responder", args)
-            if motivo:
-                self.w.registrar("responder", args, "bloqueada", bloqueada=True, motivo=motivo)
-                return (f"ACCIÓN BLOQUEADA por la defensa: {motivo} "
-                        "Pide confirmación al dueño antes de continuar.")
+        bloqueo = self._revisar("responder", args)
+        if bloqueo:
+            return bloqueo
         self.w.registrar("responder", args, "enviado")
         return f"Mensaje enviado a {a}."
 
-    def _sensible(self, nombre: str, args: dict) -> str:
+    # --- El banco: el libro de movimientos y el reverso (#129) ---
+    def consultar_movimientos(self) -> str:
+        """El libro de movimientos del banco. La glosa la escribe quien deposita: queda como no confiable."""
+        if self.w.movimientos is None:
+            texto = "El banco no entrega el libro de movimientos de esta cuenta."
+        elif not self.w.movimientos:
+            texto = "Sin movimientos."
+        else:
+            texto = "\n".join(_linea_de_movimiento(m) for m in self.w.movimientos)
+        self.w.registrar("consultar_movimientos", {}, "ok")
+        return self.w.leer(HERRAMIENTA, texto)
+
+    def revertir_deposito(self, movimiento: str) -> str:
+        """Devuelve un depósito por el reverso del banco: la plata vuelve a su cuenta de origen, a ninguna otra."""
+        m = next((x for x in self.w.movimientos or [] if str(x.get("id")) == str(movimiento)), None)
+        args = {"movimiento": str(movimiento), "monto": int(m.get("monto", 0)) if m else 0,
+                "cuenta": str(m.get("origen", "")) if m else ""}
+        bloqueo = self._revisar("revertir_deposito", args)
+        if bloqueo:
+            return bloqueo
+        ya = any(a.herramienta == "revertir_deposito" and a.resultado == "ejecutada"
+                 and a.args.get("movimiento") == args["movimiento"] for a in self.w.registro)
+        if m is None or args["monto"] <= 0 or ya:
+            motivo = ("ese depósito ya se revirtió" if ya
+                      else "no hay ningún depósito con ese número en el libro del banco")
+            self.w.registrar("revertir_deposito", args, "rechazada", motivo=motivo)
+            return f"El banco no hizo el reverso: {motivo}."
+        self.w.saldo -= args["monto"]
+        self.w.registrar("revertir_deposito", args, "ejecutada")
+        return f"Listo: el banco devolvió {_pesos(args['monto'])} a la cuenta de origen {args['cuenta']}."
+
+    def avisar_contacto(self, mensaje: str) -> str:
+        """Avisa al contacto de confianza que el dueño inscribió (un familiar)."""
+        if not self.w.avisar("contacto", mensaje):
+            return "El dueño no tiene un contacto de confianza inscrito."
+        return f"Aviso enviado a {self.w.contacto_confianza.get('nombre', 'el contacto de confianza')}."
+
+    def _revisar(self, nombre: str, args: dict) -> Optional[str]:
+        """Pasa la acción por las defensas. Si una la retiene, la registra y devuelve el aviso para el agente.
+
+        Si el motivo es una instrucción para salir del canal (#129), Grifter no puede frenar lo físico: avisa
+        al dueño y al contacto de confianza antes de que la persona salga a la calle.
+        """
         for defensa in self.defensas:
             motivo = defensa(self.w, nombre, args)
             if motivo:
                 self.w.registrar(nombre, args, "bloqueada", bloqueada=True, motivo=motivo)
+                if es_motivo_fuera_de_canal(motivo):
+                    self.w.avisar("dueno", FUERA_DE_CANAL, por="grifter")
+                    self.w.avisar("contacto", FUERA_DE_CANAL, por="grifter")
                 return (f"ACCIÓN BLOQUEADA por la defensa: {motivo} "
                         "Pide confirmación al dueño antes de continuar.")
+        return None
+
+    def _sensible(self, nombre: str, args: dict) -> str:
+        bloqueo = self._revisar(nombre, args)
+        if bloqueo:
+            return bloqueo
         if nombre in ("pagar", "transferir"):
             if args["monto"] > self.w.saldo:
                 self.w.registrar(nombre, args, "saldo insuficiente")
@@ -109,3 +158,17 @@ class Herramientas:
             return f"Listo: se enviaron ${args['monto']:,} a la cuenta {args['cuenta']}.".replace(",", ".")
         self.w.registrar(nombre, args, "ejecutada")
         return f"Listo: se compartió el dato con {args['destinatario']}."
+
+
+def _pesos(monto: int) -> str:
+    return f"${monto:,}".replace(",", ".")
+
+
+def _linea_de_movimiento(m: dict) -> str:
+    monto = int(m.get("monto", 0))
+    linea = f"[{m.get('id', '')}] {'Abono' if monto > 0 else 'Cargo'} de {_pesos(abs(monto))}"
+    if m.get("origen"):
+        linea += f" desde la cuenta {m['origen']}"
+    if m.get("glosa"):
+        linea += f". Glosa: {m['glosa']}"
+    return linea
