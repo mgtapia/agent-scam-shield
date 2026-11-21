@@ -5,6 +5,7 @@ Las acciones sensibles (pagar, transferir, compartir_dato) pasan antes por la de
 from __future__ import annotations
 
 from typing import Callable, Optional
+from urllib.parse import urlsplit
 
 from ..defenses.deposito import FUERA_DE_CANAL, es_motivo_fuera_de_canal
 from .world import CORREO, HERRAMIENTA, LLAMADA, MCP, WEB, WHATSAPP, World
@@ -13,6 +14,15 @@ from .world import CORREO, HERRAMIENTA, LLAMADA, MCP, WEB, WHATSAPP, World
 Defensa = Callable[[World, str, dict], Optional[str]]
 
 SENSIBLES = {"pagar", "transferir", "compartir_dato"}
+
+
+def _lleva_datos(url: str) -> bool:
+    """La dirección puede llevar datos: parámetros, fragmento, usuario o algo que no se pueda leer."""
+    try:
+        p = urlsplit(url if "://" in url or url.startswith("//") else "//" + url)
+        return bool(p.query or p.fragment or p.username or p.password) or "\\" in url
+    except ValueError:
+        return True
 
 
 class Herramientas:
@@ -53,9 +63,46 @@ class Herramientas:
         return self.w.leer(WHATSAPP, texto)
 
     def abrir_web(self, url: str) -> str:
-        texto = self.w.paginas.get(url, f"Error 404: no se encontró {url}")
+        # Una dirección con parámetros, fragmento o usuario puede llevar datos: pasa por las defensas (#128). Abrir una
+        # página sin nada de eso no manda nada y no se revisa.
+        if _lleva_datos(url):
+            motivo = self._revisar("abrir_web", {"url": url})
+            if motivo:
+                self.w.registrar("abrir_web", {"url": url}, "bloqueada", bloqueada=True, motivo=motivo)
+                return self._bloqueo(motivo)
+        base = url.split("#")[0].split("?")[0]
+        texto = self.w.paginas.get(url) or self.w.paginas.get(base) or f"Error 404: no se encontró {url}"
+        self.w.pagina_actual = url
         self.w.registrar("abrir_web", {"url": url}, "ok")
         return self.w.leer(WEB, texto)
+
+    def escribir_formulario(self, campo: str, valor: str, url: str = "") -> str:
+        """Escribe un valor en un campo del formulario de una página. Sin `url`, es la última página abierta."""
+        args = {"url": url or self.w.pagina_actual, "campo": campo, "valor": valor}
+        return self._formulario("escribir_formulario", args)
+
+    def enviar_formulario(self, campos: dict, url: str = "") -> str:
+        """Envía un formulario con varios campos a una página. Sin `url`, es la última página abierta."""
+        return self._formulario("enviar_formulario", {"url": url or self.w.pagina_actual, "campos": dict(campos)})
+
+    def _formulario(self, nombre: str, args: dict) -> str:
+        motivo = self._revisar(nombre, args)
+        if motivo:
+            self.w.registrar(nombre, args, "bloqueada", bloqueada=True, motivo=motivo)
+            return self._bloqueo(motivo)
+        self.w.registrar(nombre, args, "enviado")
+        return f"Formulario enviado a {args['url'] or 'la página actual'}."
+
+    def _revisar(self, nombre: str, args: dict) -> Optional[str]:
+        for defensa in self.defensas:
+            motivo = defensa(self.w, nombre, args)
+            if motivo:
+                return motivo
+        return None
+
+    @staticmethod
+    def _bloqueo(motivo: str) -> str:
+        return f"ACCIÓN BLOQUEADA por la defensa: {motivo} Pide confirmación al dueño antes de continuar."
 
     def usar_mcp(self, herramienta: str, consulta: str = "") -> str:
         desc = self.w.mcp_herramientas.get(herramienta)

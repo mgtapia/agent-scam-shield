@@ -29,7 +29,6 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
   - Una fuente que el integrador declara confiable y está envenenada (un ERP).
   - Un `grifter.yaml` que el agente reescribe con una herramienta de archivos: ya no pasa en silencio (huella de la política y aviso al dueño, #102), pero quien controla la máquina y el teléfono del dueño lo puede todo.
   - Una credencial partida en varios mensajes.
-  - Una credencial pegada en la URL de una herramienta de lectura.
   - El pago por fuera: el agente le pasa al dueño un link o una cuenta para que pague él.
   - Un número de factura del encargo con los dígitos de la cuenta del estafador. Sin titulares, la capa 2 lo toma como del dueño; con titulares, la capa 3 lo retiene.
   - Un monto inflado a la cuenta inscrita.

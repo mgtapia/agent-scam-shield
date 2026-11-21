@@ -55,6 +55,7 @@ from ..defenses.mandato import huella, motivo as motivo_mandato, parece_orden, r
 from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
 from .aprobaciones import (APROBADA, PENDIENTE, Aprobaciones, Aprobador, RegistroEncadenado, Solicitud,
                            aprobadores_de, cargar_semillas)
+from ..defenses.dominios import HERRAMIENTAS_WEB, datos_llevados, hosts_en, revisar_web
 from .integridad import ENTORNO_CLAVE, Cambio, Integridad, corta
 from .cliente_http import conectar_remoto
 
@@ -73,6 +74,9 @@ ACCION_POR_DEFECTO = {
     "transferir": "la transferencia",
     "compartir_dato": "el envío del dato",
     "responder": "el mensaje",
+    "escribir_formulario": "el envío del dato a la página",
+    "enviar_formulario": "el envío del formulario",
+    "abrir_web": "la visita a la página",
 }
 
 
@@ -98,6 +102,8 @@ class Config:
     servidores: list[ServidorAbajo] = field(default_factory=list)
     cuentas_inscritas: dict[str, str] = field(default_factory=dict)
     datos_dueno: dict[str, str] = field(default_factory=dict)
+    # Dominios oficiales de cada dato del dueño (clave -> hosts exactos): una credencial solo se escribe ahí (#128).
+    dominios: dict[str, list[str]] = field(default_factory=dict)
     encargo: str = ""
     sensibles: dict[str, AccionSensible] = field(default_factory=lambda: dict(SENSIBLES_POR_DEFECTO))
     acciones: dict[str, str] = field(default_factory=lambda: dict(ACCION_POR_DEFECTO))
@@ -156,6 +162,8 @@ def cargar_config(ruta: Union[str, Path]) -> Config:
         servidores=servidores,
         cuentas_inscritas={str(k): str(v) for k, v in (datos.get("cuentas_inscritas") or {}).items()},
         datos_dueno={str(k): str(v) for k, v in (datos.get("datos_dueno") or {}).items()},
+        dominios={str(k): [str(d) for d in (v if isinstance(v, list) else [v])]
+                  for k, v in (datos.get("dominios_oficiales") or {}).items()},
         encargo=str(datos.get("encargo") or ""),
         ruta=ruta,
         mandato=dict(datos.get("mandato") or {}),
@@ -272,6 +280,20 @@ def escalar_por_defecto(alerta: Alerta) -> Optional[bool]:
     return None
 
 
+def _tachar(valor: Any, secretos: set[str]) -> Any:
+    """Copia de los argumentos sin los valores del dueño: se cambian por «[dato del dueño]»."""
+    if isinstance(valor, str):
+        for s in sorted(secretos, key=len, reverse=True):
+            if s:
+                valor = valor.replace(s, "[dato del dueño]")
+        return valor
+    if isinstance(valor, dict):
+        return {k: _tachar(v, secretos) for k, v in valor.items()}
+    if isinstance(valor, (list, tuple)):
+        return [_tachar(v, secretos) for v in valor]
+    return valor
+
+
 class Guardia:
     """Procedencia de lo que pasó por el proxy, y la capa 2 sobre ella.
 
@@ -281,6 +303,7 @@ class Guardia:
     def __init__(self, config: Config):
         self.config = config
         self.datos_dueno: dict[str, str] = dict(config.datos_dueno)
+        self.dominios: dict[str, list[str]] = {k: list(v) for k, v in config.dominios.items()}
         self.encargo: str = config.encargo
         self.mandato: dict[str, Any] = dict(config.mandato)
         # Lista paralela: (origen, texto) para la política y la fuente para el aviso.
@@ -297,6 +320,7 @@ class Guardia:
         self.leidos, self.fuentes = [l for l, _ in pares], [f for _, f in pares]
         self.config, self.datos_dueno, self.encargo = config, dict(config.datos_dueno), config.encargo
         self.mandato = dict(config.mandato)
+        self.dominios = {k: list(v) for k, v in config.dominios.items()}
         if config.encargo:
             self._anotar(DUENO, config.encargo, None)
         for nombre, cuenta in config.cuentas_inscritas.items():
@@ -350,6 +374,21 @@ class Guardia:
         mensaje += " Confírmala con el dueño por un canal conocido antes de reintentar."
         return Alerta(herramienta=herramienta, servidor=servidor, args=dict(args), valor=valor,
                       motivo=motivo, mensaje=mensaje, fuentes=fuentes)
+
+    def revisar_web(self, herramienta: str, args: Mapping[str, Any], servidor: str = "") -> Optional[Alerta]:
+        """La regla web (#128): un dato del dueño atado a un dominio solo se escribe en ese dominio exacto."""
+        motivo = revisar_web(self, herramienta, args)
+        if motivo is None:
+            return None
+        hosts = hosts_en(args)
+        accion = self.config.acciones.get(herramienta, f"la llamada a {herramienta}")
+        # Los valores del dueño no viajan en la alerta ni en el registro: se tachan.
+        tachados = {str(self.datos_dueno[k]) for k in datos_llevados(self, args)}
+        limpio = _tachar(dict(args), tachados)
+        mensaje = (f"Grifter retuvo {accion}: {visible(motivo, 400)} "
+                   "Confírmalo con el dueño por un canal conocido antes de reintentar.")
+        return Alerta(herramienta=herramienta, servidor=servidor, args=limpio, valor=hosts[0] if hosts else "",
+                      motivo=motivo, mensaje=mensaje, fuentes=[])
 
     def _fuentes_de(self, valor: str) -> list[str]:
         vistas: list[str] = []
@@ -520,7 +559,9 @@ class Grifter:
         # Pagos escondidos dentro de un argumento anidado: cada uno se revisa con su propia regla.
         anidados = [(sub, r) for sub in subargumentos(args)
                     for r in [self._regla_para(original, sub)] if r is not None]
-        if original in self.config.sensibles or anidados:
+        # Un dato del dueño atado a un dominio que va a una página (formulario, dirección con parámetros): #128.
+        web = ((original in HERRAMIENTAS_WEB or bool(hosts_en(args))) and bool(datos_llevados(self.guardia, args)))
+        if original in self.config.sensibles or anidados or web:
             try:
                 retenida = await self._politica_pendiente()
                 if retenida:
@@ -534,6 +575,8 @@ class Grifter:
                         if alerta is not None:
                             break
                         alerta = self.guardia.revisar(original, sub, servidor, regla)
+                    if alerta is None and web:
+                        alerta = self.guardia.revisar_web(original, args, servidor)
                 else:
                     self._registrar("capa2_apagada", herramienta=original, servidor=servidor, args=args)
                 if self.quorum is not None and self.config.umbral_doble > 0 and _es_pago(original, args):
