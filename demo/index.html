@@ -11,6 +11,10 @@
   <meta property="og:title" content="Grifter · Escudo para agentes que pagan">
   <meta property="og:description" content="Red-teaming y escudo para agentes de IA que pagan: frena las estafas que el agente no ve, con una garantía que vive fuera del modelo.">
   <meta name="twitter:card" content="summary">
+  <script>
+    // #demo es la secuencia automática del pitch (demo.html): sin pestañas, a pantalla completa.
+    if (/^#demo/.test(location.hash)) { var q = location.hash.split("?")[1]; location.replace("demo.html" + (q ? "?" + q : "")); }
+  </script>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,6 +104,7 @@
         <div class="modelo">
           <div class="modelo-curvas">
             <div class="metricas" id="ops-metricas"></div>
+            <p class="ops-grifter" id="ops-grifter" tabindex="0" hidden></p>
             <div class="lienzo" id="ops-curva"></div>
           </div>
           <div class="modelo-lado">

@@ -23,9 +23,11 @@ const Operaciones = (() => {
     fu_boveda: "Firma conocida", fu_origen: "Política de origen", fu_clasificador: "Clasificador {v}",
     ac_ejecutada: "Ejecutada", ac_retenida: "Retenida", ac_escalada: "Escalada",
     o_confianza: "confianza", o_leyendo_pct: "leyendo {p}%", o_indicadores: "{n} indicadores", o_ejemplos: "{n} ejemplos",
-    o_precision: "Precisión", o_recall: "Cobertura", o_falsas: "Falsas alarmas", o_en_pausa: "En pausa",
+    o_precision: "Precisión", o_recall: "Detecta", o_el_clasificador: "El clasificador", o_falsas: "Falsas alarmas",
+    o_grifter: "Grifter completo", o_grifter_completo: "{r} de {a} frenados", o_ver_resultados: "Ver en Resultados",
+    ayuda_grifter_completo: "Con las capas 2 y 3, en el benchmark: {r} de {a} ataques frenados, en {f} tipos. El clasificador de arriba es una señal más, no la defensa: lo que se le escapa lo frenan las capas. Sale de cobertura.totales en resultados.json", o_en_pausa: "En pausa",
     ayuda_precision: "De lo que marcó como estafa, cuánto lo era. Evaluado en un conjunto apartado que nunca se usa para entrenar",
-    ayuda_recall: "Cobertura (recall): de las estafas, cuántas marcó",
+    ayuda_recall: "Detección del clasificador (recall): de las estafas, cuántas marcó. Es solo el clasificador, no la cobertura de Grifter",
     ayuda_falsas: "Correos legítimos marcados como estafa",
     o_de: "{f}/{l}",
     ayuda_falsas_n: "Correos legítimos marcados como estafa: {f} de {l} en el conjunto apartado del motor (un tercio de los escenarios, fijo, que nunca entrena). Cada legítimo pesa {pp} puntos y cada escenario trae 3 variantes, así que un solo escenario mueve la cifra de a {ep} puntos.{marcados}{cv}",
@@ -62,9 +64,11 @@ const Operaciones = (() => {
     fu_boveda: "Known signature", fu_origen: "Origin policy", fu_clasificador: "Classifier {v}",
     ac_ejecutada: "Executed", ac_retenida: "Held", ac_escalada: "Escalated",
     o_confianza: "confidence", o_leyendo_pct: "reading {p}%", o_indicadores: "{n} indicators", o_ejemplos: "{n} examples",
-    o_precision: "Precision", o_recall: "Recall", o_falsas: "False alarms", o_en_pausa: "Paused",
+    o_precision: "Precision", o_recall: "Detects", o_el_clasificador: "The classifier", o_falsas: "False alarms",
+    o_grifter: "Full Grifter", o_grifter_completo: "{r} of {a} stopped", o_ver_resultados: "See in Results",
+    ayuda_grifter_completo: "With layers 2 and 3, on the benchmark: {r} of {a} attacks stopped, across {f} types. The classifier above is one more signal, not the defense: what it misses, the layers stop. From cobertura.totales in resultados.json", o_en_pausa: "Paused",
     ayuda_precision: "Of what it flagged as a scam, how much was. Evaluated on a held-out set never used for training",
-    ayuda_recall: "Of the scams, how many it flagged",
+    ayuda_recall: "Classifier recall: of the scams, how many it flagged. It is only the classifier, not Grifter's coverage",
     ayuda_falsas: "Legitimate emails flagged as scams",
     o_de: "{f}/{l}",
     ayuda_falsas_n: "Legitimate emails flagged as scams: {f} of {l} in the engine's held-out set (a fixed third of the scenarios, never trained on). Each legitimate email weighs {pp} points and each scenario brings 3 variants, so a single scenario moves the figure by {ep} points.{marcados}{cv}",
@@ -617,11 +621,23 @@ const Operaciones = (() => {
         <span class="m-val dato">${v === undefined ? "—" : pct(v)}</span>
         <span class="m-delta dato ${dcls}">${n}${d ? `${d > 0 ? "+" : ""}${d.toFixed(1)}` : ""}</span></div>`;
     };
-    $("#ops-metricas").innerHTML = met("o_precision", "precision", "l-1") + met("o_recall", "recall", "l-2") + met("o_falsas", "falsas_alarmas", "l-3", true);
+    $("#ops-metricas").innerHTML = `<span class="m-de">${esc(t("o_el_clasificador"))}</span>` + met("o_precision", "precision", "l-1") + met("o_recall", "recall", "l-2") + met("o_falsas", "falsas_alarmas", "l-3", true);
+    pintarGrifter();
     if (animar) $("#ops-metricas").querySelectorAll(".m-val").forEach((el) => reanimar(el, "golpe"));
     pintarPesos();
     pintarColados();
     pintarCurva();
+  }
+  // Lo que frena Grifter completo en el benchmark, junto a la detección del clasificador, para que no se confundan.
+  function pintarGrifter() {
+    const el = $("#ops-grifter");
+    const to = estado.resultados?.cobertura?.totales;
+    if (!el) return;
+    if (!to) { el.hidden = true; return; }
+    el.hidden = false;
+    el.dataset.ayuda = t("ayuda_grifter_completo", { r: to.frenadas_bench, a: to.ataques_bench, f: to.familias });
+    el.innerHTML = `${ms("verified_user")}<span class="og-txt"><span class="og-de">${esc(t("o_grifter"))}</span><span class="dato">${esc(t("o_grifter_completo", { r: to.frenadas_bench, a: to.ataques_bench }))}</span></span>
+      <a href="#resultados" aria-label="${esc(t("o_ver_resultados"))}" data-ayuda="${esc(t("o_ver_resultados"))}">${ms("arrow_forward")}</a>`;
   }
   // Se colaron: las estafas apartadas que el modelo dejó como no-estafa (`colados` del evento `modelo`), por tipo.
   function pintarColados() {
@@ -946,7 +962,7 @@ const Operaciones = (() => {
     conectar();
   }
 
-  return { iniciar, alCambiarVista, aplicar, ultimaEstafa: (sirve = () => true) => [...o.estafas].reverse().find((x) => sirve(x.escenario)) || null, _o: o };
+  return { iniciar, alCambiarVista, aplicar, pintarGrifter, ultimaEstafa: (sirve = () => true) => [...o.estafas].reverse().find((x) => sirve(x.escenario)) || null, _o: o };
 })();
 window.Operaciones = Operaciones;
 Operaciones.alCambiarVista(estado.vista);
