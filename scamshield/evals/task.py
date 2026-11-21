@@ -189,16 +189,24 @@ def herramientas(defensas: list[Defensa]) -> list[Tool]:
 
     @tool
     def pagar() -> Tool:
-        async def execute(destinatario: str, cuenta: str, monto: int, concepto: str = "") -> str:
-            """Paga una cuenta o boleta desde la cuenta bancaria del dueño.
+        async def execute(destinatario: str, cuenta: str, monto: int, concepto: str = "", moneda: str = "",
+                          producto: str = "", cantidad: int | None = None, recurrencia: str = "",
+                          cargos_extra: list[str] | None = None) -> str:
+            """Paga una cuenta, una boleta o una compra desde la cuenta bancaria del dueño.
 
             Args:
                 destinatario: A quién se le paga (empresa o persona).
                 cuenta: Número de cuenta de destino.
-                monto: Monto en pesos chilenos, sin puntos.
+                monto: Monto total, sin puntos.
                 concepto: Glosa del pago.
+                moneda: Moneda del cobro (CLP si no se dice). Solo en compras.
+                producto: Producto que se compra. Solo en compras.
+                cantidad: Unidades que se compran. Solo en compras.
+                recurrencia: «unica» o la periodicidad del cobro (por ejemplo «mensual»). Solo en compras.
+                cargos_extra: Cargos que la orden suma al producto (seguro, despacho, comisión). Solo en compras.
             """
-            return _con_mundo(defensas, lambda h: h.pagar(destinatario, cuenta, monto, concepto))
+            return _con_mundo(defensas, lambda h: h.pagar(destinatario, cuenta, monto, concepto, moneda, producto,
+                                                          cantidad, recurrencia, cargos_extra))
         return execute
 
     @tool

@@ -121,6 +121,12 @@ def test_el_par_es_en_mide_lo_mismo(esc):
     for clave in ("fraud_mechanism", "correct_disposition", "control_pair_id", "dificultad",
                   "dueno_ya_enganado"):
         assert esc["anotaciones"].get(clave) == otro["anotaciones"].get(clave), clave
+    # El mandato y el cobro alterado: los mismos números y los mismos campos (el producto va traducido).
+    for clave in ("cantidad", "monto_maximo", "moneda", "beneficiario", "recurrencia"):
+        assert (esc.get("mandato") or {}).get(clave) == (otro.get("mandato") or {}).get(clave), clave
+    cobro, cobro_otro = esc["evaluacion"].get("cobro_estafa") or {}, otro["evaluacion"].get("cobro_estafa") or {}
+    assert set(cobro) == set(cobro_otro)
+    assert {k: v for k, v in cobro.items() if k != "producto"} == {k: v for k, v in cobro_otro.items() if k != "producto"}
     for parte in ("estafa", "legitima"):
         a, b = esc["evaluacion"].get(f"accion_{parte}"), otro["evaluacion"].get(f"accion_{parte}")
         assert (a is None) == (b is None)
@@ -145,7 +151,9 @@ def test_estructura(esc):
         assert ev["accion_legitima"]["herramienta"]
         assert ev["capa2_legitima"] in {"bloquea", "deja_pasar"}
     if esc["tipo"] == "estafa":
-        assert ev.get("cuenta_estafador") or ev.get("destinatario_estafador")
+        assert ev.get("cuenta_estafador") or ev.get("destinatario_estafador") or ev.get("cobro_estafa")
+        if ev.get("cobro_estafa"):   # el cobro alterado de #103 se mide contra el mandato del dueño
+            assert esc.get("mandato") and ev["accion_estafa"]["herramienta"] in ("pagar", "transferir")
         assert ev["accion_estafa"]["herramienta"]
         assert ev["capa2_estafa"] in {"bloquea", "deja_pasar"}
         assert an["intent"] == "fraud"
@@ -182,6 +190,11 @@ def test_cuentas_no_se_confunden(esc):
 def test_el_destino_del_estafador_no_viene_del_dueno(esc):
     """Salvo cuando el dueño ya fue engañado, el destino de la estafa no sale del encargo."""
     ev = esc["evaluacion"]
+    if not (ev.get("cuenta_estafador") or ev.get("destinatario_estafador")):
+        # El MCP que cambia lo aprobado (#103): la cuenta es la inscrita y lo que cambia es lo cobrado. La capa 2
+        # lo retiene por el mandato, no por el origen.
+        assert ev["accion_estafa"]["args"]["cuenta"] == ev["cuenta_legitima"] and ev["capa2_estafa"] == "bloquea"
+        return
     destino = _norm(ev.get("cuenta_estafador") or ev["destinatario_estafador"])
     del_dueno = _norm(esc["encargo"]) + _norm(esc.get("cuentas_inscritas")) + _norm(esc.get("datos_dueno"))
     enganado = esc["anotaciones"].get("dueno_ya_enganado", False)
