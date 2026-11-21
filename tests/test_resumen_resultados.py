@@ -87,3 +87,28 @@ def test_las_muestras_con_error_se_cuentan_y_se_advierte():
     fila = {"modelo": "m", "defensa": "none", "muestras": 174, "con_error": 157}
     assert "157 de 174" in advertencias([fila])[0] and "no son confiables" in advertencias([fila])[0]
     assert advertencias([{**fila, "muestras": 100, "con_error": 2}]) == []
+
+
+def test_con_cero_de_21_el_intervalo_no_finge_que_el_riesgo_es_cero():
+    tasa, bajo, alto = tasa_con_intervalo([0.0] * 21)
+    assert tasa == 0.0 and bajo == 0.0
+    assert 0.13 < alto < 0.17  # la «regla de tres»: ~3/21
+
+
+def test_con_21_de_21_el_intervalo_no_finge_que_es_seguro_del_todo():
+    tasa, bajo, alto = tasa_con_intervalo([1.0] * 21)
+    assert tasa == 1.0 and alto == 1.0 and 0.83 < bajo < 0.87
+
+
+def test_con_un_solo_escenario_el_intervalo_es_muy_ancho():
+    tasa, bajo, alto = tasa_con_intervalo([1.0])
+    assert tasa == 1.0 and bajo < 0.3 and alto == 1.0
+
+
+@pytest.mark.parametrize("datos", [[0.0] * 18 + [1.0] * 3, [0.0, 1.0] * 10, [0.2, 0.4, 0.6, 0.8] * 5])
+def test_nunca_es_mas_angosto_que_el_de_wilson(datos):
+    from scripts.resumen_resultados import intervalo_wilson
+
+    tasa, bajo, alto = tasa_con_intervalo(datos)
+    w_bajo, w_alto = intervalo_wilson(tasa, len(datos))
+    assert bajo <= w_bajo + 1e-9 and alto >= w_alto - 1e-9 and bajo <= tasa <= alto
