@@ -11,7 +11,13 @@
   <meta property="og:title" content="Grifter · Escudo para agentes que pagan">
   <meta property="og:description" content="Red-teaming y escudo para agentes de IA que pagan: frena las estafas que el agente no ve, con una garantía que vive fuera del modelo.">
   <meta name="twitter:card" content="summary">
+  <script>
+    // El QR de la lámina abre #estafalo (y la pantalla grande, #estafalo?pantalla=1): esa página es aparte y liviana.
+    if (/^#estafalo/.test(location.hash)) { var q = location.hash.split("?")[1]; location.replace("estafalo.html" + (q ? "?" + q : "")); }
+  </script>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icono-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">

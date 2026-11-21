@@ -12,6 +12,8 @@ Rutas:
     POST /api/alertas           pasa la alerta a notificar() (la web y, si hay token, Telegram)
     GET  /api/salud             para comprobar que está arriba
     POST /api/probar            «Intenta estafarlo»: el correo del juez contra las tres capas (con tope por IP)
+    GET  /api/estafalo/estado   «Estáfalo en vivo»: intentos, pagos que pasaron y los últimos intentos, enmascarados
+    POST /api/estafalo/reiniciar  reinicia el marcador (Bearer GRIFTER_ESTAFALO_TOKEN; sin token, 404)
     GET  /api/vivo              Server-Sent Events del modo «Centro de operaciones» (scamshield/vivo)
     POST /api/vivo/control      {"accion": "pausa" | "seguir" | "velocidad" | "idioma", "valor": 1|2|4 | "es"|"en"|"ambos"}
     GET  /api/vivo/estado       foto completa: bóveda, modelo, agentes y últimos 50 correos
@@ -39,6 +41,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from demo import telegram, whatsapp
+from demo.estafalo import Marcador, token_valido
 from demo.limite import LimitePorIP, ip_cliente
 from demo.notificar import notificar
 
@@ -279,9 +282,34 @@ def probar_estafa(correo: CorreoJuez, request: Request) -> dict[str, Any]:
     from scamshield.vivo.probar import probar
 
     try:
-        return probar(correo.de, correo.asunto, correo.cuerpo, correo.idioma, motor_global())
+        respuesta = probar(correo.de, correo.asunto, correo.cuerpo, correo.idioma, motor_global())
     except ValueError as e:
         raise HTTPException(422, str(e)) from e
+    respuesta["resultado"] = marcador.registrar(correo.cuerpo, respuesta)
+    return respuesta
+
+
+# --- «Estáfalo en vivo»: el marcador de la pantalla grande ------------------------------------------------------
+# Cuenta los intentos de /api/probar y guarda solo el texto enmascarado y cortado (demo/estafalo.py). Se reinicia
+# antes del pitch con POST /api/estafalo/reiniciar y el token GRIFTER_ESTAFALO_TOKEN; sin token, la ruta no existe.
+marcador = Marcador()
+
+
+@app.get("/api/estafalo/estado")
+def estado_estafalo() -> dict[str, Any]:
+    return marcador.estado()
+
+
+@app.post("/api/estafalo/reiniciar")
+def reiniciar_estafalo(request: Request) -> dict[str, Any]:
+    esperado = os.environ.get("GRIFTER_ESTAFALO_TOKEN", "").strip()
+    if not esperado:
+        raise HTTPException(404, "no encontrado")
+    dado = request.headers.get("authorization", "").removeprefix("Bearer ").strip()
+    if not token_valido(dado, esperado):
+        raise HTTPException(401, "token inválido")
+    marcador.reiniciar()
+    return {"ok": True}
 
 
 app.add_route("/mcp", ruta_mcp, methods=["GET", "POST", "DELETE"])
