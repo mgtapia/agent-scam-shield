@@ -1,175 +1,149 @@
-// Grifter, vista Duelo (#82): un hacker que aprende de cómo lo bloqueamos, contra un escudo que se reentrena con él.
-// Cada evento `duelo` del flujo /api/vivo es una generación; /api/vivo/estado trae `historial_duelo`. Operaciones
-// recibe el flujo y le pasa estos eventos (aplicar) y la historia de la foto (cargar). Lo que se mueve responde a
-// una generación nueva. Depende de app.js (T, t, esc, ms, $, estado) y de graficos.js.
+// Grifter, vista Duelo (#82): un hacker que aprende de cómo lo bloqueamos, contra el escudo congelado y contra el
+// escudo que se reentrena con él. Los números salen del bloque `duelo` de resultados.json, que arma
+// scripts/resultados_demo.py desde results/duelo/ (seis corridas deterministas de `grifter duelo`). La página no
+// calcula nada: solo dibuja. Lo en vivo (eventos `duelo` del flujo /api/vivo e `historial_duelo` de la foto) va en
+// una celda aparte: Operaciones le pasa los eventos (aplicar) y la historia (cargar).
+// Depende de app.js (T, t, esc, ms, $, estado) y de graficos.js.
 "use strict";
 
 const Duelo = (() => {
   Object.assign(T.es, {
-    du_curva: "Hacker contra escudo", du_hacker: "Lo que aprende el hacker", du_gens: "Generaciones",
-    du_gen: "Generación", du_evasion: "Evasión del hacker", du_recall: "Recall del escudo", du_capa2: "Estafas exitosas con capa 2",
-    du_eje: "generación", du_c_evasion: "Evasión", du_c_recall: "Recall", du_c_capa2: "Con capa 2", du_n: "{c} correos por generación · modelo {v}",
-    ayuda_du_evasion: "Correos mutados que el clasificador dejó pasar como seguros. Sube cuando el hacker encuentra una mutación nueva",
-    ayuda_du_recall: "Recall del clasificador en el conjunto apartado, que nunca entrena. Responde cuando aprende de las mutaciones",
-    ayuda_du_capa2: "La capa 2 no se entrena: la cuenta sigue saliendo de un correo, así que ninguna mutación paga",
-    du_de: "de {n} intentos", du_sin_capa2: "{n} pasarían sin la capa 2",
-    du_top: "Mutaciones que más le sirven", du_ultimo: "Motivo del último bloqueo", du_contra: "contra {s}",
-    du_exitos: "{e} de {i}", du_vacio_top: "Todavía ninguna mutación le sirve",
-    du_vacio: "El duelo no está corriendo en el motor", du_vacio_det: "El motor emite eventos «duelo» cuando el duelo está activo. Mientras tanto, la vista funciona con el emisor local:",
-    du_g_gen: "gen.", du_g_evasion: "evasión", du_g_recall: "recall", du_g_capa2: "capa 2", du_g_mut: "mutación top", du_g_motivo: "motivo del bloqueo",
-    mu_parafrasear: "Parafrasear", mu_sacar_urgencia: "Sacar la urgencia", mu_cambiar_autoridad: "Cambiar de autoridad",
-    mu_partir_cuenta: "Partir la cuenta", mu_cuenta_con_letras: "Cuenta con letras", mu_deletrear_cuenta: "Deletrear la cuenta",
-    mu_homoglifo_dominio: "Homoglifo en el dominio", mu_remitente_conocido: "Remitente conocido", mu_repartir_en_dos: "Repartir en dos correos",
-    mu_reenviar: "Reenviar", s_ninguna: "ninguna", s_boveda: "bóveda", s_clasificador: "clasificador",
+    du_titular: "pagos que cruzan la capa 2", du_titular_det: "en {g} generaciones · {c} intentos del hacker",
+    ayuda_du_titular: "La capa 2 exige que la cuenta venga del dueño, no de un correo. No se entrena: ninguna mutación la mueve.\nSuma de exitosas_capa2 en las seis corridas, con y sin entrenar.",
+    du_sin_capa2: "Sin capa 2 habría cobrado", du_veces: "veces", du_de: "de {n} intentos · {m}",
+    ayuda_du_sin_capa2: "Correos mutados que el clasificador dejó pasar como seguros, sumados generación a generación (sin_capa2). Es un conteo de intentos: la misma cepa vuelve en varias generaciones.",
+    du_congelado: "Escudo congelado", du_aprende: "Escudo que aprende",
+    ayuda_du_congelado: "--sin-entrenar: el clasificador y la bóveda no se reentrenan. El hacker aprende y el escudo no responde.",
+    ayuda_du_aprende: "El dueño simulado confirma las estafas de cada generación y el clasificador y la bóveda se reentrenan con ellas.",
+    du_evasion: "evasión del hacker contra el clasificador", du_sem: "sem. {s}",
+    du_l_congelado: "{i} → {f}", du_l_aprende: "pico {p} → {f}",
+    du_eje: "generación", du_gen: "Generación", du_capa2: "capa 2", du_capa2_fin: "capa 2: 0 pagos",
+    du_ayuda: "El hacker es un atacante por mutaciones con Thompson sampling, sin API: aprende qué mutación le sirve contra cada señal del escudo. Parte de la recuperación del escudo que aprende la hace la guardia de deriva, que descarta las versiones que empeoran: {r} versiones revertidas en las semillas 0, 1 y 2 (Clasificador.revertidas).",
+    du_vivo: "En vivo", du_vivo_val: "g{g} · evasión {e} · capa 2 {c}", du_vivo_vacio: "sin eventos duelo",
+    ayuda_du_vivo: "Eventos «duelo» del flujo /api/vivo. Corren en el motor solo con el duelo activo; con ?sim los emite el emisor local, con números de juguete.",
+    du_sin_archivo: "No hay corridas del duelo en results/duelo/", du_sin_archivo_det: "Se generan con:",
+    du_y: " y ",
   });
   Object.assign(T.en, {
-    du_curva: "Hacker versus shield", du_hacker: "What the hacker learns", du_gens: "Generations",
-    du_gen: "Generation", du_evasion: "Hacker evasion", du_recall: "Shield recall", du_capa2: "Successful scams with layer 2",
-    du_eje: "generation", du_c_evasion: "Evasion", du_c_recall: "Recall", du_c_capa2: "With layer 2", du_n: "{c} emails per generation · model {v}",
-    ayuda_du_evasion: "Mutated emails the classifier let through as safe. Rises when the hacker finds a new mutation",
-    ayuda_du_recall: "Classifier recall on the held-out set, never trained on. Responds when it learns from the mutations",
-    ayuda_du_capa2: "Layer 2 is not trained: the account still comes from an email, so no mutation gets paid",
-    du_de: "of {n} attempts", du_sin_capa2: "{n} would get through without layer 2",
-    du_top: "Mutations that help it most", du_ultimo: "Reason for the last block", du_contra: "against {s}",
-    du_exitos: "{e} of {i}", du_vacio_top: "No mutation helps it yet",
-    du_vacio: "The duel is not running in the engine", du_vacio_det: "The engine emits «duel» events when the duel is on. Meanwhile, the view works with the local emitter:",
-    du_g_gen: "gen.", du_g_evasion: "evasion", du_g_recall: "recall", du_g_capa2: "layer 2", du_g_mut: "top mutation", du_g_motivo: "block reason",
-    mu_parafrasear: "Paraphrase", mu_sacar_urgencia: "Drop the urgency", mu_cambiar_autoridad: "Change the authority",
-    mu_partir_cuenta: "Split the account", mu_cuenta_con_letras: "Account in letters", mu_deletrear_cuenta: "Spell the account",
-    mu_homoglifo_dominio: "Homoglyph in the domain", mu_remitente_conocido: "Known sender", mu_repartir_en_dos: "Split into two emails",
-    mu_reenviar: "Forward", s_ninguna: "none", s_boveda: "vault", s_clasificador: "classifier",
+    du_titular: "payments that cross layer 2", du_titular_det: "in {g} generations · {c} hacker attempts",
+    ayuda_du_titular: "Layer 2 requires the account to come from the owner, not from an email. It is not trained: no mutation moves it.\nSum of exitosas_capa2 over the six runs, with and without training.",
+    du_sin_capa2: "Without layer 2 it would have collected", du_veces: "times", du_de: "of {n} attempts · {m}",
+    ayuda_du_sin_capa2: "Mutated emails the classifier let through as safe, summed generation by generation (sin_capa2). It counts attempts: the same strain returns over several generations.",
+    du_congelado: "Frozen shield", du_aprende: "Shield that learns",
+    ayuda_du_congelado: "--sin-entrenar: the classifier and the vault are not retrained. The hacker learns and the shield does not respond.",
+    ayuda_du_aprende: "The simulated owner confirms each generation's scams and the classifier and the vault retrain on them.",
+    du_evasion: "hacker evasion against the classifier", du_sem: "seed {s}",
+    du_l_congelado: "{i} → {f}", du_l_aprende: "peak {p} → {f}",
+    du_eje: "generation", du_gen: "Generation", du_capa2: "layer 2", du_capa2_fin: "layer 2: 0 payments",
+    du_ayuda: "The hacker is a mutation attacker with Thompson sampling, no API: it learns which mutation works against each shield signal. Part of the learning shield's recovery comes from the drift guard, which discards versions that get worse: {r} versions rolled back in seeds 0, 1 and 2 (Clasificador.revertidas).",
+    du_vivo: "Live", du_vivo_val: "g{g} · evasion {e} · layer 2 {c}", du_vivo_vacio: "no duel events",
+    ayuda_du_vivo: "«duelo» events from the /api/vivo stream. They run in the engine only with the duel on; with ?sim the local emitter sends them, with toy numbers.",
+    du_sin_archivo: "No duel runs in results/duelo/", du_sin_archivo_det: "They are generated with:",
+    du_y: " and ",
   });
 
-  const MAX_GENS = 50;
-  const d = { historial: [], visible: false, curva: null, ultimaGen: 0 };
-  const pct = (x) => `${Math.round((x || 0) * 100)}%`;
-  const mutacion = (m) => (m ? t(`mu_${m}`) : "—");
-  const senal = (s) => (window.Operaciones?.senal ? Operaciones.senal(s) : String(s || "").replaceAll("_", " "));
-  const quieto = () => Graficos.sinMovimiento;
-  function reanimar(el, clase) {
-    if (!el || quieto()) return;
-    el.classList.remove(clase);
-    void el.offsetWidth;
-    el.classList.add(clase);
-  }
+  const MODOS = ["congelado", "aprende"];
+  const d = { historial: [], visible: false };
+  const datos = () => estado.resultados?.duelo || null;
+  const num = (n) => Number(n).toLocaleString(t("locale"));
+  const pct = (x) => `${Math.round((x || 0) * 100)} %`;
+  const lista = (xs) => (xs.length > 1 ? `${xs.slice(0, -1).join(", ")}${t("du_y")}${xs.at(-1)}` : xs.join(""));
+  const fuentes = (m) => m.semillas.map((x) => `${x.fuente}\n${x.comando}`).join("\n");
+  const archivos = (modo) => `results/duelo/${modo}_s{${datos()[modo].semillas.map((x) => x.semilla).join(",")}}.json`;
+  // Muestra de trazo para la leyenda: el mismo trazo y color que la línea de esa semilla en el gráfico.
+  const TRAZO = ["", "6 3", "2 3"];
+  const muestra = (i, rojo) => `<svg class="du-trazo" width="24" height="8" aria-hidden="true"><line x1="0" y1="4" x2="24" y2="4"
+    stroke="${rojo ? Graficos.C.rojo : [Graficos.C.texto, Graficos.C.texto2, Graficos.C.texto3][i % 3]}" stroke-width="1.5" stroke-dasharray="${TRAZO[i % 3]}"/></svg>`;
 
-  // La franja: generación, evasión, recall y la garantía de la capa 2, con el cambio contra la generación anterior.
-  function pintarFranja(golpe) {
-    const e = d.historial.at(-1), a = d.historial.at(-2);
-    const delta = (k, menosEsMejor) => {
-      if (!e || !a) return "";
-      const x = Math.round((e[k] - a[k]) * 100);
-      if (!x) return "";
-      const cls = (x < 0) === menosEsMejor ? "c-verde" : "c-rojo";
-      return `<span class="dato du-delta ${cls}">${ms(x > 0 ? "arrow_upward" : "arrow_downward")}${Math.abs(x)}</span>`;
+  function pintarFranja(D) {
+    const celda = (modo) => {
+      const m = D[modo];
+      return `<div class="du-celda" tabindex="0" data-ayuda="${esc(`${t("ayuda_du_sin_capa2")}\n${fuentes(m)}`)}">
+        <span class="rotulo">${esc(t("du_sin_capa2"))}</span>
+        <span class="du-fila"><span class="dato du-num">${num(m.sin_capa2)}</span><span>${esc(t("du_veces"))}</span></span>
+        <span class="c-2 du-det">${esc(t("du_de", { n: num(m.candidatos), m: t(`du_${modo}`).toLowerCase() }))}</span></div>`;
     };
-    $("#duelo-franja").innerHTML = !e ? "" : `
-      <div class="du-celda"><span class="rotulo">${esc(t("du_gen"))}</span><span class="dato du-num" data-k="gen">${e.generacion}</span></div>
-      <div class="du-celda" data-ayuda="${esc(t("ayuda_du_evasion"))}"><span class="rotulo">${esc(t("du_evasion"))}</span><span class="du-fila"><span class="dato du-num c-rojo" data-k="evasion">${pct(e.evasion)}</span>${delta("evasion", true)}</span></div>
-      <div class="du-celda" data-ayuda="${esc(t("ayuda_du_recall"))}"><span class="rotulo">${esc(t("du_recall"))}</span><span class="du-fila"><span class="dato du-num" data-k="recall">${pct(e.recall)}</span>${delta("recall", false)}</span></div>
-      <div class="du-celda" data-ayuda="${esc(t("ayuda_du_capa2"))}"><span class="rotulo">${esc(t("du_capa2"))}</span><span class="du-fila"><span class="dato du-num c-verde" data-k="capa2">${e.exitosas_capa2}</span><span class="c-2">${esc(t("du_de", { n: e.candidatos }))} · ${esc(t("du_sin_capa2", { n: e.sin_capa2 ?? 0 }))}</span></span></div>`;
-    if (golpe) for (const el of $("#duelo-franja").querySelectorAll(".du-num")) reanimar(el, "golpe");
-    $("#n-duelo").textContent = e ? t("du_n", { c: e.candidatos, v: e.version_modelo || "—" }) : "";
+    $("#duelo-franja").innerHTML = `
+      <div class="du-celda du-titular" tabindex="0" data-ayuda="${esc(`${t("ayuda_du_titular")}\n${D.fuente}\n${D.comando}`)}">
+        <span class="du-fila"><span class="dato du-num c-verde">${num(D.exitosas_capa2)}</span><span class="du-tit">${esc(t("du_titular"))}</span></span>
+        <span class="c-2 du-det">${esc(t("du_titular_det", { g: D.generaciones, c: num(D.candidatos) }))}</span></div>
+      ${celda("congelado")}${celda("aprende")}
+      <div class="du-celda du-vivo" tabindex="0" data-ayuda="${esc(t("ayuda_du_vivo"))}"><span class="rotulo">${esc(t("du_vivo"))}</span>
+        <span class="dato" id="du-vivo"></span></div>`;
+    pintarVivo();
   }
 
-  function pintarCurva() {
-    if (!d.visible || !Graficos.hay) return;
-    const el = $("#duelo-lienzo");
-    if (!d.historial.length) return;
-    if (!d.curva || !echarts.getInstanceByDom(el)) {
-      d.curva = Graficos.curvaDuelo(el, { eje: t("du_eje"), gen: t("du_gen"), evasion: t("du_c_evasion"), recall: t("du_c_recall"), capa2: t("du_c_capa2") });
-    }
-    const h = d.historial.slice(-MAX_GENS);
-    d.curva?.poner([h.map((e) => [e.generacion, e.evasion * 100]), h.map((e) => [e.generacion, e.recall * 100]),
-      h.map((e) => [e.generacion, e.candidatos ? (100 * e.exitosas_capa2) / e.candidatos : 0])]);
-  }
-
-  // Lo que aprende el hacker: sus mejores mutaciones y por qué lo bloquearon la última vez.
-  function pintarHacker(golpe) {
+  function pintarVivo() {
+    const el = $("#du-vivo");
+    if (!el) return;
     const e = d.historial.at(-1);
-    const caja = $("#duelo-hacker");
-    if (!e) { caja.innerHTML = ""; return; }
-    const top = e.top_mutaciones || [];
-    const maxM = Math.max(1, ...Object.values(e.motivos || {}));
-    caja.innerHTML = `
-      <p class="du-sub">${esc(t("du_top"))}</p>
-      <ol class="du-top">${top.length ? top.map((m, i) => `<li class="${i === 0 ? "primera" : ""}">
-        <span class="du-mut">${esc(mutacion(m.mutacion))}</span>
-        <span class="medidor"><span style="width:${Math.round((100 * m.exitos) / Math.max(1, m.intentos))}%"></span></span>
-        <span class="dato">${esc(t("du_exitos", { e: m.exitos, i: m.intentos }))}</span>
-        ${m.contra ? `<span class="c-2 du-contra">${esc(t("du_contra", { s: senal(m.contra) }))}</span>` : ""}</li>`).join("")
-        : `<li class="vacio">${esc(t("du_vacio_top"))}</li>`}</ol>
-      <p class="du-sub">${esc(t("du_ultimo"))}</p>
-      <p class="du-motivo">${ms("block")}<span>${esc(senal(e.motivo_bloqueo))}</span></p>
-      <ol class="du-motivos">${Object.entries(e.motivos || {}).sort((a, b) => b[1] - a[1]).map(([s, n]) => `<li>
-        <span>${esc(senal(s))}</span><span class="medidor"><span style="width:${Math.round((100 * n) / maxM)}%"></span></span><span class="dato">${n}</span></li>`).join("")}</ol>`;
-    if (golpe) reanimar(caja.querySelector(".du-top li"), "golpe");
+    el.classList.toggle("c-2", !e);
+    el.textContent = e ? t("du_vivo_val", { g: e.generacion, e: pct(e.evasion), c: e.exitosas_capa2 }) : t("du_vivo_vacio");
   }
 
-  function htmlGen(e) {
-    return `<li><span class="dato">g${e.generacion}</span>
-      <span class="dato c-rojo" title="${esc(t("du_g_evasion"))}">${pct(e.evasion)}</span>
-      <span class="dato" title="${esc(t("du_g_recall"))}">${pct(e.recall)}</span>
-      <span class="dato c-verde" title="${esc(t("du_g_capa2"))}">${e.exitosas_capa2}</span>
-      <span class="du-g-mut">${esc(mutacion(e.mutacion_top))}</span>
-      <span class="c-2 du-g-motivo">${esc(senal(e.motivo_bloqueo))}</span></li>`;
-  }
-  const cabGens = () => `<li class="cab" aria-hidden="true"><span>${esc(t("du_g_gen"))}</span><span>${esc(t("du_g_evasion"))}</span><span>${esc(t("du_g_recall"))}</span><span>${esc(t("du_g_capa2"))}</span><span>${esc(t("du_g_mut"))}</span><span>${esc(t("du_g_motivo"))}</span></li>`;
-  function pintarGens() {
-    $("#duelo-gens").innerHTML = cabGens() + [...d.historial].reverse().slice(0, MAX_GENS).map(htmlGen).join("");
-    $("#n-duelo-gens").textContent = d.historial.length ? `${d.historial.length}` : "";
+  function pintarModo(D, modo) {
+    const m = D[modo], rojo = modo === "congelado";
+    const tit = $(`#t-du-${modo}`);
+    tit.dataset.ayuda = `${t(`ayuda_du_${modo}`)}\n${fuentes(m)}`;
+    $(`#n-du-${modo}`).textContent = archivos(modo);
+    $(`#du-ley-${modo}`).innerHTML = m.semillas.map((x, i) => `<li tabindex="0" data-ayuda="${esc(`${x.fuente}\n${x.comando}`)}">
+      ${muestra(i, rojo)}<span class="c-2">${esc(t("du_sem", { s: x.semilla }))}</span>
+      <span class="dato${rojo ? " c-rojo" : ""}">${esc(rojo ? t("du_l_congelado", { i: pct(x.inicio), f: pct(x.final) })
+        : t("du_l_aprende", { p: pct(x.pico), f: pct(x.final) }))}</span></li>`).join("")
+      + `<li class="du-ley-que c-2">${esc(t("du_evasion"))}</li>`;
+    if (!d.visible || !Graficos.hay) return;
+    Graficos.curvaDuelo($(`#du-lienzo-${modo}`), {
+      rojo,
+      series: m.semillas.map((x) => ({ nombre: t("du_sem", { s: x.semilla }), puntos: x.evasion.map((v, g) => [g + 1, v * 100]) })),
+      capa2: m.semillas.map((x) => x.capa2.map((v, g) => [g + 1, v])),
+      nombres: { eje: t("du_eje"), gen: t("du_gen"), capa2: t("du_capa2"), capa2_fin: t("du_capa2_fin") },
+    });
   }
 
-  // Sin eventos «duelo»: lo dice, con cómo verlo funcionando.
-  function pintarVacio() {
-    const vacio = !d.historial.length;
+  function pintarVacio(D) {
+    const vacio = !D || D.estado !== "ok";
     $("#vista-duelo").classList.toggle("sin-duelo", vacio);
-    if (!vacio) return;
-    $("#duelo-franja").innerHTML = `<div class="du-vacio">${ms("hourglass_top", true)}<div><p class="du-vacio-tit">${esc(t("du_vacio"))}</p>
-      <p class="c-2">${esc(t("du_vacio_det"))} <code class="dato">?sim</code></p></div></div>`;
+    if (!vacio) return false;
+    $("#duelo-franja").innerHTML = `<div class="du-vacio">${ms("hourglass_top", true)}<div><p class="du-vacio-tit">${esc(t("du_sin_archivo"))}</p>
+      <p class="c-2">${esc(t("du_sin_archivo_det"))} <code class="dato">${esc(D?.comando || "grifter duelo --generaciones 20 --semilla N [--sin-entrenar] --json results/duelo/<modo>_sN.json")}</code></p></div></div>`;
+    $("#du-ayuda").textContent = "";
+    return true;
   }
 
-  function pintarTodo() {
-    pintarVacio();
-    if (!d.historial.length) return;
-    pintarFranja(false);
-    pintarHacker(false);
-    pintarGens();
-    pintarCurva();
+  function pintar() {
+    if (estado.resultados === undefined) return;   // resultados.json todavía no llega
+    const D = datos();
+    if (pintarVacio(D)) return;
+    pintarFranja(D);
+    for (const modo of MODOS) pintarModo(D, modo);
+    const rev = D.aprende.semillas.map((x) => x.revertidas).filter((r) => r !== null && r !== undefined);
+    $("#du-ayuda").textContent = rev.length ? t("du_ayuda", { r: lista(rev.map(num)) }) : "";
+    $("#du-ayuda").dataset.ayuda = D.aprende.semillas.map((x) => x.fuente).join("\n");
   }
 
   function aplicar(e) {
     if (!e || e.generacion === undefined) return;
     if (d.historial.some((x) => x.generacion === e.generacion)) return;
-    const primera = !d.historial.length;
     d.historial.push(e);
     if (d.historial.length > 200) d.historial.shift();
-    if (primera) return pintarTodo();
-    pintarFranja(true);
-    pintarHacker(true);
-    const ol = $("#duelo-gens");
-    ol.querySelector(".cab").insertAdjacentHTML("afterend", htmlGen(e));
-    reanimar(ol.children[1], "entra-fila");
-    while (ol.children.length > MAX_GENS + 1) ol.lastElementChild.remove();
-    $("#n-duelo-gens").textContent = `${d.historial.length}`;
-    pintarCurva();
+    pintarVivo();
   }
 
   function cargar(historial) {
     if (!Array.isArray(historial)) return;
     d.historial = historial.filter((e) => e && e.generacion !== undefined).sort((a, b) => a.generacion - b.generacion);
-    pintarTodo();
+    pintarVivo();
   }
 
+  // ECharts necesita medir el contenedor: los gráficos se dibujan al entrar a la vista.
   function alCambiarVista(vista) {
     const antes = d.visible;
     d.visible = vista === "duelo";
-    if (d.visible && !antes) requestAnimationFrame(() => { pintarCurva(); Graficos.redimensionar(); });
+    if (d.visible && !antes) requestAnimationFrame(pintar);
   }
 
-  document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => { d.curva = null; pintarTodo(); }));
-  pintarTodo();
-  return { aplicar, cargar, alCambiarVista, _d: d };
+  document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", pintar));
+  return { aplicar, cargar, alCambiarVista, pintar, _d: d };
 })();
 window.Duelo = Duelo;
 Duelo.alCambiarVista(estado.vista);

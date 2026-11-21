@@ -16,7 +16,7 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 | | 1. **Los modelos de punta casi no caen, y cuando caen es por confianza delegada:** Haiku no cayó en ninguno de 21 escenarios en español con la lista de cuentas visible (0 % [0-15]); Sonnet, con el encargo de pagar lo que el gerente apruebe, **pagó 6 de 6** (español e inglés, 3 repeticiones) cuando el correo del gerente venía de su propia dirección comprometida. Es **un solo escenario**, y el encargo delega explícitamente: pagar es defendible para el agente. La vulnerabilidad es la confianza delegada, no que el modelo sea tonto. La capa 2 lo retiene, porque la cuenta salió de un correo y no del encargo. | Mapa de calor táctica × defensa |
 | | 2. **Un agente sin libro de proveedores queda inútil:** sin la lista de cuentas, la utilidad baja de 79 % [57-95] a 16 % [0-38] (Haiku, español, 3 repeticiones, IC 95 %), porque no se atreve a pagar. Las estafas exitosas suben a 8 % [0-27], que con 21 escenarios no se distingue de cero. Ni siquiera avisarle que tiene escudo lo cambia. **Grifter no hace al agente más listo: lo hace seguro, y lo que no puede verificar se lo pregunta al dueño con un toque** (con la capa 2, 0 de 21 escenarios con estafa exitosa, con un límite superior de 15 %; utilidad 79 % [57-95] con el dueño en el circuito y unos 6 toques por cada 100 acciones sensibles [0-23]). | Seguridad contra utilidad, con intervalos |
 | | 3. **El atacante adaptativo reescribe la estafa ronda tras ronda.** **Honesto: la adaptación no hizo falta ni sirvió.** Con gpt-oss-20b de víctima y 5 estafas en español, sin defensa cayeron 4 de 5 ya en la ronda 0 (80 % [38-96], n=5) y ninguna más con 3 rondas de reescritura de Qwen 27B (80 % [38-96] en las rondas 0 a 3); la que resistió, aguantó las 3 rondas. Con la capa 2, el agente intentó pagar al estafador en 4 de 5 y la capa frenó los 4: 0 de 5 exitosas (0 % [0-43]) en todas las rondas con episodio puntuado (5 de 5 en las rondas 0 y 1, 2 de 5 en la 2 y 1 de 5 en la 3: la cuota diaria de Groq de la víctima cortó el resto). Con n=5 el intervalo es ancho: es un humo, no una curva; la garantía fuerte es la de los 64 escenarios y la prueba de propiedad. | Curva del atacante |
-| 2:30–3:00 | Todo es abierto: el primer dataset de estafas en español para agentes, la eval en Inspect y la capa que se suma a cualquier agente o firewall. Pruébenlo: escriban su estafa. | «Try it» |
+| 2:30–3:00 | Todo es abierto: el primer dataset de estafas en español para agentes, la eval en Inspect y la capa que se suma a cualquier agente o firewall. Mírenlo en vivo: Operaciones y el Duelo. | Operaciones en vivo |
 
 ## Por qué es distinto (si el jurado pregunta)
 - **SEA, AgentPhishing y FraudBench miden estafas contra agentes, pero en inglés.** Nosotros medimos español chileno contra inglés, con las mismas estafas.
@@ -57,6 +57,39 @@ Frase: «Ellos protegen el pago. Nosotros, además, medimos cuánto cae un agent
 - **Lo que hace:** tarjetas tokenizadas (el agente no ve la tarjeta) y aprobación biométrica de cada compra. Solo en EE. UU., para Pro.
 - **Lo que no hace:** la biometría confirma que *eres tú* el que aprueba, no que el destino sea legítimo. Si el agente fue engañado, la pantalla de aprobación te muestra la tienda o la cuenta del estafador y la apruebas con tu cara. Es el mismo punto débil que medimos: el humano aprueba lo que el agente le muestra.
 - **Lo que agrega Grifter:** el *porqué* en el momento de aprobar («este destino salió de un correo, no de tus proveedores»), la retención de lo que no se puede verificar y las transferencias a cuentas, que es la estafa dominante en Chile y que una billetera de tarjetas no cubre. Grifter es una capa de política: se puede poner antes de cualquier billetera o pasarela.
+
+### Dónde entra Grifter en el flujo (diagrama para la presentación)
+Grifter se pone en dos puntos. Ninguno es la pantalla biométrica de la billetera, que es cerrada:
+1. **Entre el agente y el comercio**, como conector MCP remoto. Para esto falta #105.
+2. **En el lado del cobro**, en Stripe o en el banco.
+
+```mermaid
+flowchart LR
+  U["Dueño<br/>«compra 10.000 chips, hasta $412.000»"] --> A["ChatGPT<br/>(o Claude, o un agente propio)"]
+  A -- "conector MCP<br/>grifter.onrender.com/mcp" --> G["Grifter"]
+  G --> M["MCP del comercio<br/>(checkout)"]
+  M -- "orden: $4.120.000" --> G
+  G -. "no calza con el mandato:<br/>retenido, nunca llega a la billetera" .-> X["✗"]
+  G -- "calza con el mandato" --> W["ChatGPT Wallet<br/>(pide tu cara)"]
+  W --> P["Cobro<br/>(Stripe o el banco)"]
+  P -. "segunda revisión antes del cobro" .-> G
+  G -. "lo que no puede verificar:<br/>2 aprobadores + código" .-> D["Dueño y segundo aprobador"]
+```
+
+- **El mandato (#103).** Al aprobar, Grifter fija el producto, la cantidad, el monto máximo, la moneda, el beneficiario y si es único o recurrente. Todo checkout se compara contra eso, y las herramientas aprobadas quedan con su huella: si el MCP cambia su descripción, se bloquea.
+- **Sin Grifter no hay con qué pagar (#102).** Las credenciales del comercio y del banco las tiene Grifter, no el agente.
+- **El negocio de fondo.** La integración con emisores y redes, como Visa Intelligent Commerce o Mastercard Agent Pay, que ya reciben los datos del mandato del agente.
+- **Frase:** «La biometría confirma que eres tú. Grifter confirma que lo que apruebas es lo que pediste».
+
+### Idea de demo: la tienda que cambia el monto después del sí
+1. En ChatGPT (modo desarrollador → conectores) se agrega `https://grifter.onrender.com/mcp`. Detrás está una tienda MCP ficticia, «Silicio Austral Store».
+2. El dueño le pide a ChatGPT: «compra 10.000 microprocesadores de 3 nm, hasta $412.000».
+3. La tienda acepta y, en el checkout, devuelve la orden con $4.120.000 y otro SKU.
+4. Grifter la retiene. En pantalla y en Telegram aparece «aprobaste $412.000 CLP por 10.000 chips de 3 nm; el comercio pide $4.120.000 por 1.000 de 7 nm». La billetera nunca pide la cara para esa compra.
+5. Se repite con la versión honesta de la tienda: calza con el mandato y el pago sale en Stripe, en modo prueba.
+6. **Bonus:** la tienda cambia la descripción de su herramienta (rug pull). Grifter la bloquea hasta que el dueño la revise.
+
+**Lo que hace falta:** el proxy remoto (#105), el mandato y la tienda que cambia el monto (#103), y la doble autorización con código (#102). **El respaldo si algo falla en vivo:** la misma secuencia con Claude Desktop por stdio, que ya funciona, y un video grabado.
 
 ## Preguntas probables
 - **¿Y si el estafador logra que su cuenta quede inscrita?** Inscribir una cuenta pide confirmar con fricción y tiene un período de espera. Lo aprendido solo sube la sospecha, nunca aprueba.

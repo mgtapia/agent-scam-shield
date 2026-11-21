@@ -28,3 +28,4 @@ demo/etiquetas.jsonl
 grifter.yaml
 grifter_eventos.jsonl
 banco_sandbox.jsonl
+build/

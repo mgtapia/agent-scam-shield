@@ -74,9 +74,12 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo despu
   - Abajo van Defensa en capas (contadores y una barra apilada por familia), Bóveda (los indicadores, como una cuarentena) y Modelo (versión, métricas, curva y pesos).
   - En Defensa en capas, los contadores son los de `bloqueos_por_capa` del motor: Firewall y Escudo cuentan acciones retenidas, y Bóveda, veredictos atajados por la bóveda. Cada número va por su lado: no suman lo mismo que las barras.
   - La barra por familia lleva un desenlace por correo, al terminar su lectura: la capa que retuvo la acción, la bóveda si ninguna capa la retuvo, o «ejecutada».
-  - El correo escrito en Pruébalo entra al flujo marcado con la etiqueta neutra «Juez» en lugar del agente. Su cuerpo se desplaza dentro de Lectura como cualquier otro.
-  - Desde 1600 px de ancho y 900 de alto, todo cabe en una pantalla. Más bajo o más angosto, las filas pasan a alto fijo y la página se desplaza. Bajo 1600 px, Registro baja a la fila de Bóveda y Modelo ocupa el ancho.
+  - Un correo que llega por `POST /api/probar` entra al flujo marcado con la etiqueta neutra «Juez» en lugar del agente. Su cuerpo se desplaza dentro de Lectura como cualquier otro.
+  - Desde 1600 px de ancho y 900 de alto, todo cabe en una pantalla, cada bloque a la vista.
+  - **Compacta** (bajo 1600 de ancho o 900 de alto, desde 1100 de ancho; un laptop a 1280×609): también cabe en una pantalla, sin scroll de página. Los agentes van en una línea, con la tarea en la ayuda. Entrada va a la izquierda y Lectura al centro, con el cuerpo a 14 px, los tramos en dos columnas y el veredicto y la acción en una franja (las señales van en la ayuda). A la derecha van los contadores de capas compactos y un panel con pestañas para Registro, Bóveda y Modelo, con su contador en la pestaña.
   - Cada bloque recorta su contenido y desplaza lo suyo. En Lectura, el cuerpo y la lista de tramos ceden alto y el veredicto con la acción queda siempre visible abajo. Del veredicto se muestran las tres señales de más peso y un «+n».
+  - El Registro agrupa las ráfagas: los indicadores que entran juntos a la bóveda van en una línea («+6 indicadores · 2 cuenta · 2 dominio · 2 plantilla») y las versiones seguidas del modelo, en otra («1.0.15 → 1.0.18»).
+  - El estado «Inactivo» de un agente va con un círculo vacío dibujado en SVG.
   - El sello de la barra dice «Simulación · motor real» con el motor, y «Simulación · emisor local» con el respaldo. Al lado va la pausa.
 - **Un solo estado para todas las pestañas:** el idioma ES/EN y la velocidad 1x/2x/4x. La velocidad se ve en Operaciones y en Episodios, y mueve a la vez el flujo del motor y la reproducción del episodio.
 - **Episodios** (`#vivo`): episodios exportados de Inspect, en tres carriles. Un carril corrido con mockllm lleva la etiqueta «Datos de prueba».
@@ -92,18 +95,12 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo despu
   - «Modelos y firewall reales»: una fila por medición (Pipelock, Sonnet, Haiku y el clasificador), con el número en `--t-4` y su intervalo al lado. Para el clasificador va el rango entre corridas, y se dice que es un rango.
   - «Atacante adaptativo»: las estafas exitosas acumuladas por ronda, una línea gris por defensa, distinta por trazo y con su nombre al final. Pasa a rojo solo si una estafa le ganó a esa defensa. Si no hay curva con rondas, va un estado vacío que dice qué falta y con qué comando se regenera.
   - La fuente y el comando de cada número van en la ayuda (`data-ayuda`). Un número sin archivo de origen lleva la etiqueta «sin archivo».
-- **Duelo** (#82): un hacker que aprende de cómo lo bloqueamos, contra el escudo que se reentrena con él. Es una vista propia, no un bloque de Operaciones: Operaciones ya llena una pantalla y el duelo cuenta otra historia, que en el proyector necesita espacio.
-  - Arriba va la franja: la generación, la evasión del hacker en `--rojo`, el recall del escudo en blanco, cada uno con su cambio contra la generación anterior, y las estafas exitosas con la capa 2 en `--verde`, que se mantienen en 0.
-  - Al medio van las curvas por generación: evasión en rojo, recall en blanco y «con capa 2» en verde punteado, plana en 0, cada una con su nombre al final. Al lado, lo que aprende el hacker: sus tres mutaciones más útiles (la primera en rojo) y el motivo del último bloqueo, con el conteo por señal.
-  - Abajo, una fila por generación, la más nueva arriba.
-  - Los eventos `duelo` llegan por el flujo de `/api/vivo`: Operaciones se los pasa al Duelo y anota cada generación en su registro. `/api/vivo/estado` trae `historial_duelo`. Sin eventos, la vista dice que el duelo no corre en el motor y cómo verlo con el emisor local (`?sim`).
-  - El duelo es parte del flujo en vivo: lleva el sello, la pausa y la velocidad de Operaciones.
-- **Pruébalo:** «Intenta estafarlo» (#21), conectado a `POST /api/probar`.
-  - A la izquierda va el formulario, con el encargo del dueño y su cuenta inscrita arriba para que el juez sepa a qué apunta. A la derecha va el resultado.
-  - El resultado lleva el veredicto («Frenada» en verde, «Pasó» en rojo o «Sin acción» en gris), la acción que intentó el agente y una fila por capa con su resultado («Retenida» o «Ejecutada», como en Operaciones) y su motivo. La fila del escudo completo no repite el motivo: dice qué partes la frenan.
-  - Debajo va el texto del juez con los tramos de la lectura resaltados, como en Operaciones. El cuerpo largo se desplaza por dentro.
-  - Los errores 413, 429 y de red van en una línea roja junto al botón, nunca en un `alert()`.
-  - El correo del juez solo se evalúa: no entrena el clasificador ni entra a la bóveda.
+- **Duelo** (#82): un hacker que aprende de cómo lo bloqueamos, contra el escudo congelado y contra el que se reentrena con él. Los números son los del bloque `duelo` de `resultados.json`: seis corridas deterministas de `grifter duelo --generaciones 20` (semillas 0, 1 y 2, con y sin `--sin-entrenar`) en `results/duelo/`.
+  - Arriba va la franja: el titular, los pagos que cruzan la capa 2 (0, en `--verde`, en todas las generaciones); «Sin capa 2 habría cobrado» para cada escudo, en blanco, con el total de intentos; y una celda chica «En vivo» con el último evento `duelo` del flujo, o «sin eventos duelo».
+  - Al medio, dos gráficos lado a lado con la evasión del hacker contra el clasificador por generación, una línea por semilla y distinta por trazo: «Escudo congelado» en `--rojo` (sube) y «Escudo que aprende» en grises (termina en 0). En los dos, la capa 2 va en verde punteado, plana en 0. Sobre cada gráfico, la leyenda dice por semilla el inicio y el final (congelado) o el pico y el final (aprende), y el título lleva los archivos de origen.
+  - Abajo, una línea en `--texto-2`: el hacker es un atacante por mutaciones con Thompson sampling, sin API, y parte de la recuperación la hace la guardia de deriva, con las versiones revertidas (`revertidas` del evento, `Clasificador.revertidas`).
+  - Desde 1100 de ancho cabe en una pantalla, sin scroll de página: los gráficos toman el alto que dejan la franja y la ayuda. Bajo 1100 van uno sobre otro.
+  - Los eventos `duelo` siguen llegando por `/api/vivo` (Operaciones se los pasa al Duelo y los anota en su registro), y `/api/vivo/estado` trae `historial_duelo`.
 
 Hay un solo nivel de contenedores. Dentro de un bloque solo hay filas separadas por `--linea`, nunca tarjetas.
 

@@ -155,6 +155,7 @@ class Duelo:
             "motivo_bloqueo": motivos.most_common(1)[0][0] if motivos else "ninguna",
             "motivos": dict(motivos),
             "version_modelo": cl.version,
+            "revertidas": cl.revertidas,         # versiones que la guardia de deriva descartó hasta aquí
         }
         self.historial.append(evento)
         self.ultimo_lote = lote

@@ -53,6 +53,7 @@ def curvas(filas: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, Any]]]:
             "reescrituras_validas": sum(1 for f in adaptadas if f["valida"] and not f["error"]),
             "reescrituras_perdidas": sum(1 for f in adaptadas if not f["valida"]),
             "no_validas": sum(1 for f in fs if not f["valida"]), "errores": sum(1 for f in fs if f["error"]),
+            "rechazos_atacante": sum(1 for f in fs if f.get("se_nego")),
         }
     return salida
 
