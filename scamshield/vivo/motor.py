@@ -22,7 +22,7 @@ from typing import Any, Callable, Iterator, Optional
 
 from ..defenses.layer1 import reglas_inyeccion
 from ..defenses.layer2 import politica_origen
-from ..env.world import LLAMADA, MCP, WEB
+from ..env.world import LLAMADA, MCP, WEB, WHATSAPP
 from .boveda import Boveda
 from .clasificador import Clasificador, rasgos
 from .duelo import Duelo
@@ -128,7 +128,7 @@ class Motor:
             yield (0.4 if i == 0 else r.uniform(0.6, 1.6)), self._estado(agente, "leyendo", c.tarea)
             # `canal` es opcional: sin él, el evento es un correo. Con `canal: "llamada"`, `de` es el número que
             # se muestra (falsificable), `asunto` dice quién dice ser quien llama y `cuerpo` es la transcripción.
-            canal = {"canal": "llamada"} if c.origen == LLAMADA else {}
+            canal = {"canal": {LLAMADA: "llamada", WHATSAPP: "whatsapp"}[c.origen]} if c.origen in (LLAMADA, WHATSAPP) else {}
             yield 0.3, {"tipo": "correo_nuevo", "id": c.id, "agente": agente, "de": c.de,
                         "asunto": c.asunto, "cuerpo": c.cuerpo, "escenario": c.unidad, **canal}
             ras = self._rasgos(c)

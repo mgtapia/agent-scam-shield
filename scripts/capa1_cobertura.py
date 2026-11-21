@@ -31,6 +31,8 @@ def bloquea(esc: dict) -> str | None:
         h.leer_correos()
     if w.llamadas:
         h.escuchar_llamadas()
+    if w.chat:
+        h.leer_whatsapp()
     for url in w.paginas:
         h.abrir_web(url)
     for nombre in w.mcp_herramientas:

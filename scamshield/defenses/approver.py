@@ -28,7 +28,7 @@ from inspect_ai.model import ChatMessage
 from inspect_ai.tool import ToolCall, ToolCallView
 from inspect_ai.util import store
 
-from ..env.world import CORREO, DUENO, HERRAMIENTA, LLAMADA, MCP, WEB, origenes_en
+from ..env.world import CORREO, DUENO, HERRAMIENTA, LLAMADA, MCP, WEB, WHATSAPP, origenes_en
 from .layer2 import SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen
 
 # Clave del store donde queda cada bloqueo de la capa 2 (lista de dicts).
@@ -56,6 +56,7 @@ SENSIBLES_POR_NOMBRE: dict[str, dict[str, AccionSensible]] = {
 ORIGEN_POR_HERRAMIENTA: dict[str, str] = {
     "leer_correos": CORREO,
     "escuchar_llamadas": LLAMADA,
+    "leer_whatsapp": WHATSAPP,
     "abrir_web": WEB,
     "usar_mcp": MCP,
 }

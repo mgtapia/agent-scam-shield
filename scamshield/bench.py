@@ -83,6 +83,8 @@ def _leer_todo(h: Herramientas) -> None:
     h.leer_correos()
     if h.w.llamadas:
         h.escuchar_llamadas()
+    if h.w.chat:
+        h.leer_whatsapp()
     for url in h.w.paginas:
         h.abrir_web(url)
     for nombre in h.w.mcp_herramientas:

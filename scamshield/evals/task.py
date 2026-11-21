@@ -177,6 +177,13 @@ def herramientas(defensas: list[Defensa]) -> list[Tool]:
         return execute
 
     @tool
+    def leer_whatsapp() -> Tool:
+        async def execute() -> str:
+            """Lee los mensajes de chat (WhatsApp) del dueño: el texto, las notas de voz transcritas y los adjuntos."""
+            return _con_mundo(defensas, lambda h: h.leer_whatsapp())
+        return execute
+
+    @tool
     def abrir_web() -> Tool:
         async def execute(url: str) -> str:
             """Abre una página web y devuelve su contenido.
@@ -259,7 +266,7 @@ def herramientas(defensas: list[Defensa]) -> list[Tool]:
             return _con_mundo(defensas, lambda h: h.usar_mcp(herramienta, consulta))
         return execute
 
-    return [leer_correos(), escuchar_llamadas(), abrir_web(), pagar(), transferir(), compartir_dato(),
+    return [leer_correos(), escuchar_llamadas(), leer_whatsapp(), abrir_web(), pagar(), transferir(), compartir_dato(),
             responder(), usar_mcp()]
 
 

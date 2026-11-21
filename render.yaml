@@ -17,3 +17,7 @@ services:
       # Detrás del proxy de Render, el tope por IP de /api/probar lee la última dirección de X-Forwarded-For.
       - key: GRIFTER_PROXY_CONFIABLE
         value: "1"
+      # /mcp sin token para conectar ChatGPT en modo desarrollador (OAuth o nada). Solo la tienda ficticia, con
+      # tope por IP y cuerpo chico; ni banco, ni Stripe, ni credenciales. En producción va OAuth.
+      - key: GRIFTER_MCP_PUBLICO
+        value: "1"
