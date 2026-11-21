@@ -19,7 +19,8 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 | 2:30–3:00 | Todo es abierto: el primer dataset de estafas en español para agentes, la eval en Inspect y la capa que se suma a cualquier agente o firewall. Mírenlo en vivo: Operaciones y el Duelo. | Operaciones en vivo |
 
 ## Por qué es distinto (si el jurado pregunta)
-- **SEA, AgentPhishing y FraudBench miden estafas contra agentes, pero en inglés.** Nosotros medimos español chileno contra inglés, con las mismas estafas.
+- **SEA, AgentPhishing y FraudBench miden estafas contra agentes.** SEA (arXiv 2611.10037) ya compara otro idioma contra inglés: chino, con ataques exitosos entre 16,9 % y 84,3 %. Nosotros medimos **pagos** en español chileno contra inglés, con un atacante que se adapta. Hay que nombrar SEA antes que el jurado.
+- **Respaldo externo de la tesis:** APort Vault (arXiv 2609.22076) reprodujo 4.371 ataques humanos contra 14 modelos. Con un chequeo determinista antes de la acción hubo 0 transferencias no autorizadas en 69.297 intentos; sin él, 140 en 76.842.
 - **Los firewalls de agentes (medimos Pipelock) frenan la inyección técnica.** La ingeniería social no tiene nada técnico que detectar. Grifter revisa el valor concreto (la cuenta, el destinatario), no la sesión completa. Con la lista visible, casi no cuesta utilidad (de 79 % [57-95] a 74 % [51-89], con intervalos que se solapan). Cuando la cuenta es nueva pero legítima, no la bloquea en silencio: le pide un toque al dueño: unas 6 de cada 100 acciones sensibles [0-23], con Haiku en español.
 - **Hay una garantía que el texto no rompe:** una cuenta que no aparece completa en el encargo ni en las cuentas inscritas se bloquea siempre, por convincente que sea el correo, en las acciones que Grifter revisa (pagos, transferencias y envío de datos del dueño) y solo sobre el destino: no cubre el monto ni un pago partido en varios. Hay una prueba de propiedad (1000 casos con semilla fija) que lo demuestra.
 - **Aunque el correo venga firmado por Google, la cuenta que trae no es tuya.** Hay estafas que salen de infraestructura legítima: un replay de DKIM desde la cuenta oficial de un proveedor de nube, un cobro real de un servicio de pagos con la nota del estafador, un comentario de documento, una invitación de calendario, un sobre de firma. Pasan SPF, DKIM y DMARC, y cualquier filtro que mire el dominio del remitente falla. Grifter no mira quién manda sino de dónde salió el valor: probamos cinco así (con marcas ficticias) y la capa 2 las retiene todas, con el remitente legítimo, con otro o sin autenticación (`tests/test_infraestructura_legitima.py`).
@@ -34,6 +35,7 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
   - Un número de factura del encargo con los dígitos de la cuenta del estafador. Sin titulares, la capa 2 lo toma como del dueño; con titulares, la capa 3 lo retiene.
   - Un monto inflado a la cuenta inscrita.
   - Un pago partido entre varias cuentas nuevas.
+  - **Fuera de alcance, y lo decimos:** los adjuntos con malware (el CSIRT avisó de tres campañas del troyano Mispadu entre el 10 y el 12 de noviembre de 2026; el agente de Grifter no descarga ni ejecuta) y el agente que **cobra** y despacha contra un comprobante falso: Grifter protege al que paga.
 
   En la misma pasada arreglamos varios: credenciales en base64, con letras cirílicas, de ancho completo o con los dígitos en palabras. También un `avisar` que devolvía «no» y aprobaba, un destino que escribía líneas falsas en el mensaje de la alerta (`Alerta.mensaje`; `valor` y `args` siguen crudos para quien integra), un monto «1.500.000» que se leía como 1 peso y el pago partido a un mismo titular.
 
@@ -46,11 +48,17 @@ No encontramos ninguno con la combinación completa, pero sí algunos con piezas
 | **Sentinel MCP Wallet** (HackMoney 2026, premio ENS) | Política determinista en MCP: tope, lista blanca y slippage. | La lista blanca no distingue una cuenta nueva legítima de una que puso el estafador; Grifter mira el origen y le pide un toque al dueño. |
 | **The Citadel** (AI Tinkerers SF, Secure Agents) | Firewall MCP en stdio contra la inyección y la fuga de datos. | Es la capa 1. Pipelock hace lo mismo y lo medimos: 4 de 42. |
 | **ClawGuard** (HackMoney 2026, premio ENS) | Aprende los hábitos del usuario y escala lo raro por Telegram. | Lo aprendido decide. En Grifter solo sube la sospecha, y la garantía es determinista. |
+| **AgentPay** (Anthropic × Kaszek, Buenos Aires, abril de 2026, **1.er lugar**) | Plugin de Claude Code determinista. Pide aprobación humana en el primer pago a un destinatario nuevo, marca cambios de monto o destinatario respecto de lo aprobado y deja un log encadenado por hash. | No sabe de dónde salió la cuenta: mira cuánto y a quién, no si «a quién» lo puso un correo. Sin benchmark, sin atacante, sin español. |
+| **AgentShield** (PARALLAX 2026) | Etiqueta la procedencia y la sensibilidad de cada valor y decide ALLOW, DENY o REQUIRE_APPROVAL con un motor determinista. | Es procedencia general de herramientas. No tiene pagos, beneficiario ni RUT, benchmark ni proxy MCP remoto. |
+| **Halter** (NEAR Hackathon 2026, AI Security) | Página pública «roba el dinero del agente», registro compartido de estafas y revisión de la antigüedad de la cuenta. | No hay regla por origen ni confirmación de beneficiario. Está en inglés y sin ChatGPT. |
+| **Agent Payment Firewall** (PayPal AI Hackathon 2026, resultados el 21-dic) | Z3 prueba que el permiso nunca supera las reglas. Tiene un Attack Lab con 6 ataques: upsell, pagos divididos, bomba de cantidad… | Mide reglas de gasto, no el origen del beneficiario ni estafas reales. |
 
-Frase: «Ellos protegen el pago. Nosotros, además, medimos cuánto cae un agente en español y sabemos de dónde salió cada cuenta».
+Frase: «Los otros escudos miran el monto. Grifter mira de dónde vino la cuenta, y lo medimos en chileno». Si preguntan por AgentPay: «AgentPay mira cuánto y a quién; Grifter mira de dónde salió ese destinatario y qué haría un estafador que se adapta».
+
+Los links de video, presentación y repo de cada proyecto están en la issue #145.
 
 ## Lo que no se dice
-- «Somos los primeros en defender pagos de agentes»: hay antecedentes (tabla de arriba). Lo primero es el benchmark en español chileno contra inglés y la regla por origen del valor.
+- «Somos los primeros en defender pagos de agentes»: hay antecedentes (tabla de arriba). Lo nuestro es el benchmark de **pagos** en español chileno contra inglés, con atacante adaptativo, y la regla por origen **aplicada al beneficiario de un pago** (AgentShield ya hace procedencia de valores en general).
 - «Grifter le devuelve la utilidad al agente»: medido en #38, no es cierto.
 - Los números con dueño simulado son un techo: el dueño idealizado sabe cuál es la cuenta buena, y en un hilo secuestrado un dueño real podría no saberlo.
 
