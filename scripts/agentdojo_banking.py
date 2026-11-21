@@ -1,7 +1,9 @@
 """Corre AgentDojo banking (inspect_evals) con y sin la capa 2 como approver, y arma la tabla.
 
 La tarea es `inspect_evals/agentdojo` con `workspace=banking` (MIT, UK AISI; port de AgentDojo de
-ETH Zürich, MIT; ver NOTICE.md). Se corren cuatro evals:
+ETH Zürich, MIT; ver NOTICE.md). Incluye una adaptación de
+`inspect_evals/agentdojo/agents/ground_truth_agent.py` (MIT, Copyright (c) 2024 UK AI Security
+Institute) en `_agente_guionado`. Se corren cuatro evals:
 
     defensa      x  ataque
     sin_defensa     con_ataque  (with_injections=True: utilidad bajo ataque y éxito del ataque)
