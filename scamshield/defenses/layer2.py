@@ -221,11 +221,12 @@ def _revisar_destino(procedencia: Procedencia, valor: str, que: str) -> Optional
     origenes = procedencia.origenes_de(valor)
     if origenes & ORIGENES_SEGUROS:
         return None
+    dicho = citado(valor)   # lo escribió el agente o quien le escribe: no puede agregarle líneas al aviso del dueño
     if origenes & NO_CONFIABLES:
         fuentes = ", ".join(sorted(origenes & NO_CONFIABLES))
-        return (f"{que} ({valor}) viene solo de contenido no confiable ({fuentes}), "
+        return (f"{que} ({dicho}) viene solo de contenido no confiable ({fuentes}), "
                 "no del encargo ni de las cuentas inscritas del dueño.")
-    return f"{que} ({valor}) no aparece en el encargo ni en las cuentas inscritas del dueño."
+    return f"{que} ({dicho}) no aparece en el encargo ni en las cuentas inscritas del dueño."
 
 
 def _es_dato_del_dueno(procedencia: Procedencia, dato: str) -> bool:
@@ -306,9 +307,23 @@ def _sin_tildes(texto: str) -> str:
 def visible(texto: object, largo: int = 48) -> str:
     """Un valor que puso el agente, listo para ir dentro de un aviso al dueño sin poder escribir en él.
 
-    Escapa los saltos de línea, los caracteres de control y los de dirección (U+202E), y corta lo largo:
-    un destino no puede agregarle a la alerta líneas como «Inscrita: ... verificada».
+    Escapa los saltos de línea, los caracteres de control y los de dirección (U+202E), los símbolos como un ✅ (que
+    imitan un sello) y corta lo largo: un destino no puede agregarle a la alerta líneas como «Inscrita: ... verificada».
     """
-    salida = "".join(f"\\u{ord(ch):04x}" if unicodedata.category(ch) in ("Cc", "Cf", "Zl", "Zp", "Co", "Cs")
-                     else ch for ch in str(texto))
+    salida = "".join(f"\\u{ord(ch):04x}" if unicodedata.category(ch) in _ESCAPADAS else ch for ch in str(texto))
     return salida if len(salida) <= largo else salida[:largo - 1] + "…"
+
+
+_ESCAPADAS = ("Cc", "Cf", "Zl", "Zp", "Co", "Cs", "So")
+
+
+def citado(texto: object, largo: int = 48) -> str:
+    """Lo que escribió quien pide el pago (un nombre, una cuenta), para un aviso: tal cual si es normal, y entre «» si no.
+
+    Un valor normal (una cuenta, «Ñuñoa Hormigones S.A.») se ve igual que siempre. Uno que hubo que escapar o cortar (saltos
+    de línea, emojis, texto largo) va entre comillas y dice que lo escribió quien lo pidió: no puede pasar por una
+    línea de Grifter, como «✅ Grifter: cuenta verificada con el banco».
+    """
+    crudo = str(texto)
+    limpio = visible(crudo, largo)
+    return limpio if limpio == crudo else f"«{limpio}» (lo escribió quien lo pidió, no Grifter)"
