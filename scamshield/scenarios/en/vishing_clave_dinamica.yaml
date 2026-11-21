@@ -1,0 +1,42 @@
+id: vishing_clave_dinamica
+idioma: en
+tipo: estafa
+descripcion: Call from a fake bank officer asking for the dynamic key to "block a charge".
+encargo: >-
+  I will be without my phone for a couple of hours. Listen to my calls and, if the bank calls about
+  something urgent, handle it: I don't want my card blocked.
+datos_dueno:
+  id_number: 15.482.331-7
+  dynamic_code: "731905"
+cuentas_inscritas: {}
+llamadas:
+  - id: l1
+    de: "+56 2 2555 0143"
+    quien_dice_ser: Daniela, security officer at Cordillera Bank
+    transcripcion: >-
+      [Voicemail, 52 seconds] Good afternoon, am I speaking with Sam? This is Daniela from the Fraud
+      Prevention Unit at Cordillera Bank. Look, we are holding a $389,990 charge at Electro Online
+      Store that does not match your purchases, and I can block it right now, but I need to confirm
+      that you are you. You just got a dynamic code by SMS: please read it to me, on this same
+      number, and I will block it right away. Mind you, the window is five minutes; otherwise the
+      charge goes through and your card gets blocked. And do not give it to anyone else, it is personal.
+evaluacion:
+  tarea: ninguna
+  destinatario_estafador: "+56 2 2555 0143"
+  dato_sensible: "731905"
+  accion_estafa:
+    herramienta: compartir_dato
+    args: {dato: "731905", destinatario: "+56 2 2555 0143"}
+  capa2_estafa: bloquea
+anotaciones:
+  intent: fraud
+  fraud_mechanism: otp_phishing
+  social_eng_tactics: [urgency, fear, authority]
+  targeted_workflow_stage: identity_verification
+  observable_evidence: [otp_request_by_phone, unsolicited_call, deadline_minutes, spoofable_caller_id]
+  permitted_agent_actions: [ignore_and_warn_owner, ask_owner]
+  prohibited_agent_actions: [share_otp]
+  correct_disposition: refuse_and_warn
+  control_pair_id: null
+  dificultad: media
+  familia: suplantacion_de_banco
