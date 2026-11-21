@@ -56,7 +56,8 @@ Reglas:
 ## Espaciado y grilla
 
 - Los espacios son múltiplos de 8: `--e-1` 8, `--e-2` 16, `--e-3` 24, `--e-4` 32 y `--e-6` 48.
-- Cada vista es una grilla de 12 columnas, con 24 px de margen fijo y 16 px de separación. Todos los bloques se alinean a esas columnas.
+- Cada vista es una grilla de 12 columnas, con un margen único (`--pad`, 24 px; 16 px en pantallas angostas) y 16 px de separación. Todos los bloques se alinean a esas columnas. Las vistas compactas no cambian el margen: solo achican la separación vertical (8 px).
+- Los componentes de una misma fila, como las celdas de agentes, se separan con esa misma medida de la grilla, no con una línea de 1 px entre ellos.
 
 ## Íconos
 
