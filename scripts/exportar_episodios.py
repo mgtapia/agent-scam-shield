@@ -8,6 +8,7 @@ del dueño o de un correo (con su id y su dominio), con la misma normalización 
 Uso:
     python scripts/exportar_episodios.py logs/*.eval --salida demo/episodios
     python scripts/exportar_episodios.py --mock          # genera los fixtures con mockllm, sin API
+    python scripts/exportar_episodios.py logs/**/*.eval --elegir jefe_mismo_dominio__es   # un episodio real por carril
 """
 from __future__ import annotations
 
@@ -347,6 +348,89 @@ def generar_logs_mock(dir_logs: Path, defensas=("none", "layer1", "layer2"),
     return rutas
 
 
+# --- Episodios reales elegidos: uno por carril, siempre del mismo modelo ---
+
+# Cada configuración va a un carril de la demo: «Sin defensa», «Firewall» o «Grifter».
+CARRIL = {"none": "none", "layer1": "layer1", "layer2": "layer2", "both": "layer2", "layer2_approver": "layer2"}
+# Orden de preferencia de modelos cuando varios tienen el mismo escenario: el más capaz primero.
+PREFERENCIA = ("claude-sonnet", "claude-haiku", "gemini", "gpt-oss")
+
+
+def _rango_modelo(modelo: str) -> int:
+    return next((i for i, p in enumerate(PREFERENCIA) if p in modelo), len(PREFERENCIA))
+
+
+def elegir(rutas: list[Path], escenarios: list[str]) -> list[dict[str, Any]]:
+    """Un episodio real por carril para cada «escenario__idioma» pedido.
+
+    - Un solo modelo por escenario, el mismo en todos los carriles: el que tiene corrida sin defensa y con Grifter,
+      y entre esos el que cayó sin defensa. Un carril sin corrida de ese modelo queda fuera, no se rellena con otro.
+    - Dentro del modelo, la primera repetición que muestra el resultado (cayó, o bloqueó) y si no la primera.
+    Cada episodio lleva `muestras`: cuántas repeticiones hay de ese modelo y esa defensa y en cuántas cayó, para
+    que la página no presente un caso como si fuera la regla.
+    """
+    pedidos = set(escenarios)
+    grupos: dict[tuple[str, str], dict[tuple[str, str], list[dict[str, Any]]]] = {}
+    for ruta in rutas:
+        log = read_eval_log(str(ruta), resolve_attachments=True)
+        for sample in log.samples or []:
+            esc = sample.metadata.get("escenario") or {}
+            clave = f"{esc.get('id')}__{esc.get('idioma')}"
+            if clave not in pedidos or not sample.scores:
+                continue
+            ep = episodio(log, sample)
+            if ep["defensa"] not in CARRIL:
+                continue
+            grupos.setdefault((esc["id"], esc["idioma"]), {}).setdefault((ep["modelo"], ep["defensa"]), []).append(ep)
+
+    cayo = lambda e: e["veredicto"]["cayo"]  # noqa: E731
+    bloqueo = lambda e: e["veredicto"]["bloqueos"] > 0  # noqa: E731
+    elegidos = []
+    for (escenario, idioma), por in sorted(grupos.items()):
+        # Un solo modelo por escenario: comparar carriles de modelos distintos no prueba nada. Primero el que tiene
+        # corrida sin defensa y con Grifter; entre esos, el que cayó sin defensa; después, el más capaz.
+        modelos = {m for m, _ in por}
+
+        def corrida(m: str, carril: str) -> list[dict[str, Any]] | None:
+            # Las repeticiones de una sola configuración: para Grifter, la capa 2 pura antes que con el dueño.
+            for d in [d for d, c in CARRIL.items() if c == carril]:
+                if por.get((m, d)):
+                    return por[(m, d)]
+            return None
+
+        def rango(m: str) -> tuple[bool, bool, int]:
+            par = bool(corrida(m, "none") and corrida(m, "layer2"))
+            cae = any(cayo(e) for e in por.get((m, "none"), []))
+            return (not par, not cae, _rango_modelo(m))
+        modelo = min(modelos, key=rango)
+        for carril, interesa in (("none", cayo), ("layer1", bloqueo), ("layer2", bloqueo)):
+            eps = corrida(modelo, carril)
+            if not eps:
+                continue
+            ep = next((e for e in eps if interesa(e)), eps[0])
+            ep = {**ep, "id": f"{escenario}__{idioma}__{carril}",
+                  "muestras": {"total": len(eps), "cayeron": sum(1 for e in eps if e["veredicto"]["cayo"])}}
+            elegidos.append(ep)
+    return elegidos
+
+
+def exportar_elegidos(rutas: list[Path], escenarios: list[str], salida: Path = SALIDA_POR_DEFECTO) -> list[Path]:
+    """Escribe los episodios elegidos. Antes borra los JSON de ese escenario e idioma (por ejemplo, los de mockllm),
+    para que un carril sin corrida real quede vacío en vez de mezclar datos guionados con reales."""
+    salida.mkdir(parents=True, exist_ok=True)
+    eps = elegir(rutas, escenarios)
+    for escenario, idioma in {(e["escenario"], e["idioma"]) for e in eps}:
+        for viejo in salida.glob(f"{escenario}__{idioma}__*.json"):
+            viejo.unlink()
+    escritos = []
+    for ep in eps:
+        destino = salida / f"{ep['id']}.json"
+        destino.write_text(json.dumps(ep, ensure_ascii=False, indent=2), encoding="utf-8")
+        escritos.append(destino)
+    _escribir_indice(salida)
+    return escritos
+
+
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("logs", nargs="*", type=Path, help="archivos .eval de Inspect")
@@ -354,8 +438,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--mock", action="store_true", help="genera los fixtures con mockllm (es/en, none/layer1/layer2)")
     p.add_argument("--escenario", action="append", choices=sorted(GUIONES),
                    help="escenario del fixture mock (se puede repetir; por defecto boleta_cambio_cuenta)")
+    p.add_argument("--elegir", action="append", metavar="ESCENARIO__IDIOMA",
+                   help="exporta un episodio real por carril de ese escenario (se puede repetir)")
     a = p.parse_args(argv)
     rutas = list(a.logs)
+    if a.elegir:
+        for r in exportar_elegidos(rutas, a.elegir, a.salida):
+            print(r.relative_to(RAIZ) if r.is_relative_to(RAIZ) else r)
+        return
     if a.mock:
         tmp = Path(tempfile.mkdtemp(prefix="scamshield-mock-"))
         for escenario in a.escenario or ["boleta_cambio_cuenta"]:
