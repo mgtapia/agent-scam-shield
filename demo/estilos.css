@@ -495,9 +495,11 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .agente { display: grid; align-content: center; min-height: 64px; padding: var(--e-1) var(--e-2); background: var(--superficie); min-width: 0; box-shadow: inset 0 -1px 0 transparent; transition: box-shadow var(--dur) ease-out; }
 .agente.foco { box-shadow: inset 0 -1px 0 var(--texto); }
 .ag-l1 { display: flex; align-items: center; gap: var(--e-1); min-width: 0; }
-.ag-nombre { font-size: var(--t-3); line-height: var(--l-3); font-weight: var(--p-fuerte); }
+.ag-nombre { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--t-3); line-height: var(--l-3); font-weight: var(--p-fuerte); }
 .ag-estado { display: flex; align-items: center; gap: var(--e-1); margin-left: auto; font: var(--p-fuerte) var(--t-1) / var(--l-1) var(--mono); color: var(--texto); white-space: nowrap; }
-.ag-tarea { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
+.ag-l2 { display: flex; align-items: center; gap: var(--e-1); min-width: 0; }
+.ag-l2 .tag { flex: none; }
+.ag-tarea { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
 .agente[data-estado="esperando"] .ag-estado { color: var(--texto-2); }
 .agente[data-estado="inactivo"] .ag-estado { color: var(--texto-3); font-weight: var(--p-normal); }
 .agente[data-estado="retenido"] .ag-estado { color: var(--verde); }
