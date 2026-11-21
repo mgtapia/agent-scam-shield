@@ -16,11 +16,13 @@ esperando respuesta. El proxy sigue reteniendo pase lo que pase: sin respuesta, 
 from __future__ import annotations
 
 import logging
+import re
 import secrets
 import time
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Optional
 
+from .aprobaciones import Aprobaciones, AprobadorQuorum, RegistroEncadenado, Solicitud, aprobadores_de, cargar_semillas
 from .integridad import Cambio
 from .proxy import Alerta, Escalar
 
@@ -127,6 +129,7 @@ class Ganchos:
     escalar: Escalar
     aprobador: AprobadorTelegram
     latido: Callable[[str, dict[str, Any]], None]
+    canal: Any = None
 
 
 def ganchos_desde_entorno(entorno: Optional[Mapping[str, str]] = None, esperar_s: float = 0.0,
@@ -173,7 +176,7 @@ def ganchos_desde_entorno(entorno: Optional[Mapping[str, str]] = None, esperar_s
     def latido(evento: str, datos: dict[str, Any]) -> None:
         canal._api("sendMessage", chat_id=canal.chat_id, text=texto_de_latido(evento, datos))
 
-    return Ganchos(escalar, AprobadorTelegram(canal), latido)
+    return Ganchos(escalar, AprobadorTelegram(canal), latido, canal)
 
 
 def escalar_telegram(entorno: Optional[Mapping[str, str]] = None, esperar_s: float = 0.0,
@@ -182,3 +185,117 @@ def escalar_telegram(entorno: Optional[Mapping[str, str]] = None, esperar_s: flo
     """Solo el gancho `escalar` (la alerta de un pago retenido), o None si faltan el token o el chat."""
     ganchos = ganchos_desde_entorno(entorno, esperar_s, cuenta_inscrita, al_elegir, reloj)
     return ganchos.escalar if ganchos else None
+
+
+CODIGO = re.compile(r"^\s*(\d{6})\s*$")
+
+
+class QuorumTelegram:
+    """Pide y cuenta las aprobaciones de varias personas por Telegram, cada una desde su propio chat.
+
+    Cada aprobador recibe la solicitud con dos botones. «Rechazar» rechaza al tiro. «Aprobar» le pide el código de su
+    digipass, atado a esa solicitud (id, monto y cuenta); con el código bueno el voto cuenta. Todo lo que pasa queda en
+    el registro encadenado. Un solo sondeo (`getUpdates`) atiende a todos.
+    """
+
+    def __init__(self, canal: Any, aprobaciones: Aprobaciones):
+        self.canal, self.aprobaciones = canal, aprobaciones
+        self._offset = 0
+        self._esperando: dict[str, str] = {}   # chat -> solicitud a la que le falta el código
+        self._chats = {a.nombre: a.canal for a in aprobaciones.aprobadores.values()}
+
+    def aprobador_de_politica(self) -> AprobadorQuorum:
+        return AprobadorQuorum(self)
+
+    def reconfigurar(self, politica: Mapping[str, Any]) -> None:
+        lista, q = aprobadores_de(politica)
+        if lista:
+            self.aprobaciones.aprobadores = {a.nombre: a for a in lista}
+            self.aprobaciones.quorum = q
+            self._chats = {a.nombre: a.canal for a in lista}
+
+    def _nombre_de(self, chat: str) -> Optional[str]:
+        return next((n for n, c in self._chats.items() if c and str(c) == str(chat)), None)
+
+    def _decir(self, chat: str, texto: str, botones: Optional[dict[str, Any]] = None) -> None:
+        datos: dict[str, Any] = {"chat_id": chat, "text": texto}
+        if botones:
+            datos["reply_markup"] = botones
+        try:
+            self.canal._api("sendMessage", **datos)
+        except Exception as e:
+            log.warning("%s", e)
+
+    def notificar(self, s: Solicitud) -> None:
+        """Le manda la solicitud a cada aprobador (menos a quien la inició)."""
+        texto = (f"Grifter pide aprobación ({s.id})\n{s.detalle}\n\n{self.aprobaciones.progreso(s.id)}. "
+                 f"Para aprobar, saca el código de tu digipass para el desafío {s.desafio} y escríbelo aquí.")
+        botones = {"inline_keyboard": [[{"text": "Aprobar", "callback_data": f"{s.id}:ap"},
+                                        {"text": "Rechazar", "callback_data": f"{s.id}:re"}]]}
+        for nombre, chat in self._chats.items():
+            if chat and nombre != s.iniciador:
+                self._decir(chat, texto, botones)
+
+    def sondear(self) -> None:
+        try:
+            novedades = self.canal._api("getUpdates", offset=self._offset, timeout=0,
+                                        allowed_updates=["callback_query", "message"]) or []
+        except Exception as e:
+            log.warning("%s", e)
+            return
+        for n in novedades:
+            self._offset = max(self._offset, int(n.get("update_id", 0)) + 1)
+            if "callback_query" in n:
+                self._boton(n["callback_query"])
+            elif "message" in n:
+                self._texto(n["message"])
+
+    def _boton(self, cb: Mapping[str, Any]) -> None:
+        chat = str(((cb.get("message") or {}).get("chat") or {}).get("id", ""))
+        nombre = self._nombre_de(chat)
+        id_, _, accion = str(cb.get("data", "")).partition(":")
+        if nombre is None or id_ not in self.aprobaciones.solicitudes:
+            return
+        if accion == "re":
+            r = self.aprobaciones.votar(id_, nombre, False, canal="telegram")
+            self._decir(chat, r.mensaje)
+            if r.ok:
+                self._avisar_a_los_demas(nombre, f"{nombre} rechazó la solicitud {id_}.")
+        elif accion == "ap":
+            self._esperando[chat] = id_
+            self._decir(chat, f"Escribe el código de tu digipass para {id_} "
+                              f"(desafío {self.aprobaciones.solicitudes[id_].desafio}).")
+
+    def _texto(self, msg: Mapping[str, Any]) -> None:
+        chat = str((msg.get("chat") or {}).get("id", ""))
+        nombre = self._nombre_de(chat)
+        m = CODIGO.match(str(msg.get("text", "")))
+        if nombre is None or m is None or chat not in self._esperando:
+            return
+        id_ = self._esperando[chat]
+        r = self.aprobaciones.votar(id_, nombre, True, m.group(1), canal="telegram")
+        if r.ok or r.estado != "pendiente" or "bloqueado" in r.mensaje:
+            self._esperando.pop(chat, None)
+        self._decir(chat, r.mensaje)
+        if r.ok:
+            self._avisar_a_los_demas(nombre, f"{nombre} aprobó la solicitud {id_}: {self.aprobaciones.progreso(id_)}.")
+
+    def _avisar_a_los_demas(self, quien: str, texto: str) -> None:
+        for nombre, chat in self._chats.items():
+            if chat and nombre != quien:
+                self._decir(chat, texto)
+
+
+def quorum_desde_entorno(config: Any, integridad: Any, canal: Any, entorno: Mapping[str, str]) -> QuorumTelegram:
+    """El quórum con los aprobadores de la política aprobada (si hay) y las semillas de fuera del repo."""
+    lista, q = list(config.aprobadores), config.quorum
+    if integridad is not None:
+        try:
+            aprobada = integridad.estado()
+        except Exception:
+            aprobada = None
+        if aprobada is not None and aprobada.politica.get("aprobadores"):
+            lista, q = aprobadores_de(aprobada.politica)
+    semillas = cargar_semillas(str(config.semillas) if config.semillas else None, entorno)
+    ruta = config.registro_aprobaciones or (config.ruta.parent / "grifter_aprobaciones.jsonl" if config.ruta else None)
+    return QuorumTelegram(canal, Aprobaciones(lista, q, semillas, RegistroEncadenado(ruta)))
