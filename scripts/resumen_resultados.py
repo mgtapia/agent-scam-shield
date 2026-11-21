@@ -64,7 +64,37 @@ def agregar(muestras: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         tasa, bajo, alto = tasa_con_intervalo(fracciones)
         salida[nombre] = {"tasa": tasa, "bajo": bajo, "alto": alto, "escenarios": len(fracciones),
                           "repeticiones": len(reps)}
+    salida["toques_por_100"] = toques_por_100(muestras)
     return salida
+
+
+def toques_por_100(muestras: list[dict[str, Any]], remuestreos: int = REMUESTREOS,
+                   semilla: int = SEMILLA) -> dict[str, Any]:
+    """Consultas al dueño por cada 100 acciones sensibles intentadas, con intervalo por escenario.
+
+    Es la razón entre los totales (toques / intentos), y el intervalo sale de remuestrear escenarios.
+    Sin acciones sensibles intentadas no hay base y devuelve NaN en lugar de inventar un número.
+    """
+    por_id: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    for m in muestras:
+        por_id[m["escenario"]][0] += m.get("toques", 0)
+        por_id[m["escenario"]][1] += m.get("intentos", 0)
+    pares = list(por_id.values())
+
+    def razon(p: list[list[int]]) -> float:
+        intentos = sum(i for _, i in p)
+        return 100 * sum(t for t, _ in p) / intentos if intentos else float("nan")
+
+    punto = razon(pares)
+    if punto != punto or len(pares) < 2:
+        return {"tasa": punto, "bajo": punto, "alto": punto, "escenarios": len(pares),
+                "intentos": sum(i for _, i in pares)}
+    azar = random.Random(semilla)
+    valores = sorted(v for v in (razon(azar.choices(pares, k=len(pares))) for _ in range(remuestreos))
+                     if v == v)
+    return {"tasa": punto, "bajo": valores[int(0.025 * len(valores))],
+            "alto": valores[int(0.975 * len(valores)) - 1], "escenarios": len(pares),
+            "intentos": sum(i for _, i in pares)}
 
 
 def muestras_de_log(log) -> list[dict[str, Any]]:
@@ -83,6 +113,8 @@ def muestras_de_log(log) -> list[dict[str, Any]]:
             "cayo": v.get("seguridad") == "I",
             "tarea_ok": v.get("utilidad") == "C",
             "falsa_alarma": bool(v.get("falsa_alarma")),
+            "toques": int(s.scores["puntaje_estafa"].metadata.get("toques", 0)),
+            "intentos": int(s.scores["puntaje_estafa"].metadata.get("intentos_sensibles", 0)),
         })
     return resultado
 
@@ -97,11 +129,12 @@ def resumir(carpeta: Path, idioma: str | None = None) -> list[dict[str, Any]]:
             continue
         args = log.eval.task_args or {}
         clave = (log.eval.model, args.get("defense", "none"), bool(args.get("cuentas_visibles", True)),
-                 bool(args.get("aviso_escudo", False)))
+                 bool(args.get("aviso_escudo", False)), bool(args.get("dueno_simulado", False)))
         muestras = muestras_de_log(log)
         grupos[clave].extend(m for m in muestras if idioma is None or m["idioma"] == idioma)
     return [{"modelo": modelo, "defensa": defensa, "cuentas_visibles": visibles, "aviso_escudo": aviso,
-             **agregar(m)} for (modelo, defensa, visibles, aviso), m in sorted(grupos.items())]
+             "dueno_simulado": dueno, **agregar(m)}
+            for (modelo, defensa, visibles, aviso, dueno), m in sorted(grupos.items())]
 
 
 def _celda(m: dict[str, Any]) -> str:
@@ -110,13 +143,21 @@ def _celda(m: dict[str, Any]) -> str:
     return f"{m['tasa'] * 100:.0f}% [{m['bajo'] * 100:.0f}-{m['alto'] * 100:.0f}] (n={m['escenarios']})"
 
 
+def _toques(t: dict[str, Any]) -> str:
+    if t["tasa"] != t["tasa"]:
+        return "n/a"
+    return f"{t['tasa']:.0f} [{t['bajo']:.0f}-{t['alto']:.0f}]"
+
+
 def tabla(filas: list[dict[str, Any]]) -> str:
-    cabecera = "| Modelo | Defensa | Lista de cuentas | Aviso del escudo | Estafas exitosas | Utilidad | Falsas alarmas |"
-    lineas = [cabecera, "|---|---|---|---|---|---|---|"]
+    cabecera = ("| Modelo | Defensa | Lista de cuentas | Aviso del escudo | Dueño simulado | Estafas exitosas | "
+                "Utilidad | Falsas alarmas | Toques por 100 |")
+    lineas = [cabecera, "|---|---|---|---|---|---|---|---|---|"]
     for f in filas:
         lineas.append(f"| {f['modelo']} | {f['defensa']} | {'sí' if f['cuentas_visibles'] else 'no'} | "
-                      f"{'sí' if f['aviso_escudo'] else 'no'} | "
-                      f"{_celda(f['estafas_exitosas'])} | {_celda(f['utilidad'])} | {_celda(f['falsas_alarmas'])} |")
+                      f"{'sí' if f['aviso_escudo'] else 'no'} | {'sí' if f['dueno_simulado'] else 'no'} | "
+                      f"{_celda(f['estafas_exitosas'])} | {_celda(f['utilidad'])} | {_celda(f['falsas_alarmas'])} | "
+                      f"{_toques(f['toques_por_100'])} |")
     return "\n".join(lineas)
 
 

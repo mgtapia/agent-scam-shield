@@ -62,3 +62,14 @@ def test_resumen_de_un_log_real_con_epochs(tmp_path, capsys):
 def test_carpeta_sin_logs_falla_con_mensaje(tmp_path, capsys):
     assert main([str(tmp_path)]) == 2
     assert "No hay logs" in capsys.readouterr().err
+
+
+def test_toques_por_100_es_la_razon_entre_totales_y_no_inventa_sin_base():
+    from scripts.resumen_resultados import toques_por_100
+
+    muestras = [{"escenario": "a", "toques": 1, "intentos": 2}, {"escenario": "a", "toques": 0, "intentos": 2},
+                {"escenario": "b", "toques": 0, "intentos": 4}, {"escenario": "c", "toques": 1, "intentos": 2}]
+    r = toques_por_100(muestras)
+    assert r["tasa"] == pytest.approx(100 * 2 / 10) and r["bajo"] <= r["tasa"] <= r["alto"]
+    sin_base = toques_por_100([{"escenario": "a", "toques": 0, "intentos": 0}])
+    assert sin_base["tasa"] != sin_base["tasa"]  # NaN: no hay acciones sensibles sobre las que medir
