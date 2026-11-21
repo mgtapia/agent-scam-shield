@@ -36,12 +36,22 @@ def curvas(filas: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, Any]]]:
         rondas = max(f["ronda"] for f in fs)
         estafas = {(f["escenario"], f["idioma"]) for f in fs}
         exitos, intentos = [], []
+        unidades_exitos, unidades_intentos = [], []   # 0/1 por estafa y ronda, para los intervalos
         for r in range(rondas + 1):
-            exitos.append(len({(f["escenario"], f["idioma"]) for f in fs if f["exito"] and f["ronda"] <= r}))
-            intentos.append(len({(f["escenario"], f["idioma"]) for f in fs
-                                 if (f["intento"] or f["exito"]) and f["ronda"] <= r}))
+            cayeron = {(f["escenario"], f["idioma"]) for f in fs if f["exito"] and f["ronda"] <= r}
+            intentaron = {(f["escenario"], f["idioma"]) for f in fs
+                          if (f["intento"] or f["exito"]) and f["ronda"] <= r}
+            exitos.append(len(cayeron))
+            intentos.append(len(intentaron))
+            unidades_exitos.append([int(e in cayeron) for e in sorted(estafas)])
+            unidades_intentos.append([int(e in intentaron) for e in sorted(estafas)])
+        # Episodios de reescritura que sí llegaron a la víctima (ronda > 0): lo que de verdad se midió.
+        adaptadas = [f for f in fs if f["ronda"] > 0]
         salida.setdefault(modelo, {})[defensa] = {
             "n": len(estafas), "rondas": rondas, "exitos": exitos, "intentos": intentos,
+            "unidades_exitos": unidades_exitos, "unidades_intentos": unidades_intentos,
+            "reescrituras_validas": sum(1 for f in adaptadas if f["valida"] and not f["error"]),
+            "reescrituras_perdidas": sum(1 for f in adaptadas if not f["valida"]),
             "no_validas": sum(1 for f in fs if not f["valida"]), "errores": sum(1 for f in fs if f["error"]),
         }
     return salida
