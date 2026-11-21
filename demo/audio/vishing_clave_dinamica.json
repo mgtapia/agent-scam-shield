@@ -1,0 +1,13 @@
+{
+  "escenario": "vishing_clave_dinamica",
+  "idioma": "es",
+  "origen": "llamada",
+  "texto": "Buenas tardes, ¿hablo con Sam? Le habla Daniela, de la Unidad de Prevención de Fraudes de Banco Cordillera. Mire, tenemos en espera un cargo de $389.990 en Tienda Electro Online que no calza con sus compras, y lo puedo bloquear ahora mismo, pero necesito validar que usted es usted. Le acaba de llegar una clave dinámica por SMS: dígamela, por favor, por este mismo número, y yo se lo bloqueo al tiro. Ojo que la ventana es de cinco minutos; si no, el cargo queda firme y la tarjeta se bloquea. Y no se la dé a nadie más, que es personal.",
+  "voz": "femenina",
+  "voz_id": "21m00Tcm4TlvDq8ikWAM",
+  "clase_de_voz": "professional",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 538
+}

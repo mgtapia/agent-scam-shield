@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grifter · Escudo para agentes que pagan</title>
+  <meta name="description" content="Red-teaming y escudo para agentes de IA que pagan: frena las estafas que el agente no ve, con una garantía que vive fuera del modelo.">
+  <meta name="theme-color" content="#09090B">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Grifter · Escudo para agentes que pagan">
+  <meta property="og:description" content="Red-teaming y escudo para agentes de IA que pagan: frena las estafas que el agente no ve, con una garantía que vive fuera del modelo.">
+  <meta name="twitter:card" content="summary">
+  <script>
+    // #demo es la secuencia automática del pitch (demo.html): sin pestañas, a pantalla completa.
+    if (/^#demo/.test(location.hash)) { var q = location.hash.split("?")[1]; location.replace("demo.html" + (q ? "?" + q : "")); }
+  </script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..24,300,0,0&display=block">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header class="barra">
+    <div class="marca">
+      <span class="ms grande" aria-hidden="true">shield</span>
+      <span class="nombre">Grifter</span>
+    </div>
+    <nav class="pestanas" role="tablist" aria-label="Vistas">
+      <a role="tab" href="#operaciones" data-vista="operaciones" aria-selected="true"><span class="ms" aria-hidden="true">radar</span><span data-t="v_operaciones">Operaciones</span></a>
+      <a role="tab" href="#vivo" data-vista="vivo" aria-selected="false" data-ayuda-solo="ayuda_v_vivo"><span class="ms" aria-hidden="true">replay</span><span data-t="v_vivo">Episodios</span></a>
+      <a role="tab" href="#resultados" data-vista="resultados" aria-selected="false"><span class="ms" aria-hidden="true">grid_view</span><span data-t="v_resultados">Resultados</span></a>
+      <a role="tab" href="#duelo" data-vista="duelo" aria-selected="false" data-ayuda-solo="ayuda_v_duelo"><span class="ms" aria-hidden="true">swords</span><span data-t="v_duelo">Duelo</span></a>
+      <a role="tab" href="#instalar" data-vista="instalar" aria-selected="false" data-ayuda-solo="ayuda_v_instalar"><span class="ms" aria-hidden="true">download</span><span data-t="v_instalar">Instalar</span></a>
+    </nav>
+    <div class="controles">
+      <label class="campo solo-vivo">
+        <span class="oculto" data-t="escenario">Escenario</span>
+        <select id="sel-escenario"></select>
+      </label>
+      <button type="button" class="boton principal solo-vivo" id="btn-reproducir">
+        <span class="ms" aria-hidden="true">play_arrow</span><span data-t="reproducir">Reproducir</span>
+      </button>
+      <button type="button" class="boton icono solo-vivo" id="btn-reiniciar" data-ayuda-t="reiniciar" aria-label="Reiniciar">
+        <span class="ms" aria-hidden="true">restart_alt</span>
+      </button>
+      <span class="tag sello solo-ops" id="ops-sello" data-ayuda-t="ayuda_sello"></span>
+      <button type="button" class="boton icono solo-ops" id="ops-pausa" aria-pressed="false" aria-label="Pausa">
+        <span class="ms" aria-hidden="true">pause</span>
+      </button>
+      <div class="segmentado solo-flujo" role="group" aria-label="Velocidad" id="ops-velocidad">
+        <button type="button" data-ops-velocidad="1" aria-pressed="true">1x</button>
+        <button type="button" data-ops-velocidad="2" aria-pressed="false">2x</button>
+        <button type="button" data-ops-velocidad="4" aria-pressed="false">4x</button>
+      </div>
+      <span class="fuente solo-resultados" id="fuente"></span>
+      <div class="segmentado" role="group" aria-label="Idioma">
+        <button type="button" data-idioma="es" aria-pressed="true">ES</button>
+        <button type="button" data-idioma="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="vista ops" id="vista-operaciones" data-panel="registro" data-vista="operaciones" aria-label="Operaciones">
+      <ul class="ops-agentes" id="ops-agentes" aria-label="Agentes"></ul>
+
+      <section class="ops-bloque ops-cola" aria-labelledby="t-cola">
+        <h2 class="titulo" id="t-cola"><span class="ms" aria-hidden="true">inbox</span><span data-t="o_cola">Entrada</span><span class="nota" id="n-cola"></span></h2>
+        <ol class="ops-lista" id="ops-cola"></ol>
+      </section>
+
+      <section class="ops-bloque ops-lectura" aria-labelledby="t-lectura" aria-live="off">
+        <h2 class="titulo" id="t-lectura"><span class="ms" aria-hidden="true">document_scanner</span><span data-t="o_lectura">Lectura</span><span class="nota" id="n-lectura"></span></h2>
+        <div class="lectura" id="ops-lectura"></div>
+        <p class="oculto" id="ops-anuncio" aria-live="polite"></p>
+      </section>
+
+      <section class="ops-bloque ops-registro" aria-labelledby="t-registro">
+        <h2 class="titulo" id="t-registro"><span class="ms" aria-hidden="true">terminal</span><span data-t="o_registro">Registro</span><span class="nota" id="n-registro"></span></h2>
+        <ol class="registro" id="ops-registro" role="log" aria-live="off"></ol>
+      </section>
+
+      <section class="ops-bloque ops-capas" aria-labelledby="t-capas">
+        <h2 class="titulo" id="t-capas"><span class="ms" aria-hidden="true">stacks</span><span data-t="o_capas">Defensa en capas</span><span class="nota" id="n-capas"></span></h2>
+        <div id="ops-capas"></div>
+      </section>
+
+      <div class="ops-tabs" role="tablist" aria-label="Paneles">
+        <button type="button" role="tab" data-panel="registro" aria-selected="true"><span data-t="o_registro">Registro</span><span class="dato" data-espejo="n-registro"></span></button>
+        <button type="button" role="tab" data-panel="boveda" aria-selected="false"><span data-t="o_boveda">Bóveda</span><span class="dato" data-espejo="n-boveda"></span></button>
+        <button type="button" role="tab" data-panel="modelo" aria-selected="false"><span data-t="o_modelo">Modelo</span><span class="dato" data-espejo="ops-version"></span></button>
+      </div>
+
+      <section class="ops-bloque ops-boveda" aria-labelledby="t-boveda">
+        <h2 class="titulo" id="t-boveda"><span class="ms" aria-hidden="true">lock</span><span data-t="o_boveda">Bóveda</span><span class="nota" id="n-boveda"></span></h2>
+        <ol class="ops-lista" id="ops-boveda"></ol>
+      </section>
+
+      <section class="ops-bloque ops-modelo" aria-labelledby="t-modelo">
+        <h2 class="titulo" id="t-modelo"><span class="ms" aria-hidden="true">model_training</span><span data-t="o_modelo">Modelo</span><span class="dato version" id="ops-version"></span><span class="nota" id="n-modelo"></span></h2>
+        <div class="modelo">
+          <div class="modelo-curvas">
+            <div class="metricas" id="ops-metricas"></div>
+            <p class="ops-grifter" id="ops-grifter" tabindex="0" hidden></p>
+            <div class="lienzo" id="ops-curva"></div>
+          </div>
+          <div class="modelo-lado">
+            <ol class="pesos" id="ops-pesos" aria-label="Pesos de las señales"></ol>
+            <section class="colados" aria-labelledby="t-colados">
+              <h3 class="co-titulo" id="t-colados" tabindex="0"><span data-t="o_colados">Se colaron</span><span class="dato" id="n-colados"></span></h3>
+              <ol class="co-lista" id="ops-colados"></ol>
+            </section>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="vista" id="vista-vivo" data-vista="vivo" aria-label="Episodios" hidden>
+      <div class="franja" id="franja"></div>
+      <div class="carril-hueco" id="carriles" role="presentation"></div>
+      <section class="correos" aria-labelledby="t-correos">
+        <h2 class="titulo" id="t-correos"><span class="ms" aria-hidden="true">mail</span><span data-t="correos">Correos</span><span class="nota" id="n-correos"></span></h2>
+        <ul class="tabla" id="correos"></ul>
+      </section>
+    </section>
+
+    <section class="vista resultados" id="vista-resultados" data-vista="resultados" aria-label="Resultados" hidden>
+      <div class="res-cifras" id="res-cifras" role="presentation"></div>
+      <section class="res-bloque res-cobertura" id="res-cobertura"></section>
+      <section class="res-bloque res-colados" id="res-colados"></section>
+      <section class="res-bloque res-bench" id="res-bench"></section>
+      <section class="res-bloque res-segutil" id="res-segutil"></section>
+      <section class="res-bloque res-idiomas" id="res-idiomas"></section>
+      <section class="res-bloque res-reales" id="res-reales"></section>
+      <section class="res-bloque res-atacante" id="res-atacante"></section>
+      <section class="res-bloque res-duelo" id="res-duelo"></section>
+      <section class="res-bloque res-clasif" id="res-clasif"></section>
+    </section>
+
+    <section class="vista duelo" id="vista-duelo" data-vista="duelo" aria-label="Duelo" hidden>
+      <div class="duelo-franja" id="duelo-franja"></div>
+      <section class="du-bloque du-congelado" aria-labelledby="t-du-congelado">
+        <h2 class="titulo" id="t-du-congelado" tabindex="0"><span class="ms" aria-hidden="true">ac_unit</span><span data-t="du_congelado">Escudo congelado</span><span class="nota" id="n-du-congelado"></span></h2>
+        <ol class="du-leyenda" id="du-ley-congelado"></ol>
+        <div class="lienzo" id="du-lienzo-congelado"></div>
+      </section>
+      <section class="du-bloque du-aprende" aria-labelledby="t-du-aprende">
+        <h2 class="titulo" id="t-du-aprende" tabindex="0"><span class="ms" aria-hidden="true">model_training</span><span data-t="du_aprende">Escudo que aprende</span><span class="nota" id="n-du-aprende"></span></h2>
+        <ol class="du-leyenda" id="du-ley-aprende"></ol>
+        <div class="lienzo" id="du-lienzo-aprende"></div>
+      </section>
+      <p class="du-ayuda" id="du-ayuda"></p>
+    </section>
+
+    <section class="vista instalar" id="vista-instalar" data-vista="instalar" aria-label="Instalar" hidden></section>
+
+  </main>
+
+  <aside class="panel-lateral" id="panel-correo" role="dialog" aria-modal="false" aria-labelledby="pc-asunto" hidden></aside>
+  <div class="ayuda" id="ayuda" role="tooltip" hidden></div>
+  <div class="borde-alerta" id="borde-alerta" aria-hidden="true" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+  <script src="episodios/episodios.js"></script>
+  <script src="resultados.js"></script>
+  <script src="graficos.js"></script>
+  <script src="app.js"></script>
+  <script src="vivo_simulado.js"></script>
+  <script src="duelo.js"></script>
+  <script src="operaciones.js"></script>
+  <script src="resultados_vista.js"></script>
+  <script src="instalar.js"></script>
+</body>
+</html>
