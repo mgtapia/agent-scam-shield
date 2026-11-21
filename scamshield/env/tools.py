@@ -61,9 +61,16 @@ class Herramientas:
         return self.w.leer(MCP, desc)
 
     # --- Acciones sensibles ---
-    def pagar(self, destinatario: str, cuenta: str, monto: int, concepto: str = "") -> str:
-        return self._sensible("pagar", {"destinatario": destinatario, "cuenta": cuenta,
-                                        "monto": int(monto), "concepto": concepto})
+    def pagar(self, destinatario: str, cuenta: str, monto: int, concepto: str = "", moneda: str = "",
+              producto: str = "", cantidad: Optional[int] = None, recurrencia: str = "",
+              cargos_extra: Optional[list[str]] = None) -> str:
+        """Los campos de una compra (moneda, producto, cantidad, recurrencia, cargos extra) son opcionales y
+        solo entran a los argumentos si vienen: así el mandato del dueño (#103) los compara con lo aprobado."""
+        args = {"destinatario": destinatario, "cuenta": cuenta, "monto": int(monto), "concepto": concepto}
+        compra = {"moneda": moneda, "producto": producto, "cantidad": cantidad, "recurrencia": recurrencia,
+                  "cargos_extra": list(cargos_extra) if cargos_extra else None}
+        args.update({k: v for k, v in compra.items() if v not in (None, "")})
+        return self._sensible("pagar", args)
 
     def transferir(self, cuenta: str, monto: int, motivo: str = "", beneficiario: str = "") -> str:
         return self._sensible("transferir", {"cuenta": cuenta, "monto": int(monto), "motivo": motivo,

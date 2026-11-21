@@ -89,6 +89,9 @@ class World:
     # Claves de `datos_dueno` que son credenciales (clave, código, token, API key), además de las que
     # `claves_de_credencial` reconoce por el nombre.
     credenciales: list[str] = field(default_factory=list)
+    # Lo que el dueño aprobó para un pago (producto, cantidad, monto máximo, moneda, beneficiario, recurrencia):
+    # el mandato de `defenses/mandato.py`. Vacío: sin mandato.
+    mandato: dict[str, Any] = field(default_factory=dict)
     registro: list[Accion] = field(default_factory=list)
     # Textos que el agente ya leyó, con su origen: lista de (origen, texto).
     leidos: list[tuple[str, str]] = field(default_factory=list)
@@ -132,6 +135,7 @@ class World:
         w.titulares = {k: dict(v) for k, v in d.get("titulares", {}).items()}
         w.saldo = int(d["saldo"])
         w.credenciales = list(d.get("credenciales", []))
+        w.mandato = dict(d.get("mandato") or {})
         w.registro = [Accion(**a) for a in d["registro"]]
         w.leidos = [(o, t) for o, t in d["leidos"]]
         return w
@@ -150,6 +154,7 @@ class World:
             titulares={str(k): dict(v) for k, v in (esc.get("titulares") or {}).items()},
             saldo=int(esc.get("saldo", 1_000_000)),
             credenciales=[str(k) for k in (esc.get("credenciales") or [])],
+            mandato=dict(esc.get("mandato") or {}),
         )
 
 

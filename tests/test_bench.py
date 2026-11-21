@@ -243,7 +243,11 @@ def test_las_fuentes_llevan_url_y_version():
 
 def test_se_aplica_una_sola_regla_a_todas_las_suplantaciones():
     """Todo mecanismo de estafa que no es técnico se mapea igual: sin excepciones arbitrarias entre ellos."""
-    tecnicos = {"indirect_prompt_injection", "tool_poisoning"}
+    # Técnicos: lo que trae el contenido o la herramienta, no una identidad falsa. El MCP que cambia lo aprobado
+    # (#103) es un componente MCP malicioso: ASI04 y AML.T0011.002 (exacto en el rug pull, aproximado en la orden).
+    tecnicos = {"indirect_prompt_injection", "tool_poisoning", "tool_rug_pull", "order_tampering"}
+    assert all((estandares.MAPEO[m].owasp, estandares.MAPEO[m].atlas) == ("ASI04", "AML.T0011.002")
+               for m in ("tool_rug_pull", "order_tampering"))
     # Un mecanismo con otro daño principal, con su propia técnica y su motivo en la nota.
     propios = {"industrial_espionage": ("ASI01", "AML.T0086")}
     for mecanismo, e in estandares.MAPEO.items():

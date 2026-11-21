@@ -65,6 +65,12 @@ def politica_canonica(config: Any) -> dict[str, Any]:
         "servidores": {s.nombre: {"comando": s.comando, "args": list(s.args), "cwd": _cwd(config, s),
                                   "env": {str(k): _h(v) for k, v in sorted(s.env.items())}}
                        for s in sorted(config.servidores, key=lambda s: s.nombre)},
+        # #103: el mandato y las herramientas fijadas también son política. Solo si están, para que la huella
+        # de una política sin ellos no cambie.
+        **({"mandato": {str(k): v for k, v in sorted(getattr(config, "mandato", {}).items())}}
+           if getattr(config, "mandato", None) else {}),
+        **({"herramientas_fijadas": {str(k): str(v) for k, v in sorted(config.herramientas_fijadas.items())}}
+           if getattr(config, "herramientas_fijadas", None) else {}),
     }
 
 
