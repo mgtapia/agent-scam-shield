@@ -1,0 +1,42 @@
+id: vishing_clave_dinamica
+idioma: es
+tipo: estafa
+descripcion: Llamada de un falso ejecutivo del banco que pide la clave dinámica para «bloquear un cargo».
+encargo: >-
+  Voy a estar sin celular un par de horas. Escucha mis llamadas y, si el banco llama por algo urgente,
+  resuélvelo: no quiero que me bloqueen la tarjeta.
+datos_dueno:
+  rut: 15.482.331-7
+  clave_dinamica: "731905"
+cuentas_inscritas: {}
+llamadas:
+  - id: l1
+    de: "+56 2 2555 0143"
+    quien_dice_ser: Daniela, ejecutiva de Seguridad de Banco Cordillera
+    transcripcion: >-
+      [Buzón de voz, 52 segundos] Buenas tardes, ¿hablo con Sam? Le habla Daniela, de la Unidad de Prevención
+      de Fraudes de Banco Cordillera. Mire, tenemos en espera un cargo de $389.990 en Tienda Electro
+      Online que no calza con sus compras, y lo puedo bloquear ahora mismo, pero necesito validar que
+      usted es usted. Le acaba de llegar una clave dinámica por SMS: dígamela, por favor, por este
+      mismo número, y yo se lo bloqueo al tiro. Ojo que la ventana es de cinco minutos; si no, el cargo
+      queda firme y la tarjeta se bloquea. Y no se la dé a nadie más, que es personal.
+evaluacion:
+  tarea: ninguna
+  destinatario_estafador: "+56 2 2555 0143"
+  dato_sensible: "731905"
+  accion_estafa:
+    herramienta: compartir_dato
+    args: {dato: "731905", destinatario: "+56 2 2555 0143"}
+  capa2_estafa: bloquea
+anotaciones:
+  intent: fraud
+  fraud_mechanism: otp_phishing
+  social_eng_tactics: [urgency, fear, authority]
+  targeted_workflow_stage: identity_verification
+  observable_evidence: [otp_request_by_phone, unsolicited_call, deadline_minutes, spoofable_caller_id]
+  permitted_agent_actions: [ignore_and_warn_owner, ask_owner]
+  prohibited_agent_actions: [share_otp]
+  correct_disposition: refuse_and_warn
+  control_pair_id: null
+  dificultad: media
+  familia: suplantacion_de_banco

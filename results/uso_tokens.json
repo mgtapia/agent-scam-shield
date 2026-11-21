@@ -1,0 +1,142 @@
+{
+  "desde": "2026-11-21T01:30:00Z",
+  "generado": "2026-11-21T13:24:24+00:00",
+  "filas": [
+    {
+      "fuente": "Claude Code · coordinador",
+      "modelo": "claude-opus-5-5",
+      "respuestas": 684,
+      "entrada": 1778,
+      "escritura_cache": 2635786,
+      "lectura_cache": 193469868,
+      "salida": 572978,
+      "total": 196680410,
+      "costo_lista_usd": 63.34
+    },
+    {
+      "fuente": "Claude Code · coordinador (subagentes)",
+      "modelo": "claude-opus-5-5",
+      "respuestas": 1040,
+      "entrada": 2238,
+      "escritura_cache": 5450573,
+      "lectura_cache": 287393771,
+      "salida": 1164929,
+      "total": 294011511,
+      "costo_lista_usd": 108.04
+    },
+    {
+      "fuente": "Claude Code · coordinador (subagentes)",
+      "modelo": "claude-sonnet-5-5",
+      "respuestas": 489,
+      "entrada": 1014,
+      "escritura_cache": 1920347,
+      "lectura_cache": 67583926,
+      "salida": 370159,
+      "total": 69875446,
+      "costo_lista_usd": 15.26
+    },
+    {
+      "fuente": "Claude Code · hacker",
+      "modelo": "claude-sonnet-5-5",
+      "respuestas": 292,
+      "entrada": 620,
+      "escritura_cache": 1837735,
+      "lectura_cache": 69178843,
+      "salida": 409624,
+      "total": 71426822,
+      "costo_lista_usd": 15.61
+    },
+    {
+      "fuente": "Claude Code · scam-shield",
+      "modelo": "claude-opus-5-5",
+      "respuestas": 101,
+      "entrada": 234,
+      "escritura_cache": 252663,
+      "lectura_cache": 18575579,
+      "salida": 131542,
+      "total": 18960018,
+      "costo_lista_usd": 7.61
+    },
+    {
+      "fuente": "Claude Code · scam-shield",
+      "modelo": "claude-sonnet-5-5",
+      "respuestas": 517,
+      "entrada": 1114,
+      "escritura_cache": 3955387,
+      "lectura_cache": 219747426,
+      "salida": 726138,
+      "total": 224430065,
+      "costo_lista_usd": 39.13
+    },
+    {
+      "fuente": "Claude Code · scam-shield (subagentes)",
+      "modelo": "claude-opus-5-5",
+      "respuestas": 114,
+      "entrada": 242,
+      "escritura_cache": 623619,
+      "lectura_cache": 11426346,
+      "salida": 103838,
+      "total": 12154045,
+      "costo_lista_usd": 7.48
+    },
+    {
+      "fuente": "Claude Code · scam-shield (subagentes)",
+      "modelo": "claude-sonnet-5-5",
+      "respuestas": 108,
+      "entrada": 230,
+      "escritura_cache": 900632,
+      "lectura_cache": 12087628,
+      "salida": 136863,
+      "total": 13125353,
+      "costo_lista_usd": 4.83
+    },
+    {
+      "fuente": "Inspect (benchmark, atacante y víctima)",
+      "modelo": "anthropic/claude-haiku-5-5",
+      "respuestas": 21,
+      "entrada": 2616,
+      "escritura_cache": 276354,
+      "lectura_cache": 1536343,
+      "salida": 312273,
+      "total": 2127586,
+      "costo_lista_usd": 0.21
+    },
+    {
+      "fuente": "Inspect (benchmark, atacante y víctima)",
+      "modelo": "anthropic/claude-sonnet-5-5",
+      "respuestas": 5,
+      "entrada": 720,
+      "escritura_cache": 74625,
+      "lectura_cache": 398475,
+      "salida": 60699,
+      "total": 534519,
+      "costo_lista_usd": 0.83
+    },
+    {
+      "fuente": "Inspect (benchmark, atacante y víctima)",
+      "modelo": "google/gemini-3.5-flash",
+      "respuestas": 1,
+      "entrada": 32515,
+      "escritura_cache": 0,
+      "lectura_cache": 0,
+      "salida": 7345,
+      "total": 39860,
+      "costo_lista_usd": null
+    },
+    {
+      "fuente": "Inspect (benchmark, atacante y víctima)",
+      "modelo": "groq/openai/gpt-oss-20b",
+      "respuestas": 13,
+      "entrada": 169395,
+      "escritura_cache": 0,
+      "lectura_cache": 0,
+      "salida": 51635,
+      "total": 221030,
+      "costo_lista_usd": null
+    }
+  ],
+  "total_tokens": 903586665,
+  "total_salida": 4048023,
+  "costo_lista_usd": 262.34,
+  "nota": "Costo estimado a precio de lista; las sesiones de Claude Code con suscripción no se pagan por token."
+}

@@ -1,0 +1,34 @@
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Resultados y caché de evals
+logs/
+results/raw/
+.cache/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Demo: respuestas del dueño guardadas por el servidor
+demo/etiquetas.jsonl
+
+# Grifter como proxy MCP: la configuración trae los datos del dueño y los eventos traen lo que el agente
+# intentó enviar (un RUT o un código, por ejemplo). Nunca entran al repo.
+grifter.yaml
+grifter_eventos.jsonl
+banco_sandbox.jsonl
+build/
+
+# La política aprobada por el dueño (huella de grifter.yaml): vive junto a la configuración.
+.grifter_aprobada.json

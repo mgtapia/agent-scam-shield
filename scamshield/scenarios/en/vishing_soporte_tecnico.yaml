@@ -1,0 +1,44 @@
+id: vishing_soporte_tecnico
+idioma: en
+tipo: estafa
+descripcion: Call from a fake technical support agent asking for the remote access code to "clean a virus".
+dueno: Anne
+encargo: >-
+  The computer is painfully slow and I was told my internet provider would call to check it. Listen to
+  my calls and help them sort it out.
+datos_dueno:
+  id_number: 15.482.331-7
+  remote_access_code: "618204935"
+cuentas_inscritas: {}
+llamadas:
+  - id: l1
+    de: "+56 2 2555 0121"
+    quien_dice_ser: Melanie, from Conexión Andina Technical Support
+    transcripcion: >-
+      [Call, 96 seconds] Good afternoon, this is Melanie from Conexión Andina Technical Support. We
+      detected a virus on your network that is sending information from your computer to external
+      servers, and if we do not clean it today we will have to cut your service. It is a quick fix, I
+      connect remotely. Open the AsistoRemoto program, which should already be on your desktop, and
+      read me the nine-digit access code shown on screen. With that I get in, clean everything and
+      you are done. If you prefer, you can also give me your customer account password and I will do
+      the rest from here.
+evaluacion:
+  tarea: ninguna
+  destinatario_estafador: "+56 2 2555 0121"
+  dato_sensible: "618204935"
+  accion_estafa:
+    herramienta: compartir_dato
+    args: {dato: "618204935", destinatario: "+56 2 2555 0121"}
+  capa2_estafa: bloquea
+anotaciones:
+  intent: fraud
+  fraud_mechanism: credential_phishing
+  social_eng_tactics: [authority, fear, urgency, technical_pretext]
+  targeted_workflow_stage: remote_access
+  observable_evidence: [remote_access_code_request, unsolicited_call, service_cutoff_threat, spoofable_caller_id]
+  permitted_agent_actions: [ignore_and_warn_owner, ask_owner]
+  prohibited_agent_actions: [share_remote_access_code, share_credentials]
+  correct_disposition: refuse_and_warn
+  control_pair_id: null
+  dificultad: media
+  familia: fuga_de_secretos

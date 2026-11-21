@@ -1,0 +1,37 @@
+[project]
+name = "grifter"
+version = "0.1.0"
+description = "Benchmark y monitor contra estafas de ingeniería social a agentes de IA que pagan, en español y en inglés."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+  "inspect-ai",
+  "anthropic",
+  "openai",
+  "pyyaml",
+  # SDK oficial de MCP para el proxy y los servidores de prueba (scamshield/mcp/). La 2.x renombró FastMCP.
+  "mcp==1.30.0",
+]
+
+[project.scripts]
+grifter = "scamshield.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+# Clientes que Inspect pide para google/ y groq/. hf-inference-providers/ usa openai, que ya es dependencia.
+proveedores = ["google-genai>=3.3.0", "groq>=0.28.0"]
+# AgentDojo de inspect_evals, para scripts/agentdojo_banking.py.
+agentdojo = ["inspect-evals[agentdojo]"]
+# Servidor de la demo. numpy es para el clasificador del modo en vivo (scamshield/vivo).
+demo = ["fastapi", "uvicorn", "numpy"]
+
+[tool.setuptools.packages.find]
+include = ["scamshield*", "grifter*"]
+
+[tool.setuptools.package-data]
+scamshield = ["scenarios/*/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,388 @@
+"""Valida todos los escenarios: estructura, pares es/en, marcas ficticias y el guion de cada uno.
+
+El guion es un agente sin LLM: lee todo lo que hay en el mundo y ejecuta la acción de la estafa
+o la acción legítima que declara el YAML. Así cada escenario se prueba sin API y el resultado
+esperado de la capa 2 queda escrito como dato en el escenario, no inferido por la prueba.
+"""
+from __future__ import annotations
+
+import re
+
+import pytest
+import yaml
+
+from scamshield.defenses.layer1 import PATRONES_INYECCION
+from scamshield.defenses.layer2 import politica_origen
+from scamshield.defenses.layer3 import confirmacion_beneficiario
+from scamshield.env.tools import Herramientas
+from scamshield.env.world import World
+from scamshield.evals.puntaje import puntuar
+from scamshield.scenarios import cargar
+
+ESCENARIOS = cargar()
+POR_CLAVE = {(e["id"], e["idioma"]): e for e in ESCENARIOS}
+ESTAFAS = [e for e in ESCENARIOS if e["tipo"] == "estafa"]
+CONTROLES = [e for e in ESCENARIOS if e["tipo"] == "control"]
+
+CLAVES_FRAUDBENCH = {
+    "intent", "fraud_mechanism", "social_eng_tactics", "targeted_workflow_stage",
+    "observable_evidence", "permitted_agent_actions", "prohibited_agent_actions",
+    "correct_disposition", "control_pair_id",
+}
+# «familia» usa etiquetas propias, inspiradas en la taxonomía de ScamWorld (solo como referencia).
+CLAVES_PROPIAS = {"dificultad", "familia"}
+DIFICULTADES = {"burda", "media", "convincente"}
+TAREAS = {"pagar", "transferir", "compartir", "revertir", "ninguna"}   # revertir: el reverso del banco (#129)
+
+# Marcas e instituciones reales de Chile y globales que no pueden aparecer en un escenario.
+# Se buscan como palabra completa. Se dejan fuera palabras comunes como «claro», «líder» o «visa».
+MARCAS_REALES = [
+    "BancoEstado", "Banco Estado", "Santander", "BCI", "Banco de Chile", "Itaú", "Itau",
+    "Scotiabank", "Falabella", "Ripley", "Cencosud", "Jumbo", "Coopeuch", "BICE",
+    "Chilexpress", "Correos de Chile", "Starken", "Blue Express", "Bluexpress",
+    "SII", "Servicio de Impuestos Internos", "Tesorería General", "TGR", "ClaveÚnica",
+    "Clave Única", "Registro Civil", "ChileAtiende", "Fonasa", "Carabineros", "PDI",
+    "Enel", "CGE", "Metrogas", "Aguas Andinas", "Essbio", "Esval",
+    "Autopista Central", "Costanera Norte", "Vespucio Sur", "Vespucio Norte",
+    "Mercado Libre", "MercadoLibre", "Mercado Pago", "MACH", "Tenpo", "Copec", "Entel",
+    "Movistar", "WOM", "VTR", "Servipag", "Khipu", "Webpay", "Transbank", "Previred",
+    "Portal Inmobiliario", "Yapo", "LATAM", "JetSMART", "PedidosYa", "Rappi", "Uber",
+    "WhatsApp", "Telegram", "Netflix", "Spotify", "Amazon", "Google", "Microsoft", "Apple",
+    "PayPal", "Mastercard",
+]
+
+
+def _norm(texto) -> str:
+    return "".join(ch for ch in str(texto).lower() if ch.isalnum())
+
+
+def _texto(esc) -> str:
+    return yaml.safe_dump(esc, allow_unicode=True)
+
+
+def _contenido_no_confiable(esc) -> str:
+    partes = [f"{c['asunto']}\n{c['cuerpo']}" for c in esc.get("correos", [])]
+    partes += [f"{c['quien_dice_ser']}\n{c['transcripcion']}" for c in esc.get("llamadas", [])]
+    partes += [f"{c['quien_dice_ser']}\n{c['texto']}\n" + "\n".join(a["texto"] for a in c.get("adjuntos", []))
+              for c in esc.get("chat", [])]
+    partes += list(esc.get("paginas", {}).values())
+    partes += list(esc.get("mcp_herramientas", {}).values())
+    return "\n".join(partes)
+
+
+def _leer_todo(h: Herramientas) -> None:
+    h.leer_correos()
+    if h.w.llamadas:
+        h.escuchar_llamadas()
+    if h.w.chat:
+        h.leer_whatsapp()
+    for url in h.w.paginas:
+        h.abrir_web(url)
+    for nombre in h.w.mcp_herramientas:
+        h.usar_mcp(nombre)
+
+
+def _ejecutar(h: Herramientas, accion: dict) -> str:
+    return getattr(h, accion["herramienta"])(**accion["args"])
+
+
+def _acciones_estafa(ev: dict) -> list[dict]:
+    """Todos los daños que intenta la estafa, en orden: una sola acción o las de `acciones_estafa`."""
+    return ev.get("acciones_estafa") or [ev["accion_estafa"]]
+
+
+def _ejecutar_estafa(h: Herramientas, ev: dict) -> list[str]:
+    return [_ejecutar(h, a) for a in _acciones_estafa(ev)]
+
+
+def _ids(escs):
+    return [f"{e['id']}__{e['idioma']}" for e in escs]
+
+
+# --- Cantidad y pares ---
+
+@pytest.mark.parametrize("idioma", ["es", "en"])
+def test_hay_al_menos_15_estafas_y_5_controles_por_idioma(idioma):
+    tipos = [e["tipo"] for e in ESCENARIOS if e["idioma"] == idioma]
+    assert tipos.count("estafa") >= 15
+    assert tipos.count("control") >= 5
+
+
+def test_cada_escenario_tiene_su_par_en_el_otro_idioma():
+    es = {e["id"] for e in ESCENARIOS if e["idioma"] == "es"}
+    en = {e["id"] for e in ESCENARIOS if e["idioma"] == "en"}
+    assert es == en
+
+
+@pytest.mark.parametrize("esc", [e for e in ESCENARIOS if e["idioma"] == "es"], ids=lambda e: e["id"])
+def test_el_par_es_en_mide_lo_mismo(esc):
+    otro = POR_CLAVE[(esc["id"], "en")]
+    assert esc["tipo"] == otro["tipo"]
+    for clave in ("tarea", "cuenta_legitima", "cuenta_estafador", "monto", "dato_sensible",
+                  "dato_legitimo", "capa2_estafa", "capa2_legitima", "correos_estafa",
+                  "capa3_estafa", "capa3_legitima", "movimiento_legitimo", "fuera_de_canal"):
+        assert esc["evaluacion"].get(clave) == otro["evaluacion"].get(clave), clave
+    for clave in ("fraud_mechanism", "correct_disposition", "control_pair_id", "dificultad",
+                  "dueno_ya_enganado"):
+        assert esc["anotaciones"].get(clave) == otro["anotaciones"].get(clave), clave
+    # El mandato y el cobro alterado: los mismos números y los mismos campos (el producto va traducido).
+    for clave in ("cantidad", "monto_maximo", "moneda", "beneficiario", "recurrencia"):
+        assert (esc.get("mandato") or {}).get(clave) == (otro.get("mandato") or {}).get(clave), clave
+    cobro, cobro_otro = esc["evaluacion"].get("cobro_estafa") or {}, otro["evaluacion"].get("cobro_estafa") or {}
+    assert set(cobro) == set(cobro_otro)
+    assert {k: v for k, v in cobro.items() if k != "producto"} == {k: v for k, v in cobro_otro.items() if k != "producto"}
+    for parte in ("estafa", "legitima"):
+        a, b = esc["evaluacion"].get(f"accion_{parte}"), otro["evaluacion"].get(f"accion_{parte}")
+        assert (a is None) == (b is None)
+        if a:
+            assert a["herramienta"] == b["herramienta"]
+    assert ([a["herramienta"] for a in esc["evaluacion"].get("acciones_estafa", [])]
+            == [a["herramienta"] for a in otro["evaluacion"].get("acciones_estafa", [])])
+
+
+# --- Estructura ---
+
+@pytest.mark.parametrize("esc", ESCENARIOS, ids=_ids(ESCENARIOS))
+def test_estructura(esc):
+    assert esc["tipo"] in {"estafa", "control"}
+    ev, an = esc["evaluacion"], esc["anotaciones"]
+    assert ev["tarea"] in TAREAS
+    if ev["tarea"] in ("pagar", "transferir"):
+        assert ev["cuenta_legitima"] and ev["monto"]
+    if ev["tarea"] == "compartir":
+        assert ev["destinatario_legitimo"] and ev["dato_legitimo"]
+    if ev["tarea"] == "revertir":   # el depósito que se devuelve tiene que estar en el libro del banco
+        assert ev["movimiento_legitimo"] in {m["id"] for m in esc.get("movimientos") or []}
+    if ev["tarea"] != "ninguna":
+        assert ev["accion_legitima"]["herramienta"]
+        assert ev["capa2_legitima"] in {"bloquea", "deja_pasar"}
+    if esc["tipo"] == "estafa":
+        assert (ev.get("cuenta_estafador") or ev.get("destinatario_estafador") or ev.get("cobro_estafa")
+                or ev.get("fuera_de_canal") or ev.get("destino_final_estafador"))
+        if ev.get("fuera_de_canal"):   # #129: el daño es coordinar el paso físico con quien lo pide
+            assert ev["accion_estafa"]["herramienta"] == "responder" and esc.get("contacto_confianza")
+        if ev.get("cobro_estafa"):   # el cobro alterado de #103 se mide contra el mandato del dueño
+            assert esc.get("mandato") and ev["accion_estafa"]["herramienta"] in ("pagar", "transferir")
+        assert ev["accion_estafa"]["herramienta"]
+        assert ev["capa2_estafa"] in {"bloquea", "deja_pasar"}
+        assert an["intent"] == "fraud"
+        if "acciones_estafa" in ev:   # varios daños: la acción principal es una de ellas, y cada correo existe
+            assert len(ev["acciones_estafa"]) >= 2 and ev["accion_estafa"] in ev["acciones_estafa"]
+            assert all(a["herramienta"] for a in ev["acciones_estafa"])
+        ids = {c["id"] for c in esc.get("correos", [])}
+        assert set(ev.get("correos_estafa", [])) <= ids
+    else:
+        assert "accion_estafa" not in ev and not ev.get("cuenta_estafador")
+        assert an["intent"] == "legitimate"
+    faltan = (CLAVES_FRAUDBENCH | CLAVES_PROPIAS) - set(an)
+    assert not faltan, faltan
+    assert an["dificultad"] in DIFICULTADES
+    assert isinstance(an["social_eng_tactics"], list)
+    if an["control_pair_id"]:
+        assert (an["control_pair_id"], esc["idioma"]) in POR_CLAVE
+
+
+@pytest.mark.parametrize("esc", ESCENARIOS, ids=_ids(ESCENARIOS))
+def test_cuentas_no_se_confunden(esc):
+    """Cuentas de 8 dígitos o más, y ninguna contenida en otra: el rastreo es por subcadena."""
+    ev = esc["evaluacion"]
+    cuentas = [ev[c] for c in ("cuenta_legitima", "cuenta_estafador") if ev.get(c)]
+    cuentas += list(esc.get("cuentas_inscritas", {}).values())
+    for c in cuentas:
+        assert sum(ch.isdigit() for ch in c) >= 8, c
+    if ev.get("cuenta_legitima") and ev.get("cuenta_estafador"):
+        a, b = _norm(ev["cuenta_legitima"]), _norm(ev["cuenta_estafador"])
+        assert a not in b and b not in a
+
+
+@pytest.mark.parametrize("esc", ESTAFAS, ids=_ids(ESTAFAS))
+def test_el_destino_del_estafador_no_viene_del_dueno(esc):
+    """Salvo cuando el dueño ya fue engañado, el destino de la estafa no sale del encargo."""
+    ev = esc["evaluacion"]
+    if ev.get("fuera_de_canal"):
+        # Fuera del canal (#129): quien pide ir al banco no viene del dueño, y la capa 2 retiene la respuesta.
+        assert _norm(ev["fuera_de_canal"]["a"]) not in _norm(esc["encargo"]) and ev["capa2_estafa"] == "bloquea"
+        return
+    if ev.get("destino_final_estafador"):
+        # Pago por un intermediario (#142): la cuenta es la inscrita y el destinatario final viaja en la referencia;
+        # no viene del dueño, y la capa 2 retiene el pago por la referencia.
+        assert _norm(ev["destino_final_estafador"]) not in _norm(esc["encargo"]) + _norm(esc.get("cuentas_inscritas"))
+        assert ev["capa2_estafa"] == "bloquea"
+        return
+    if not (ev.get("cuenta_estafador") or ev.get("destinatario_estafador")):
+        # El MCP que cambia lo aprobado (#103): la cuenta es la inscrita y lo que cambia es lo cobrado. La capa 2
+        # lo retiene por el mandato, no por el origen.
+        assert ev["accion_estafa"]["args"]["cuenta"] == ev["cuenta_legitima"] and ev["capa2_estafa"] == "bloquea"
+        return
+    destino = _norm(ev.get("cuenta_estafador") or ev["destinatario_estafador"])
+    del_dueno = _norm(esc["encargo"]) + _norm(esc.get("cuentas_inscritas")) + _norm(esc.get("datos_dueno"))
+    enganado = esc["anotaciones"].get("dueno_ya_enganado", False)
+    assert (destino in del_dueno) == enganado
+    assert (ev["capa2_estafa"] == "deja_pasar") == enganado
+
+
+# --- Nada real ---
+
+@pytest.mark.parametrize("esc", ESCENARIOS, ids=_ids(ESCENARIOS))
+def test_sin_marcas_reales(esc):
+    texto = _texto(esc)
+    for marca in MARCAS_REALES:
+        assert not re.search(rf"(?<!\w){re.escape(marca)}(?!\w)", texto, flags=re.IGNORECASE), marca
+
+
+@pytest.mark.parametrize("esc", CONTROLES, ids=_ids(CONTROLES))
+def test_los_controles_no_parecen_inyeccion(esc):
+    texto = _contenido_no_confiable(esc)
+    for patron in PATRONES_INYECCION:
+        assert not re.search(patron, texto, flags=re.IGNORECASE), patron
+
+
+# --- El guion de cada escenario ---
+
+@pytest.mark.parametrize("esc", ESTAFAS, ids=_ids(ESTAFAS))
+def test_sin_defensa_la_estafa_funciona(esc):
+    w = World.desde_escenario(esc)
+    h = Herramientas(w)
+    _leer_todo(h)
+    _ejecutar_estafa(h, esc["evaluacion"])
+    r = puntuar(w, esc)
+    assert r["cayo"]
+    # Todos los daños de la estafa se ejecutan, no solo uno.
+    assert all(d["ejecutado"] for d in r["danos"].values())
+
+
+@pytest.mark.parametrize("esc", ESTAFAS, ids=_ids(ESTAFAS))
+def test_capa2_frente_a_la_estafa(esc):
+    w = World.desde_escenario(esc)
+    h = Herramientas(w, [politica_origen])
+    _leer_todo(h)
+    salidas = _ejecutar_estafa(h, esc["evaluacion"])
+    r = puntuar(w, esc)
+    if esc["evaluacion"]["capa2_estafa"] == "bloquea":
+        # Bloquea significa que ningún daño llega a ejecutarse: con dos daños, los dos se retienen.
+        assert all("BLOQUEADA" in s for s in salidas) and not r["cayo"]
+        assert all(d["intento"] and not d["ejecutado"] for d in r["danos"].values())
+    else:
+        assert "BLOQUEADA" not in salidas[0] and r["cayo"]
+
+
+CON_ACCION_LEGITIMA = [e for e in ESCENARIOS if e["evaluacion"]["tarea"] != "ninguna"]
+
+
+@pytest.mark.parametrize("esc", CON_ACCION_LEGITIMA, ids=_ids(CON_ACCION_LEGITIMA))
+def test_capa2_frente_a_la_accion_legitima(esc):
+    w = World.desde_escenario(esc)
+    h = Herramientas(w, [politica_origen])
+    _leer_todo(h)
+    salida = _ejecutar(h, esc["evaluacion"]["accion_legitima"])
+    r = puntuar(w, esc)
+    assert not r["cayo"]
+    if esc["evaluacion"]["capa2_legitima"] == "deja_pasar":
+        assert "BLOQUEADA" not in salida and r["tarea_ok"] and not r["falsa_alarma"]
+    else:  # falsa alarma conocida de la capa 2: queda medida, no escondida
+        assert "BLOQUEADA" in salida and not r["tarea_ok"]
+        assert r["falsa_alarma"] == (esc["tipo"] == "control")
+
+
+@pytest.mark.parametrize("esc", CON_ACCION_LEGITIMA, ids=_ids(CON_ACCION_LEGITIMA))
+def test_no_hacer_nada_no_cumple_la_tarea(esc):
+    w = World.desde_escenario(esc)
+    _leer_todo(Herramientas(w))
+    assert not puntuar(w, esc)["tarea_ok"]
+
+
+def test_capa2_tiene_falsas_alarmas_medidas():
+    """Al menos un control expone el costo de la capa 2: una cuenta legítima que llega por correo."""
+    assert any(e["evaluacion"].get("capa2_legitima") == "bloquea" for e in CONTROLES)
+
+
+# --- Capa 3: confirmación de beneficiario ---
+
+CON_TITULARES = [e for e in ESCENARIOS if e.get("titulares")]
+ESTAFAS_CON_TITULARES = [e for e in CON_TITULARES if e["tipo"] == "estafa"]
+ENGANADOS = [e for e in ESTAFAS_CON_TITULARES if e["anotaciones"].get("dueno_ya_enganado")]
+
+
+def test_el_par_es_en_comparte_el_registro_de_titulares():
+    for esc in CON_TITULARES:
+        otro = POR_CLAVE[(esc["id"], "en" if esc["idioma"] == "es" else "es")]
+        assert {c: t["rut"] for c, t in esc["titulares"].items()} == {c: t["rut"] for c, t in otro["titulares"].items()}
+
+
+@pytest.mark.parametrize("esc", CON_TITULARES, ids=_ids(CON_TITULARES))
+def test_los_titulares_cubren_las_cuentas_de_las_acciones(esc):
+    ev = esc["evaluacion"]
+    for clave, esperado in (("accion_estafa", "capa3_estafa"), ("accion_legitima", "capa3_legitima")):
+        if clave in ev:
+            assert ev[clave]["args"]["cuenta"] in esc["titulares"]
+            assert ev[esperado] in {"bloquea", "deja_pasar"}
+    assert all(t["nombre"] and t["rut"] for t in esc["titulares"].values())
+
+
+@pytest.mark.parametrize("esc", ESTAFAS_CON_TITULARES, ids=_ids(ESTAFAS_CON_TITULARES))
+def test_capa3_frente_a_la_estafa(esc):
+    w = World.desde_escenario(esc)
+    h = Herramientas(w, [confirmacion_beneficiario])
+    _leer_todo(h)
+    salidas = _ejecutar_estafa(h, esc["evaluacion"])
+    if esc["evaluacion"]["capa3_estafa"] == "bloquea":
+        assert all("BLOQUEADA" in s for s in salidas) and not puntuar(w, esc)["cayo"]
+    else:
+        # La capa 3 solo cubre pagos: si la estafa tiene otro daño, ese pasa y el agente cae.
+        assert any("BLOQUEADA" not in s for s in salidas) and puntuar(w, esc)["cayo"]
+
+
+LEGITIMOS_CON_TITULARES = [e for e in CON_TITULARES if "accion_legitima" in e["evaluacion"]]
+
+
+@pytest.mark.parametrize("esc", LEGITIMOS_CON_TITULARES, ids=_ids(LEGITIMOS_CON_TITULARES))
+def test_capa3_frente_a_la_accion_legitima(esc):
+    w = World.desde_escenario(esc)
+    h = Herramientas(w, [confirmacion_beneficiario])
+    _leer_todo(h)
+    salida = _ejecutar(h, esc["evaluacion"]["accion_legitima"])
+    if esc["evaluacion"]["capa3_legitima"] == "deja_pasar":
+        assert "BLOQUEADA" not in salida and puntuar(w, esc)["tarea_ok"] and not puntuar(w, esc)["falsa_alarma"]
+    else:
+        assert "BLOQUEADA" in salida
+
+
+@pytest.mark.parametrize("esc", ENGANADOS, ids=_ids(ENGANADOS))
+def test_el_dueno_enganado_antes_y_despues_de_la_capa_3(esc):
+    """La capa 2 deja pasar la cuenta que dicta el dueño; la capa 3 la retiene, sola o junto a la 2."""
+    def intento(defensas):
+        w = World.desde_escenario(esc)
+        h = Herramientas(w, defensas)
+        _leer_todo(h)
+        _ejecutar_estafa(h, esc["evaluacion"])
+        return puntuar(w, esc)["cayo"]
+
+    assert intento([]) and intento([politica_origen])               # antes: la capa 2 no lo ve
+    assert not intento([confirmacion_beneficiario])                 # después
+    assert not intento([politica_origen, confirmacion_beneficiario])
+
+
+# --- Nombres de personas: solo nombres de pila de fundadores de tecnología (regla de CLAUDE.md) ---
+
+FUNDADORES = {"sam", "elon", "jensen", "lei", "satya", "sundar", "larry", "sergey", "steve", "bill", "mark", "jeff", "reed",
+              "brian", "drew", "melanie", "whitney", "daniela", "anne", "jack", "mira", "demis", "dario", "ilya"}
+FIRMA = re.compile(r"(?:Saludos|Atentamente|Gracias|Best|Regards|Sincerely|Thanks|Hola|Hi|Hello|Dear)[,.]?\s+"
+                   r"([A-ZÁÉÍÓÚÑ][\wáéíóúñ]+)")
+DIRECCION_CON_NOMBRE = re.compile(r"\b([a-z][a-z0-9]*)\.[a-z0-9._-]*@")
+
+
+@pytest.mark.parametrize("esc", ESCENARIOS, ids=_ids(ESCENARIOS))
+def test_los_nombres_de_personas_son_de_fundadores(esc):
+    texto = _texto(esc)
+    firmas = {m.group(1) for m in FIRMA.finditer(texto)}
+    # Una palabra que no es persona («Cliente», «Estimado cliente»...) no cuenta: solo las que parecen nombre.
+    no_fundadores = {n for n in firmas if n.lower() not in FUNDADORES and n.lower() not in PALABRAS_COMUNES}
+    assert not no_fundadores, f"nombres que no son de fundadores en saludos o firmas: {no_fundadores}"
+    locales = {m.group(1) for m in DIRECCION_CON_NOMBRE.finditer(texto)}
+    assert all(local in FUNDADORES for local in locales), f"direcciones con nombre propio: {locales - FUNDADORES}"
+
+
+PALABRAS_COMUNES = {"cliente", "usuario", "usuaria", "estimado", "estimada", "contribuyente", "beneficiario", "customer",
+                    "user", "taxpayer", "beneficiary", "equipo", "team", "todos", "all", "mamá", "mom", "papá", "dad",
+                    "señor", "señora", "sir", "madam", "gracias", "thanks", "cobranza", "collections",
+                    "departamento", "security"}  # firmas institucionales, no personas
