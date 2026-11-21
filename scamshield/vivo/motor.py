@@ -30,6 +30,7 @@ from .lectura import tramos
 
 EVENTOS_GUARDADOS = 2000
 VELOCIDADES = (1, 2, 4)
+IDIOMAS = {"es": ("es",), "en": ("en",), "ambos": ("es", "en")}
 
 
 class Motor:
@@ -52,6 +53,8 @@ class Motor:
         self.totales = {"correos": 0, "estafas": 0, "pagos_ejecutados": 0, "retenidos": 0,
                         "escalados": 0}
         self.modelo = self.clasificador.evento_modelo()
+        self.historial_modelo: deque[dict[str, Any]] = deque(maxlen=50)
+        self.historial_bloqueos: deque[dict[str, Any]] = deque(maxlen=200)
         self._eventos: deque[tuple[int, dict[str, Any]]] = deque(maxlen=EVENTOS_GUARDADOS)
         self._seq = 0
         self._candado = threading.Lock()
@@ -191,6 +194,12 @@ class Motor:
 
     def _actualizar(self, ev: dict[str, Any]) -> None:
         tipo = ev["tipo"]
+        antes = dict(self.bloqueos_por_capa)
+        self._actualizar_tipo(ev, tipo)
+        if self.bloqueos_por_capa != antes:
+            self.historial_bloqueos.append({"ts": ev["ts"], **self.bloqueos_por_capa})
+
+    def _actualizar_tipo(self, ev: dict[str, Any], tipo: str) -> None:
         if tipo == "agente_estado":
             self.agentes[ev["agente"]] = {k: ev[k] for k in ("agente", "estado", "tarea", "ts")}
         elif tipo == "correo_nuevo":
@@ -223,11 +232,35 @@ class Motor:
                 self.totales["pagos_ejecutados"] += 1
         elif tipo == "modelo":
             self.modelo = ev
+            self.historial_modelo.append(ev)
 
     def siguiente(self) -> tuple[float, dict[str, Any]]:
         """El próximo paso del generador, publicado. Devuelve la espera que tenía y el evento."""
         espera, ev = next(self._pasos)
         return espera, self.publicar(ev)
+
+    def precalentar(self, correos: int = 45, segundos_por_correo: float = 4.0) -> int:
+        """Corre el mismo motor sin dormir hasta procesar unos correos, para no partir en frío.
+
+        Es la misma simulación con las mismas defensas, solo que más rápida: el modelo ya sale
+        con versión y métricas, y la bóveda con indicadores. Los ts quedan en el pasado reciente,
+        como si el centro llevara unos minutos andando. Termina al cierre de un episodio.
+        """
+        reloj_real = self.reloj
+        virtual = [reloj_real() - correos * segundos_por_correo]
+        self.reloj = lambda: min(virtual[0], reloj_real())
+        try:
+            vistos = 0
+            while True:
+                espera, ev = next(self._pasos)
+                virtual[0] += espera
+                self.publicar(ev)
+                if ev["tipo"] == "correo_nuevo":
+                    vistos += 1
+                if vistos >= correos and ev["tipo"] == "agente_estado" and ev["estado"] == "esperando":
+                    return vistos
+        finally:
+            self.reloj = reloj_real
 
     def avanzar(self, n: int) -> list[dict[str, Any]]:
         """Publica `n` eventos sin dormir (para pruebas)."""
@@ -245,6 +278,9 @@ class Motor:
                 "agentes": [dict(v) for v in self.agentes.values()],
                 "correos": [dict(f) for f in self.correos],
                 "bloqueos_por_capa": dict(self.bloqueos_por_capa),
+                "historial_modelo": [dict(e) for e in self.historial_modelo],
+                "historial_bloqueos": [dict(e) for e in self.historial_bloqueos],
+                "idioma": self.idioma,
                 "totales": dict(self.totales),
             }
 
@@ -262,15 +298,23 @@ class Motor:
             self._pausa.set()
         elif accion == "seguir":
             self._pausa.clear()
+        elif accion == "idioma":
+            if valor not in IDIOMAS:
+                raise ValueError(f"idioma debe ser uno de {sorted(IDIOMAS)}")
+            self.flujo.activos = IDIOMAS[valor]
         elif accion == "velocidad":
             v = int(valor)
             if v not in VELOCIDADES:
                 raise ValueError(f"velocidad debe ser una de {VELOCIDADES}")
             self.velocidad = v
         else:
-            raise ValueError("accion debe ser pausa, seguir o velocidad")
+            raise ValueError("accion debe ser pausa, seguir, velocidad o idioma")
         self._despertar.set()
-        return {"pausa": self._pausa.is_set(), "velocidad": self.velocidad}
+        return {"pausa": self._pausa.is_set(), "velocidad": self.velocidad, "idioma": self.idioma}
+
+    @property
+    def idioma(self) -> str:
+        return next((k for k, v in IDIOMAS.items() if v == tuple(self.flujo.activos)), "es")
 
     def iniciar(self) -> None:
         with self._candado:
@@ -314,5 +358,6 @@ def motor_global() -> Motor:
     with _candado_global:
         if _motor is None:
             _motor = Motor(semilla=int(time.time()) % 10_000)
+            _motor.precalentar()
         _motor.iniciar()
         return _motor

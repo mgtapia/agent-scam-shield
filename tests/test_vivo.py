@@ -184,4 +184,35 @@ def test_rutas_del_servidor():
     assert cliente.post("/api/vivo/control", json={"accion": "pausa"}).json()["pausa"] is True
     assert cliente.post("/api/vivo/control", json={"accion": "velocidad", "valor": 3}).status_code == 422
     assert cliente.get("/api/salud").json()["ok"] is True
+    cors = cliente.get("/api/vivo/estado", headers={"Origin": "http://127.0.0.1:8769"})
+    assert cors.headers["access-control-allow-origin"] == "http://127.0.0.1:8769"
+    ajeno = cliente.get("/api/vivo/estado", headers={"Origin": "https://ejemplo.cl"})
+    assert "access-control-allow-origin" not in ajeno.headers
+    assert cliente.post("/api/vivo/control", json={"accion": "idioma", "valor": "en"}).json()["idioma"] == "en"
     motor._motor = None
+
+
+def test_el_flujo_sale_en_espanol_por_defecto_y_el_ingles_se_pide():
+    m = _motor()
+    idiomas = {c.escenario["idioma"] for _ in range(40) for c in m.flujo.episodio()}
+    assert idiomas == {"es"}
+    m.control("idioma", "en")
+    assert {c.escenario["idioma"] for _ in range(20) for c in m.flujo.episodio()} == {"en"}
+    with pytest.raises(ValueError):
+        m.control("idioma", "fr")
+
+
+def test_el_precalentamiento_deja_modelo_boveda_e_historial():
+    ahora = [1_000_000.0]
+    m = Motor(semilla=11, reloj=lambda: ahora[0], flujo=Flujo(semilla=11))
+    vistos = m.precalentar(correos=40)
+    foto = m.foto()
+    assert vistos >= 40 and foto["totales"]["correos"] == vistos
+    assert foto["modelo"]["version"] != "1.0.0" and foto["modelo"]["ejemplos"] > 0
+    assert len(foto["boveda"]) > 0
+    assert foto["historial_modelo"][0]["version"] == "1.0.0"
+    assert foto["historial_modelo"][-1] == foto["modelo"]
+    assert foto["historial_bloqueos"] and set(foto["historial_bloqueos"][-1]) == {"ts", "1", "2", "boveda"}
+    # Los ts quedan en el pasado reciente y en orden, nunca en el futuro.
+    ts = [e["ts"] for _, e in m.eventos_desde(0)]
+    assert ts == sorted(ts) and ts[-1] <= ahora[0] and ts[0] < ahora[0] - 60

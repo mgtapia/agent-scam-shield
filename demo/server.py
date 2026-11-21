@@ -12,7 +12,7 @@ Rutas:
     POST /api/alertas           pasa la alerta a notificar() (punto de enchufe para Telegram)
     GET  /api/salud             para comprobar que está arriba
     GET  /api/vivo              Server-Sent Events del modo «Centro de operaciones» (scamshield/vivo)
-    POST /api/vivo/control      {"accion": "pausa" | "seguir" | "velocidad", "valor": 1|2|4}
+    POST /api/vivo/control      {"accion": "pausa" | "seguir" | "velocidad" | "idioma", "valor": 1|2|4 | "es"|"en"|"ambos"}
     GET  /api/vivo/estado       foto completa: bóveda, modelo, agentes y últimos 50 correos
 """
 from __future__ import annotations
@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -36,6 +37,9 @@ ETIQUETAS = DEMO / "etiquetas.jsonl"
 ELECCIONES = {"pagar_inscrita", "no_pagar", "pagar_igual"}
 
 app = FastAPI(title="agent-scam-shield demo")
+# La interfaz puede correr en otro puerto local (por ejemplo, en su propio worktree): solo localhost.
+app.add_middleware(CORSMiddleware, allow_origin_regex=r"https?://(127\.0\.0\.1|localhost)(:\d+)?",
+                   allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
 _candado = threading.Lock()
 
 
@@ -64,10 +68,15 @@ def recibir_alerta(alerta: dict[str, Any] = Body(...)) -> dict[str, Any]:
 # --- Modo «Centro de operaciones» en vivo -------------------------------------------------------
 # Agentes y correos simulados; capa 1, capa 2, bóveda y clasificador reales (scamshield/vivo).
 @app.get("/api/vivo")
-async def vivo(request: Request) -> StreamingResponse:
+async def vivo(request: Request, idioma: str | None = None) -> StreamingResponse:
     from scamshield.vivo.motor import motor_global
 
     motor = motor_global()
+    if idioma:
+        try:
+            motor.control("idioma", idioma)
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
 
     async def eventos():
         seq = motor.seq

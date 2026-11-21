@@ -205,9 +205,11 @@ class Flujo:
     """Genera episodios con variaciones desde el corpus. Determinista para una semilla dada."""
 
     def __init__(self, semilla: int = 7, idiomas: tuple[str, ...] = ("es", "en"),
-                 proporcion: Optional[dict[str, float]] = None):
+                 proporcion: Optional[dict[str, float]] = None, activos: tuple[str, ...] = ("es",)):
         self.rng = random.Random(semilla)
         self.idiomas = idiomas
+        # Idiomas que salen en el flujo. Por defecto, solo español; el inglés se pide aparte.
+        self.activos = tuple(i for i in activos if i in idiomas) or idiomas
         self.proporcion = dict(proporcion or PROPORCION)
         self._n: dict[str, int] = {}
         corpus = cargar(idiomas)
@@ -325,7 +327,9 @@ class Flujo:
                 familias = list(self.proporcion)
                 familia = rng.choices(familias, weights=[self.proporcion[f] for f in familias])[0]
             unidad = rng.choice([u for u in self.unidades if u.familia == familia])
-        idioma = idioma if idioma in unidad.escenarios else rng.choice(sorted(unidad.escenarios))
+        if idioma not in unidad.escenarios:
+            opciones = [i for i in sorted(unidad.escenarios) if i in self.activos]
+            idioma = rng.choice(opciones or sorted(unidad.escenarios))
         original = unidad.escenarios[idioma]
         nombre = _nombre_dueno(original)
         if agente is None:
@@ -393,6 +397,8 @@ class Flujo:
             if u.clave not in self.claves_evaluacion:
                 continue
             for idioma in sorted(u.escenarios):
+                if idioma not in self.activos:
+                    continue
                 for _ in range(variaciones):
                     agente = rng.choice(AGENTES)
                     salida.extend(self.episodio(agente=agente, clave=u.clave, idioma=idioma,
