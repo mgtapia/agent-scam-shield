@@ -58,7 +58,7 @@ def test_manda_el_pedido_de_pablo_con_aprobar_y_rechazar(cliente):
     assert cuerpo["to"] == canal.dueno
     texto = cuerpo["interactive"]["body"]["text"]
     assert texto.startswith("Grifter pide aprobación (demo-")
-    assert "Marta quiere pagar $650.000 a J. Contreras V." in texto and "0 de 1 aprobaciones" in texto
+    assert "Marta quiere pagar $650.000 a J. Contreras V." in texto and "1 de 2 aprobaciones: Marta ya aprobó con su código" in texto
     assert [b["reply"]["title"] for b in cuerpo["interactive"]["action"]["buttons"]] == ["Aprobar", "Rechazar"]
 
 
@@ -108,4 +108,71 @@ def test_demo_js_solo_llama_con_whatsapp_1():
     cuerpo = funcion.group(1)
     assert re.search(r'if \(params\.get\("whatsapp"\) !== "1"[^)]*\) return;', cuerpo)
     assert cuerpo.index("return;") < cuerpo.index("api/demo/alerta-en-vivo")
-    assert js.count("api/demo/alerta-en-vivo") == 1
+    # Una sola llamada que manda, y la consulta del rechazo real solo se lanza desde ahí (sondear).
+    assert js.count('fetch("api/demo/alerta-en-vivo"') == 1
+    assert js.count("sondear(") == 2   # la definición y la única llamada, dentro de avisarEnVivo
+    assert "sondear(clave)" in cuerpo
+
+
+# --- El rechazo real de Pablo: el webhook firmado de Kapso vuelve al pedido ---------------------------------------
+import hashlib  # noqa: E402
+import hmac  # noqa: E402
+import json  # noqa: E402
+
+SECRETO = "secreto-del-webhook"
+PABLO = "56912345678"
+
+
+def _entrega(numero: str, boton: str) -> tuple[bytes, dict[str, str]]:
+    cuerpo = json.dumps({"message": {"from": numero, "type": "interactive",
+                                     "interactive": {"type": "button_reply", "button_reply": {"id": boton}}}}).encode()
+    firma = hmac.new(SECRETO.encode(), cuerpo, hashlib.sha256).hexdigest()
+    return cuerpo, {"Content-Type": "application/json", "X-Webhook-Signature": firma, "X-Webhook-Event": "whatsapp.message.received"}
+
+
+@pytest.fixture
+def real(monkeypatch):
+    """Un canal real (firma, manejadores) con el envío a Kapso falso, conectado como en el arranque del servidor."""
+    reloj = [500.0]
+    canal = whatsapp.CanalWhatsApp(LLAVE, "1", PABLO, lambda e: None, SECRETO)
+    enviados = []
+    monkeypatch.setattr(canal, "enviar", lambda cuerpo: enviados.append(cuerpo) or {"messages": [{}]})
+    vivo = en_vivo.EnVivo({"GRIFTER_DEMO_CLAVE": "c"}, reloj=lambda: reloj[0])
+    vivo.usar_canal(canal)
+    monkeypatch.setattr(server, "demo_en_vivo", vivo)
+    monkeypatch.setenv(en_vivo.VARIABLE, "1")
+    c = TestClient(server.app)
+    c.app.state.whatsapp = canal   # lo que deja el arranque
+    return c, reloj, enviados
+
+
+def test_el_rechazo_firmado_de_pablo_llega_con_su_latencia(real):
+    c, reloj, enviados = real
+    id_ = c.post("/api/demo/alerta-en-vivo", json={"clave": "c"}).json()["id"]
+    estado = lambda: c.get(f"/api/demo/alerta-en-vivo/estado?id={id_}", headers={"X-Grifter-Demo-Clave": "c"})  # noqa: E731
+    assert estado().json() == {"id": id_, "estado": "esperando", "latencia_s": None}
+    reloj[0] += 2.4
+    cuerpo, cab = _entrega(PABLO, f"{id_}:re")
+    assert c.post("/api/whatsapp/webhook", content=cuerpo, headers=cab).status_code == 200
+    assert estado().json() == {"id": id_, "estado": "rechazado", "latencia_s": 2.4}
+    assert enviados[-1]["text"]["body"].startswith("Rechazaste el pago")
+
+
+def test_sin_firma_o_de_otro_numero_el_rechazo_no_cuenta(real):
+    c, _, _ = real
+    id_ = c.post("/api/demo/alerta-en-vivo", json={"clave": "c"}).json()["id"]
+    cuerpo, cab = _entrega(PABLO, f"{id_}:re")
+    assert c.post("/api/whatsapp/webhook", content=cuerpo, headers={**cab, "X-Webhook-Signature": "0" * 64}).status_code == 401
+    cuerpo, cab = _entrega("56900000000", f"{id_}:re")   # otro número
+    c.post("/api/whatsapp/webhook", content=cuerpo, headers=cab)
+    r = c.get(f"/api/demo/alerta-en-vivo/estado?id={id_}", headers={"X-Grifter-Demo-Clave": "c"})
+    assert r.json()["estado"] == "esperando"
+
+
+def test_el_estado_pide_la_clave_y_no_existe_sin_la_variable(real, monkeypatch):
+    c, _, _ = real
+    id_ = c.post("/api/demo/alerta-en-vivo", json={"clave": "c"}).json()["id"]
+    assert c.get(f"/api/demo/alerta-en-vivo/estado?id={id_}").status_code == 403
+    assert c.get("/api/demo/alerta-en-vivo/estado?id=demo-0000", headers={"X-Grifter-Demo-Clave": "c"}).status_code == 404
+    monkeypatch.delenv(en_vivo.VARIABLE)
+    assert c.get(f"/api/demo/alerta-en-vivo/estado?id={id_}", headers={"X-Grifter-Demo-Clave": "c"}).status_code == 404

@@ -12,16 +12,20 @@ Seguridad:
 - Un envío cada 30 s como máximo, para todos.
 - Las llaves de Kapso salen del entorno y nunca van a la respuesta ni a los registros: los errores dicen solo el tipo.
 
-No hay webhook público: los botones llegan al teléfono, pero lo que se toca allí no vuelve a la demo.
+El rechazo de Pablo puede ser real: si Kapso llega al servidor (un túnel público hacia /api/whatsapp/webhook, firmado
+con KAPSO_WEBHOOK_SECRET), el «Rechazar» del número del aprobador marca el pedido como rechazado, con la latencia
+medida, y la página lo consulta con GET /api/demo/alerta-en-vivo/estado. Sin túnel, la demo sigue su guion simulado.
 """
 from __future__ import annotations
 
 import hmac
+import re
 import logging
 import os
 import secrets
 import threading
 import time
+from collections import OrderedDict
 from typing import Any, Callable, Mapping, Optional
 
 from demo import whatsapp
@@ -32,19 +36,22 @@ log = logging.getLogger("scamshield.demo.en_vivo")
 VARIABLE = "GRIFTER_DEMO_WHATSAPP"
 VARIABLE_CLAVE = "GRIFTER_DEMO_CLAVE"
 INTERVALO_S = 30.0
+MAX_PEDIDOS = 20
+BOTON = re.compile(r"^(demo-[0-9a-f]{4}):(ap|re)$")
 
-# El pedido de aprobación del acto 1, en el formato de QuorumWhatsApp.notificar (alerta_whatsapp.py).
+# El pedido de aprobación del acto 1, en el formato de QuorumWhatsApp.notificar (alerta_whatsapp.py): aprobadores
+# Marta y Pablo con quórum 2; Marta ya aprobó con su código y falta Pablo.
 CUENTA, MONTO = "48-2210-7735", 650_000
 TEXTOS = {
     "es": {
         "detalle": "Marta quiere pagar $650.000 a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser su nieto.",
-        "progreso": "0 de 1 aprobaciones",
+        "progreso": "1 de 2 aprobaciones: Marta ya aprobó con su código",
         "pie": "Para aprobar, saca el código de tu digipass para el desafío {d} y escríbelo aquí.",
         "titulo": "Grifter pide aprobación ({id})", "aprobar": "Aprobar", "rechazar": "Rechazar",
     },
     "en": {
         "detalle": "Marta wants to pay $650,000 to J. Contreras V. The account came from a call from a private number claiming to be her grandson.",
-        "progreso": "0 of 1 approvals",
+        "progreso": "1 of 2 approvals: Marta already approved with her code",
         "pie": "To approve, get the code from your digipass for challenge {d} and type it here.",
         "titulo": "Grifter asks for approval ({id})", "aprobar": "Approve", "rechazar": "Reject",
     },
@@ -67,6 +74,13 @@ class EnVivo:
         self._candado = threading.Lock()
         self._ultimo: Optional[float] = None
         self._clave_de_un_uso = secrets.token_urlsafe(9)
+        self._pedidos: "OrderedDict[str, dict[str, Any]]" = OrderedDict()
+
+    def usar_canal(self, canal: Optional[Any]) -> None:
+        """El canal del servidor (el mismo del webhook): así el «Rechazar» de Pablo vuelve a este pedido."""
+        if canal is not None:
+            self._canal = canal
+            canal.agregar_manejador(self.atender)
 
     def clave(self) -> str:
         """La clave vigente: la de .env si está, o la de un solo uso de este arranque."""
@@ -103,7 +117,37 @@ class EnVivo:
         canal.enviar({"to": canal.dueno, "type": "interactive", "interactive": {
             "type": "button", "body": {"text": texto[:whatsapp.MAX_CUERPO]},
             "action": {"buttons": [{"type": "reply", "reply": {"id": i, "title": b[:whatsapp.MAX_BOTON]}} for i, b in botones]}}})
+        with self._candado:
+            self._pedidos[id_] = {"enviado": self.reloj(), "estado": "esperando", "latencia_s": None}
+            while len(self._pedidos) > MAX_PEDIDOS:
+                self._pedidos.popitem(last=False)
         return {"ok": True, "id": id_}
+
+    def atender(self, numero: str, tipo: str, valor: str) -> bool:
+        """Manejador del canal: el botón de Pablo (el número del aprobador, KAPSO_OWNER_NUMBER) sobre un pedido nuestro."""
+        m = BOTON.match(valor) if tipo == "boton" else None
+        canal = self._canal
+        if not m or canal is None or numero != getattr(canal, "dueno", None):
+            return False
+        id_, accion = m.groups()
+        with self._candado:
+            p = self._pedidos.get(id_)
+            if p is None or p["estado"] != "esperando":
+                return p is not None
+            p["estado"] = "rechazado" if accion == "re" else "aprobar"
+            p["latencia_s"] = round(self.reloj() - p["enviado"], 1)
+        try:   # como en la doble autorización: quien vota recibe la confirmación
+            canal.texto(numero, "Rechazaste el pago. No se pagó nada." if accion == "re"
+                        else "Para aprobar, escribe aquí el código de tu digipass.")
+        except whatsapp.ErrorWhatsApp as e:
+            log.warning("demo en vivo: %s", e)
+        return True
+
+    def estado(self, id_: str) -> Optional[dict[str, Any]]:
+        """Lo que la página necesita saber del pedido, sin datos sensibles."""
+        with self._candado:
+            p = self._pedidos.get(id_)
+            return None if p is None else {"id": id_, "estado": p["estado"], "latencia_s": p["latencia_s"]}
 
 
 def anunciar_clave(en_vivo: EnVivo, imprimir: Callable[[str], None] = lambda s: print(s, flush=True)) -> None:

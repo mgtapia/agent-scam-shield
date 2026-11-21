@@ -172,6 +172,8 @@ async def _vida(_app: FastAPI):
     Con GRIFTER_MCP_TOKEN o GRIFTER_MCP_PUBLICO=1, también conecta a Grifter con sus MCP de abajo para servir /mcp."""
     canal = telegram.iniciar_desde_entorno(registrar_etiqueta)
     _app.state.whatsapp = whatsapp.iniciar_desde_entorno(registrar_etiqueta)   # #116: el webhook de Kapso entra por /api/whatsapp/webhook
+    if en_vivo.activa():   # el «Rechazar» de Pablo vuelve por el mismo canal y el mismo webhook
+        demo_en_vivo.usar_canal(_app.state.whatsapp)
     try:
         async with _conector_mcp():
             yield
@@ -340,6 +342,19 @@ def alerta_en_vivo(pedido: PedidoEnVivo) -> dict[str, Any]:
     except whatsapp.ErrorWhatsApp as e:   # el mensaje dice el estado de Kapso, nunca la URL ni la llave
         log.warning("demo en vivo: %s", e)
         raise HTTPException(502, "Kapso no aceptó el envío") from None
+
+
+@app.get("/api/demo/alerta-en-vivo/estado")
+def estado_en_vivo(id: str, request: Request) -> dict[str, Any]:
+    """Si Pablo ya respondió desde su WhatsApp. La clave va en la cabecera, no en la URL."""
+    if not en_vivo.activa():
+        raise HTTPException(404, "Not Found")
+    if not demo_en_vivo.clave_valida(request.headers.get("x-grifter-demo-clave", "")):
+        raise HTTPException(403, "clave inválida")
+    e = demo_en_vivo.estado(id)
+    if e is None:
+        raise HTTPException(404, "no existe ese pedido")
+    return e
 
 
 app.add_route("/mcp", ruta_mcp, methods=["GET", "POST", "DELETE"])
