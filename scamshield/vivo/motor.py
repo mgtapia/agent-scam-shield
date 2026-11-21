@@ -25,6 +25,7 @@ from ..defenses.layer2 import politica_origen
 from ..env.world import MCP, WEB
 from .boveda import Boveda
 from .clasificador import Clasificador, rasgos
+from .duelo import Duelo
 from .flujo import AGENTES, Correo, Flujo, _destino
 from .lectura import tramos
 
@@ -35,7 +36,7 @@ IDIOMAS = {"es": ("es",), "en": ("en",), "ambos": ("es", "en")}
 
 class Motor:
     def __init__(self, semilla: int = 7, reloj: Callable[[], float] = time.time,
-                 flujo: Optional[Flujo] = None, cada: int = 6):
+                 flujo: Optional[Flujo] = None, cada: int = 6, duelo: bool = False):
         self.reloj = reloj
         self.rng = random.Random(semilla + 1)
         self.flujo = flujo or Flujo(semilla)
@@ -55,6 +56,12 @@ class Motor:
         self.modelo = self.clasificador.evento_modelo()
         self.historial_modelo: deque[dict[str, Any]] = deque(maxlen=50)
         self.historial_bloqueos: deque[dict[str, Any]] = deque(maxlen=200)
+        self.historial_duelo: deque[dict[str, Any]] = deque(maxlen=50)
+        # El duelo (un atacante que aprende contra este mismo escudo) corre entre episodio y episodio.
+        self._semilla = semilla
+        self.duelo: Optional[Duelo] = None
+        if duelo:
+            self.activar_duelo()
         self._eventos: deque[tuple[int, dict[str, Any]]] = deque(maxlen=EVENTOS_GUARDADOS)
         self._seq = 0
         self._candado = threading.Lock()
@@ -96,6 +103,20 @@ class Motor:
             yield 0.05, {"tipo": "agente_estado", "agente": a, "estado": "inactivo", "tarea": ""}
         while True:
             yield from self.episodio(self.flujo.episodio())
+            if self.duelo is not None:
+                yield from self.paso_duelo()
+
+    def activar_duelo(self) -> None:
+        """Enciende el duelo. Va después de `precalentar()`: así el arranque no corre generaciones de más."""
+        if self.duelo is None:
+            self.duelo = Duelo(self, semilla=self._semilla)
+
+    def paso_duelo(self) -> Iterator[tuple[float, dict[str, Any]]]:
+        """Una generación del duelo: su evento, y lo que el escudo aprendió (modelo nuevo, bóveda)."""
+        evento, extras = self.duelo.generacion()
+        yield 0.3, evento
+        for ev in extras:
+            yield 0.05, ev
 
     def episodio(self, correos: list[Correo]) -> Iterator[tuple[float, dict[str, Any]]]:
         """Los eventos de un episodio: lo que le pasa a un agente con los correos de un escenario."""
@@ -238,6 +259,8 @@ class Motor:
         elif tipo == "modelo":
             self.modelo = ev
             self.historial_modelo.append(ev)
+        elif tipo == "duelo":
+            self.historial_duelo.append(ev)
 
     def siguiente(self) -> tuple[float, dict[str, Any]]:
         """El próximo paso del generador, publicado. Devuelve la espera que tenía y el evento."""
@@ -285,6 +308,7 @@ class Motor:
                 "bloqueos_por_capa": dict(self.bloqueos_por_capa),
                 "historial_modelo": [dict(e) for e in self.historial_modelo],
                 "historial_bloqueos": [dict(e) for e in self.historial_bloqueos],
+                "historial_duelo": [dict(e) for e in self.historial_duelo],
                 "idioma": self.idioma,
                 "totales": dict(self.totales),
             }
@@ -364,5 +388,6 @@ def motor_global() -> Motor:
         if _motor is None:
             _motor = Motor(semilla=int(time.time()) % 10_000)
             _motor.precalentar()
+            _motor.activar_duelo()
         _motor.iniciar()
         return _motor

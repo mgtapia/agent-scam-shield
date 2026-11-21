@@ -1,4 +1,4 @@
-"""Línea de comandos de Grifter: `grifter bench` (o `python -m scamshield bench`)."""
+"""Línea de comandos de Grifter: `grifter bench` y `grifter duelo` (o `python -m scamshield <comando>`)."""
 from __future__ import annotations
 
 import argparse
@@ -22,7 +22,38 @@ def _parser() -> argparse.ArgumentParser:
     b.add_argument("--json", type=Path, metavar="ARCHIVO", help="guarda además los números en este archivo")
     b.add_argument("--dry-run", action="store_true", help="describe lo que haría --modelo, sin correr nada")
     b.add_argument("--logs", default="logs/bench", help="carpeta de logs de Inspect (solo con --modelo)")
+    d = sub.add_parser(
+        "duelo", help="un hacker que aprende de cómo lo bloquean, contra un escudo que aprende de él",
+        description=("Corre el duelo sin llaves de API: un atacante por mutaciones (Thompson sampling) contra el "
+                     "clasificador y la bóveda reales, que se reentrenan con lo que el dueño simulado confirma. "
+                     "La capa 2 no se entrena: `Pagos con capa 2` debe quedar en 0."))
+    d.add_argument("--generaciones", type=int, default=20, help="generaciones a correr (por defecto 20)")
+    d.add_argument("--semilla", type=int, default=0, help="semilla del flujo, el clasificador y el atacante")
+    d.add_argument("--sin-entrenar", action="store_true",
+                   help="congela el clasificador y la bóveda: el atacante aprende y el escudo no responde")
+    d.add_argument("--json", type=Path, metavar="ARCHIVO", help="guarda además los eventos `duelo` en este archivo")
     return p
+
+
+def _duelo(args: argparse.Namespace) -> int:
+    from scamshield.vivo.duelo import Duelo, tabla
+    from scamshield.vivo.flujo import Flujo
+    from scamshield.vivo.motor import Motor
+
+    inicio = time.perf_counter()
+    motor = Motor(semilla=args.semilla, flujo=Flujo(semilla=args.semilla))
+    motor.precalentar()
+    duelo = Duelo(motor, semilla=args.semilla, entrenar=not args.sin_entrenar)
+    eventos = [duelo.generacion()[0] for _ in range(args.generaciones)]
+    sys.stdout.write(tabla(eventos) + "\n")
+    pagos = sum(e["exitosas_capa2"] for e in eventos)
+    sin_capa2 = sum(e["sin_capa2"] for e in eventos)
+    sys.stdout.write(f"\nCon la capa 2: {pagos} pagos a una cuenta de estafador en {args.generaciones} "
+                     f"generaciones. Sin ella habrían salido {sin_capa2}.\n")
+    if args.json:
+        args.json.write_text(json.dumps(eventos, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Listo en {time.perf_counter() - inicio:.1f} s.", file=sys.stderr)
+    return 0
 
 
 def _utf8() -> None:
@@ -37,6 +68,8 @@ def _utf8() -> None:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     _utf8()
+    if args.comando == "duelo":
+        return _duelo(args)
     from scamshield import bench
     from scamshield.scenarios import cargar
 

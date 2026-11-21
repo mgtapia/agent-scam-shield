@@ -16,6 +16,11 @@ buena y se descarta el último lote de etiquetas. Se mide la probabilidad y no e
 apartado tiene pocas estafas y el recall salta de a una: una deriva fuerte puede costar solo un punto.
 El daño posible queda acotado a esa deriva.
 
+La misma guardia tiene un presupuesto de falsas alarmas: contra un atacante que le quita todas las
+señales a sus estafas, la salida fácil es subir el sesgo y marcar todo (el duelo, `duelo.py`, llegó a
+66 % de falsas alarmas en el apartado). Una versión que sube las falsas alarmas del apartado más de
+`PRESUPUESTO_FALSAS_ALARMAS` sobre las que tenía al arrancar también se revierte.
+
 Solo usa numpy (ya está en el entorno) y zlib para un hashing estable entre corridas.
 """
 from __future__ import annotations
@@ -91,6 +96,9 @@ class Clasificador:
     """Regresión logística en línea (SGD con L2), con versiones 1.0.N y evaluación apartada."""
 
     UMBRAL = 0.5
+    MEMORIA_MAX = 1500   # etiquetas que se guardan para reentrenar; las más viejas se olvidan
+    REENTRENO_MAX = 240  # etiquetas por pasada de reentrenamiento: acota el costo cuando el duelo corre sin fin
+    PRESUPUESTO_FALSAS_ALARMAS = 0.1   # cuánto pueden subir las falsas alarmas del apartado, en puntos
     DERIVA_MAX = 0.1   # cuánta probabilidad media en las estafas apartadas puede perder una versión nueva
 
     def __init__(self, apartado: list[tuple[Rasgos, int]], cada: int = 6, tasa: float = 0.5,
@@ -109,6 +117,7 @@ class Clasificador:
         self._pesos_version = self.pesos()
         self.metricas = self.evaluar()
         self.mejor_p_estafas = self.p_medio_estafas()
+        self.falsas_alarmas_base = self.metricas["falsas_alarmas"]
         self.revertidas = 0                    # versiones descartadas por la guardia de deriva
         self._estado_bueno = self._estado()
 
@@ -157,18 +166,24 @@ class Clasificador:
         """Entrena con una etiqueta. Cada `cada` etiquetas sube la versión y devuelve el evento."""
         self._paso(r, y)
         self._memoria.append((r, y))
+        if len(self._memoria) > self.MEMORIA_MAX:
+            del self._memoria[0]
         self.ejemplos += 1
         if self.ejemplos % self.cada:
             return None
         # Reentrenamiento incremental: dos pasadas sobre lo visto, en otro orden.
+        base = self._memoria
+        if len(base) > self.REENTRENO_MAX:   # una muestra al azar de lo visto, más las etiquetas del último lote
+            base = self._rng.sample(self._memoria[:-self.cada], self.REENTRENO_MAX - self.cada) + self._memoria[-self.cada:]
         for _ in range(2):
-            orden = list(self._memoria)
+            orden = list(base)
             self._rng.shuffle(orden)
             for ri, yi in orden:
                 self._paso(ri, yi)
         metricas = self.evaluar()
         p_estafas = self.p_medio_estafas()
-        if p_estafas < self.mejor_p_estafas - self.DERIVA_MAX:
+        if (p_estafas < self.mejor_p_estafas - self.DERIVA_MAX
+                or metricas["falsas_alarmas"] > self.falsas_alarmas_base + self.PRESUPUESTO_FALSAS_ALARMAS):
             # Deriva sospechosa: se vuelve a la última versión buena y se descarta el lote que la causó.
             self.w, self.wh, self.b = (a.copy() if hasattr(a, "copy") else a for a in self._estado_bueno)
             del self._memoria[-self.cada:]
