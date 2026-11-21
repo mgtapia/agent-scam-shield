@@ -17,8 +17,9 @@ CORREO = "correo"
 WEB = "web"
 MCP = "mcp"
 LLAMADA = "llamada"  # transcripción de una llamada: el número que se muestra se puede falsificar
+WHATSAPP = "whatsapp"  # mensaje de chat con sus notas de voz y adjuntos como texto: el remitente puede ser cualquiera
 HERRAMIENTA = "herramienta"  # resultado de otra herramienta (por ejemplo, en una eval ajena como AgentDojo)
-NO_CONFIABLES = {CORREO, WEB, MCP, HERRAMIENTA, LLAMADA}
+NO_CONFIABLES = {CORREO, WEB, MCP, HERRAMIENTA, LLAMADA, WHATSAPP}
 
 
 @dataclass
@@ -40,6 +41,31 @@ class Llamada:
 
 
 @dataclass
+class MensajeChat:
+    """Un mensaje de chat (WhatsApp). `de` es el número que lo manda, que puede ser nuevo o robado.
+
+    Los adjuntos llegan como texto: una nota de voz como su transcripción y un documento como el texto que se lee en
+    él. Son contenido no confiable igual que el cuerpo. Cada adjunto: `tipo` (nota_de_voz, documento, imagen) y `texto`.
+    """
+
+    id: str
+    de: str
+    quien_dice_ser: str
+    texto: str
+    adjuntos: list[dict[str, Any]] = field(default_factory=list)
+
+    def completo(self) -> str:
+        """El mensaje como lo lee el agente: el encabezado, el texto y, debajo, cada adjunto con su tipo."""
+        partes = [f"[{self.id}] Chat de: {self.de} (dice ser: {self.quien_dice_ser})", self.texto]
+        for a in self.adjuntos:
+            etiqueta = {"nota_de_voz": "Nota de voz (transcripción)", "documento": "Documento (texto)",
+                        "imagen": "Imagen (texto)"}.get(str(a.get("tipo")), "Adjunto")
+            nombre = f" {a['nombre']}" if a.get("nombre") else ""
+            partes.append(f"[{etiqueta}{nombre}] {a.get('texto', '')}")
+        return "\n".join(partes)
+
+
+@dataclass
 class Accion:
     herramienta: str
     args: dict[str, Any]
@@ -55,6 +81,7 @@ class World:
     cuentas_inscritas: dict[str, str] = field(default_factory=dict)  # nombre -> cuenta verificada
     correos: list[Email] = field(default_factory=list)
     llamadas: list[Llamada] = field(default_factory=list)
+    chat: list[MensajeChat] = field(default_factory=list)
     paginas: dict[str, str] = field(default_factory=dict)            # url -> contenido
     mcp_herramientas: dict[str, str] = field(default_factory=dict)   # nombre -> descripción
     titulares: dict[str, dict[str, str]] = field(default_factory=dict)  # cuenta -> {nombre, rut}: lo que sabe el banco
@@ -99,6 +126,7 @@ class World:
         w.cuentas_inscritas = dict(d["cuentas_inscritas"])
         w.correos = [Email(**c) for c in d["correos"]]
         w.llamadas = [Llamada(**c) for c in d.get("llamadas", [])]
+        w.chat = [MensajeChat(**c) for c in d.get("chat", [])]
         w.paginas = dict(d["paginas"])
         w.mcp_herramientas = dict(d["mcp_herramientas"])
         w.titulares = {k: dict(v) for k, v in d.get("titulares", {}).items()}
@@ -116,6 +144,7 @@ class World:
             cuentas_inscritas=dict(esc.get("cuentas_inscritas", {})),
             correos=[Email(**c) for c in esc.get("correos", [])],
             llamadas=[Llamada(**c) for c in esc.get("llamadas", [])],
+            chat=[MensajeChat(**c) for c in esc.get("chat", [])],
             paginas=dict(esc.get("paginas", {})),
             mcp_herramientas=dict(esc.get("mcp_herramientas", {})),
             titulares={str(k): dict(v) for k, v in (esc.get("titulares") or {}).items()},

@@ -63,6 +63,8 @@ def _texto(esc) -> str:
 def _contenido_no_confiable(esc) -> str:
     partes = [f"{c['asunto']}\n{c['cuerpo']}" for c in esc.get("correos", [])]
     partes += [f"{c['quien_dice_ser']}\n{c['transcripcion']}" for c in esc.get("llamadas", [])]
+    partes += [f"{c['quien_dice_ser']}\n{c['texto']}\n" + "\n".join(a["texto"] for a in c.get("adjuntos", []))
+              for c in esc.get("chat", [])]
     partes += list(esc.get("paginas", {}).values())
     partes += list(esc.get("mcp_herramientas", {}).values())
     return "\n".join(partes)
@@ -72,6 +74,8 @@ def _leer_todo(h: Herramientas) -> None:
     h.leer_correos()
     if h.w.llamadas:
         h.escuchar_llamadas()
+    if h.w.chat:
+        h.leer_whatsapp()
     for url in h.w.paginas:
         h.abrir_web(url)
     for nombre in h.w.mcp_herramientas:
@@ -261,7 +265,7 @@ def test_no_hacer_nada_no_cumple_la_tarea(esc):
 
 def test_capa2_tiene_falsas_alarmas_medidas():
     """Al menos un control expone el costo de la capa 2: una cuenta legítima que llega por correo."""
-    assert any(e["evaluacion"]["capa2_legitima"] == "bloquea" for e in CONTROLES)
+    assert any(e["evaluacion"].get("capa2_legitima") == "bloquea" for e in CONTROLES)
 
 
 # --- Capa 3: confirmación de beneficiario ---
