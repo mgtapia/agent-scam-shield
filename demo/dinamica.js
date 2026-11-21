@@ -30,7 +30,13 @@
     arrow_forward: "M665.08-450H180v-60h485.08L437.23-737.85 480-780l300 300-300 300-42.77-42.15L665.08-450Z",
   };
   // La marca de Grifter, la misma de la versión A: el escudo en un solo trazo y un check en ámbar adentro.
-  const marca = (cls = "") => `<svg class="dn-marca ${cls}" viewBox="0 0 120 140" aria-hidden="true"><path class="dn-marca-escudo" pathLength="1" d="M60 8 L108 26 V68 C108 100 88 122 60 132 C32 122 12 100 12 68 V26 Z"/><path class="dn-marca-check" pathLength="1" d="M38 70 L54 86 L84 54"/></svg>`;
+  // La marca de Grifter (escudo de un trazo con el check en ámbar) en una sola constante: si cambia el logo, se cambia
+  // solo aquí y la usan la portada, el cierre y las partículas. Caja de 120×140; peso = parte de las partículas del trazo.
+  const LOGO = { caja: [120, 140], trazos: [
+    { d: "M60 8 L108 26 V68 C108 100 88 122 60 132 C32 122 12 100 12 68 V26 Z", color: "texto", ancho: 7, peso: 0.78, cls: "dn-marca-escudo" },
+    { d: "M38 70 L54 86 L84 54", color: "ambar", ancho: 9, peso: 0.22, cls: "dn-marca-check" },
+  ] };
+  const marca = (cls = "", attr = "") => `<svg class="dn-marca ${cls}" viewBox="0 0 ${LOGO.caja[0]} ${LOGO.caja[1]}" aria-hidden="true" ${attr}>${LOGO.trazos.map((tz) => `<path class="${tz.cls}" pathLength="1" d="${tz.d}" style="stroke: var(--${tz.color}); stroke-width: ${tz.ancho}"/>`).join("")}</svg>`;
   const ic = (n, cls = "") => `<svg class="dn-ic ${cls}" viewBox="0 -960 960 960" aria-hidden="true"><path d="${P[n]}"/></svg>`;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   // Miles con punto, a mano: en es-CL, toLocaleString no agrupa los números de 4 cifras («5280»).
@@ -81,7 +87,7 @@
     estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 87.8,  dur: 6.0,  pal: [0, 0.52, 1.1, 1.89, 2.04, 2.36, 2.44, 2.64, 3.3, 3.65, 4.23, 5.15, 5.6] },
     atacante: { src: "audio/dinamica_09_atacante.mp3", en: 94.2,  dur: 6.56, pal: [0, 0.13, 0.66, 0.78, 1.31, 1.58, 2.08, 2.52, 2.74, 3.42, 3.84, 4.51, 5.5, 5.87, 5.98, 6.36] },
     remate:   { src: "audio/dinamica_11_remate.mp3",   en: 101.2, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
-    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 105.3, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
+    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 105.9, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
   };
   // Cuándo empieza la palabra i de una narración, en segundos de la demo.
   const palabra = (n, i) => NARR[n].en + NARR[n].pal[i];
@@ -135,10 +141,9 @@
   // Hablando, pulsa en ámbar con la envolvente del texto que escribe; cuando Grifter retiene (data-retiene = segundo),
   // las partículas se reordenan en el contorno del escudo de la marca, en verde. Se dibuja desde t en un canvas.
   //   grande 360 px (escenas y costado del chat) · medio 240 px (retenciones) · mini 72 px (encabezado del chat)
-  const agente = (cls = "grande", retiene = null) => {
-    const px = { grande: 360, medio: 240, mini: 72 }[cls] * 2;
-    return `<canvas class="dn-nube ${cls}" width="${px}" height="${px}"${retiene === null ? "" : ` data-retiene="${retiene}"`} aria-hidden="true"></canvas>`;
-  };
+  const agente = (cls = "grande") => cls === "mini"
+    ? `<canvas class="dn-nube mini" width="144" height="144" aria-hidden="true"></canvas>`
+    : `<span class="dn-nube ${cls}" data-ancla="nube" aria-hidden="true"></span>`;;
   // Retratos ficticios generados con IA (los de la versión A). Si falta el .jpg, el .svg ilustrado.
   const fotoNieto = (cls = "") => `<div class="dn-foto ${cls}"><i class="dn-anillo"></i><i class="dn-anillo"></i><img src="img/nieto.jpg" onerror="this.onerror=null;this.src='img/nieto.svg'" alt="" width="400" height="400"></div>`;
   const fotoMarta = (cls = "") => `<div class="dn-foto ${cls}"><img src="img/abuela.jpg" onerror="this.onerror=null;this.src='img/abuela.svg'" alt="" width="400" height="400"></div>`;
@@ -157,12 +162,12 @@
       const i = ESCENAS.findIndex((e) => e[0] === id);
       const [, desde, entra] = ESCENAS[i];
       const hasta = i + 1 < ESCENAS.length ? ESCENAS[i + 1][1] : Infinity;
-      h.push(`<section class="dn-escena dn-e-${id} ${cls}" data-desde="${desde}" data-hasta="${hasta}" data-entra="${entra}">${contenido}</section>`);
+      h.push(`<section class="dn-escena dn-e-${id} ${cls}" data-id="${id}" data-desde="${desde}" data-hasta="${hasta}" data-entra="${entra}">${contenido}</section>`);
     };
 
     // 1. Gancho
     esc_("gancho", `
-        <div class="dn-personas">${[0, 1, 2, 3].map((i) => `<span class="dn-persona"${ap(palabra("gancho", 4) + i * 0.08, "pop")}>${ic("person")}${i === 3 ? `<span class="dn-persona-cae"${ap(palabra("gancho", 7), "nada")}>${ic("person")}</span>` : ""}</span>`).join("")}</div>
+        <div class="dn-personas" aria-hidden="true">${[0, 1, 2, 3].map((i) => `<span class="dn-persona" data-ancla="persona-${i}"></span>`).join("")}</div>
         <h1 class="dn-cifra-gancho">${saltan("Casi 1 de cada 4", "gancho", 0)}</h1>
         <p class="dn-bajada">${escribe("chilenos ya perdió plata en una estafa digital.", 0, desdePalabra("gancho", 5))}</p>
         <p class="dn-fuente dato"${ap(4.0, "nada")}>TransUnion, 2025: 23 % de los consumidores chilenos</p>`, "dn-centro");
@@ -361,21 +366,23 @@
         </div>`, "dn-centro");
 
     // 6. Cifras (docs/cifras.md: 150 estafas de 32 tipos, 0 pasan Grifter completo; 5.280 intentos, 0 cruzan la capa 2)
+    // La cifra: las partículas la arman; el texto real aparece encima en «v» (y siempre está para lectores de pantalla).
+    const cifra = (txt, v, cls = "") => `<p class="dn-cifra dato ${cls}" data-ancla="cifra"><span class="oculto">${txt}</span><span aria-hidden="true"${ap(v, "nada")}>${txt}</span></p>`;
     esc_("estafas", `
-        <p class="dn-cifra dato">${cuenta(0, 150, palabra("estafas", 0), 1.1)}</p>
+        ${cifra("150", 89.0)}
         <p class="dn-cifra-txt"${ap(palabra("estafas", 2), "pop")}>estafas</p>
         <p class="dn-cifra-txt dn-2"${ap(palabra("estafas", 3), "sube")}>de <b class="dato">${cuenta(0, 32, palabra("estafas", 4), 0.7)}</b> tipos</p>
         <p class="dn-fuente dato"${ap(90.0, "nada")}>Agente que hace todo lo que lee · grifter bench</p>`, "dn-centro");
     esc_("pasan", `
-        <p class="dn-cifra dato dn-a-verde" data-on="93.3">${cuenta(150, 0, 91.3, 2.0, { baja: true })}</p>
+        ${cifra("0", 93.4, "c-verde")}
         <p class="dn-cifra-txt"${ap(palabra("estafas", 8), "pop")}>pasan con Grifter completo</p>
         <p class="dn-fuente dato"${ap(92.2, "nada")}>150 de 150 frenadas · capas 2 y 3 · docs/cifras.md</p>`, "dn-centro");
     esc_("atacante", `
-        <p class="dn-cifra dato">${cuenta(0, 5280, palabra("atacante", 4), 1.6)}</p>
+        ${cifra("5.280", 96.6)}
         <p class="dn-cifra-txt"${ap(palabra("atacante", 0), "pop")}>intentos de un atacante que aprende</p>
         <p class="dn-fuente dato"${ap(96.6, "nada")}>120 generaciones · 6 corridas · grifter duelo</p>`, "dn-centro");
     esc_("cruzan", `
-        <p class="dn-cifra dato dn-a-verde" data-on="99.6">${cuenta(5280, 0, 98.0, 1.6, { baja: true })}</p>
+        ${cifra("0", 99.6, "c-verde")}
         <p class="dn-cifra-txt"${ap(palabra("atacante", 11), "pop")}>cruzan la capa 2</p>
         <p class="dn-fuente dato"${ap(99.0, "nada")}>5.280 intentos contra la capa 2 · grifter duelo · docs/cifras.md</p>`, "dn-centro");
 
@@ -384,12 +391,12 @@
         <h1 class="dn-titular dn-frase-final">${escribe(FRASE_FINAL[0], 0, desdePalabra("remate", 0))}<span class="dn-remate-2">${escribe(FRASE_FINAL[1], 0, desdePalabra("remate", FRASE_FINAL[0].split(" ").length))}</span></h1>`, "dn-centro");
     esc_("cierre", `
         <div class="dn-logo">
-          ${marca("dn-marca-cierre")}
+          ${marca("dn-marca-cierre", 'data-ancla="logo"')}
           <span class="dn-logo-txt">${[..."Grifter"].map((c, i) => `<span${ap(palabra("cierre", 0) - 0.05 + i * 0.07, "cae")}>${c}</span>`).join("")}</span>
         </div>
         <p class="dn-lema">${escribe("Escudo para agentes que pagan", 0, desdePalabra("cierre", 1))}</p>
-        <p class="dn-url dato"${ap(107.8, "sube")}>grifter.onrender.com</p>
-        <p class="dn-aviso"${ap(108.3, "nada")}>Personas y marcas ficticias · voces sintéticas</p>`, "dn-centro");
+        <p class="dn-url dato"${ap(108.6, "sube")}>grifter.onrender.com</p>
+        <p class="dn-aviso"${ap(109.0, "nada")}>Personas y marcas ficticias · voces sintéticas</p>`, "dn-centro");
 
     h.push(`<div class="dn-progreso" aria-hidden="true"><i id="dn-barra"></i></div>
       <div class="dn-portada" aria-hidden="true">
@@ -397,7 +404,10 @@
         <div class="dn-logo dn-logo-portada">${marca("dibuja")}<span>Grifter</span></div>
       </div>
       <button type="button" class="dn-inicio" id="dn-inicio" aria-label="Iniciar o pausar la demo (Espacio)">${ic("play_arrow")}<span>Espacio</span></button>`);
+    h.unshift(`<canvas id="dn-particulas" aria-hidden="true"></canvas>`);
     $("#dn-escenario").innerHTML = h.join("");
+    lienzo = $("#dn-particulas");
+    g2 = lienzo.getContext("2d");
     $("#dn-inicio").addEventListener("click", alternar);
   }
 
@@ -449,6 +459,247 @@
     }
   }
 
+  // --- Motor de partículas: el lenguaje visual de toda la versión B ---
+  // Un solo canvas detrás del escenario. Las mismas NP partículas pasan de figura en figura (cuatro personas → la
+  // esfera del agente → el escudo al retener → las cifras → la marca), con una interpolación de 0,6-1,4 s y algo de
+  // dispersión en el camino. Un grupo rojo (la amenaza) se acerca a la nube cuando entra una estafa y rebota cuando
+  // Grifter retiene. Detrás, un campo tenue a la deriva. Todo es función de t (semilla fija): ?t=N da el mismo cuadro,
+  // y con movimiento reducido cada figura queda quieta. El texto va siempre encima del canvas.
+  const NM = 400, NR = 60, NF = 90;   // partículas de la nube, de la amenaza y del fondo
+  const azarM = semilla(7);
+  const ESF_M = Array.from({ length: NM }, (_, i) => { const y = 1 - (2 * (i + 0.5)) / NM, r = Math.sqrt(1 - y * y), a = i * 2.39996; return { x: Math.cos(a) * r, y, z: Math.sin(a) * r, f: azarM() * 6.283 }; });
+  const RAND_M = Array.from({ length: NM }, () => ({ x: azarM() * 1920, y: azarM() * 1080, retraso: azarM() * 0.25, dx: azarM() * 2 - 1, dy: azarM() * 2 - 1 }));
+  const RAND_R = Array.from({ length: NR }, (_, i) => ({ a: i * 2.39996, f: azarM() * 6.283, d: 0.85 + azarM() * 0.3 }));
+  const FONDO = Array.from({ length: NF }, () => ({ x: azarM() * 1920, y: azarM() * 1080, vx: (azarM() - 0.5) * 14, vy: (azarM() - 0.5) * 10, s: 1 + azarM() * 1.5, f: azarM() * 6.283 }));
+  const RGB = {};
+  function colores() {
+    const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    for (const k of ["texto", "texto-2", "texto-3", "ambar", "verde", "rojo"]) RGB[k] = hex(css("--" + k));
+  }
+
+  // Dónde está cada ancla (data-ancla) de cada escena, en coordenadas del escenario. Se mide una vez (y al cargar la
+  // letra), mostrando cada escena oculta y sin sus movimientos de entrada.
+  let ANCLAS = {};
+  function medir() {
+    const esc = $("#dn-escenario"), base = esc.getBoundingClientRect(), k = base.width / 1920;
+    ANCLAS = {};
+    for (const s of escenas) {
+      s.el.classList.add("dn-midiendo");
+      const m = {};
+      s.el.querySelectorAll("[data-ancla]").forEach((a) => {
+        const r = a.getBoundingClientRect();
+        m[a.dataset.ancla] = { x: (r.left - base.left + r.width / 2) / k, y: (r.top - base.top + r.height / 2) / k, w: r.width / k, h: r.height / k, el: a };
+      });
+      s.el.classList.remove("dn-midiendo");
+      ANCLAS[s.el.dataset.id] = m;
+    }
+    MUESTRAS.clear();
+  }
+  const ancla = (id, nombre) => ANCLAS[id]?.[nombre] || { x: 960, y: 540, w: 360, h: 360 };
+
+  // Puntos de una figura: rasteriza en un canvas oculto y elige n puntos parejos (orden barajado con semilla).
+  const MUESTRAS = new Map();
+  function elegir(pts, n, clave) {
+    const az = semilla(clave.length * 131 + 17), orden = pts.map((p, i) => [az(), i]).sort((a, b) => a[0] - b[0]);
+    return Array.from({ length: n }, (_, i) => pts[orden[i % orden.length][1]]);
+  }
+  function rasterizar(w, h, dibujar, paso) {
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h));
+    const g = c.getContext("2d");
+    dibujar(g);
+    const d = g.getImageData(0, 0, c.width, c.height).data, pts = [];
+    for (let y = 0; y < c.height; y += paso) for (let x = 0; x < c.width; x += paso) if (d[(y * c.width + x) * 4 + 3] > 120) pts.push({ x, y });
+    return pts.length ? pts : [{ x: w / 2, y: h / 2 }];
+  }
+  // Una cifra con la letra de --titular, alineada con el texto del DOM (misma caja y misma línea base).
+  function puntosTexto(txt, a, n) {
+    const clave = `t|${txt}|${n}|${Math.round(a.w)}|${document.documentElement.dataset.letra || ""}`;
+    if (!MUESTRAS.has(clave)) {
+      const cs = a.el ? getComputedStyle(a.el) : null;
+      const pts = rasterizar(a.w, a.h, (g) => {
+        g.font = cs ? `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}` : "600 300px sans-serif";
+        if (cs && "letterSpacing" in g) g.letterSpacing = cs.letterSpacing;
+        g.textAlign = "center";
+        const m = g.measureText(txt);
+        g.fillStyle = "#fff";
+        g.fillText(txt, a.w / 2, a.h / 2 + (m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2);
+      }, 5);
+      MUESTRAS.set(clave, elegir(pts, n, clave).map((p) => ({ x: a.x - a.w / 2 + p.x, y: a.y - a.h / 2 + p.y })));
+    }
+    return MUESTRAS.get(clave);
+  }
+  // Una persona (el ícono person) hecha de puntos, en la caja del ancla.
+  function puntosPersona(a, n, i) {
+    const clave = `p|${i}|${n}|${Math.round(a.x)}`;
+    if (!MUESTRAS.has(clave)) {
+      const lado = Math.min(a.w, a.h), e = lado / 960;
+      const pts = rasterizar(lado, lado, (g) => { g.setTransform(e, 0, 0, e, 0, 960 * e); g.fillStyle = "#fff"; g.fill(new Path2D(P.person)); }, 3);
+      MUESTRAS.set(clave, elegir(pts, n, clave).map((p) => ({ x: a.x - lado / 2 + p.x, y: a.y - lado / 2 + p.y })));
+    }
+    return MUESTRAS.get(clave);
+  }
+  // La marca (LOGO): puntos repartidos a lo largo de cada trazo, según su peso.
+  function puntosLogo(a, n) {
+    const clave = `l|${n}|${Math.round(a.x)}|${Math.round(a.w)}`;
+    if (!MUESTRAS.has(clave)) {
+      const e = a.w / LOGO.caja[0], x0 = a.x - a.w / 2, y0 = a.y - (LOGO.caja[1] * e) / 2, pts = [];
+      let resto = n;
+      LOGO.trazos.forEach((tz, j) => {
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("d", tz.d);
+        const largo = p.getTotalLength(), m = j === LOGO.trazos.length - 1 ? resto : Math.round(n * tz.peso);
+        resto -= m;
+        for (let i = 0; i < m; i++) { const q = p.getPointAtLength((i / m) * largo); pts.push({ x: x0 + q.x * e, y: y0 + q.y * e, color: tz.color }); }
+      });
+      MUESTRAS.set(clave, pts);
+    }
+    return MUESTRAS.get(clave);
+  }
+
+  // --- Las figuras. Cada una da, para cada partícula, posición, color, opacidad y tamaño en el segundo tt ---
+  const figEsfera = (centro, { habla = false, rel = 0.37 } = {}) => (tt) => {
+    const c = typeof centro === "function" ? centro() : centro, R = c.R ?? c.w * rel;
+    const peso = habla ? (quieto ? +(pesoHabla(tt) > 0.5) : pesoHabla(tt)) : 0, env = quieto ? 0.5 : pulsoHabla(tt);
+    const giro = quieto ? 0.6 : tt * 0.45, cg = Math.cos(giro), sg = Math.sin(giro);
+    const color = mezcla(RGB.texto, RGB.ambar, peso), esc = R / 135;
+    return { centro: { x: c.x, y: c.y, R }, p: ESF_M.map((q) => {
+      const x = q.x * cg + q.z * sg, z = -q.x * sg + q.z * cg, prof = (z + 1) / 2;
+      const pulso = 1 + (quieto ? 0 : 0.02 * Math.sin(tt * 1.6 + q.f)) + env * peso * (0.08 + 0.16 * Math.abs(Math.sin(tt * 9 + q.f)));
+      return { x: c.x + x * R * pulso, y: c.y + q.y * R * pulso, c: color, a: 0.25 + 0.75 * prof, s: (1.2 + 2.6 * prof) * esc };
+    }) };
+  };
+  const figEscudo = (centro, rel = 0.37) => (tt) => {
+    const c = typeof centro === "function" ? centro() : centro, R = c.R ?? c.w * rel, esc = R / 135;
+    return { centro: { x: c.x, y: c.y, R }, p: ESCUDO_M().map((q, i) => ({
+      x: c.x + q.x * R * 0.95, y: c.y + q.y * R * 0.95 + (quieto ? 0 : Math.sin(tt * 2 + i) * 0.6), c: RGB.verde, a: 0.95, s: 2.2 * esc + 0.6,
+    })) };
+  };
+  let ESC_CACHE = null;
+  function ESCUDO_M() {   // el contorno del escudo de LOGO (el primer trazo), centrado, en unidades de 62 px de la caja
+    if (!ESC_CACHE) {
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p.setAttribute("d", LOGO.trazos[0].d);
+      const largo = p.getTotalLength(), cx = LOGO.caja[0] / 2, cy = LOGO.caja[1] / 2;
+      ESC_CACHE = Array.from({ length: NM }, (_, i) => { const q = p.getPointAtLength((i / NM) * largo); return { x: (q.x - cx) / 62, y: (q.y - cy) / 62 }; });
+    }
+    return ESC_CACHE;
+  }
+  const figTexto = (id, txt, color, { tenue = null } = {}) => (tt) => {
+    const a = ancla(id, "cifra"), pts = puntosTexto(txt, a, NM);
+    const op = tenue !== null && tt >= tenue ? 0.35 : 0.95;   // cuando aparece el texto real encima, los puntos quedan de fondo
+    return { centro: { x: a.x, y: a.y, R: a.h * 0.45 }, p: pts.map((q) => ({ x: q.x, y: q.y, c: RGB[color], a: op, s: 3.2 })) };
+  };
+  const figPersonas = (tt) => {
+    const por = NM / 4, cae = palabra("gancho", 7);
+    const out = [];
+    for (let i = 0; i < NM; i++) {
+      const g = Math.floor(i / por), a = ancla("gancho", `persona-${g}`), pts = puntosPersona(a, por, g), q = pts[i % por];
+      const llega = quieto ? +(tt >= palabra("gancho", 4)) : salida(clamp((tt - palabra("gancho", 4) - g * 0.08 - RAND_M[i].retraso * 0.6) / 0.7));
+      const r = RAND_M[i];
+      const tinte = g === 3 ? clamp((tt - cae) / 0.3) : 0;
+      out.push({ x: r.x + (q.x - r.x) * llega, y: r.y + (q.y - r.y) * llega, c: mezcla(RGB["texto-2"], RGB.ambar, quieto ? +(tt >= cae) * (g === 3) : tinte), a: 0.15 + 0.8 * llega, s: 2.6 });
+    }
+    const a = ancla("gancho", "persona-3");
+    return { centro: { x: a.x, y: a.y, R: a.w / 2 }, p: out };
+  };
+  const figLogo = (tt) => {
+    const a = ancla("cierre", "logo"), pts = puntosLogo(a, NM), tenue = tt >= 106.5 ? 0.3 : 0.95;
+    return { centro: { x: a.x, y: a.y, R: a.w / 2 }, p: pts.map((q) => ({ x: q.x, y: q.y, c: RGB[q.color], a: tenue, s: 2.6 })) };
+  };
+  const ESQUINA = { x: 190, y: 925, R: 58 };     // donde espera el agente mientras habla otro (abajo a la izquierda)
+  const ARRIBA = { x: 960, y: 190, R: 72 };
+  const nube = (id) => () => ancla(id, "nube");
+
+  // La línea de tiempo de la nube: [desde, figura, duración de la transición, dispersión en el camino (px)].
+  const FIGURAS = [
+    [0, figPersonas, 0.8, 40],
+    [4.6, figEsfera(nube("agentes")), 0.9, 80],
+    [8.0, figEsfera(nube("encargo"), { habla: true }), 0.8, 60],
+    [11.2, figEsfera(ESQUINA), 0.8, 60],
+    [40.9, figEsfera(nube("paga"), { habla: true }), 0.8, 60],
+    [44.25, figEscudo(nube("frena")), 0.9, 50],
+    [45.8, figEscudo(ARRIBA), 0.7, 40],
+    [50.0, figEscudo(ESQUINA), 0.8, 40],
+    [70.6, figEsfera(ESQUINA), 0.8, 50],
+    [74.0, figEsfera(nube("responde"), { habla: true }), 0.7, 60],
+    [76.05, figEscudo(nube("clave")), 0.9, 50],
+    [79.6, figEsfera(ESQUINA), 0.8, 50],
+    [85.05, figEscudo(nube("calza")), 0.9, 50],
+    [87.7, figTexto("estafas", "150", "texto", { tenue: 89.0 }), 0.9, 90],
+    [91.2, figTexto("pasan", "0", "verde", { tenue: 93.4 }), 1.4, 260],
+    [94.3, figTexto("atacante", "5.280", "texto", { tenue: 96.6 }), 1.2, 180],
+    [98.0, figTexto("cruzan", "0", "verde", { tenue: 99.6 }), 1.4, 260],
+    [101.0, figEsfera(ARRIBA), 0.9, 120],
+    [palabra("remate", 6), figEscudo(ARRIBA), 0.7, 40],
+    [105.0, figLogo, 0.9, 80],
+  ];
+
+  // La amenaza: tramos en que el grupo rojo se acerca y segundos en que Grifter lo hace rebotar.
+  const ACECHO = [[13.6, 40.9], [40.9, 44.25], [70.6, 74.0], [74.0, 76.05], [82.4, 85.05]];
+  const REBOTES = [44.25, 76.05, 85.05];
+  function amenaza(tt, centro) {
+    const tramo = ACECHO.find(([a, b]) => tt >= a && tt < b);
+    const rebote = REBOTES.find((r) => tt >= r && tt < r + 1.3);
+    if (!tramo && !rebote) return null;
+    const R = centro.R;
+    return RAND_R.map((q, i) => {
+      const ang = q.a + (quieto ? 0 : tt * 0.35 + 0.25 * Math.sin(tt * 0.8 + q.f));
+      let d, a = 0.85;
+      if (rebote !== undefined) {
+        const p = quieto ? 1 : salida(clamp((tt - rebote) / 1.3));
+        d = R * 1.5 * q.d + 560 * p; a = 0.85 * (1 - p);
+      } else {
+        const [ini, fin] = tramo, cerca = ACECHO.some(([x, y]) => y === ini) ? 1 : clamp((tt - ini) / Math.max(1, fin - ini - 0.6));
+        d = R * 1.5 * q.d + (1 - (quieto ? 1 : cerca * cerca)) * 1000 + (quieto ? 0 : 10 * Math.sin(tt * 3 + q.f));
+      }
+      return { x: centro.x + Math.cos(ang) * d, y: centro.y + Math.sin(ang) * d, c: RGB.rojo, a, s: 2.6 };
+    });
+  }
+
+  // Dibuja el cuadro tt en el canvas. La transición: cada partícula sale de la figura anterior (que sigue
+  // moviéndose) hacia la nueva con su propio retraso, y se abre un poco del camino recto en el medio.
+  let lienzo = null, g2 = null, resol = 0;
+  function motor(tt) {
+    if (!lienzo) return;
+    if (!RGB.texto) colores();
+    const k = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--dn-k")) || 1;
+    const q = Math.min(2, (window.devicePixelRatio || 1) * k);
+    if (Math.abs(q - resol) > 0.01) { resol = q; lienzo.width = Math.round(1920 * q); lienzo.height = Math.round(1080 * q); }
+    g2.setTransform(resol, 0, 0, resol, 0, 0);
+    g2.clearRect(0, 0, 1920, 1080);
+    // El fondo: un campo muy tenue a la deriva.
+    for (const f of FONDO) {
+      const x = (((f.x + (quieto ? 0 : f.vx * tt)) % 1920) + 1920) % 1920, y = (((f.y + (quieto ? 0 : f.vy * tt)) % 1080) + 1080) % 1080;
+      g2.fillStyle = `rgba(${RGB["texto-3"].join(",")},${(0.12 + (quieto ? 0 : 0.06 * Math.sin(tt + f.f))).toFixed(3)})`;
+      g2.fillRect(x, y, f.s, f.s);
+    }
+    // La nube.
+    let k2 = 0;
+    while (k2 + 1 < FIGURAS.length && tt >= FIGURAS[k2 + 1][0]) k2++;
+    const [desde, fig, dura, disp] = FIGURAS[k2];
+    const ahora = fig(tt);
+    let pts = ahora.p, centro = ahora.centro;
+    if (k2 > 0 && !quieto && tt < desde + dura + 0.3) {
+      const antes = FIGURAS[k2 - 1][1](tt);
+      const e0 = salida(clamp((tt - desde) / dura));
+      centro = { x: antes.centro.x + (ahora.centro.x - antes.centro.x) * e0, y: antes.centro.y + (ahora.centro.y - antes.centro.y) * e0, R: antes.centro.R + (ahora.centro.R - antes.centro.R) * e0 };
+      pts = ahora.p.map((b, i) => {
+        const a = antes.p[i], r = RAND_M[i], e = vaiven(clamp((tt - desde - r.retraso) / dura)), abre = Math.sin(Math.PI * e) * disp;
+        return { x: a.x + (b.x - a.x) * e + r.dx * abre, y: a.y + (b.y - a.y) * e + r.dy * abre, c: mezcla(a.c, b.c, e), a: a.a + (b.a - a.a) * e, s: a.s + (b.s - a.s) * e };
+      });
+    }
+    const rojos = amenaza(tt, centro);
+    for (const lista of rojos ? [pts, rojos] : [pts]) {
+      for (const p of lista) {
+        if (p.a <= 0.01) continue;
+        g2.fillStyle = `rgba(${p.c[0]},${p.c[1]},${p.c[2]},${p.a.toFixed(3)})`;
+        g2.beginPath(); g2.arc(p.x, p.y, p.s, 0, 6.2832); g2.fill();
+      }
+    }
+  }
+
   // --- Cuadro: qué se ve en el segundo t ---
   let escenas = [];
   function preparar() {
@@ -459,7 +710,7 @@
       escribe: [...el.querySelectorAll("[data-e]")].map((x) => Object.assign(ESCRIBE[+x.dataset.e], { el: x, n: -1 })),
       cuentas: [...el.querySelectorAll("[data-c]")].map((x) => Object.assign(CUENTAS[+x.dataset.c], { el: x, txt: "" })),
       dedos: [...el.querySelectorAll("[data-d]")].map((x) => Object.assign(DEDOS[+x.dataset.d], { el: x })),
-      nubes: [...el.querySelectorAll(".dn-nube")],
+      nubes: [...el.querySelectorAll(".dn-nube.mini")],
       barras: [...el.querySelectorAll(".dn-barras")],
       puntos: [...el.querySelectorAll(".dn-puntos i")],
       anillos: [...el.querySelectorAll(".dn-anillo")],
@@ -585,9 +836,9 @@
       const seg = Math.max(0, Math.floor(Math.min(tt, LL.cuelga) - LL.contesta));
       s.relojes.forEach((r) => { r.textContent = `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, "0")}`; });
       s.pulsa.forEach((p) => p.style.setProperty("--pulso", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(tt * 2 * Math.PI * 0.9))).toFixed(3)));
-      // La marca del cierre se dibuja: primero el escudo (1 s) y después el check (0,4 s).
+      // La marca nítida del cierre se dibuja sobre la de partículas: primero el escudo y después el check.
       s.marca.forEach((p, i) => {
-        const desde = s.desde + (i ? 1.15 : 0.15), dura = i ? 0.4 : 1.0;
+        const desde = i ? 106.45 : 105.95, dura = i ? 0.3 : 0.5;
         p.style.strokeDashoffset = (quieto ? 0 : 1 - salida(clamp((tt - desde) / dura))).toFixed(3);
       });
     }
@@ -596,6 +847,7 @@
     document.body.classList.toggle("dn-alarma", alarma);
     document.body.style.setProperty("--alarma", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.cos(((tt - ALARMA[0]) * 2 * Math.PI) / 1.2))).toFixed(3));
     $("#dn-barra").style.width = `${(Math.min(tt, DURACION) / DURACION) * 100}%`;
+    motor(tt);
     if (revisor) { revisor.reloj.textContent = `t = ${tt.toFixed(1)} s`; if (document.activeElement !== revisor.barra) revisor.barra.value = tt; }
   }
 
@@ -687,6 +939,35 @@
     render(tiempo);
     if (seguir) alternar();
   }
+  // Letra de los titulares, el logo y las cifras grandes: --titular. Por defecto IBM Plex Sans; con ?letra= se prueba otra.
+  const LETRAS = {
+    plex: ["IBM Plex Sans (actual)", "", ""],
+    outfit: ["Outfit", "Outfit:wght@600;700", "-0.02em"],
+    space: ["Space Grotesk", "Space+Grotesk:wght@500;700", "-0.03em"],
+    sora: ["Sora", "Sora:wght@600;800", "-0.04em"],
+    bricolage: ["Bricolage Grotesque", "Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800", "-0.03em"],
+    serif: ["Instrument Serif", "Instrument+Serif:ital@0;1", "-0.01em"],
+    syne: ["Syne", "Syne:wght@700;800", "-0.03em"],
+  };
+  // Al cambiar la letra se vuelven a medir las anclas y a muestrear las cifras de partículas (con la letra ya cargada).
+  const remedir = () => { medir(); render(tiempo); };
+  function ponerLetra(clave) {
+    const [nombre, familia, espacio] = LETRAS[clave] || LETRAS.plex;
+    const raiz = document.documentElement;
+    if (!familia) { raiz.style.removeProperty("--titular"); raiz.style.removeProperty("--titular-esp"); delete raiz.dataset.letra; remedir(); return; }
+    raiz.style.setProperty("--titular", `"${nombre}", var(--sans)`);
+    raiz.style.setProperty("--titular-esp", espacio);
+    raiz.dataset.letra = clave;
+    const cargada = () => document.fonts.load(`700 100px "${nombre}"`).then(remedir, remedir);
+    let hoja = document.getElementById(`dn-letra-${clave}`);
+    if (hoja) return cargada();
+    hoja = document.createElement("link");
+    Object.assign(hoja, { id: `dn-letra-${clave}`, rel: "stylesheet", href: `https://fonts.googleapis.com/css2?family=${familia}&display=swap` });
+    hoja.addEventListener("load", cargada);
+    hoja.addEventListener("error", remedir);
+    document.head.append(hoja);
+  }
+
   // --- Modo revisión (?revisar=1 o la tecla V): una barra de controles abajo, fuera del escenario, para retroceder,
   // pausar, avanzar, arrastrar al segundo exacto y copiar el enlace del cuadro. No sale en el pitch. ---
   let revisor = null;
@@ -717,6 +998,12 @@
     const reloj = document.createElement("output");
     reloj.textContent = "t = 0.0 s";
     caja.append(barra, reloj);
+    const letra = document.createElement("select");
+    letra.title = "Letra de titulares, logo y cifras (vista previa)";
+    for (const [clave, [nombre]] of Object.entries(LETRAS)) letra.append(new Option(nombre, clave));
+    letra.value = LETRAS[params.get("letra")] ? params.get("letra") : "plex";
+    letra.addEventListener("change", () => { ponerLetra(letra.value); letra.blur(); });
+    caja.append(letra);
     boton("Copiar enlace", "Copia el enlace de este cuadro", () => {
       const u = new URL(location.href);
       u.searchParams.set("t", tiempo.toFixed(1));
@@ -745,6 +1032,9 @@
   escalar();
   construir();
   preparar();
+  medir();
+  ponerLetra(LETRAS[params.get("letra")] ? params.get("letra") : "plex");
+  document.fonts?.ready.then(remedir);
   if (params.get("revisar") === "1") { abrirRevisor(); escalar(); }
   prepararAudio();
   if (params.has("t")) {   // un cuadro fijo para capturas: sin audio hasta que el presentador pulse Espacio

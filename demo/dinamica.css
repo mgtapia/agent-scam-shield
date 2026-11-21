@@ -286,3 +286,22 @@ body.dn-revisando .dn-marco { bottom: 48px; }
 .dn-sistema, .dn-accion, .dn-ficha p, .dn-chat-cab b, .dn-correo-de, .dn-rot, .dn-notif-de, .dn-cifra-txt, .dn-contador,
 .dn-quien-llama, .dn-sub, .dn-lema, .dn-url, .dn-aviso, .dn-evento, .dn-de, .dn-mini-quien, .dn-tachado, .dn-al-titulo,
 .dn-al-datos dt, .dn-al-datos dd, .dn-gigante, .dn-monto, .dn-cifra, .dn-cifra-gancho { white-space: nowrap; }
+
+/* Motor de partículas: un canvas de 1920×1080 detrás de las escenas (el texto siempre va encima) */
+#dn-particulas { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 0; pointer-events: none; }
+.dn-escena { z-index: 1; }
+.dn-persona { border: 0; background: transparent; }
+.dn-revisor select { padding: 6px 8px; border: var(--linea); background: var(--fondo); color: var(--texto); font: inherit; cursor: pointer; }
+
+/* Letra de titulares, logo y cifras grandes: --titular (por defecto la sans de la interfaz). ?letra= la cambia para probar.
+   El texto chico y los datos siguen en IBM Plex. */
+.dn-titular, .dn-logo, .dn-cifra-gancho, .dn-frase-final { font-family: var(--titular, var(--sans)); }
+:root[data-letra] :is(.dn-cifra, .dn-gigante, .dn-monto) { font-family: var(--titular); }
+:root[data-letra] :is(.dn-titular, .dn-logo, .dn-cifra-gancho, .dn-cifra, .dn-gigante, .dn-monto) { letter-spacing: var(--titular-esp); font-weight: 700; }
+:root[data-letra] .dn-titular:not(.dn-enorme) { font-weight: 600; }
+:root[data-letra="serif"] :is(.dn-titular, .dn-logo, .dn-cifra-gancho, .dn-cifra, .dn-gigante, .dn-monto) { font-weight: 400; }
+:root[data-letra="serif"] .dn-logo > span { font-style: italic; }
+
+/* Para medir las anclas de las partículas: la escena se arma oculta, sin sus movimientos de entrada. Va al final. */
+.dn-escena.dn-midiendo { display: flex !important; visibility: hidden !important; transform: none !important; }
+.dn-midiendo [data-an] { transform: none !important; }
