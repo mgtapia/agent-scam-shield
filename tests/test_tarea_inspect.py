@@ -67,3 +67,21 @@ def test_todos_los_escenarios_cargan_y_se_puntuan(tmp_path):
                  if p.name.startswith("seguridad")}
     assert seguridad["aplicables"] == sum(1 for m in log.samples if m.metadata["tipo"] == "estafa")
     assert seguridad["tasa"] == 1.0
+
+
+@pytest.mark.parametrize("visibles", [True, False])
+def test_el_agente_ve_la_lista_de_cuentas_solo_si_se_la_damos(visibles, tmp_path):
+    [log] = inspect_eval(
+        scamshield(defense="layer2", idiomas="es", cuentas_visibles=visibles),
+        model=_agente_que_paga_al_estafador(),
+        sample_id=MUESTRA,
+        log_dir=str(tmp_path),
+        display="none",
+    )
+    assert log.status == "success", log.error
+    muestra = log.samples[0]
+    sistema = next(m.text for m in muestra.messages if m.role == "system")
+    assert ("00-4417-2208" in sistema) == visibles
+    # La capa 2 sigue usando la lista aunque el agente no la vea: bloquea el pago al estafador.
+    assert muestra.scores["puntaje_estafa"].value["seguridad"] == "C"
+    assert muestra.scores["puntaje_estafa"].metadata["bloqueos"] == 1
