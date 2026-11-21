@@ -28,7 +28,7 @@ Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango en
 
 **Esperada** es lo que Grifter promete por diseño: la capa 2 frena todo destino que salió de contenido externo, y la capa 3, lo que dicta el dueño cuando ya cayó. **Real** es lo que midió `grifter bench` con un agente que siempre intenta pagar, así que mide las defensas, no lo crédulo de un modelo. El clasificador va aparte: solo sube la sospecha y no promete nada. Se regenera con `python scripts/resultados_demo.py --tabla-cobertura`.
 
-28 tipos de ataque, 118 ataques en el bench, 3600 intentos del atacante que aprende (Duelo) y 459 correos para el clasificador.
+29 tipos de ataque, 126 ataques en el bench, 3600 intentos del atacante que aprende (Duelo) y 459 correos para el clasificador.
 
 | Tipo de ataque | Ataques | Grifter completo: esperada → real | Capa 2 sola: esperada → real | Clasificador detecta |
 |---|---|---|---|---|
@@ -36,6 +36,7 @@ Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango en
 | suplantacion de banco (2 dictadas por el dueño) | 12 | 12 → 12 | 10 → 10 | 45/45 (100%) |
 | infraestructura legitima | 10 | 10 → 10 | 10 → 10 | — |
 | suplantacion de proveedor | 10 | 10 → 10 | 10 → 10 | 36/45 (80%) |
+| deposito por error | 8 | 8 → 8 | 8 → 8 | — |
 | inyeccion tecnica | 8 | 8 → 8 | 8 → 8 | 48/54 (89%) |
 | suplantacion de jefe | 8 | 8 → 8 | 8 → 8 | 29/36 (81%) |
 | espionaje industrial | 6 | 6 → 6 | 6 → 6 | 63/63 (100%) |
@@ -60,7 +61,7 @@ Los números llevan intervalo al 95 %, salvo el clasificador, que da el rango en
 | soporte falso | 2 | 2 → 2 | 2 → 2 | 0/9 (0%) |
 | suplantacion autoridad | 2 | 2 → 2 | 2 → 2 | 9/9 (100%) |
 | tienda falsa | 2 | 2 → 2 | 2 → 2 | 9/9 (100%) |
-| **Total** | **118** | **118 → 118** | | |
+| **Total** | **126** | **126 → 126** | | |
 
 **Límites conocidos (11):** ataques que todavía nos rompen, cada uno con una prueba `xfail(strict=True)`. Esperada: 0 %.
 
