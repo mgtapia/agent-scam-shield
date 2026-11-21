@@ -27,7 +27,7 @@ agentdojo = ["inspect-evals[agentdojo]"]
 demo = ["fastapi", "uvicorn", "numpy"]
 
 [tool.setuptools.packages.find]
-include = ["scamshield*"]
+include = ["scamshield*", "grifter*"]
 
 [tool.setuptools.package-data]
 scamshield = ["scenarios/*/*.yaml"]

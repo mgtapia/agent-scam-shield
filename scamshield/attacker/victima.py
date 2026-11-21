@@ -92,7 +92,7 @@ def resumir(acciones: list[dict[str, Any]], respuesta: str, limite: int = 900) -
 def episodio_de(muestra: Any, esc: dict[str, Any]) -> Episodio:
     """Convierte una muestra de un log de Inspect en un `Episodio`."""
     if muestra.error:
-        return Episodio(False, False, [], "", error=str(muestra.error.message)[:300])
+        return Episodio(False, False, [], "", error=" ".join(str(muestra.error.message).split())[-250:])
     score = muestra.scores[TAREA]
     # Los bloqueos del approver no pasan por el registro del mundo: se suman como acciones bloqueadas.
     del_approver = [{**b, "resultado": "bloqueada", "bloqueada": True}
@@ -113,6 +113,7 @@ async def correr(
     log_dir: str,
     cache: bool = True,
     max_connections: int = 8,
+    retry_on_error: int | None = None,
 ) -> tuple[dict[tuple[str, str], Episodio], dict[str, int]]:
     """Corre una ronda de la víctima: {defensa: escenarios} → ({(defensa, id de muestra): Episodio}, tokens).
 
@@ -124,7 +125,8 @@ async def correr(
     es_anthropic = str(modelo).startswith("anthropic/")
     tareas = [tarea_victima(es, d, cache=cache, cache_prompt=es_anthropic) for d, es in por_defensa.items()]
     logs = await eval_async(tareas, model=modelo, log_dir=log_dir,
-                            max_connections=max_connections, fail_on_error=False)
+                            max_connections=max_connections, fail_on_error=False,
+                            retry_on_error=retry_on_error)
     salida: dict[tuple[str, str], Episodio] = {}
     tokens: dict[str, int] = {}
     for log in logs:

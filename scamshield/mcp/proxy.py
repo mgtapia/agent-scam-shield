@@ -37,7 +37,7 @@ from mcp.client.stdio import stdio_client
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
-from ..defenses.layer2 import SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen
+from ..defenses.layer2 import MOTIVO_CREDENCIAL, SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen
 from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
 
 log = logging.getLogger("grifter")
@@ -167,6 +167,7 @@ class Guardia:
     def __init__(self, config: Config):
         self.config = config
         self.datos_dueno: dict[str, str] = dict(config.datos_dueno)
+        self.encargo: str = config.encargo
         # Lista paralela: (origen, texto) para la política y la fuente para el aviso.
         self.leidos: list[tuple[str, str]] = []
         self.fuentes: list[Optional[Fuente]] = []
@@ -194,9 +195,12 @@ class Guardia:
             return None
         regla = self.config.sensibles[herramienta]
         valor = str(args.get(regla.destino, ""))
-        fuentes = self._fuentes_de(valor)
+        credencial = motivo == MOTIVO_CREDENCIAL
+        fuentes = [] if credencial else self._fuentes_de(valor)
         accion = self.config.acciones.get(herramienta, f"la llamada a {herramienta}")
-        if fuentes:
+        if credencial:
+            mensaje = f"Grifter retuvo {accion}: {MOTIVO_CREDENCIAL[:-1].lower()}."
+        elif fuentes:
             donde = ", ".join(fuentes)
             mensaje = (f"Grifter retuvo {accion}: {regla.que} {valor} apareció en {donde}, "
                        "no en tus cuentas inscritas.")

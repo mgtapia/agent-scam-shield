@@ -7,6 +7,15 @@ se usa para entrenar. Las métricas del evento `modelo` salen de esa evaluación
 Lo que aprende solo sube la sospecha: puede escalar un pago al dueño, pero no deja pasar nada que
 la capa 1 o la capa 2 retengan.
 
+Guardia contra el envenenamiento de etiquetas: un atacante que logra que el dueño etiquete como
+legítimos muchos correos inocuos con lenguaje de estafa («urgente», «cuenta nueva»...) baja de a poco
+el peso de esas señales, hasta que una estafa real sale «segura». Cada versión nueva se evalúa en el
+conjunto apartado (que nunca entrena): si la probabilidad media que da a las estafas apartadas cae más
+de `DERIVA_MAX` respecto de la mejor versión aceptada, se vuelve a los pesos de la última versión
+buena y se descarta el último lote de etiquetas. Se mide la probabilidad y no el recall porque el
+apartado tiene pocas estafas y el recall salta de a una: una deriva fuerte puede costar solo un punto.
+El daño posible queda acotado a esa deriva.
+
 Solo usa numpy (ya está en el entorno) y zlib para un hashing estable entre corridas.
 """
 from __future__ import annotations
@@ -82,6 +91,7 @@ class Clasificador:
     """Regresión logística en línea (SGD con L2), con versiones 1.0.N y evaluación apartada."""
 
     UMBRAL = 0.5
+    DERIVA_MAX = 0.1   # cuánta probabilidad media en las estafas apartadas puede perder una versión nueva
 
     def __init__(self, apartado: list[tuple[Rasgos, int]], cada: int = 6, tasa: float = 0.5,
                  l2: float = 1e-3, sesgo: float = -1.5, semilla: int = 3):
@@ -98,6 +108,17 @@ class Clasificador:
         self._rng = random.Random(semilla)
         self._pesos_version = self.pesos()
         self.metricas = self.evaluar()
+        self.mejor_p_estafas = self.p_medio_estafas()
+        self.revertidas = 0                    # versiones descartadas por la guardia de deriva
+        self._estado_bueno = self._estado()
+
+    def p_medio_estafas(self) -> float:
+        """Probabilidad media que el modelo da hoy a las estafas del conjunto apartado."""
+        ps = [self.probabilidad(r) for r, y in self.apartado if y]
+        return float(sum(ps) / len(ps)) if ps else 0.0
+
+    def _estado(self) -> tuple[np.ndarray, np.ndarray, float]:
+        return self.w.copy(), self.wh.copy(), self.b
 
     @property
     def version(self) -> str:
@@ -145,10 +166,20 @@ class Clasificador:
             self._rng.shuffle(orden)
             for ri, yi in orden:
                 self._paso(ri, yi)
+        metricas = self.evaluar()
+        p_estafas = self.p_medio_estafas()
+        if p_estafas < self.mejor_p_estafas - self.DERIVA_MAX:
+            # Deriva sospechosa: se vuelve a la última versión buena y se descarta el lote que la causó.
+            self.w, self.wh, self.b = (a.copy() if hasattr(a, "copy") else a for a in self._estado_bueno)
+            del self._memoria[-self.cada:]
+            self.revertidas += 1
+            return None
         antes = self._pesos_version
         self.n_version += 1
         self._pesos_version = self.pesos()
-        self.metricas = self.evaluar()
+        self.metricas = metricas
+        self.mejor_p_estafas = max(self.mejor_p_estafas, p_estafas)
+        self._estado_bueno = self._estado()
         cambios = [{"senal": k, "peso_antes": round(antes[k], 3), "peso_despues": round(v, 3)}
                    for k, v in self._pesos_version.items() if abs(v - antes[k]) >= 0.005]
         cambios.sort(key=lambda c: -abs(c["peso_despues"] - c["peso_antes"]))

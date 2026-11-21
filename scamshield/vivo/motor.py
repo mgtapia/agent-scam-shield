@@ -127,6 +127,8 @@ class Motor:
             if c.etiqueta == "estafa":
                 for ind in self.boveda.confirmar(c, self.reloj()):
                     yield 0.15, {"tipo": "boveda", "indicador": ind.a_dict()}
+            elif c.etiqueta == "legitimo":
+                self.boveda.vio_legitimo(c)
             if not self.flujo.es_evaluacion(c):
                 ev = self.clasificador.aprender(ras, int(c.etiqueta == "estafa"))
                 if ev:
