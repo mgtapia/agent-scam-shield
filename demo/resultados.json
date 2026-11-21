@@ -1,5 +1,5 @@
 {
- "generado": "2026-11-21T14:18:19+00:00",
+ "generado": "2026-11-21T14:25:29+00:00",
  "readme": "README.md#resultados",
  "bench": {
   "agente": "guionado",
@@ -131,6 +131,257 @@
     }
    }
   ],
+  "es_contra_en": {
+   "configuraciones": [
+    {
+     "clave": "none",
+     "es": {
+      "estafas_exitosas": {
+       "tasa": 1.0,
+       "bajo": 0.938868520215908,
+       "alto": 1.0,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 1.0,
+       "bajo": 0.9161983874908382,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.0,
+       "bajo": 0.0,
+       "alto": 0.14312112541726274,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     },
+     "en": {
+      "estafas_exitosas": {
+       "tasa": 1.0,
+       "bajo": 0.938868520215908,
+       "alto": 1.0,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 1.0,
+       "bajo": 0.9161983874908382,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.0,
+       "bajo": 0.0,
+       "alto": 0.14312112541726274,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     }
+    },
+    {
+     "clave": "layer1",
+     "es": {
+      "estafas_exitosas": {
+       "tasa": 0.9661016949152542,
+       "bajo": 0.8845621301839242,
+       "alto": 1.0,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 0.9523809523809523,
+       "bajo": 0.8420986468452026,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.0,
+       "bajo": 0.0,
+       "alto": 0.14312112541726274,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     },
+     "en": {
+      "estafas_exitosas": {
+       "tasa": 0.9661016949152542,
+       "bajo": 0.8845621301839242,
+       "alto": 1.0,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 0.9523809523809523,
+       "bajo": 0.8420986468452026,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.0,
+       "bajo": 0.0,
+       "alto": 0.14312112541726274,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     }
+    },
+    {
+     "clave": "layer2",
+     "es": {
+      "estafas_exitosas": {
+       "tasa": 0.05084745762711865,
+       "bajo": 0.0,
+       "alto": 0.1391672332228667,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 0.9523809523809523,
+       "bajo": 0.8420986468452026,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.043478260869565216,
+       "bajo": 0.0,
+       "alto": 0.20991586494059142,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     },
+     "en": {
+      "estafas_exitosas": {
+       "tasa": 0.05084745762711865,
+       "bajo": 0.0,
+       "alto": 0.1391672332228667,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 0.9523809523809523,
+       "bajo": 0.8420986468452026,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.043478260869565216,
+       "bajo": 0.0,
+       "alto": 0.20991586494059142,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     }
+    },
+    {
+     "clave": "layer3",
+     "es": {
+      "estafas_exitosas": {
+       "tasa": 0.7966101694915254,
+       "bajo": 0.6773174503671768,
+       "alto": 0.8983050847457628,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 1.0,
+       "bajo": 0.9161983874908382,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.0,
+       "bajo": 0.0,
+       "alto": 0.14312112541726274,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     },
+     "en": {
+      "estafas_exitosas": {
+       "tasa": 0.7966101694915254,
+       "bajo": 0.6773174503671768,
+       "alto": 0.8983050847457628,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 1.0,
+       "bajo": 0.9161983874908382,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.0,
+       "bajo": 0.0,
+       "alto": 0.14312112541726274,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     }
+    },
+    {
+     "clave": "layer23",
+     "es": {
+      "estafas_exitosas": {
+       "tasa": 0.0,
+       "bajo": 0.0,
+       "alto": 0.061131479784092065,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 0.9523809523809523,
+       "bajo": 0.8420986468452026,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.043478260869565216,
+       "bajo": 0.0,
+       "alto": 0.20991586494059142,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     },
+     "en": {
+      "estafas_exitosas": {
+       "tasa": 0.0,
+       "bajo": 0.0,
+       "alto": 0.061131479784092065,
+       "escenarios": 59,
+       "repeticiones": 59
+      },
+      "utilidad": {
+       "tasa": 0.9523809523809523,
+       "bajo": 0.8420986468452026,
+       "alto": 1.0,
+       "escenarios": 42,
+       "repeticiones": 42
+      },
+      "falsas_alarmas": {
+       "tasa": 0.043478260869565216,
+       "bajo": 0.0,
+       "alto": 0.20991586494059142,
+       "escenarios": 23,
+       "repeticiones": 23
+      }
+     }
+    }
+   ],
+   "pares": 82,
+   "difieren": []
+  },
   "fuente": "results/bench.json",
   "comando": "grifter bench --json results/bench.json"
  },

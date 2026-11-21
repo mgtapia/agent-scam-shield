@@ -412,16 +412,40 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .res-bench { grid-column: 1 / span 7; }
 .res-segutil { grid-column: 8 / span 5; display: flex; flex-direction: column; }
 .res-segutil .lienzo { flex: 1; min-height: 288px; }
-.res-colados { grid-column: 1 / span 8; }
-.res-idiomas { grid-column: 9 / span 4; }
-.res-reales { grid-column: 1 / -1; }
+.res-colados { grid-column: 1 / -1; }
+.res-idiomas { grid-column: 1 / span 5; }
+.res-reales { grid-column: 6 / span 7; }
+.res-reales .res-reales-lista { grid-template-columns: minmax(0, 1fr); }
+.res-reales .res-real + .res-real { border-left: 0; border-top: var(--linea); }
+.res-reales .res-real { grid-template-columns: minmax(0, 1fr) auto; }
+.res-reales .res-real > .res-valor { grid-column: 2; grid-row: 1 / span 2; justify-content: flex-end; }
+.res-reales .res-real > .r-det, .res-reales .res-real > .res-pie { grid-column: 1; }
 .res-atacante { grid-column: 1 / span 8; }
 .res-duelo { grid-column: 9 / span 4; display: flex; flex-direction: column; }
 .res-clasif { grid-column: 1 / -1; }
+.res-cobertura { grid-column: 1 / -1; }
+.r-cobertura tbody th, .r-cobertura tbody td { padding-top: 0; padding-bottom: 0; height: 32px; }
+.r-cobertura tbody th .tag { margin-left: var(--e-1); font-weight: var(--p-normal); }
+.cob-par { display: inline-flex; align-items: center; gap: var(--e-1); }
+.cob-par .ms { color: var(--texto-3); }
+.cob-par .dato { min-width: 24px; text-align: right; }
+.r-barra.vacia { background: transparent; border: var(--linea); height: 8px; }
+.cob-par .r-barra { width: 96px; margin-left: var(--e-1); }
+.r-barra.gris .r-tasa { background: var(--texto-2); }
+.res-limites { border-top: var(--linea); }
+.res-limites summary { display: flex; align-items: center; gap: var(--e-1); min-height: 48px; padding: 0 var(--e-2); cursor: pointer; font-weight: var(--p-fuerte); list-style: none; }
+.res-limites summary::-webkit-details-marker { display: none; }
+.res-limites summary .ms { color: var(--texto-2); transition: transform var(--dur) ease-out; }
+.res-limites[open] summary .ms { transform: rotate(180deg); }
+.res-limites ol { border-top: var(--linea); }
+.res-limites li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: start; gap: var(--e-1) var(--e-2); padding: var(--e-1) var(--e-2); color: var(--texto-2); outline-offset: -1px; }
+.res-limites li + li { border-top: var(--linea); }
+.res-limites li .ms { color: var(--texto-3); }
 .res-bloque .titulo { flex-wrap: wrap; }
 .res-bloque .titulo .nota { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .res-bloque .titulo .res-pie { margin-left: var(--e-2); }
 .res-desliza { overflow-x: auto; }
+.res-desliza .r-colados tbody th, .res-desliza .r-cobertura tbody th { position: sticky; left: 0; z-index: 1; background: var(--superficie); }
 
 /* Tabla del bench: una fila por configuración; la tasa de estafas con barra e intervalo */
 .r-tabla { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
@@ -839,7 +863,7 @@ mark.tramo { background: transparent; color: inherit; }
 @media (max-width: 1099px) {
   .vista.duelo { height: auto; min-height: 0; grid-template-rows: none; }
   .du-congelado, .du-aprende { grid-column: 1 / -1; height: 360px; }
-  .res-bench, .res-segutil, .res-colados, .res-idiomas, .res-atacante, .res-duelo { grid-column: 1 / -1; }
+  .res-bench, .res-segutil, .res-colados, .res-idiomas, .res-reales, .res-atacante, .res-duelo { grid-column: 1 / -1; }
   .res-cifra { grid-column: span 6; }
   .barra { grid-template-columns: auto minmax(0, 1fr); height: auto; padding: var(--e-1) var(--e-2); row-gap: var(--e-1); }
   .pestanas { grid-row: 2; grid-column: 1 / -1; height: 48px; margin-left: 0; }
@@ -894,11 +918,11 @@ mark.tramo { background: transparent; color: inherit; }
   .pestanas a { padding: 0 var(--e-1); }
   .pestanas a .ms { display: none; }
   /* El bench en el móvil: cada configuración en dos líneas, sin scroll interno. */
-  .r-tabla:not(.r-colados) thead { display: none; }
-  .r-tabla:not(.r-colados) tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--e-2); padding: var(--e-1) 0; }
-  .r-tabla:not(.r-colados) th[scope="row"], .r-tabla .r-estafas { grid-column: 1 / -1; padding-bottom: 0; }
-  .r-tabla:not(.r-colados) td[data-et]::before { content: attr(data-et); display: block; color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
-  .r-tabla:not(.r-colados) td { white-space: normal; }
+  .r-tabla:not(.r-colados):not(.r-cobertura) thead { display: none; }
+  .r-tabla:not(.r-colados):not(.r-cobertura) tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--e-2); padding: var(--e-1) 0; }
+  .r-tabla:not(.r-colados):not(.r-cobertura) th[scope="row"], .r-tabla .r-estafas { grid-column: 1 / -1; padding-bottom: 0; }
+  .r-tabla:not(.r-colados):not(.r-cobertura) td[data-et]::before { content: attr(data-et); display: block; color: var(--texto-2); font-size: var(--t-1); line-height: var(--l-1); }
+  .r-tabla:not(.r-colados):not(.r-cobertura) td { white-space: normal; }
   .res-bloque .titulo { flex-wrap: wrap; }
   .res-bloque .titulo .nota { white-space: normal; margin-left: 0; flex-basis: 100%; }
   .fuente, .res-cmd { display: none; }

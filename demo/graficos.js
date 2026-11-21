@@ -287,12 +287,22 @@ const Graficos = (() => {
         ] };
       },
     };
+    // El eje de utilidad parte un poco bajo el intervalo más bajo: con todo entre 84 y 100, de 0 a 100 no se lee nada.
+    const yMin = Math.max(0, Math.floor((Math.min(...ok.map((p) => pp(p.y.bajo))) - 5) / 10) * 10);
+    // Etiquetas: a la derecha del punto (a la izquierda pasado el 60 %, para no salirse del gráfico). Si dos puntos
+    // caen muy cerca, una etiqueta sube y la otra baja.
+    const cerca = (p, q) => Math.abs(pp(q.x.tasa) - pp(p.x.tasa)) < 25 && Math.abs(pp(q.y.tasa) - pp(p.y.tasa)) < 4;
+    const lado = ok.map((p, i) => {
+      const antes = ok.some((q, j) => j < i && cerca(p, q));
+      const despues = ok.some((q, j) => j > i && cerca(p, q));
+      return { position: p.x.tasa > 0.6 ? "left" : "right", offset: [0, antes ? 10 : despues ? -10 : 0] };
+    });
     g.setOption({
       animation: false,
-      grid: { left: 48, right: 24, top: 16, bottom: 48 },
+      grid: { left: 48, right: 24, top: 24, bottom: 48 },
       xAxis: { type: "value", min: 0, max: 100, interval: 25, name: eje_x, nameLocation: "middle", nameGap: 28,
         nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, axisLabel: { formatter: "{value}%" } },
-      yAxis: { type: "value", min: 0, max: 100, interval: 25, name: eje_y, nameLocation: "middle", nameGap: 36,
+      yAxis: { type: "value", min: yMin, max: 100, name: eje_y, nameLocation: "middle", nameGap: 36,
         nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, axisLabel: { formatter: "{value}%" } },
       tooltip: { trigger: "item", formatter: (p) => {
         const x = ok[p.dataIndex];
@@ -300,9 +310,8 @@ const Graficos = (() => {
       } },
       series: [bigote, {
         type: "scatter", z: 2, symbol: "rect", symbolSize: 8,
-        data: ok.map((p) => ({ value: [pp(p.x.tasa), pp(p.y.tasa)], itemStyle: { color: color(p) },
-          label: { show: true, formatter: p.nombre, position: p.x.tasa > 0.6 ? "left" : "right", color: color(p), fontFamily: MONO, fontSize: T1 } })),
-        labelLayout: { moveOverlap: "shiftY" },
+        data: ok.map((p, i) => ({ value: [pp(p.x.tasa), pp(p.y.tasa)], itemStyle: { color: color(p) },
+          label: { show: true, formatter: p.nombre, ...lado[i], distance: 8, color: color(p), fontFamily: MONO, fontSize: T1 } })),
       }],
     });
   }
