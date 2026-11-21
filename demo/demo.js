@@ -155,7 +155,7 @@
     { id: "intro", desde: 0 }, { id: "a1", desde: 3 }, { id: "a2", desde: 55 }, { id: "a3", desde: 67 }, { id: "cierre", desde: 78 },
   ];
   const DURACION = 86;
-  const LLAMADA = { suena: 4.4, contesta: 7, abuela: 7.3, nieto: 9.3, cuelga: 34.6 };
+  const LLAMADA = { suena: 4.4, contesta: 7, abuela: 7.3, nieto: 9.9, cuelga: 34.6 };
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
   // Doble autorización con quórum 2: Marta toca «Pagar igual», le llega el código por correo y aprueba (1 de 2);
