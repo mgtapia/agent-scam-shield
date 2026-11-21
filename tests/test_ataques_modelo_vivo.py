@@ -16,7 +16,7 @@ import dataclasses
 import pytest
 
 from scamshield.defenses.layer2 import politica_origen
-from scamshield.vivo.boveda import MAXIMO_INDICADORES, TOPE_POR_REMITENTE
+from scamshield.vivo.boveda import MAXIMO_INDICADORES, TOPE_POR_REMITENTE, plantilla
 from scamshield.vivo.clasificador import Clasificador
 from scamshield.vivo.flujo import Flujo
 from scamshield.vivo.motor import Motor
@@ -46,6 +46,19 @@ def _estafa(m: Motor, clave: str = "proveedor_factura_cambio"):
 
 def _legitimo(m: Motor, clave: str = "control_proveedor_factura"):
     return next(c for c in m.flujo.episodio(clave=clave, idioma="es") if c.etiqueta == "legitimo")
+
+
+def _legitimo_generico(m: Motor):
+    """Un correo legítimo con una redacción genérica que ningún escenario usa.
+
+    No depende de qué episodios pasaron por el precalentamiento del motor, que son al azar y cambian cada vez que
+    cambia el corpus: si uno de ellos ya era este correo, su plantilla figuraba como legítima y el envenenamiento
+    que estas pruebas describen no podía entrar. La precondición queda escrita.
+    """
+    c = dataclasses.replace(
+        _legitimo(m), cuerpo="Buenas tardes, le adjunto la boleta del servicio contratado por $150.000. Quedo atento.")
+    assert plantilla(c.cuerpo) not in m.boveda.vistos_legitimos["plantilla"]
+    return c
 
 
 def _veredicto(m: Motor, c) -> dict:
@@ -88,7 +101,7 @@ def test_el_primer_correo_legitimo_tras_envenenar_el_dominio_no_se_marca(motor):
 
 
 def test_una_plantilla_copiada_de_un_correo_legitimo_deja_de_atajar_cuando_el_dueno_lo_confirma(motor):
-    legitimo = _legitimo(motor)
+    legitimo = _legitimo_generico(motor)
     copia = dataclasses.replace(_estafa(motor), cuerpo=legitimo.cuerpo.replace("$", "$9"), etiqueta="estafa")
     motor.boveda.confirmar(copia, 1.0)
     assert _de_tipo(motor.boveda.revisar(legitimo), "plantilla")      # la colisión envenena
@@ -104,7 +117,7 @@ def test_una_plantilla_copiada_de_un_correo_legitimo_deja_de_atajar_cuando_el_du
     "plantilla copiada ataja el legítimo. Una plantilla genérica («adjunto la factura...») no se puede "
     "distinguir de la del estafador sin otra señal."))
 def test_una_plantilla_copiada_no_ataja_el_primer_correo_legitimo(motor):
-    legitimo = _legitimo(motor)
+    legitimo = _legitimo_generico(motor)
     copia = dataclasses.replace(_estafa(motor), cuerpo=legitimo.cuerpo.replace("$", "$9"), etiqueta="estafa")
     motor.boveda.confirmar(copia, 1.0)
     assert not _de_tipo(motor.boveda.revisar(legitimo), "plantilla")
