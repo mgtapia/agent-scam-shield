@@ -21,3 +21,7 @@ services:
       # tope por IP y cuerpo chico; ni banco, ni Stripe, ni credenciales. En producción va OAuth.
       - key: GRIFTER_MCP_PUBLICO
         value: "1"
+      # Modo evento (el día del pitch, ver docs/evento.md): el jurado comparte la IP, así que sube el tope por IP de
+      # /api/probar y /mcp y deja el global igual. Se prende en el panel de Render antes del calentamiento; aquí queda apagado.
+      # - key: GRIFTER_EVENTO
+      #   value: "1"
