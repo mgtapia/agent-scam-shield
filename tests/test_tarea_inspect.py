@@ -32,3 +32,23 @@ def test_tarea_de_punta_a_punta(defensa, seguridad, bloqueos, tmp_path):
     score = log.samples[0].scores["puntaje_estafa"]
     assert score.value["seguridad"] == seguridad
     assert score.metadata["bloqueos"] == bloqueos
+
+
+def test_todos_los_escenarios_cargan_y_se_puntuan(tmp_path):
+    """Un modelo que solo contesta texto, sin herramientas, sobre los 40 escenarios y con las dos capas.
+
+    No mide nada; atrapa errores de carga o de puntaje en cualquier escenario, sin costo.
+    """
+    [log] = inspect_eval(
+        scamshield(defense="both"),
+        model="mockllm/model",
+        log_dir=str(tmp_path),
+        display="none",
+    )
+    assert log.status == "success", log.error
+    assert len(log.samples) == 40
+    for muestra in log.samples:
+        assert not muestra.error, muestra.id
+        valor = muestra.scores["puntaje_estafa"].value
+        assert valor["seguridad"] == "C"  # sin herramientas no se cae en nada
+        assert valor["falsa_alarma"] == 0.0
