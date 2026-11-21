@@ -9,11 +9,21 @@ Para no atajar correos legítimos:
 - nunca entra un dominio de la libreta de contactos conocidos (un proveedor real cuyo correo fue
   secuestrado sigue siendo un proveedor real: ahí manda la cuenta).
 La cuenta se reconoce con `origenes_en`, la misma función de origen de la capa 2.
+
+Contra el envenenamiento (un atacante que suplanta el remitente de un proveedor real, o copia la
+redacción de un correo legítimo, para que la bóveda se acuerde de ese dominio o de esa plantilla):
+- un dominio o una plantilla vistos en un correo que el dueño confirmó como legítimo dejan de
+  atajar: son indicadores blandos y la cuenta, que el estafador no puede prestar, sigue mandando;
+- cada remitente aporta como mucho `TOPE_POR_REMITENTE` indicadores nuevos, y la bóveda entera
+  guarda como mucho `MAXIMO_INDICADORES` (se olvidan los más viejos), así que una avalancha de
+  correos suplantados no la hace crecer sin límite.
+Los dígitos y guiones de ancho completo se normalizan (NFKC) antes de buscar una cuenta.
 """
 from __future__ import annotations
 
 import hashlib
 import re
+import unicodedata
 from dataclasses import asdict, dataclass
 from typing import Any, Iterable
 
@@ -22,6 +32,13 @@ from .flujo import AGENTES, CUENTA, Correo, Libreta, dominio_de
 from .lectura import dominios_en
 
 _LETRAS = re.compile(r"[a-záéíóúñü]+")
+TOPE_POR_REMITENTE = 20
+MAXIMO_INDICADORES = 2000
+
+
+def _nfkc(texto: str) -> str:
+    """«４８－９９１７» y «48-9917» son lo mismo para un lector humano y para esta bóveda."""
+    return unicodedata.normalize("NFKC", str(texto))
 
 
 @dataclass
@@ -48,6 +65,9 @@ class Boveda:
         self.libreta = libreta
         self.cuentas_legitimas = {_digitos(c) for c in cuentas_legitimas}
         self.indicadores: dict[tuple[str, str], Indicador] = {}
+        # Dominios y plantillas que el dueño confirmó en correo legítimo: indicadores blandos.
+        self.vistos_legitimos: dict[str, set[str]] = {"dominio": set(), "plantilla": set()}
+        self._por_remitente: dict[str, int] = {}
 
     def __len__(self) -> int:
         return len(self.indicadores)
@@ -61,15 +81,24 @@ class Boveda:
     def revisar(self, correo: Correo) -> list[Indicador]:
         """Los indicadores de la bóveda que trae el correo (verificación inmediata)."""
         aciertos = []
-        leido = [(CORREO, correo.texto)]
+        leido = [(CORREO, _nfkc(correo.texto))]
         for (tipo, valor), ind in self.indicadores.items():
             if tipo == "cuenta" and origenes_en(leido, valor):
                 aciertos.append(ind)
-            elif tipo == "dominio" and valor in self._dominios(correo):
+            elif tipo == "dominio" and valor in self._dominios(correo) \
+                    and valor not in self.vistos_legitimos["dominio"]:
                 aciertos.append(ind)
-            elif tipo == "plantilla" and valor == plantilla(correo.cuerpo):
+            elif tipo == "plantilla" and valor == plantilla(correo.cuerpo) \
+                    and valor not in self.vistos_legitimos["plantilla"]:
                 aciertos.append(ind)
         return aciertos
+
+    def vio_legitimo(self, correo: Correo) -> None:
+        """El dueño confirmó que este correo es legítimo: su dominio y su plantilla dejan de atajar."""
+        dominio = dominio_de(correo.de)
+        if dominio:
+            self.vistos_legitimos["dominio"].add(dominio)
+        self.vistos_legitimos["plantilla"].add(plantilla(correo.cuerpo))
 
     def marcar(self, indicadores: Iterable[Indicador]) -> list[Indicador]:
         """Suma una detección a cada indicador que atajó un correo."""
@@ -94,13 +123,21 @@ class Boveda:
             if not self.libreta.dominio_conocido(d):
                 nuevos.append(("dominio", d))
         nuevos.append(("plantilla", plantilla(correo.cuerpo)))
+        remitente = dominio_de(correo.de) or correo.de.lower()
         salida = []
         for clave in nuevos:
+            if clave[0] in self.vistos_legitimos and clave[1] in self.vistos_legitimos[clave[0]]:
+                continue
             ind = self.indicadores.get(clave)
             if ind is None:
+                if self._por_remitente.get(remitente, 0) >= TOPE_POR_REMITENTE:
+                    continue
+                self._por_remitente[remitente] = self._por_remitente.get(remitente, 0) + 1
                 ind = Indicador(clave[0], clave[1], 1, ts, correo.id)
                 self.indicadores[clave] = ind
                 salida.append(ind)
+        while len(self.indicadores) > MAXIMO_INDICADORES:
+            del self.indicadores[next(iter(self.indicadores))]   # el más viejo
         return salida
 
     @staticmethod
