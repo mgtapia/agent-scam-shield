@@ -16,7 +16,7 @@ todo lo sensible y le manda el diff al dueño hasta que apruebe; y avisa (latido
 Ver `integridad.py`.
 
 Uso: python -m scamshield.mcp.proxy --config grifter.yaml            # stdio (Claude Desktop, Claude Code)
-     GRIFTER_MCP_TOKEN=... python -m scamshield.mcp.proxy --http   # HTTP en /mcp (ChatGPT, Claude.ai)
+     GRIFTER_MCP_TOKEN=... python -m scamshield.mcp.proxy --http   # HTTP en /mcp, con token (ver docs/mcp.md)
 Los MCP de abajo pueden ser procesos stdio (`comando`) o remotos por HTTP (`url`, `headers`).
 Ejemplo de configuración: scamshield/mcp/grifter.ejemplo.yaml
 """
@@ -662,7 +662,8 @@ def main(argv: Optional[list[str]] = None) -> None:
     parser.add_argument("--encargo", default=None,
                         help="texto del encargo del dueño; se suma a lo confiable")
     parser.add_argument("--http", action="store_true",
-                        help="expone streamable HTTP en /mcp (para ChatGPT o Claude.ai) en vez de stdio; "
+                        help="expone streamable HTTP en /mcp en vez de stdio (clientes que mandan cabecera, como Claude Code; "
+                             "ChatGPT y Claude.ai piden OAuth, ver docs/mcp.md); "
                              "pide GRIFTER_MCP_TOKEN en el entorno")
     parser.add_argument("--host", default="127.0.0.1", help="con --http: dirección donde escucha")
     parser.add_argument("--puerto", type=int, default=8766, help="con --http: puerto")

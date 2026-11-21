@@ -1,13 +1,13 @@
 """Grifter como conector MCP remoto: streamable HTTP en `/mcp`, con token de portador.
 
-ChatGPT (modo desarrollador, conectores) y Claude.ai solo se conectan a servidores MCP por HTTPS. Con
-esto se les da la URL de Grifter (`https://tu-host/mcp`) en vez de la del comercio: Grifter recibe
+Un agente remoto se conecta a la URL de Grifter (`https://tu-host/mcp`) en vez de la del comercio. Grifter recibe
 las llamadas, aplica las mismas capas que por stdio y recién entonces las reenvía a los MCP de
 abajo (por stdio o por HTTP, ver `grifter.yaml`).
 
 - **Autenticación del conector:** un token de portador (`Authorization: Bearer <token>`), el de
-  `GRIFTER_MCP_TOKEN`. Es lo mínimo para una demo. En producción corresponde OAuth 2.1, que es lo que
-  ChatGPT y Claude.ai hablan con los conectores de verdad. Sin token configurado, el endpoint no
+  `GRIFTER_MCP_TOKEN`. Es lo mínimo para una demo y sirve a los clientes que dejan poner una cabecera
+  (Claude Code, las APIs, el MCP Inspector). ChatGPT (modo desarrollador) y Claude.ai solo ofrecen OAuth
+  o nada: para ellos, y en producción, corresponde OAuth 2.1 (pendiente, ver docs/mcp.md). Sin token configurado, el endpoint no
   arranca, y sin el token correcto responde 401 antes de tocar nada.
 - **Las credenciales del comercio y del banco** viven en Grifter (los `headers` de `grifter.yaml`,
   que pueden venir de variables de entorno con `${VAR}`), no en ChatGPT ni en Claude.ai.

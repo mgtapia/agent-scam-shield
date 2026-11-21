@@ -83,6 +83,7 @@ async def _grupo(grifter: "Grifter", pila: AsyncExitStack) -> anyio.abc.TaskGrou
     grupo = getattr(grifter, "_vigilantes", None)
     if grupo is None:
         grupo = await pila.enter_async_context(anyio.create_task_group())
+        pila.callback(setattr, grifter, "_vigilantes", None)   # al cerrar, un conectar nuevo abre otro grupo
         pila.callback(grupo.cancel_scope.cancel)   # LIFO: cancela a las vigilantes antes de esperarlas
         grifter._vigilantes = grupo
     return grupo

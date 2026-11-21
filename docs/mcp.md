@@ -109,9 +109,9 @@ En la demo de Render, `demo/server.py` monta `/mcp` en el mismo servicio solo si
 claude mcp add --transport http grifter https://grifter.onrender.com/mcp \
   --header "Authorization: Bearer $GRIFTER_MCP_TOKEN"
 ```
-Lo mismo para el conector MCP de la API de Anthropic (`authorization_token`), la herramienta `mcp` de la API de Responses de OpenAI (`headers`) o el MCP Inspector.
+También sirven las APIs de Anthropic y de OpenAI, que dejan pasar el token al declarar el servidor MCP, y el MCP Inspector.
 
-**ChatGPT (modo desarrollador).** En ChatGPT web: Settings, Apps (antes Connectors), Advanced settings, Developer mode. Después se agrega un servidor MCP propio con su nombre y la URL `https://grifter.onrender.com/mcp`. Hoy ChatGPT ofrece solo **OAuth** o **sin autenticación** y no deja poner un token de portador fijo. Contra el `/mcp` protegido con token, ChatGPT recibe 401. Para que ChatGPT se conecte falta OAuth. Esto queda pendiente, porque abrir `/mcp` sin autenticación expondría el endpoint a cualquiera. **Claude.ai** (conectores personalizados) tiene la misma restricción: OAuth o nada.
+**ChatGPT (modo desarrollador).** En ChatGPT web: Settings, Apps (antes Connectors), Advanced settings, Developer mode. Después se agrega un servidor MCP propio con su nombre y la URL `https://grifter.onrender.com/mcp`. Hoy ChatGPT ofrece solo **OAuth** o **sin autenticación** y no deja poner un token de portador fijo. Contra el `/mcp` protegido con token, ChatGPT recibe 401. Para que ChatGPT se conecte falta OAuth. Esto queda pendiente, porque abrir `/mcp` sin autenticación expondría el endpoint a cualquiera. **Claude.ai** (conectores personalizados), por lo que vimos, tiene la misma restricción: OAuth o nada.
 
 **Los MCP del comercio, por URL.** En `grifter.yaml`:
 ```yaml
