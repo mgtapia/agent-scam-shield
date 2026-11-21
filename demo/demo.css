@@ -1,3 +1,5 @@
+/* Escala tipográfica del escenario (1920×1080), cuatro tamaños: 24/32 etiquetas (.md-rot, .md-quien), 28/36 cuerpo
+   (.md-rotulo, .md-encargo, .md-pasos), 36/48 subtítulos de la llamada (.md-sub) y 52/64 título (.md-frase). No sumar otro. */
 /* Grifter, modo demo (demo.html): un escenario fijo de 1920×1080 que se escala a la ventana (--md-k).
    Usa los tokens de estilos.css. Los tamaños grandes son propios de este modo, que se proyecta o se graba:
    están pensados para leerse desde el fondo de una sala. La única excepción a «radio 0» es el celular dibujado,
@@ -32,18 +34,18 @@ body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--f
 
 .md-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 64px; align-items: start; }
 .md-consola { display: grid; gap: 24px; min-width: 0; }
-.md-rot { margin: 0; color: var(--texto-2); font-size: var(--t-3); line-height: var(--l-3); display: flex; align-items: center; gap: var(--e-1); }
+.md-rot { margin: 0; color: var(--texto-2); font-size: 24px; line-height: 32px; display: flex; align-items: center; gap: var(--e-1); }
 .md-encargo { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 16px; padding: 24px; font-size: 28px; line-height: 36px; border: var(--linea); background: var(--superficie); }
 .md-encargo p { margin: 0; }
 .md-encargo .md-ic { color: var(--texto-2); }
 
 /* Rótulo neutro sobre la frase del acto */
-.md-rotulo { margin: 0 0 -24px; color: var(--texto-2); font-size: 32px; line-height: 40px; }
+.md-rotulo { margin: 0 0 -24px; color: var(--texto-2); font-size: 28px; line-height: 36px; }
 /* Subtítulos de la llamada: una frase a la vez, en el mismo lugar */
 .md-subtitulos:not(.ve) { display: none; }
 .md-subtitulos { position: relative; min-height: 200px; padding: 24px; border: var(--linea); background: var(--superficie); }
 .md-sub { position: absolute; inset: 24px; margin: 0; font-size: 36px; line-height: 48px; }
-.md-sub .md-quien { display: block; margin-bottom: 8px; font-size: 22px; line-height: 28px; }
+.md-sub .md-quien { display: block; margin-bottom: 8px; font-size: 24px; line-height: 32px; }
 .md-sub-dueno { color: var(--texto-2); }
 .md-cuenta { white-space: nowrap; background: transparent; color: var(--ambar); font-family: var(--mono); text-decoration: underline; text-decoration-color: var(--ambar); text-underline-offset: 6px; }
 .md-contacto { margin: 0; display: flex; align-items: center; gap: 12px; font-weight: var(--p-fuerte); }
@@ -55,17 +57,22 @@ body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--f
 .md-pasos li { display: grid; grid-template-columns: 32px 140px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 16px 24px; font-size: 28px; line-height: 36px; }
 .md-pasos li + li { border-top: var(--linea); }
 .md-pasos li .md-ic { color: var(--texto-2); }
-.md-quien { color: var(--texto-3); font-size: 22px; }
+.md-quien { color: var(--texto-3); font-size: 24px; line-height: 32px; }
 .md-pasos .tag { font-size: var(--t-2); height: auto; padding: 2px 12px; }
 .md-retuvo .md-ic, .md-retuvo b, .md-retuvo .md-quien { color: var(--verde); }
 .md-retuvo b { font-weight: var(--p-fuerte); }
 .md-pago-ok .md-ic, .md-pago-ok .md-quien { color: var(--verde); }
 
-/* El celular dibujado: un Android actual a escala. Pantalla 9:19,5 (412×915 dp) de 388×840 px, es decir 0,92 px
-   por dp; los textos van a 1,1-1,3 veces su tamaño real en sp para leerse proyectados. En el acto 1 va fijo a la
-   derecha, de arriba abajo, y el texto de la izquierda le deja el espacio. */
-.md-a1 { padding-right: 600px; }
-.md-a1 .md-cols { grid-template-columns: minmax(0, 1fr); }
+/* El celular dibujado: un Android actual a escala. Pantalla 9:19,5 (412×915 dp) de 413×894 px, 1 px por dp; los
+   textos van a 1,1-1,3 veces su tamaño real en sp para leerse proyectados.
+   Escenas con teléfono (acto 1 y las dos del acto 2): dos bloques con el mismo margen a los lados (96 px). El teléfono
+   ocupa el 85 % del alto (918 de 1080) y la columna de la izquierda queda centrada en vertical respecto de él. */
+.md-comp.activo { display: flex; flex-direction: column; justify-content: center; gap: 32px; padding: 81px 629px 81px 96px; }
+.md-comp > .md-rotulo { margin: 0; }
+.md-a1 .md-frase { min-height: 64px; font-size: 52px; line-height: 64px; }   /* las dos frases caben en una línea de la columna */
+.md-comp > .md-cols { display: contents; }
+.md-a1 .md-consola { height: 472px; align-content: start; }   /* fija: lo que aún no aparece no corre el bloque */
+.md-comp .md-celular { right: 96px; top: 81px; width: 437px; height: 918px; }
 .md-celular {
   position: absolute; right: 96px; top: 108px; width: 412px; height: 864px; padding: 12px;
   border-radius: 56px; background: #16171A; border: 2px solid var(--borde);
@@ -86,11 +93,26 @@ body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--f
 .md-ll-estado > span { position: absolute; inset: 0; }
 /* La foto del nieto con dos ondas que se abren mientras suena. --md-p va de 0 a 1 y lo fija render() */
 .md-avatar { position: relative; width: 168px; height: 168px; margin: 32px 0 40px; transition: transform 480ms ease-out; }
-.md-avatar img { position: relative; width: 100%; height: 100%; border-radius: 50%; display: block; }
+.md-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; display: block; object-fit: cover; transition: opacity 400ms ease-out; }
+.md-foto-marta, body.md-habla-marta .md-foto-nieto { opacity: 0; }
+body.md-habla-marta .md-foto-marta { opacity: 1; }
+/* Quién llama, como en Android: el nombre grande arriba y el número más chico y en gris debajo */
+.md-ll-nombre { display: grid; justify-items: center; }
+.md-ll-nombre > p { grid-area: 1 / 1; margin: 0; display: grid; gap: 6px; transition: opacity 400ms ease-out; }
+.md-ll-nombre b { font-size: 34px; line-height: 40px; font-weight: var(--p-normal); }
+.md-ll-nombre span { color: var(--texto-2); font-size: 20px; line-height: 26px; }
+.md-n-habla-nieto, .md-n-marta { opacity: 0; }
+body.md-habla-nieto .md-n-nieto, body.md-habla-marta .md-n-nieto { opacity: 0; }
+body.md-habla-nieto .md-n-habla-nieto, body.md-habla-marta .md-n-marta { opacity: 1; }
+/* La barra de voz bajo la foto: siete barras cuya altura fija render() mientras alguien habla */
+.md-voz-barras { display: flex; align-items: center; justify-content: center; gap: 5px; height: 28px; margin-top: -24px; opacity: 0; transition: opacity 240ms ease-out; }
+body.md-contestada .md-voz-barras { opacity: 1; }
+.md-voz-barras i { width: 5px; height: calc(4px + var(--md-h, 0.12) * 24px); background: var(--verde); border-radius: 3px; opacity: 0.45; transition: opacity 240ms ease-out; }
+body.md-voz .md-voz-barras i { opacity: 1; }
+@keyframes md-voz-pulso { 50% { opacity: 0.45; } }
 .md-pulso { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--verde); opacity: calc((1 - var(--md-p, 0)) * 0.6); transform: scale(calc(1 + var(--md-p, 0) * 0.55)); }
 body:not(.md-suena) .md-pulso { opacity: 0; }
 body.md-contestada .md-avatar { transform: scale(0.82); }
-.md-ll-nombre { margin: 0; font-size: 34px; line-height: 40px; font-weight: var(--p-normal); }
 .md-ll-botones { position: absolute; left: 24px; right: 24px; bottom: 72px; display: flex; justify-content: space-around; }
 .md-ll-b { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; }
 .md-ll-b .md-ic { width: 36px; height: 36px; }
@@ -117,15 +139,76 @@ body.md-contestada .md-avatar { transform: scale(0.82); }
 .md-al-hecho p.dato { color: var(--texto-2); font-size: 22px; font-weight: var(--p-normal); }
 .md-al-hecho .md-ic { color: var(--verde); }
 
-/* Acto 2: dos tarjetas rápidas con el mismo formato */
-.md-tarjetas { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-content: start; }
-.md-tarjeta { display: grid; align-content: start; gap: 32px; padding: 40px; border: var(--linea); background: var(--superficie); }
-.md-tarjeta dl { margin: 0; display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px 24px; align-items: baseline; }
-.md-tarjeta dt { color: var(--texto-3); font-size: var(--t-3); line-height: 32px; }
-.md-tarjeta dd { margin: 0; font-size: 32px; line-height: 44px; }
-.md-tarjeta dd.dato { font-size: 28px; }
-.md-tarjeta .md-contacto { font-size: 26px; line-height: 32px; }
-.md-tarjeta .tag { font-size: var(--t-2); height: auto; padding: 2px 12px; vertical-align: middle; }
+/* Doble autorización del acto 1: Marta espera a Pablo, y el teléfono de Pablo (más chico) trae el pedido por WhatsApp */
+.md-a1 { transition: padding-right 480ms ease-out; }
+body.md-con-pablo .md-a1.activo { padding-right: 929px; }   /* el teléfono de Pablo entra entre el texto y el de Marta */
+/* Con Pablo a la vista la columna se angosta: frases más chicas y en dos líneas, y el log crece con la doble autorización */
+body.md-con-pablo .md-a1 .md-frase { min-height: 112px; font-size: 44px; line-height: 56px; }
+body.md-con-pablo .md-a1 > .md-rotulo { font-size: 24px; line-height: 32px; }
+body.md-aut .md-a1 .md-consola { height: 680px; }   /* el alto final del log con la doble autorización: crece una vez, sin saltos */
+.md-a1 .md-consola { transition: height 480ms ease-out; }
+.md-espera { position: absolute; left: 16px; right: 16px; top: 200px; display: grid; justify-items: center; gap: 12px; padding: 40px 24px; text-align: center; border: var(--linea); background: var(--superficie); }
+.md-espera p { margin: 0; font-size: 22px; line-height: 28px; font-weight: var(--p-fuerte); }
+.md-espera .md-ic { color: var(--texto-2); }
+.md-espera .md-esperando { color: var(--texto-2); font-size: 18px; font-weight: var(--p-normal); }
+.md-espera .md-ic { color: var(--verde); }
+.md-digitos { display: grid; grid-template-columns: repeat(6, 36px); gap: 6px; }
+.md-digitos span { display: grid; place-items: center; height: 48px; border: var(--linea); background: var(--fondo); font: var(--p-fuerte) 24px / 1 var(--mono); }
+/* La notificación del correo con el código, arriba de la pantalla como en Android */
+.md-notif { position: absolute; z-index: 3; left: 12px; right: 12px; top: 52px; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 12px 14px; background: #1F2126; border: var(--linea); border-radius: 18px; }
+.md-notif .md-ic { width: 22px; height: 22px; color: var(--texto-2); }
+.md-notif p { margin: 0; font-size: 15px; line-height: 20px; }
+.md-notif .md-notif-de { color: var(--texto-2); font-size: 13px; line-height: 18px; }
+.md-wa-avance { margin-top: 8px !important; color: var(--texto-2); font-size: 14px !important; line-height: 20px !important; }
+/* Con la doble autorización, el log de la izquierda crece: filas más compactas para que quepa todo */
+body.md-aut .md-a1 .md-pasos li { padding: 8px 20px; font-size: 22px; line-height: 28px; }
+body.md-aut .md-a1 .md-encargo { padding: 14px 20px; font-size: 22px; line-height: 28px; }
+body.md-aut .md-a1 .md-motivo span:not(.md-quien) { font-size: 20px; line-height: 26px; }
+.md-cadena { margin: -12px 0 0; color: var(--texto-3); font: var(--p-normal) 18px / 24px var(--mono); }
+.md-a1 .md-celular.md-pablo { right: 565px; top: 224px; width: 300px; height: 632px; padding: 8px; border-radius: 44px; }
+.md-pablo .md-pantalla { border-radius: 36px; }
+.md-pablo .md-camara { top: 10px; width: 12px; height: 12px; margin-left: -6px; }
+.md-pablo .md-estado { height: 34px; padding: 0 20px; font-size: 13px; }
+.md-pablo-de { position: absolute; left: 0; right: 0; top: -44px; margin: 0; text-align: center; color: var(--texto-2); font-size: 22px; line-height: 28px; }
+.md-wa { position: absolute; inset: 44px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+.md-wa-cab { margin: 0 0 6px; display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: var(--linea); font-size: 17px; line-height: 22px; font-weight: var(--p-fuerte); }
+.md-wa-cab .md-ic { width: 22px; height: 22px; color: var(--verde); }
+.md-wa-msg { padding: 12px 14px; background: var(--superficie); border: var(--linea); }
+.md-wa-msg p { margin: 0; font-size: 16px; line-height: 22px; }
+.md-wa-botones { display: grid; gap: 6px; }
+.md-wa-b { position: relative; overflow: hidden; display: block; padding: 10px; text-align: center; border: var(--linea); background: var(--superficie); color: var(--verde); font-size: 15px; line-height: 20px; font-weight: var(--p-fuerte); }
+
+/* Acto 2: un caso a la vez. Tres líneas que se leen desde el fondo de la sala; lo clave, resaltado */
+.md-tres { margin: 0; padding: 0; list-style: none; display: grid; align-content: start; gap: 40px; }
+.md-tres li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 32px; font-size: 56px; line-height: 68px; font-weight: var(--p-fuerte); letter-spacing: -0.02em; }
+.md-tres .md-ic { width: 48px; height: 48px; margin-top: 10px; color: var(--texto-3); }
+.md-tres .md-ret .md-ic { color: var(--verde); }
+.md-clave { white-space: nowrap; background: transparent; color: var(--ambar); text-decoration: underline; text-decoration-color: var(--ambar); text-underline-offset: 8px; }
+/* Las pantallas del caso: el correo del falso ejecutivo y el checkout */
+.md-correo, .md-compra { position: absolute; left: 20px; right: 20px; top: 64px; bottom: 24px; display: flex; flex-direction: column; gap: 18px; }
+.md-correo p, .md-compra p { margin: 0; }
+.md-correo-de { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; border-bottom: var(--linea); font-size: 17px; line-height: 24px; }
+.md-correo-de .md-ic { flex: none; width: 24px; height: 24px; color: var(--texto-2); }
+.md-correo-de .md-clave { text-underline-offset: 4px; }
+.md-correo-asunto { font-size: 22px; line-height: 30px; font-weight: var(--p-fuerte); }
+.md-correo-cuerpo { color: var(--texto-2); font-size: 18px; line-height: 27px; }
+.md-respuesta { display: grid; gap: 8px; padding: 14px 16px; border: var(--linea); background: var(--superficie); }
+.md-respuesta p:last-child { font-size: 20px; line-height: 28px; }
+.md-respuesta b { white-space: nowrap; color: var(--ambar); }
+.md-compra-tienda { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: var(--linea); font-size: 24px; line-height: 30px; font-weight: var(--p-fuerte); }
+.md-compra-tienda .md-ic { color: var(--texto-2); }
+.md-compra-orden { color: var(--texto-2); font-size: 17px; line-height: 22px; }
+.md-compra-item { font-size: 22px; line-height: 32px; }
+.md-compra-tot { margin: 0; display: grid; grid-template-columns: auto auto; justify-content: space-between; align-items: baseline; gap: 16px; padding-top: 20px; border-top: var(--linea); font-size: 22px; line-height: 32px; }
+.md-compra-tot dt { color: var(--texto-2); }
+.md-compra-tot dd { margin: 0; font-family: var(--mono); font-weight: var(--p-fuerte); }
+.md-compra-tot .md-total { font-size: 28px; }
+.md-compra-b { margin-top: auto; display: grid; place-items: center; height: 56px; }
+.md-retenido { position: absolute; left: 20px; right: 20px; bottom: 24px; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 18px; border: 1px solid var(--rojo); background: var(--superficie); }
+.md-retenido .md-ic { width: 36px; height: 36px; color: var(--verde); }
+.md-retenido p { display: grid; gap: 4px; margin: 0; }
+.md-retenido b { font-size: 22px; line-height: 28px; }
+.md-retenido span { color: var(--texto-2); font-size: 17px; line-height: 22px; }
 .md-ret { color: var(--verde); font-weight: var(--p-fuerte); }
 .md-ret .md-ic { vertical-align: middle; }
 
@@ -163,4 +246,5 @@ body.md-corriendo { cursor: none; }
 @media (prefers-reduced-motion: reduce) {
   [data-v], [data-h], .md-avatar { transition: none; }
   .md-toque.ve { animation: none; opacity: 0; }
+  body.md-voz .md-voz-barras i { animation: md-voz-pulso 1200ms ease-in-out infinite; }
 }

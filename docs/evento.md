@@ -54,3 +54,46 @@ Despierta el servicio con reintentos (hasta 180 s) y verifica, mostrando el tiem
 4. `/api/probar`: un correo ficticio, que arma el motor para el primer intento del jurado.
 
 Sale con 1 y dice cuál ruta falló. Solo hace GET, un `initialize` a `/mcp` y un POST de un correo ficticio: no manda nada a Telegram ni a ninguna API.
+
+## Demo en vivo con WhatsApp
+
+En el acto 1 del modo demo (`/#demo`), Marta toca «Pagar igual», aprueba con el código que le llega por correo (1 de 2) y falta Pablo, su hijo. Pablo lo hace el presentador: el pedido de aprobación le llega **de verdad** por WhatsApp (Kapso), con Aprobar y Rechazar y el mismo texto de la doble autorización. El teléfono del presentador se muestra en la pantalla grande con scrcpy.
+
+**1. El día antes.** Desde el teléfono del presentador (el número de `KAPSO_OWNER_NUMBER`), escríbele «hola» al número de Grifter en las 24 h previas: WhatsApp solo deja mandar mensajes libres, como este pedido con botones, dentro de esa ventana.
+
+**2. El servidor local**, en el notebook del pitch. Toma las llaves de Kapso de `.env`; si corre desde un worktree, también busca el `.env` del repo principal:
+
+```bash
+GRIFTER_DEMO_WHATSAPP=1 python -m demo.server --puerto 8765
+```
+
+- Sin `GRIFTER_DEMO_WHATSAPP=1`, la ruta `POST /api/demo/alerta-en-vivo` da 404. En Render nunca está, así que el sitio público no puede mandar WhatsApp.
+- **Pide una clave de un solo uso.** El servidor la genera al arrancar y la imprime en la consola («Clave de un solo uso de este arranque: …»).
+  - Va en la URL, y la barra de direcciones se proyecta y queda en el historial y en el log de acceso. Por eso nunca es una clave fija: muere al reiniciar el servidor.
+  - `GRIFTER_DEMO_CLAVE` ya no se usa. Si está en `.env`, el servidor avisa que la ignora.
+  - Después de una exposición, reinicia el servidor y usa la clave nueva.
+- **Tope a las claves malas:** después de 5 en un minuto, la ruta responde 429 hasta que pase el minuto, aunque llegue la buena.
+- **Un pedido cada 30 s como máximo.** Si Kapso no acepta el envío (502) o faltan las llaves (503), el intento no gasta los 30 s y se puede reintentar de inmediato.
+- Las llaves de Kapso nunca aparecen en la respuesta ni en los registros.
+
+**3. La URL**, en Chrome a pantalla completa (F11), y Espacio para arrancar:
+
+```
+http://127.0.0.1:8765/demo.html?whatsapp=1&clave=LA_CLAVE_DE_ESTE_ARRANQUE
+```
+
+Copia la clave de la consola justo antes de subir al escenario. Si reinicias el servidor, la URL vieja deja de servir.
+
+La demo llama a Kapso una sola vez por corrida, a los 45 s, y no espera la respuesta: si Kapso falla o tarda, la demo sigue con el teléfono dibujado.
+
+**4. El teléfono en la pantalla grande:** con el Android conectado por USB y la depuración USB activada, `scrcpy --window-title Pablo --stay-awake` duplica la pantalla en una ventana que se pone al lado de la demo.
+
+**5. El rechazo de Pablo.** Puede ser real o simulado:
+- **Simulado (por defecto):** si el presentador no responde, o no hay túnel, la demo espera hasta 12 s desde el envío y sigue con «Pablo rechazó» simulado. Nunca se queda esperando más.
+- **Real:** si el presentador toca «Rechazar» en su WhatsApp y Kapso llega al notebook, el log de la izquierda dice «Pablo rechazó desde su WhatsApp · 2,4 s», con la latencia medida. Para eso hacen falta dos cosas:
+  1. **Un túnel público al servidor local**, por ejemplo `cloudflared tunnel --url http://127.0.0.1:8765`, que entrega una URL `https://….trycloudflare.com`.
+  2. **El webhook en Kapso.** En el panel de Kapso, en el número de WhatsApp, Webhooks: la URL `https://….trycloudflare.com/api/whatsapp/webhook`, el evento `whatsapp.message.received` y el secreto, que es el mismo `KAPSO_WEBHOOK_SECRET` de `.env`. El servidor revisa la firma HMAC de cada entrega (ver `docs/mcp.md`), y solo cuenta el botón del número de `KAPSO_OWNER_NUMBER` sobre el pedido recién enviado.
+
+  La página se entera consultando `GET /api/demo/alerta-en-vivo/estado`, que devuelve solo el estado y la latencia, con la clave en una cabecera.
+
+**Ensayo:** cada prueba le llega de verdad al teléfono. Sin `?whatsapp=1`, la demo corre igual y no manda nada, y con `?t=48` se ve el cuadro fijo, siempre en modo simulado.
