@@ -246,7 +246,7 @@ const Graficos = (() => {
     if (!g) return;
     g.setOption({
       animation: !sinMovimiento,
-      grid: { left: 40, right: 136, top: 16, bottom: 32 },
+      grid: { left: 40, right: 136, top: 16, bottom: 48 },
       xAxis: { type: "value", min: 0, max: Math.max(1, rondas), interval: 1, name: ayuda.eje_x, nameLocation: "middle", nameGap: 24,
         nameTextStyle: { color: C.texto2, fontFamily: MONO, fontSize: T1 }, splitLine: { show: false } },
       yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },

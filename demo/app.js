@@ -172,6 +172,10 @@ function irA(vista) {
   document.querySelectorAll("[role=tab]").forEach((a) => a.setAttribute("aria-selected", String(a.dataset.vista === vista)));
   if (vista !== "vivo") cerrarCorreo();
   window.Operaciones?.alCambiarVista(vista);
+  // El borde de alerta es de la vista que la levantó: en Resultados y Pruébalo no se ve; al volver a Episodios
+  // reaparece si la alerta del escudo sigue sin respuesta.
+  if (vista === "vivo") bordeAlerta(!!(estado.alerta && !estado.carriles.layer2?.decision));
+  else if (vista !== "operaciones") bordeAlerta(false);
   if (vista === "vivo") abrirUltimaEstafa(anterior === "operaciones");
   if (vista === "resultados") {
     if (!estado.analisisPintado) pintarAnalisis();

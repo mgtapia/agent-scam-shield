@@ -53,6 +53,9 @@ const ResultadosVista = (() => {
     sin_resultados_r: "No resultados.json: run python scripts/resultados_demo.py",
   });
 
+  // Los textos de esta vista se registran después del primer pintado de app.js: se vuelven a pintar.
+  pintarTextos();
+
   const G = Graficos;
   const PRINCIPALES = new Set(["none", "layer2", "layer23"]);   // las tres filas del README
   const dec = (x, d = 2) => Number(x).toLocaleString(t("locale"), { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -119,6 +122,7 @@ const ResultadosVista = (() => {
     const nota = $("#n-atacante");
     if (a.estado === "sin_archivo" || a.estado === "sin_rondas") {
       nota.textContent = a.fuente || "";
+      nota.dataset.ayuda = a.fuente || "";
       caja.innerHTML = `<div class="r-vacio">${ms("hourglass_top", true)}<div>
         <p class="r-vacio-tit">${esc(t(`r_at_${a.estado}`))}</p>
         <p class="c-2">${esc(t(`r_at_${a.estado}_det`))}</p>
