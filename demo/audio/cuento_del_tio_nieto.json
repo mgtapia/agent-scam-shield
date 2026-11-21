@@ -1,0 +1,13 @@
+{
+  "escenario": "cuento_del_tio",
+  "idioma": "es",
+  "origen": "llamada",
+  "texto": "Abuelita, soy yo, tu nieto. No le digas a nadie, por favor. Choqué el auto y me tienen detenido. El carabinero dice que si pago la fianza ahora me sueltan, son seiscientos cincuenta mil pesos. Anota la cuenta del abogado: Banco Austral, cuenta vista cuarenta y ocho, veintidós diez, setenta y siete treinta y cinco. Hazlo rápido, abuelita, por favor, no me cortes.",
+  "voz": "masculina",
+  "voz_id": "TX3LPaxmHKxFdv7VOQHJ",
+  "clase_de_voz": "premade",
+  "modelo": "eleven_multilingual_v2",
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs. No es la voz de ninguna persona real.",
+  "caracteres": 364
+}
