@@ -23,8 +23,18 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 - **Los firewalls de agentes (medimos Pipelock) frenan la inyección técnica.** La ingeniería social no tiene nada técnico que detectar. Grifter revisa el valor concreto (la cuenta, el destinatario), no la sesión completa. Con la lista visible, casi no cuesta utilidad (de 79 % [57-95] a 74 % [51-89], con intervalos que se solapan). Cuando la cuenta es nueva pero legítima, no la bloquea en silencio: le pide un toque al dueño: unas 6 de cada 100 acciones sensibles [0-23], con Haiku en español.
 - **Hay una garantía que el texto no rompe:** una cuenta que no aparece completa en el encargo ni en las cuentas inscritas se bloquea siempre, por convincente que sea el correo, en las acciones que Grifter revisa (pagos, transferencias y envío de datos del dueño) y solo sobre el destino: no cubre el monto ni un pago partido en varios. Hay una prueba de propiedad (1000 casos con semilla fija) que lo demuestra.
 - **Firewall real medido:** Pipelock frenó 4 de 42 estafas, todas técnicas (inyección web y MCP envenenado), con 0 falsas alarmas. Es lo mismo que nuestras reglas de referencia: un firewall de agentes no ve la ingeniería social. No decir que «ve más que un regex».
-- **Si al dueño ya lo engañaron y dicta él la cuenta:** la capa 2 la deja pasar por diseño, y ahí entra la **capa 3, confirmación de beneficiario**: el titular de la cuenta tiene que calzar con el RUT de la cuenta que el dueño inscribió, no con el de la factura, que se puede falsificar. Un beneficiario nuevo tiene un tope en el primer pago. Es una garantía probada con un agente guionado (3 de 3 retenidos, 2 controles que pasan), no una medición con modelo real. Frase: «para engañarte a ti, además tiene que pasar la confirmación de beneficiario».
-- **Límite honesto que queda:** un estafador con una cuenta a nombre de quien dice ser, o un dueño que decide pagar igual.
+- **Si al dueño ya lo engañaron y dicta él la cuenta:** la capa 2 la deja pasar por diseño, y ahí entra la **capa 3, confirmación de beneficiario**: el titular de la cuenta tiene que calzar con el RUT de la cuenta que el dueño inscribió, no con el de la factura, que se puede falsificar. Un beneficiario nuevo tiene un tope, que suma los pagos de la sesión a su RUT. Es una garantía probada con un agente guionado (3 de 3 retenidos, 2 controles que pasan), no una medición con modelo real. Frase: «para engañarte a ti, además tiene que pasar la confirmación de beneficiario».
+- **Límite honesto que queda:** un estafador con una cuenta a nombre de quien dice ser, o un dueño que decide pagar igual. Además, el equipo rojo de caja blanca (#90, `tests/test_equipo_rojo.py`) encontró ocho variantes de ataque que todavía nos rompen, y lo decimos antes de que pregunten:
+  - Una fuente que el integrador declara confiable y está envenenada (un ERP).
+  - Un `grifter.yaml` que el agente reescribe con una herramienta de archivos.
+  - Una credencial partida en varios mensajes.
+  - Una credencial pegada en la URL de una herramienta de lectura.
+  - El pago por fuera: el agente le pasa al dueño un link o una cuenta para que pague él.
+  - Un número de factura del encargo con los dígitos de la cuenta del estafador. Sin titulares, la capa 2 lo toma como del dueño; con titulares, la capa 3 lo retiene.
+  - Un monto inflado a la cuenta inscrita.
+  - Un pago partido entre varias cuentas nuevas.
+
+  En la misma pasada arreglamos varios: credenciales en base64, con letras cirílicas, de ancho completo o con los dígitos en palabras. También un `avisar` que devolvía «no» y aprobaba, un destino que escribía líneas falsas en el mensaje de la alerta (`Alerta.mensaje`; `valor` y `args` siguen crudos para quien integra), un monto «1.500.000» que se leía como 1 peso y el pago partido a un mismo titular.
 
 ## Proyectos parecidos de otras hackathons (si el jurado pregunta)
 No encontramos ninguno con la combinación completa, pero sí algunos con piezas parecidas. Conviene nombrarlos antes de que lo haga el jurado:
