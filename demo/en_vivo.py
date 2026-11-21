@@ -7,9 +7,11 @@ presentador (KAPSO_OWNER_NUMBER) el mismo pedido que manda la doble autorizació
 
 Seguridad:
 - La ruta existe solo con GRIFTER_DEMO_WHATSAPP=1 en el entorno: sin eso responde 404. En Render nunca está.
-- Pide una clave: GRIFTER_DEMO_CLAVE de .env o, si no hay, una de un solo uso que se genera al arrancar y se imprime en
-  la consola local. Se compara en tiempo constante.
-- Un envío cada 30 s como máximo, para todos.
+- Pide una clave de un solo uso que se genera al arrancar y se imprime en la consola local. Va en la URL, que se
+  proyecta y queda en el historial y en el log de acceso: por eso nunca es una clave fija de .env, y muere al reiniciar.
+  Se compara en tiempo constante.
+- Tope a las claves malas: después de 5 en un minuto, la ruta responde 429 hasta que pase la ventana.
+- Un envío cada 30 s como máximo, para todos. Si Kapso no acepta el envío, el cupo se devuelve y se puede reintentar.
 - Las llaves de Kapso salen del entorno y nunca van a la respuesta ni a los registros: los errores dicen solo el tipo.
 
 El rechazo de Pablo puede ser real: si Kapso llega al servidor (un túnel público hacia /api/whatsapp/webhook, firmado
@@ -34,8 +36,9 @@ from scamshield.mcp.aprobaciones import desafio
 log = logging.getLogger("scamshield.demo.en_vivo")
 
 VARIABLE = "GRIFTER_DEMO_WHATSAPP"
-VARIABLE_CLAVE = "GRIFTER_DEMO_CLAVE"
+VARIABLE_CLAVE = "GRIFTER_DEMO_CLAVE"   # ya no se usa: si está, se avisa que se ignora
 INTERVALO_S = 30.0
+MAX_FALLOS, VENTANA_FALLOS_S = 5, 60.0
 MAX_PEDIDOS = 20
 BOTON = re.compile(r"^(demo-[0-9a-f]{4}):(ap|re)$")
 
@@ -67,13 +70,15 @@ class EnVivo:
     """La clave, el tope de 30 s y el envío. Una instancia por arranque del servidor."""
 
     def __init__(self, entorno: Optional[Mapping[str, str]] = None, reloj: Callable[[], float] = time.monotonic,
-                 canal: Optional[Any] = None):
+                 canal: Optional[Any] = None, clave: Optional[str] = None):
         self.entorno = os.environ if entorno is None else entorno
         self.reloj = reloj
         self._canal = canal
         self._candado = threading.Lock()
         self._ultimo: Optional[float] = None
-        self._clave_de_un_uso = secrets.token_urlsafe(9)
+        self._previo: Optional[float] = None
+        self._fallos: list[float] = []
+        self._clave_de_un_uso = clave or secrets.token_urlsafe(9)   # `clave` solo para las pruebas
         self._pedidos: "OrderedDict[str, dict[str, Any]]" = OrderedDict()
 
     def usar_canal(self, canal: Optional[Any]) -> None:
@@ -83,11 +88,25 @@ class EnVivo:
             canal.agregar_manejador(self.atender)
 
     def clave(self) -> str:
-        """La clave vigente: la de .env si está, o la de un solo uso de este arranque."""
-        return self.entorno.get(VARIABLE_CLAVE, "").strip() or self._clave_de_un_uso
+        """La clave de un solo uso de este arranque."""
+        return self._clave_de_un_uso
 
     def clave_valida(self, dada: str) -> bool:
-        return bool(dada) and hmac.compare_digest(str(dada).encode(), self.clave().encode())
+        """Compara en tiempo constante. Una clave mala cuenta para el tope (ver `bloqueada`)."""
+        ok = bool(dada) and hmac.compare_digest(str(dada).encode(), self.clave().encode())
+        if not ok:
+            with self._candado:
+                self._fallos.append(self.reloj())
+        return ok
+
+    def bloqueada(self) -> int:
+        """Segundos que faltan si ya hubo MAX_FALLOS claves malas en la última ventana; 0 si se puede intentar."""
+        ahora = self.reloj()
+        with self._candado:
+            self._fallos = [f for f in self._fallos if ahora - f < VENTANA_FALLOS_S]
+            if len(self._fallos) < MAX_FALLOS:
+                return 0
+            return max(1, int(VENTANA_FALLOS_S - (ahora - self._fallos[0])) + 1)
 
     def permitir(self) -> tuple[bool, int]:
         """(ok, segundos para reintentar). Solo cuenta el intento si se permite."""
@@ -95,8 +114,13 @@ class EnVivo:
         with self._candado:
             if self._ultimo is not None and ahora - self._ultimo < INTERVALO_S:
                 return False, max(1, int(INTERVALO_S - (ahora - self._ultimo)))
-            self._ultimo = ahora
+            self._previo, self._ultimo = self._ultimo, ahora
             return True, 0
+
+    def devolver_cupo(self) -> None:
+        """Si el envío falló, el intento no gasta los 30 s: el reintento del pitch puede salir de inmediato."""
+        with self._candado:
+            self._ultimo = self._previo
 
     def canal(self) -> Optional[Any]:
         return self._canal or whatsapp.desde_entorno(lambda etiqueta: None, self.entorno)
@@ -151,8 +175,8 @@ class EnVivo:
 
 
 def anunciar_clave(en_vivo: EnVivo, imprimir: Callable[[str], None] = lambda s: print(s, flush=True)) -> None:
-    """Al arrancar con la variable, dice en la consola local cómo abrir la demo. La clave de .env no se imprime."""
+    """Al arrancar con la variable, dice en la consola local la clave de un solo uso de este arranque."""
     if en_vivo.entorno.get(VARIABLE_CLAVE, "").strip():
-        imprimir("Demo con WhatsApp en vivo: usa la clave GRIFTER_DEMO_CLAVE (de .env o del entorno) en la URL (&clave=...).")
-    else:
-        imprimir(f"Demo con WhatsApp en vivo. Clave de un solo uso de este arranque: {en_vivo.clave()}")
+        imprimir(f"Aviso: {VARIABLE_CLAVE} se ignora; la clave de la URL es siempre la de un solo uso de cada arranque.")
+    imprimir(f"Demo con WhatsApp en vivo. Clave de un solo uso de este arranque: {en_vivo.clave()}"
+             " (en la URL: demo.html?whatsapp=1&clave=...). Muere al reiniciar el servidor.")

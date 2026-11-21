@@ -68,14 +68,21 @@ GRIFTER_DEMO_WHATSAPP=1 python -m demo.server --puerto 8765
 ```
 
 - Sin `GRIFTER_DEMO_WHATSAPP=1`, la ruta `POST /api/demo/alerta-en-vivo` da 404. En Render nunca está, así que el sitio público no puede mandar WhatsApp.
-- Pide una clave. La de `GRIFTER_DEMO_CLAVE` en `.env` o, si no hay, una de un solo uso que el servidor imprime al arrancar («Clave de un solo uso de este arranque: …»).
-- Manda un pedido cada 30 s como máximo. Las llaves de Kapso nunca aparecen en la respuesta ni en los registros.
+- **Pide una clave de un solo uso.** El servidor la genera al arrancar y la imprime en la consola («Clave de un solo uso de este arranque: …»).
+  - Va en la URL, y la barra de direcciones se proyecta y queda en el historial y en el log de acceso. Por eso nunca es una clave fija: muere al reiniciar el servidor.
+  - `GRIFTER_DEMO_CLAVE` ya no se usa. Si está en `.env`, el servidor avisa que la ignora.
+  - Después de una exposición, reinicia el servidor y usa la clave nueva.
+- **Tope a las claves malas:** después de 5 en un minuto, la ruta responde 429 hasta que pase el minuto, aunque llegue la buena.
+- **Un pedido cada 30 s como máximo.** Si Kapso no acepta el envío (502) o faltan las llaves (503), el intento no gasta los 30 s y se puede reintentar de inmediato.
+- Las llaves de Kapso nunca aparecen en la respuesta ni en los registros.
 
 **3. La URL**, en Chrome a pantalla completa (F11), y Espacio para arrancar:
 
 ```
-http://127.0.0.1:8765/demo.html?whatsapp=1&clave=LA_CLAVE
+http://127.0.0.1:8765/demo.html?whatsapp=1&clave=LA_CLAVE_DE_ESTE_ARRANQUE
 ```
+
+Copia la clave de la consola justo antes de subir al escenario. Si reinicias el servidor, la URL vieja deja de servir.
 
 La demo llama a Kapso una sola vez por corrida, a los 45 s, y no espera la respuesta: si Kapso falla o tarda, la demo sigue con el teléfono dibujado.
 

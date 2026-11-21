@@ -30,8 +30,8 @@ class CanalFalso:
 def cliente(monkeypatch):
     reloj = [1000.0]
     canal = CanalFalso()
-    entorno = {"GRIFTER_DEMO_CLAVE": "clave-de-prueba", "KAPSO_API_KEY": LLAVE}
-    monkeypatch.setattr(server, "demo_en_vivo", en_vivo.EnVivo(entorno, reloj=lambda: reloj[0], canal=canal))
+    entorno = {"KAPSO_API_KEY": LLAVE}
+    monkeypatch.setattr(server, "demo_en_vivo", en_vivo.EnVivo(entorno, reloj=lambda: reloj[0], canal=canal, clave="clave-de-prueba"))
     monkeypatch.setenv(en_vivo.VARIABLE, "1")
     return TestClient(server.app), canal, reloj
 
@@ -76,27 +76,52 @@ def test_un_envio_cada_30_segundos(cliente):
 
 def test_la_llave_no_sale_en_la_respuesta_ni_en_los_registros(cliente, monkeypatch, caplog):
     c, _, _ = cliente
-    falla = en_vivo.EnVivo({"GRIFTER_DEMO_CLAVE": "clave-de-prueba", "KAPSO_API_KEY": LLAVE}, canal=CanalFalso(falla=True))
+    falla = en_vivo.EnVivo({"KAPSO_API_KEY": LLAVE}, canal=CanalFalso(falla=True), clave="clave-de-prueba")
     monkeypatch.setattr(server, "demo_en_vivo", falla)
     with caplog.at_level(logging.DEBUG):
         r = c.post("/api/demo/alerta-en-vivo", json={"clave": "clave-de-prueba"})
     assert r.status_code == 502
     assert LLAVE not in r.text and LLAVE not in caplog.text
-    ok = c.post("/api/demo/alerta-en-vivo", json={"clave": "clave-de-prueba"})   # ya pasó por el tope: otra instancia
+    ok = c.post("/api/demo/alerta-en-vivo", json={"clave": "clave-de-prueba"})   # el fallo devolvió el cupo
     assert LLAVE not in ok.text
 
 
 def test_sin_llaves_de_kapso_lo_dice_sin_mostrar_nada(monkeypatch):
     monkeypatch.setenv(en_vivo.VARIABLE, "1")
-    monkeypatch.setattr(server, "demo_en_vivo", en_vivo.EnVivo({"GRIFTER_DEMO_CLAVE": "c"}))
+    monkeypatch.setattr(server, "demo_en_vivo", en_vivo.EnVivo({}, clave="c"))
     r = TestClient(server.app).post("/api/demo/alerta-en-vivo", json={"clave": "c"})
     assert r.status_code == 503 and "KAPSO_API_KEY" in r.text
 
 
-def test_sin_clave_en_env_usa_una_de_un_solo_uso_por_arranque():
-    a, b = en_vivo.EnVivo({}), en_vivo.EnVivo({})
-    assert a.clave() and a.clave() != b.clave()
+def test_la_clave_es_siempre_de_un_solo_uso_por_arranque():
+    a, b = en_vivo.EnVivo({}), en_vivo.EnVivo({en_vivo.VARIABLE_CLAVE: "demo2026"})
+    assert a.clave() and a.clave() != b.clave() and b.clave() != "demo2026"   # la de .env se ignora
     assert a.clave_valida(a.clave()) and not a.clave_valida(b.clave()) and not a.clave_valida("")
+    avisos = []
+    en_vivo.anunciar_clave(b, avisos.append)
+    assert "se ignora" in avisos[0] and b.clave() in avisos[1] and "demo2026" not in "".join(avisos)
+
+
+def test_si_kapso_falla_el_cupo_de_30_s_no_se_gasta(cliente, monkeypatch):
+    c, _, _ = cliente
+    falla = en_vivo.EnVivo({"KAPSO_API_KEY": LLAVE}, canal=CanalFalso(falla=True), clave="clave-de-prueba")
+    monkeypatch.setattr(server, "demo_en_vivo", falla)
+    assert c.post("/api/demo/alerta-en-vivo", json={"clave": "clave-de-prueba"}).status_code == 502
+    falla._canal = CanalFalso()   # Kapso vuelve: el reintento inmediato sale, sin 429
+    assert c.post("/api/demo/alerta-en-vivo", json={"clave": "clave-de-prueba"}).status_code == 200
+    assert c.post("/api/demo/alerta-en-vivo", json={"clave": "clave-de-prueba"}).status_code == 429   # el éxito sí cuenta
+
+
+def test_despues_de_5_claves_malas_hay_que_esperar(cliente):
+    c, canal, reloj = cliente
+    for _ in range(en_vivo.MAX_FALLOS):
+        assert c.post("/api/demo/alerta-en-vivo", json={"clave": "mala"}).status_code == 403
+    r = c.post("/api/demo/alerta-en-vivo", json={"clave": "clave-de-prueba"})   # ni la buena pasa durante la espera
+    assert r.status_code == 429 and int(r.headers["Retry-After"]) > 0
+    assert c.get("/api/demo/alerta-en-vivo/estado?id=demo-0000", headers={"X-Grifter-Demo-Clave": "mala"}).status_code == 429
+    reloj[0] += en_vivo.VENTANA_FALLOS_S
+    assert c.post("/api/demo/alerta-en-vivo", json={"clave": "clave-de-prueba"}).status_code == 200
+    assert len(canal.enviados) == 1
 
 
 def test_demo_js_solo_llama_con_whatsapp_1():
@@ -137,7 +162,7 @@ def real(monkeypatch):
     canal = whatsapp.CanalWhatsApp(LLAVE, "1", PABLO, lambda e: None, SECRETO)
     enviados = []
     monkeypatch.setattr(canal, "enviar", lambda cuerpo: enviados.append(cuerpo) or {"messages": [{}]})
-    vivo = en_vivo.EnVivo({"GRIFTER_DEMO_CLAVE": "c"}, reloj=lambda: reloj[0])
+    vivo = en_vivo.EnVivo({}, reloj=lambda: reloj[0], clave="c")
     vivo.usar_canal(canal)
     monkeypatch.setattr(server, "demo_en_vivo", vivo)
     monkeypatch.setenv(en_vivo.VARIABLE, "1")

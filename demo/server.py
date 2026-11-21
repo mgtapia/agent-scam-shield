@@ -382,7 +382,8 @@ def probar_estafa(correo: CorreoJuez, request: Request) -> dict[str, Any]:
 
 
 # --- Demo en vivo: el pedido de aprobación de Pablo llega de verdad por WhatsApp (demo/en_vivo.py) ------------
-# Solo con GRIFTER_DEMO_WHATSAPP=1 (en Render nunca está), con clave y un envío cada 30 s.
+# Solo con GRIFTER_DEMO_WHATSAPP=1 (en Render nunca está), con la clave de un solo uso del arranque, tope a las claves
+# malas y un envío cada 30 s (que se devuelve si Kapso falla).
 demo_en_vivo = en_vivo.EnVivo()
 
 
@@ -395,18 +396,28 @@ class PedidoEnVivo(BaseModel):
 def alerta_en_vivo(pedido: PedidoEnVivo) -> dict[str, Any]:
     if not en_vivo.activa():
         raise HTTPException(404, "Not Found")
-    if not demo_en_vivo.clave_valida(pedido.clave):
-        raise HTTPException(403, "clave inválida")
+    _clave_o_error(pedido.clave)
     ok, espera = demo_en_vivo.permitir()
     if not ok:
         raise HTTPException(429, "un envío cada 30 s", headers={"Retry-After": str(espera)})
     try:
         return demo_en_vivo.enviar(pedido.idioma)
     except LookupError as e:
+        demo_en_vivo.devolver_cupo()
         raise HTTPException(503, str(e)) from None
     except whatsapp.ErrorWhatsApp as e:   # el mensaje dice el estado de Kapso, nunca la URL ni la llave
+        demo_en_vivo.devolver_cupo()
         log.warning("demo en vivo: %s", e)
         raise HTTPException(502, "Kapso no aceptó el envío") from None
+
+
+def _clave_o_error(dada: str) -> None:
+    """429 si ya hubo demasiadas claves malas en el último minuto; 403 si esta es mala."""
+    espera = demo_en_vivo.bloqueada()
+    if espera:
+        raise HTTPException(429, "demasiadas claves inválidas", headers={"Retry-After": str(espera)})
+    if not demo_en_vivo.clave_valida(dada):
+        raise HTTPException(403, "clave inválida")
 
 
 @app.get("/api/demo/alerta-en-vivo/estado")
@@ -414,8 +425,7 @@ def estado_en_vivo(id: str, request: Request) -> dict[str, Any]:
     """Si Pablo ya respondió desde su WhatsApp. La clave va en la cabecera, no en la URL."""
     if not en_vivo.activa():
         raise HTTPException(404, "Not Found")
-    if not demo_en_vivo.clave_valida(request.headers.get("x-grifter-demo-clave", "")):
-        raise HTTPException(403, "clave inválida")
+    _clave_o_error(request.headers.get("x-grifter-demo-clave", ""))
     e = demo_en_vivo.estado(id)
     if e is None:
         raise HTTPException(404, "no existe ese pedido")
