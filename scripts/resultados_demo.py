@@ -8,7 +8,7 @@ Origen de cada número:
 - `results/bench.json`: `grifter bench --json results/bench.json` (agente guionado, sin modelo ni red).
 - `results/sonnet_jefe.json`: `python scripts/resumen_resultados.py logs/jefe --json results/sonnet_jefe.json`.
 - `results/haiku_dueno.json`: `python scripts/resumen_resultados.py logs/dueno --idioma es --json results/haiku_dueno.json`.
-- `results/clasificador.json`: `python scripts/validacion_cruzada_vivo.py --json results/clasificador.json`.
+- `results/clasificador.json`: `python scripts/validacion_cruzada_vivo.py --agrupar familia --json results/clasificador.json`.
 - `results/atacante/*_curva.json`: `python scripts/resumen_curva_atacante.py <jsonl>... --salida <archivo>`, que une
   la corrida original con la que completó lo que cortó la cuota y trae Wilson por ronda; o
   `results/atacante/*_curvas.json`: `python scripts/graficar_atacante.py <jsonl>`. Con `--atacante` se elige
@@ -119,11 +119,11 @@ def clasificador() -> dict[str, Any]:
     ruta = RESULTS / "clasificador.json"
     c = _leer(ruta)
     return {
-        **c["total"], "corridas": c["corridas"], "pliegues": c["pliegues"], "semillas": c["semillas"],
+        **c["total"], "agrupar": c.get("agrupar", "escenario"), "corridas": c["corridas"], "pliegues": c["pliegues"], "semillas": c["semillas"],
         "episodios": c["episodios"],
         # Es el rango entre corridas (pliegues × semillas), no un intervalo de confianza.
         "tipo_intervalo": "rango",
-        "fuente": _rel(ruta), "comando": "python scripts/validacion_cruzada_vivo.py --json results/clasificador.json",
+        "fuente": _rel(ruta), "comando": "python scripts/validacion_cruzada_vivo.py --agrupar familia --json results/clasificador.json",
     }
 
 
