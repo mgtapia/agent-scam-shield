@@ -292,7 +292,7 @@
             </div>
             <ol class="md-pasos">
               <li data-v="${LLAMADA.cuelga + 0.3}">${ic("call")}<span class="md-quien">${esc(t("escucho"))}</span><span>${esc(t("escucho_v"))}</span><span class="tag externo">${esc(t("llamada"))}</span></li>
-              <li data-v="${LLAMADA.cuelga + 1.3}">${ic("payments")}<span class="md-quien">${esc(t("intento"))}</span><span class="dato">${idioma === "en" ? "Pay" : "Pagar"} ${f(650000)} ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="tag externo">${esc(t("llamada"))}</span></li>
+              <li data-v="${LLAMADA.cuelga + 1.3}">${ic("payments")}<span class="md-quien">${esc(t("intento"))}</span><span class="dato">${idioma === "en" ? "Pay" : "Pagar"} $${f(650000)} ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="tag externo">${esc(t("llamada"))}</span></li>
               <li class="md-retuvo md-motivo" data-v="37">${ic("block")}<span class="md-quien">${esc(t("grifter"))}</span><span><b>${esc(t("retuvo"))}</b> ${esc(t("motivo1"))}</span></li>
               <li data-v="${AUT.igual + 0.3}">${ic("person")}<span class="md-quien">${esc(t("eligio"))}</span><span>${esc(t("dueno"))}: ${esc(t("igual_v"))}</span></li>
               <li data-v="${AUT.pide}">${ic("gpp_good")}<span class="md-quien">${esc(t("grifter"))}</span><span>${esc(t("pide_v"))}</span></li>
