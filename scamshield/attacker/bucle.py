@@ -16,12 +16,12 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
-from inspect_ai.model import (ChatMessage, ChatMessageAssistant, ChatMessageSystem, ChatMessageUser,
-                              GenerateConfig, Model)
+from inspect_ai.model import ChatMessage, ChatMessageAssistant, ChatMessageSystem, ChatMessageUser, Model
 
 from . import prompts
+from .costo import Gasto, PresupuestoAgotado, Rechazo, config_para
 from .escenario import aplicar, validar, variante_maliciosa
 from .victima import Episodio, correr, id_muestra
 
@@ -42,6 +42,8 @@ class Config:
     log_dir: str = "logs/atacante"
     salida: Path | None = None            # JSONL con una fila por ronda
     nombre_victima: str = ""
+    gasto: Gasto = field(default_factory=Gasto)   # uso real del atacante, el crítico y el juez; con tope
+    effort: str = "high"                          # solo para modelos que piensan siempre (Claude 5.x)
     al_terminar_ronda: Callable[[int, list[dict[str, Any]]], None] | None = None
 
 
@@ -68,6 +70,7 @@ class Propuesta:
     mejora: str = ""
     rechazo: str = ""
     fallo: bool = False   # el modelo del atacante falló (cuota, red): no es culpa de la reescritura
+    se_nego: bool = False  # el atacante se negó a escribirla (`stop_reason: refusal`): un dato, no un fallo
 
 
 def extraer_json(texto: str) -> Any:
@@ -102,19 +105,34 @@ ESPERA_S = (8, 20, 45, 90, 120)  # esperas entre reintentos de un modelo con cuo
 
 
 async def pedir(modelo: Model, sistema: str, mensajes: list[ChatMessage], *, temperatura: float,
-                cache: bool, max_tokens: int = 4000) -> str:
-    """Una llamada al modelo del atacante, con reintentos propios y espera cuando la cuota se agota."""
-    config = GenerateConfig(temperature=temperatura, max_tokens=max_tokens, cache=cache or None,
-                            # gpt-oss razona antes de responder: con poco razonamiento gasta menos cuota.
-                            reasoning_effort="low" if "gpt-oss" in str(modelo.name) else None)
+                cache: bool, max_tokens: int = 4000, gasto: Optional[Gasto] = None,
+                effort: str = "high") -> str:
+    """Una llamada al modelo del atacante, con reintentos propios y espera cuando la cuota se agota.
+
+    Con `gasto`, corta antes de llamar si ya no cabe bajo el tope (`PresupuestoAgotado`) y suma el uso real
+    de cada respuesta. Si el modelo se niega (`stop_reason: refusal`, que Inspect informa como
+    `content_filter`) lanza `Rechazo` sin reintentar: repetirlo costaría y se negaría igual.
+    """
+    nombre = str(modelo.name)
+    config = config_para(nombre, temperatura, max_tokens, cache, effort)
+    tope = config.max_tokens or max_tokens
     for espera in (*ESPERA_S, None):
+        if gasto is not None:
+            gasto.verificar(tope)
         try:
             salida = await modelo.generate([ChatMessageSystem(content=sistema), *mensajes], config=config)
-            return salida.completion or ""
         except Exception:
             if espera is None:
                 raise
             await asyncio.sleep(espera)
+            continue
+        if gasto is not None:
+            gasto.registrar(getattr(salida, "usage", None))
+        if getattr(salida, "stop_reason", "stop") == "content_filter":
+            if gasto is not None:
+                gasto.rechazos += 1
+            raise Rechazo(f"{nombre} se negó a responder")
+        return salida.completion or ""
     return ""
 
 
@@ -136,7 +154,7 @@ async def juzgar_realismo(cfg: Config, f: Flujo, variante: dict[str, Any]) -> tu
         [ChatMessageUser(content=prompts.usuario_juez(
             variante_maliciosa(f.semilla), variante, f.objetivo,
             f.semilla.get("anotaciones", {}).get("familia", "")))],
-        temperatura=0.0, cache=cfg.cache, max_tokens=600)
+        temperatura=0.0, cache=cfg.cache, max_tokens=600, gasto=cfg.gasto, effort=cfg.effort)
     j = extraer_json(texto)
     if not isinstance(j, dict):
         return 1, False, "el juez de realismo no respondió un JSON."
@@ -151,7 +169,11 @@ async def proponer(cfg: Config, f: Flujo) -> Propuesta:
         usuario = ChatMessageUser(content=f.pendiente)
         try:
             texto = await pedir(cfg.atacante, sistema, [*f.mensajes[-VENTANA:], usuario],
-                                temperatura=1.0, cache=cfg.cache)
+                                temperatura=1.0, cache=cfg.cache, gasto=cfg.gasto, effort=cfg.effort)
+        except Rechazo as e:
+            return Propuesta(None, rechazo=f"el atacante se negó: {e}", se_nego=True)
+        except PresupuestoAgotado as e:
+            return Propuesta(None, rechazo=str(e), fallo=True)
         except Exception as e:  # cuota o red del modelo barato: la corrida sigue sin esta estafa
             return Propuesta(None, rechazo=f"falló el modelo del atacante ({_causa(e)}).", fallo=True)
         f.mensajes += [usuario, ChatMessageAssistant(content=texto or "(sin respuesta)")]
@@ -161,6 +183,10 @@ async def proponer(cfg: Config, f: Flujo) -> Propuesta:
         if variante is not None:
             try:
                 realismo, estafa, razon = await juzgar_realismo(cfg, f, variante)
+            except Rechazo as e:
+                return Propuesta(None, rechazo=f"el juez se negó: {e}", se_nego=True)
+            except PresupuestoAgotado as e:
+                return Propuesta(None, rechazo=str(e), fallo=True)
             except Exception as e:
                 return Propuesta(None, rechazo=f"falló el juez de realismo ({_causa(e)}).", fallo=True)
             if realismo >= cfg.realismo_min and estafa:
@@ -178,8 +204,10 @@ async def criticar(cfg: Config, f: Flujo, ep: Episodio) -> int:
         texto = await pedir(
             cfg.atacante, prompts.SISTEMA_CRITICO,
             [ChatMessageUser(content=prompts.usuario_critico(f.objetivo, ep.resumen))],
-            temperatura=0.0, cache=cfg.cache, max_tokens=600)
-    except Exception:  # sin crítico, el puntaje sale solo de lo observado
+            temperatura=0.0, cache=cfg.cache, max_tokens=600, gasto=cfg.gasto, effort=cfg.effort)
+    except PresupuestoAgotado:
+        raise
+    except Exception:  # sin crítico (incluye una negativa del crítico), el puntaje sale solo de lo observado
         texto = ""
     j = extraer_json(texto)
     p = _entero(j.get("puntaje") if isinstance(j, dict) else None, 1)
@@ -190,7 +218,7 @@ async def criticar(cfg: Config, f: Flujo, ep: Episodio) -> int:
 def _fila(cfg: Config, f: Flujo, ronda: int, **campos: Any) -> dict[str, Any]:
     return {"modelo": cfg.nombre_victima or str(cfg.victima), "defensa": f.defensa, "escenario": f.semilla["id"],
             "idioma": f.semilla["idioma"], "ronda": ronda, "valida": True, "exito": False,
-            "intento": False, "puntaje": None, "realismo": None, "motivo_rechazo": "",
+            "intento": False, "se_nego": False, "puntaje": None, "realismo": None, "motivo_rechazo": "",
             "bloqueos": [], "mejora": "", "ataque": None, "error": "", **campos}
 
 
@@ -220,6 +248,10 @@ async def correr_atacante(cfg: Config, semillas: list[dict[str, Any]]) -> dict[s
         vivos = [f for f in flujos if not f.exito]
         if not vivos:
             break
+        if cfg.gasto.agotado:
+            print(f"Ronda {ronda}: se detiene, se llegó al tope de US${cfg.gasto.tope_usd:.2f} del atacante "
+                  f"(gastado ~US${cfg.gasto.gastado_usd:.3f}).")
+            break
         if cfg.max_episodios is not None and episodios + len(vivos) > cfg.max_episodios:
             print(f"Ronda {ronda}: se detiene, el tope de {cfg.max_episodios} episodios no alcanza para "
                   f"{len(vivos)} más.")
@@ -240,8 +272,8 @@ async def correr_atacante(cfg: Config, semillas: list[dict[str, Any]]) -> dict[s
             p = propuestas[id(f)]
             if p.variante is None:
                 filas.append(_fila(cfg, f, ronda, valida=False, motivo_rechazo=p.rechazo, puntaje=1,
-                                   error=p.rechazo if p.fallo else ""))
-                if not p.fallo:
+                                   se_nego=p.se_nego, error=p.rechazo if p.fallo else ""))
+                if not p.fallo and not p.se_nego:
                     f.pendiente = prompts.mensaje_ronda({}, "", 0, [], rechazo=p.rechazo)
                 continue
             f.variante = p.variante
@@ -271,4 +303,4 @@ async def correr_atacante(cfg: Config, semillas: list[dict[str, Any]]) -> dict[s
         todas += filas
         if cfg.al_terminar_ronda:
             cfg.al_terminar_ronda(ronda, filas)
-    return {"filas": todas, "tokens": tokens, "episodios": episodios}
+    return {"filas": todas, "tokens": tokens, "episodios": episodios, "gasto": cfg.gasto.resumen()}

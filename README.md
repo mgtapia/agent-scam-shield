@@ -327,8 +327,11 @@ Nota de licencia: los binarios oficiales de Pipelock traen además código bajo 
 python scripts/atacante_adaptativo.py --dry-run                  # plan y gasto máximo, sin llamar a ningún modelo
 python scripts/atacante_adaptativo.py --limit 2 --rondas 2       # humo
 python scripts/atacante_adaptativo.py --victima anthropic/claude-sonnet-5-5 --rondas 3
+python scripts/atacante_adaptativo.py --atacante anthropic/claude-fable-5-2 --defensas none,layer2 --rondas 3 --limit 5 --dry-run
 python scripts/graficar_atacante.py results/raw/atacante_<fecha>.jsonl   # SVG, tabla y curvas
 ```
+
+**Con un Claude 5.x como atacante** (por ejemplo Fable 5.2, US$8 / US$40 por millón de tokens): el modelo piensa siempre y rechaza `temperature`, así que el script la omite, fija `--effort high` y sube `max_tokens` a 4.000 como mínimo. `--dry-run` imprime el costo estimado (típico y peor caso). La corrida se corta sola al llegar a `--tope-usd` (por defecto US$5), medido con el uso real de tokens que informa la API, y guarda lo que alcanzó. Si el modelo se niega a escribir la estafa (`stop_reason: refusal`) no es un error: queda en la fila como `se_nego` y se cuenta en el informe. Los precios están en `scamshield/attacker/costo.py` y se cambian con `--precio-entrada` y `--precio-salida`.
 
 El atacante, el crítico y el juez son un modelo abierto barato (por defecto `groq/openai/gpt-oss-120b`). Límites que se encontraron el 2026-11-21:
 
