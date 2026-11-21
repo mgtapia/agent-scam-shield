@@ -236,3 +236,18 @@ def test_un_correo_sigue_siendo_un_correo():
     eventos = [m.publicar(ev) for _, ev in m.episodio(m.flujo.episodio(clave="proveedor_factura_cambio", idioma="es"))]
     assert all("canal" not in e for e in eventos if e["tipo"] == "correo_nuevo")
     assert m.foto()["correos"][-1]["canal"] == "correo"
+
+
+# --- El mapeo a estándares de la voz clonada ---
+
+def test_la_voz_clonada_no_inventa_una_tecnica_de_atlas():
+    from scamshield import estandares
+    for idioma in IDIOMAS:
+        e = estandares.clasificar(ESCENARIOS[("vishing_jefe_voz_clonada", idioma)])
+        assert (e.owasp, e.atlas) == ("ASI01", estandares.POR_CONFIRMAR)
+    # La misma estafa sin voz clonada sigue con la regla de siempre.
+    assert estandares.clasificar(ESCENARIOS[("jefe_transferencia", "es")]).atlas == "AML.T0073"
+    # Los demás mecanismos telefónicos usan identificadores que ya estaban.
+    for id_ in ("vishing_clave_dinamica", "vishing_cuenta_segura", "vishing_familiar", "vishing_soporte_tecnico"):
+        e = estandares.clasificar(ESCENARIOS[(id_, "es")])
+        assert e.owasp in estandares.OWASP_AGENTICO and e.atlas in estandares.ATLAS_TECNICAS
