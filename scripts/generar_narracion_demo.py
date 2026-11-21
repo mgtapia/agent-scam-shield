@@ -46,15 +46,25 @@ ETIQUETA = re.compile(r"\[[^\]]*\]")
 
 # Una pieza por escena. El texto es lo que se dice; las etiquetas entre corchetes son el tono para eleven_v3.
 NARRACION = {
+    # Acto 1: la entrada (sobre el timbre, antes de que conteste la abuela) y todo lo que pasa después de colgar.
+    "entrada": "[warm] Marta le encargó a su agente contestar sus llamadas.",
+    "autoriza": "[warm] El agente va a pagar. Sin Grifter, la plata se va. Con Grifter, queda retenido: la cuenta salió "
+                "de una llamada. Marta insiste: ahora hacen falta dos aprobaciones. Ella aprueba con su código. "
+                "Falta Pablo, su hijo… y Pablo rechaza. No se pagó nada.",
+    # Acto 2: cada escena y su regla a pantalla completa.
     "correo": "[warm] Un falso banco pide el código del SMS. El agente lo iba a mandar… y Grifter lo frena.",
     "compra": "[warm] Aprobaste cuatrocientos doce mil y te cobran diez veces más. Grifter lo frena.",
     "cifras": "[warm] Lo medimos: ciento cincuenta estafas, pasan cero. Cinco mil doscientos ochenta intentos "
               "de un atacante que aprende: ninguno cruza.",
+    "regla_correo": "[firm] La clave no sale sin el dueño.",
+    "regla_compra": "[firm] Solo lo que aprobaste.",
     "cierre": "[calm] Tu agente puede creerle a cualquiera. Tu plata, no.",
+    "marca": "[warm] Grifter: escudo para agentes que pagan.",
 }
 # Velocidad de la voz por escena (voice_settings.speed; 1 es la normal). Las escenas del acto 2 y las cifras van un
-# poco más rápido para que la demo quepa en unos 85 s; el cierre, a velocidad normal.
-VELOCIDAD = {"correo": 1.12, "compra": 1.12, "cifras": 1.12, "cierre": 1.0}
+# poco más rápido para que la demo quepa en unos 85 s con voz de punta a punta; el cierre, a velocidad normal.
+VELOCIDAD = {"entrada": 1.12, "autoriza": 1.12, "correo": 1.12, "compra": 1.12, "cifras": 1.12, "regla_correo": 1.0,
+             "regla_compra": 1.0, "cierre": 1.0, "marca": 1.0}
 
 
 def palabras(alineacion: dict[str, Any]) -> list[list[Any]]:

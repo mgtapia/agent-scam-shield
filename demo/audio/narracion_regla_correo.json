@@ -1,0 +1,46 @@
+{
+  "escenario": "demo_narracion_regla_correo",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "[firm] La clave no sale sin el dueño.",
+  "voz": "Ignacio - Natural Chilean, unhurried pace (biblioteca de ElevenLabs)",
+  "voz_id": "NDx3GTwfaeouBvRv4NrB",
+  "clase_de_voz": "professional",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "velocidad": 1.0,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca compartida de ElevenLabs, publicada por su autor para texto a voz. No imita a nadie del proyecto ni a ninguna persona de la demo.",
+  "caracteres": 37,
+  "duracion_s": 2.32,
+  "palabras": [
+    [
+      "La",
+      0.142
+    ],
+    [
+      "clave",
+      0.24
+    ],
+    [
+      "no",
+      0.773
+    ],
+    [
+      "sale",
+      1.12
+    ],
+    [
+      "sin",
+      1.48
+    ],
+    [
+      "el",
+      1.653
+    ],
+    [
+      "dueño.",
+      1.8
+    ]
+  ]
+}

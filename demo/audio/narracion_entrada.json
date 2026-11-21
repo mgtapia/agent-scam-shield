@@ -1,0 +1,54 @@
+{
+  "escenario": "demo_narracion_entrada",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "[warm] Marta le encargó a su agente contestar sus llamadas.",
+  "voz": "Ignacio - Natural Chilean, unhurried pace (biblioteca de ElevenLabs)",
+  "voz_id": "NDx3GTwfaeouBvRv4NrB",
+  "clase_de_voz": "professional",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "velocidad": 1.12,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca compartida de ElevenLabs, publicada por su autor para texto a voz. No imita a nadie del proyecto ni a ninguna persona de la demo.",
+  "caracteres": 59,
+  "duracion_s": 3.04,
+  "palabras": [
+    [
+      "Marta",
+      0.315
+    ],
+    [
+      "le",
+      0.507
+    ],
+    [
+      "encargó",
+      0.6
+    ],
+    [
+      "a",
+      1.0
+    ],
+    [
+      "su",
+      1.093
+    ],
+    [
+      "agente",
+      1.253
+    ],
+    [
+      "contestar",
+      1.66
+    ],
+    [
+      "sus",
+      2.2
+    ],
+    [
+      "llamadas.",
+      2.368
+    ]
+  ]
+}

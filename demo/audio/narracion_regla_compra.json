@@ -1,0 +1,34 @@
+{
+  "escenario": "demo_narracion_regla_compra",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "[firm] Solo lo que aprobaste.",
+  "voz": "Ignacio - Natural Chilean, unhurried pace (biblioteca de ElevenLabs)",
+  "voz_id": "NDx3GTwfaeouBvRv4NrB",
+  "clase_de_voz": "professional",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "velocidad": 1.0,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca compartida de ElevenLabs, publicada por su autor para texto a voz. No imita a nadie del proyecto ni a ninguna persona de la demo.",
+  "caracteres": 29,
+  "duracion_s": 1.76,
+  "palabras": [
+    [
+      "Solo",
+      0.256
+    ],
+    [
+      "lo",
+      0.427
+    ],
+    [
+      "que",
+      0.68
+    ],
+    [
+      "aprobaste.",
+      0.88
+    ]
+  ]
+}
