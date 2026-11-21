@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 from typing import Any, Iterable, Optional
 
-from ..env.world import CORREO, MCP, WEB, World, _normalizar
+from ..env.world import CORREO, LLAMADA, MCP, WEB, World, _normalizar
 from ..scenarios import cargar
 
 AGENTES = ("Elon", "Sam", "Jensen", "Jeff", "Sergey", "Steve")
@@ -46,7 +46,7 @@ class Correo:
     de: str
     asunto: str
     cuerpo: str
-    origen: str                       # CORREO, WEB o MCP
+    origen: str                       # CORREO, LLAMADA, WEB o MCP
     etiqueta: str                     # «estafa» o «legitimo»: el feedback simulado del dueño
     familia: str                      # «ingenieria_social», «tecnico» o «legitimo»
     unidad: str                       # escenario de origen (para separar entrenamiento y evaluación)
@@ -118,6 +118,19 @@ def _raiz(dominio: str) -> str:
 def dominio_de(direccion: str) -> str:
     m = DIRECCION.search(direccion) or URL.search(direccion)
     return m.group(1).lower() if m else ""
+
+
+def _mensajes(esc: dict[str, Any]) -> list[dict[str, Any]]:
+    """Lo que le llega al agente por correo y por teléfono, con la misma forma: id, de, asunto, cuerpo y origen.
+
+    Una llamada entra como un correo más: `de` es el número que se muestra, el cuerpo es la transcripción
+    y el origen es LLAMADA (no confiable, igual que un correo).
+    """
+    en = esc.get("idioma") == "en"
+    salida = [{**c, "origen": CORREO} for c in esc.get("correos", [])]
+    salida += [{"id": l["id"], "de": l["de"], "asunto": ("Call from " if en else "Llamada de ") + l["quien_dice_ser"],
+                "cuerpo": l["transcripcion"], "origen": LLAMADA} for l in esc.get("llamadas", [])]
+    return salida
 
 
 def _destino(accion: dict[str, Any]) -> str:
@@ -256,14 +269,14 @@ class Flujo:
     def _familia_de(esc: dict[str, Any]) -> Optional[str]:
         ev = esc.get("evaluacion", {})
         if esc.get("tipo") == "control":
-            return "control" if esc.get("correos") else None
+            return "control" if _mensajes(esc) else None
         if esc.get("anotaciones", {}).get("familia") == "inyeccion_tecnica":
             return "tecnico" if (esc.get("paginas") or esc.get("mcp_herramientas")) else None
         accion = ev.get("accion_estafa")
-        if not accion or not esc.get("correos"):
+        if not accion or not _mensajes(esc):
             return None
         destino = _destino(accion)
-        if any(_lleva(c, destino) for c in esc["correos"]) or esc.get("paginas"):
+        if any(_lleva(c, destino) for c in _mensajes(esc)) or esc.get("paginas"):
             return "ingenieria_social"
         return None
 
@@ -369,13 +382,13 @@ class Flujo:
             leidos.append((origen, c.texto))
             return c
 
-        correos = esc.get("correos", [])
+        correos = _mensajes(esc)
         if unidad.familia == "control":
             accion = ev.get("accion_legitima")
             destino = _destino(accion) if accion else ""
             portador = next((c["id"] for c in correos if _lleva(c, destino)), correos[0]["id"])
             for c in correos:
-                nuevo(c["de"], c["asunto"], c["cuerpo"], CORREO, "legitimo", "legitimo",
+                nuevo(c["de"], c["asunto"], c["cuerpo"], c["origen"], "legitimo", "legitimo",
                       copy.deepcopy(accion) if (accion and c["id"] == portador) else None)
         elif unidad.familia == "ingenieria_social":
             # Una estafa puede tener varios daños (`acciones_estafa`): cada uno viaja en el correo que lleva su
@@ -396,12 +409,12 @@ class Flujo:
                 if c["id"] in por_correo:
                     extra = [(WEB, t) for t in esc.get("paginas", {}).values()] if primero_con_accion else []
                     primero_con_accion = False
-                    nuevo(c["de"], c["asunto"], c["cuerpo"], CORREO, "estafa", "ingenieria_social",
+                    nuevo(c["de"], c["asunto"], c["cuerpo"], c["origen"], "estafa", "ingenieria_social",
                           copy.deepcopy(por_correo[c["id"]]), extra)
                 elif c["id"] in de_la_estafa:
-                    nuevo(c["de"], c["asunto"], c["cuerpo"], CORREO, "estafa", "ingenieria_social")
+                    nuevo(c["de"], c["asunto"], c["cuerpo"], c["origen"], "estafa", "ingenieria_social")
                 else:
-                    nuevo(c["de"], c["asunto"], c["cuerpo"], CORREO, "legitimo", "legitimo")
+                    nuevo(c["de"], c["asunto"], c["cuerpo"], c["origen"], "legitimo", "legitimo")
         else:  # técnico
             accion = ev["accion_estafa"]
             if esc.get("_sintetico"):
@@ -520,6 +533,7 @@ def _textos(esc: dict[str, Any]) -> list[str]:
     t = [str(esc.get("encargo", ""))]
     for c in esc.get("correos", []):
         t += [c["asunto"], c["cuerpo"]]
+    t += [l["transcripcion"] for l in esc.get("llamadas", [])]
     t += [str(v) for v in esc.get("paginas", {}).values()]
     t += [str(v) for v in esc.get("mcp_herramientas", {}).values()]
     return t
@@ -529,5 +543,7 @@ def _aplicar(esc: dict[str, Any], f) -> None:
     esc["encargo"] = f(str(esc.get("encargo", "")))
     for c in esc.get("correos", []):
         c["asunto"], c["cuerpo"] = f(c["asunto"]), f(c["cuerpo"])
+    for l in esc.get("llamadas", []):
+        l["transcripcion"] = f(l["transcripcion"])
     esc["paginas"] = {k: f(str(v)) for k, v in esc.get("paginas", {}).items()}
     esc["mcp_herramientas"] = {k: f(str(v)) for k, v in esc.get("mcp_herramientas", {}).items()}

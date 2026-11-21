@@ -170,6 +170,13 @@ def herramientas(defensas: list[Defensa]) -> list[Tool]:
         return execute
 
     @tool
+    def escuchar_llamadas() -> Tool:
+        async def execute() -> str:
+            """Escucha las llamadas recibidas por el dueño: devuelve la transcripción de cada una."""
+            return _con_mundo(defensas, lambda h: h.escuchar_llamadas())
+        return execute
+
+    @tool
     def abrir_web() -> Tool:
         async def execute(url: str) -> str:
             """Abre una página web y devuelve su contenido.
@@ -244,8 +251,8 @@ def herramientas(defensas: list[Defensa]) -> list[Tool]:
             return _con_mundo(defensas, lambda h: h.usar_mcp(herramienta, consulta))
         return execute
 
-    return [leer_correos(), abrir_web(), pagar(), transferir(), compartir_dato(), responder(),
-            usar_mcp()]
+    return [leer_correos(), escuchar_llamadas(), abrir_web(), pagar(), transferir(), compartir_dato(),
+            responder(), usar_mcp()]
 
 
 @metric
