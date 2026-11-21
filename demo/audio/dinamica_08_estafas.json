@@ -3,8 +3,8 @@
   "paso": "6. Cifras",
   "idioma": "es",
   "origen": "narración",
-  "texto": "Ciento cincuenta estafas, de treinta y dos tipos. Con Grifter completo, pasan cero.",
-  "texto_enviado": "Ciento cincuenta estafas, de treinta y dos tipos. Con Grifter completo, pasan cero.",
+  "texto": "Ciento cincuenta estafas. Pasan cero.",
+  "texto_enviado": "Ciento cincuenta estafas. Pasan cero.",
   "voz": "femenina",
   "nombre_de_la_voz": "Catalina",
   "voz_id": "5yNXxdAaHAkq8N8bGqwQ",
@@ -12,8 +12,8 @@
   "descripcion_de_la_voz": "Narradora chilena joven de la biblioteca de ElevenLabs: cálida, cercana y natural, sin tono de noticiero.",
   "modelo": "eleven_v3",
   "formato": "mp3_44100_64",
-  "duracion_s": 6,
+  "duracion_s": 3.44,
   "sintetica": true,
   "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
-  "caracteres": 83
+  "caracteres": 37
 }

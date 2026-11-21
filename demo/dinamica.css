@@ -204,7 +204,7 @@ body.modo-dinamica { margin: 0; height: 100vh; overflow: hidden; background: var
 .dn-notif .dn-ic { color: var(--texto-2); font-size: 56px; }
 .dn-notif-de { color: var(--texto-2); font-size: 30px; line-height: 36px; }
 .dn-notif b { color: var(--texto); font-weight: var(--p-fuerte); }
-.dn-e-codigo { padding-top: 240px; }
+
 .dn-digitos { display: flex; gap: 20px; }
 .dn-digitos span { display: grid; place-items: center; width: 150px; height: 190px; border: 2px solid var(--borde); background: var(--superficie); font: var(--p-fuerte) 120px / 1 var(--mono); }
 
@@ -308,3 +308,23 @@ body.dn-revisando .dn-marco { bottom: 48px; }
 
 /* Las cifras de partículas ya no cuentan: sin cifras tabulares, para que el texto calce con los puntos muestreados */
 .dn-cifra.dato { font-variant-numeric: normal; }
+
+/* Gancho: cuatro siluetas limpias y sólidas (cabeza y hombros); la cuarta se enciende en ámbar con «cuatro» */
+.dn-personas { gap: 56px; }
+.dn-persona { width: 180px; height: 216px; display: block; }
+.dn-persona svg { display: block; width: 100%; height: 100%; fill: var(--texto-3); }
+.dn-persona.cae.on svg { fill: var(--ambar); }
+
+/* El chat de Pablo: arriba su foto y su nombre (es su teléfono); adentro escribe Grifter */
+.dn-chat-av.foto { padding: 0; border-radius: 50%; overflow: hidden; }
+.dn-chat-av.foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.dn-sin-pablo { display: grid; place-items: center; width: 100%; height: 100%; color: var(--texto-2); font-size: 40px; font-weight: var(--p-fuerte); }
+.dn-remitente { align-self: flex-start; color: var(--texto-2); }
+.dn-remitente .dn-ic { color: var(--verde); }
+
+/* La escena del código: el rótulo arriba y la notificación en el flujo, no encima */
+.dn-e-codigo { padding-top: 72px; }
+.dn-notif.dn-notif-medio { position: static; margin: 0; width: 1240px; }
+
+/* Una frase corta del nieto que va entera en una línea */
+.dn-una-linea .dn-titular { font-size: 84px; line-height: 100px; white-space: nowrap; }

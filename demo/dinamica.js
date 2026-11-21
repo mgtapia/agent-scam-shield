@@ -53,41 +53,42 @@
   // --- Línea de tiempo (segundos). Cada escena dura lo que dura su voz; ninguna narración se encima con la llamada ---
   const ESCENAS = [
     // 1. Gancho
-    ["gancho", 0, "zoom"], ["agentes", 4.6, "der"],
-    // 2. El cuento del tío: el encargo, la llamada y cada frase del nieto en su escena
-    ["encargo", 8.0, "abajo"], ["suena", 11.2, "zoom"], ["contesta", 13.6, "der"],
-    ["n1", 15.9, "der"], ["n2", 20.65, "golpe"], ["n3", 22.6, "izq"], ["fianza", 26.6, "zoom"],
-    ["n4", 29.55, "der"], ["cuenta", 32.6, "zoom"], ["n5", 37.35, "abajo"],
+    ["gancho", 0, "zoom"], ["agentes", 4.5, "der"],
+    // 2. El cuento del tío: el encargo, la llamada y cada frase del nieto en su escena (la llamada dura lo que sus mp3)
+    ["encargo", 7.3, "abajo"], ["suena", 9.2, "zoom"], ["contesta", 11.0, "der"],
+    ["n1", 13.1, "der"], ["n2", 17.85, "golpe"], ["n3", 19.8, "izq"], ["fianza", 23.8, "zoom"],
+    ["n4", 26.75, "der"], ["cuenta", 29.8, "zoom"], ["n5", 34.55, "abajo"],
     // 3. El agente va a pagar y Grifter retiene
-    ["paga", 40.9, "abajo"], ["frena", 44.2, "golpe"], ["motivo", 45.8, "zoom"],
+    ["paga", 38.1, "abajo"], ["frena", 40.4, "golpe"], ["motivo", 41.7, "zoom"],
     // 4. Pagar igual: doble autorización, Marta aprueba con su código y Pablo rechaza
-    ["alerta", 50.0, "abajo"], ["quorum", 53.8, "der"], ["codigo", 56.6, "abajo"], ["uno", 60.2, "zoom"],
-    ["pablo", 62.4, "der"], ["nada", 67.0, "zoom"],
-    // 5. Dos estafas más
-    ["banco", 70.6, "abajo"], ["responde", 74.0, "der"], ["clave", 76.0, "golpe"],
-    ["aprobaste", 79.6, "zoom"], ["cobra", 82.4, "golpe"], ["calza", 85.0, "zoom"],
+    ["alerta", 45.3, "abajo"], ["codigo", 47.7, "der"], ["pablo", 50.5, "der"],
+    // 5. Dos estafas más, de ~5 s cada una
+    ["banco", 54.6, "abajo"], ["responde", 57.0, "der"], ["clave", 58.75, "golpe"],
+    ["aprobaste", 61.2, "zoom"], ["cobra", 63.3, "golpe"], ["calza", 65.6, "zoom"],
     // 6. Cifras
-    ["estafas", 87.6, "zoom"], ["pasan", 91.0, "corte"], ["atacante", 94.0, "der"], ["cruzan", 97.8, "corte"],
-    // 7. Cierre: la frase final (sin voz) y el logo que se arma
-    ["remate", 101.0, "zoom"], ["cierre", 105.0, "zoom"],
+    ["estafas", 67.6, "zoom"], ["pasan", 69.7, "corte"], ["atacante", 71.4, "der"], ["cruzan", 75.9, "corte"],
+    // 7. Cierre: la frase final y la marca que se arma
+    ["remate", 77.4, "zoom"], ["cierre", 81.2, "zoom"],
   ];
-  const DURACION = 110;
-  const PASOS = [0, 8.0, 40.9, 50.0, 70.6, 87.6, 101.0];   // teclas 1 a 7
+  const DURACION = 85.3;
+  const E = Object.fromEntries(ESCENAS.map(([id, desde]) => [id, desde]));   // el inicio de cada escena
+  const PASOS = [0, E.encargo, E.paga, E.alerta, E.banco, E.estafas, E.remate];   // teclas 1 a 7
 
   // La narración (ElevenLabs, eleven_v3, voz de biblioteca). `pal` es el inicio de cada palabra en el mp3, sacado
   // de /with-timestamps: el texto de pantalla se escribe al ritmo de la voz, sin cargar audio (sirve para ?t=N).
+  // Ninguna se pisa con la siguiente ni con la llamada.
   const NARR = {
-    gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,   dur: 4.08, pal: [0.07, 0.36, 0.53, 0.7, 1.01, 1.33, 1.95, 2.2, 2.71, 2.91, 3, 3.16, 3.59] },
-    agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.8,   dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
-    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 44.6,  dur: 4.64, pal: [0.13, 0.51, 0.64, 1.28, 1.82, 2.22, 2.51, 2.6, 2.77, 3.55, 3.81, 3.95, 4.06] },
-    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 70.8,  dur: 3.04, pal: [0, 0.16, 0.63, 1.04, 1.31, 1.43, 1.88, 2.24] },
-    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 76.1,  dur: 3.12, pal: [0, 0.21, 0.52, 0.7, 1.25, 1.58, 1.9, 2.11, 2.22] },
-    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 79.7,  dur: 4.8,  pal: [0, 0.63, 1.49, 1.76, 2.76, 2.85, 3.01, 3.4, 3.82, 4.13, 4.46] },
-    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 85.2,  dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
-    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 87.8,  dur: 6.0,  pal: [0, 0.52, 1.1, 1.89, 2.04, 2.36, 2.44, 2.64, 3.3, 3.65, 4.23, 5.15, 5.6] },
-    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 94.2,  dur: 6.56, pal: [0, 0.13, 0.66, 0.78, 1.31, 1.58, 2.08, 2.52, 2.74, 3.42, 3.84, 4.51, 5.5, 5.87, 5.98, 6.36] },
-    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 101.2, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
-    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 105.9, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
+    gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,  dur: 4.08, pal: [0.07, 0.36, 0.53, 0.7, 1.01, 1.33, 1.95, 2.2, 2.71, 2.91, 3, 3.16, 3.59] },
+    agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.6,  dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
+    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 40.5, dur: 4.64, pal: [0.13, 0.51, 0.64, 1.28, 1.82, 2.22, 2.51, 2.6, 2.77, 3.55, 3.81, 3.95, 4.06] },
+    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 54.8, dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
+    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 58.85, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
+    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 61.3, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
+    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 65.7, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
+    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 67.7, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
+    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 71.5, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
+    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 77.5, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
+    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 81.7, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
   };
   // Cuándo empieza la palabra i de una narración, en segundos de la demo.
   const palabra = (n, i) => NARR[n].en + NARR[n].pal[i];
@@ -95,13 +96,15 @@
   const desdePalabra = (n, i) => ({ t0: palabra(n, i), pal: NARR[n].pal.slice(i).map((x) => x - NARR[n].pal[i]) });
 
   // La llamada: los mp3 de la versión A. FRASES son los inicios de cada frase del nieto en su mp3 (demo.js).
-  const LL = { suena: 11.4, contesta: 13.6, abuela: 13.8, nieto: 15.9, cuelga: 40.6 };
+  const LL = { suena: 9.3, contesta: 11.0, abuela: 11.2, nieto: 13.1, cuelga: 37.8 };
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];
   const frase = (i) => LL.nieto + FRASES[i];
+  // Los toques: «Pagar igual» de Marta y «Rechazar» de Pablo.
+  const TOQUE_MARTA = E.alerta + 1.7, TOQUE_PABLO = E.pablo + 2.1;
   // Cuándo «habla» el agente (su nube pulsa en ámbar) y cuándo suena cada voz de la llamada.
-  const HABLA_AGENTE = [[9.3, 10.9], [41.1, 43.3], [74.1, 76.0]];
+  const HABLA_AGENTE = [[E.encargo + 0.6, E.encargo + 1.7], [E.paga + 0.05, E.paga + 1.6], [E.responde + 0.05, E.responde + 1.5]];
   const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7]], nieto: [[LL.nieto, LL.cuelga]] };
-  const ALARMA = [44.2, 65.3];   // el borde rojo: desde que Grifter retiene hasta que Pablo rechaza
+  const ALARMA = [E.frena, TOQUE_PABLO + 0.25];   // el borde rojo: desde que Grifter retiene hasta que Pablo rechaza
   // La frase final, en dos líneas (su voz es NARR.remate: si cambia el texto, hay que regenerar ese mp3).
   const FRASE_FINAL = ["Tu agente puede creerle a cualquiera.", "Tu plata, no."];
   const CODIGO = "482913";       // el código del correo de ejemplo: es un dibujo, no un código real
@@ -165,42 +168,44 @@
       h.push(`<section class="dn-escena dn-e-${id} ${cls}" data-id="${id}" data-desde="${desde}" data-hasta="${hasta}" data-entra="${entra}">${contenido}</section>`);
     };
 
-    // 1. Gancho
+    // 1. Gancho: cuatro siluetas que entran de a una con la voz; la cuarta se enciende en ámbar cuando dice «cuatro»
+    const silueta = `<svg viewBox="0 0 100 120" aria-hidden="true"><circle cx="50" cy="30" r="22"/><path d="M8 120 C8 82 26 62 50 62 C74 62 92 82 92 120 Z"/></svg>`;
     esc_("gancho", `
-        <div class="dn-personas" aria-hidden="true">${[0, 1, 2, 3].map((i) => `<span class="dn-persona" data-ancla="persona-${i}"></span>`).join("")}</div>
+        <div class="dn-personas" aria-hidden="true">${[0, 1, 2, 3].map((i) => `<span class="dn-persona${i === 3 ? " cae" : ""}"${ap(palabra("gancho", 1) + i * 0.18, "pop")}${i === 3 ? ` data-on="${palabra("gancho", 4)}"` : ""}>${silueta}</span>`).join("")}</div>
         <h1 class="dn-cifra-gancho">${saltan("Casi 1 de cada 4", "gancho", 0)}</h1>
         <p class="dn-bajada">${escribe("chilenos ya perdió plata en una estafa digital.", 0, desdePalabra("gancho", 5))}</p>
-        <p class="dn-fuente dato"${ap(4.0, "nada")}>TransUnion, 2025: 23 % de los consumidores chilenos</p>`, "dn-centro");
+        <p class="dn-fuente dato"${ap(3.9, "nada")}>TransUnion, 2025: 23 % de los consumidores chilenos</p>`, "dn-centro");
     esc_("agentes", `
         <div class="dn-agentes-fila">
-          <div${ap(4.65, "pop")}>${agente("grande")}</div>
+          <div${ap(E.agentes + 0.05, "pop")}>${agente("grande")}</div>
           <ul class="dn-tareas">
-            <li${ap(5.3, "der")}>${ic("payments")}<span>Paga la luz</span></li>
-            <li${ap(5.7, "der")}>${ic("shopping_cart")}<span>Compra en línea</span></li>
-            <li${ap(6.1, "der")}>${ic("arrow_forward")}<span>Transfiere</span></li>
+            <li${ap(E.agentes + 0.5, "der")}>${ic("payments")}<span>Paga la luz</span></li>
+            <li${ap(E.agentes + 0.85, "der")}>${ic("shopping_cart")}<span>Compra en línea</span></li>
+            <li${ap(E.agentes + 1.2, "der")}>${ic("arrow_forward")}<span>Transfiere</span></li>
           </ul>
         </div>
         <h1 class="dn-titular">${escribe("Ahora los agentes pagan por nosotros.", 0, desdePalabra("agentes", 1))}</h1>`, "dn-centro");
 
     // 2. El cuento del tío
+    const S1 = E.encargo;
     esc_("encargo", `
         <div class="dn-con-agente">
           <div class="dn-lado">${agente("grande")}<p class="dn-nombre">Agente de Marta</p></div>
-          <div class="dn-chat">${cabeceraAgente([["En línea", 8.0, 9.3], ["Escribiendo…", 9.3, 9.9], ["En línea", 9.9, null]])}
+          <div class="dn-chat">${cabeceraAgente([["En línea", S1, S1 + 0.6], ["Escribiendo…", S1 + 0.6, S1 + 1.0], ["En línea", S1 + 1.0, null]])}
             <div class="dn-msgs">
-              <div class="dn-burbuja yo"${ap(8.3, "pop")}><span class="dn-de">Marta</span>${esc(encargo)}</div>
-              ${puntos(9.3, 9.9)}
-              <div class="dn-burbuja ag"${ap(9.9, "pop")}>Listo, Marta. Yo contesto tus llamadas.</div>
+              <div class="dn-burbuja yo"${ap(S1 + 0.05, "pop")}><span class="dn-de">Marta</span>${esc(encargo)}</div>
+              ${puntos(S1 + 0.6, S1 + 1.0)}
+              <div class="dn-burbuja ag"${ap(S1 + 1.0, "pop")}>Listo, Marta. Yo contesto tus llamadas.</div>
             </div>
           </div>
         </div>`);
     esc_("suena", `
-        <p class="dn-rotulo"${ap(11.25, "cae")}>El cuento del tío · la estafa telefónica más conocida de Chile</p>
+        <p class="dn-rotulo"${ap(E.suena + 0.05, "cae")}>El cuento del tío · la estafa telefónica más conocida de Chile</p>
         <div class="dn-vibra">
           ${fotoNieto("dn-xl dn-llama")}
-          <p class="dn-quien-llama"${ap(11.4, "sube")}>Número privado</p>
-          <p class="dn-sub"${ap(11.6, "sube")}>Llamada entrante</p>
-          <div class="dn-ll-botones"${ap(11.8, "sube")}>
+          <p class="dn-quien-llama"${ap(E.suena + 0.15, "sube")}>Número privado</p>
+          <p class="dn-sub"${ap(E.suena + 0.3, "sube")}>Llamada entrante</p>
+          <div class="dn-ll-botones"${ap(E.suena + 0.4, "sube")}>
             <span class="dn-ll-b colgar">${ic("call_end")}</span>
             <span class="dn-ll-b contestar">${ic("call")}${dedo(LL.contesta - 0.45, -260, 180)}</span>
           </div>
@@ -223,18 +228,20 @@
         <div class="dn-mini-quien"${ap(frase(1), "izq")}>${fotoNieto("dn-s")}${barras("nieto")}<p>Tomás (nieto)</p></div>
         <h1 class="dn-titular dn-enorme">${escribe("Choqué el auto y me tienen detenido.", frase(1) + 0.05, { cps: 21 })}</h1>`, "dn-centro");
     esc_("n3", habla("El carabinero dice que si pago la fianza ahora me sueltan altiro.", frase(2) + 0.05, 17.5, "dn-al-reves"));
+    const S2 = E.fianza;
     esc_("fianza", `
         ${reloj()}
-        <p class="dn-etiqueta"${ap(26.7, "cae")}>«Son…</p>
-        <p class="dn-monto dn-ambar">${cuenta(0, 650000, 26.9, 1.7, { pesos: true })}</p>
-        <p class="dn-etiqueta"${ap(28.5, "sube")}>…abuelita»</p>
-        <span class="dn-tag ext"${ap(28.8, "pop")}>${ic("call")}Dictado en la llamada</span>`, "dn-centro");
-    esc_("n4", habla("Anota la cuenta del abogado:", frase(3) + 0.05, 16));
+        <p class="dn-etiqueta"${ap(S2 + 0.1, "cae")}>«Son…</p>
+        <p class="dn-monto dn-ambar">${cuenta(0, 650000, S2 + 0.3, 1.7, { pesos: true })}</p>
+        <p class="dn-etiqueta"${ap(S2 + 1.9, "sube")}>…abuelita»</p>
+        <span class="dn-tag ext"${ap(S2 + 2.2, "pop")}>${ic("call")}Dictado en la llamada</span>`, "dn-centro");
+    esc_("n4", habla("Anota la cuenta del abogado:", frase(3) + 0.05, 16, "dn-una-linea"));
+    const S3 = E.cuenta;
     esc_("cuenta", `
         ${reloj()}
-        <p class="dn-etiqueta"${ap(32.8, "cae")}>Banco Austral · cuenta vista</p>
-        <p class="dn-monto dn-ambar dato">${escribe("48-2210-7735", 33.3, { cps: 3.8 })}</p>
-        <span class="dn-tag ext"${ap(36.6, "pop")}>${ic("call")}Dictada por un número privado</span>`, "dn-centro");
+        <p class="dn-etiqueta"${ap(S3 + 0.2, "cae")}>Banco Austral · cuenta vista</p>
+        <p class="dn-monto dn-ambar dato">${escribe("48-2210-7735", S3 + 0.7, { cps: 3.8 })}</p>
+        <span class="dn-tag ext"${ap(S3 + 4.0, "pop")}>${ic("call")}Dictada por un número privado</span>`, "dn-centro");
     esc_("n5", `
         ${reloj()}
         <div class="dn-pila-centro">
@@ -244,35 +251,38 @@
         </div>`, "dn-centro");
 
     // 3. El agente va a pagar y Grifter retiene
+    const S4 = E.paga;
     esc_("paga", `
         <div class="dn-con-agente">
           <div class="dn-lado">${agente("grande")}<p class="dn-nombre">Agente de Marta</p></div>
-          <div class="dn-chat">${cabeceraAgente([["En línea", 0, 41.1], ["Escribiendo…", 41.1, 41.7], ["En línea", 41.7, null]])}
+          <div class="dn-chat">${cabeceraAgente([["En línea", 0, S4 + 0.05], ["Escribiendo…", S4 + 0.05, S4 + 0.4], ["En línea", S4 + 0.4, null]])}
             <div class="dn-msgs">
               <div class="dn-burbuja yo"${ap(0, "pop")}><span class="dn-de">Marta</span>${esc(encargo)}</div>
               <div class="dn-burbuja ag"${ap(0, "pop")}>Listo, Marta. Yo contesto tus llamadas.</div>
-              <p class="dn-sistema"${ap(40.95, "nada")}>${ic("call")}Llamada de número privado · 0:27</p>
-              ${puntos(41.1, 41.7)}
-              <div class="dn-burbuja ag"${ap(41.7, "pop")}>${escribe("Marta, Tomás necesita la fianza. Pago [[$650.000]] a la cuenta [[48-2210-7735]].", 41.7, { cps: 60 })}</div>
-              <div class="dn-accion"${ap(43.0, "izq")}>${ic("payments")}<span class="dato">Pagar $650.000 ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="dn-tag ext">Llamada</span></div>
+              <p class="dn-sistema"${ap(S4 + 0.05, "nada")}>${ic("call")}Llamada de número privado · 0:27</p>
+              ${puntos(S4 + 0.05, S4 + 0.4)}
+              <div class="dn-burbuja ag"${ap(S4 + 0.4, "pop")}>${escribe("Marta, Tomás necesita la fianza. Pago [[$650.000]] a la cuenta [[48-2210-7735]].", S4 + 0.4, { cps: 70 })}</div>
+              <div class="dn-accion"${ap(S4 + 1.5, "izq")}>${ic("payments")}<span class="dato">Pagar $650.000 ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="dn-tag ext">Llamada</span></div>
             </div>
           </div>
         </div>`);
+    const S5 = E.frena;
     esc_("frena", `
-        <div class="dn-escudo-nube"${ap(44.2, "nada")}>${agente("grande", 44.25)}</div>
-        <h1 class="dn-titular dn-enorme"${ap(44.55, "sube")}>Pago retenido</h1>
-        <p class="dn-tachado dato"${ap(44.85, "sube")}><span>$650.000 → 48-2210-7735</span><i${ap(45.15, "raya")}></i></p>`, "dn-centro");
+        <div class="dn-escudo-nube">${agente("grande")}</div>
+        <h1 class="dn-titular dn-enorme"${ap(S5 + 0.3, "sube")}>Pago retenido</h1>
+        <p class="dn-tachado dato"${ap(S5 + 0.55, "sube")}><span>$650.000 → 48-2210-7735</span><i${ap(S5 + 0.8, "raya")}></i></p>`, "dn-centro");
     esc_("motivo", `
         <h1 class="dn-titular">${escribe("La cuenta salió de [[una llamada]], no de tu encargo.", 0, desdePalabra("retiene", 3))}</h1>
         <div class="dn-versus">
-          <span class="dn-tag"${ap(48.6, "izq")}>${ic("person")}Encargo de Marta: contestar sus llamadas</span>
-          <span class="dn-tag ext"${ap(49.0, "der")}>${ic("call")}Cuenta 48-2210-7735 · llamada</span>
+          <span class="dn-tag"${ap(E.motivo + 2.2, "izq")}>${ic("person")}Encargo de Marta: contestar sus llamadas</span>
+          <span class="dn-tag ext"${ap(E.motivo + 2.5, "der")}>${ic("call")}Cuenta 48-2210-7735 · llamada</span>
         </div>`, "dn-centro");
 
     // 4. Pagar igual: doble autorización
+    const S6 = E.alerta;
     esc_("alerta", `
-        <p class="dn-rotulo">${escribe("Marta está convencida: es su nieto.", 50.15, { cps: 30 })}</p>
-        <div class="dn-alerta"${ap(50.05, "sube")}>
+        <p class="dn-rotulo">${escribe("Marta está convencida: es su nieto.", S6 + 0.1, { cps: 34 })}</p>
+        <div class="dn-alerta"${ap(S6 + 0.05, "sube")}>
           <p class="dn-al-titulo">${ic("gpp_good")}<span>Grifter retuvo un pago</span></p>
           <p class="dn-al-motivo">La cuenta viene solo de una llamada, no de tu encargo.</p>
           <dl class="dn-al-datos">
@@ -284,109 +294,101 @@
           <div class="dn-al-botones">
             <span class="dn-b principal">Pagar a mi inscrita</span>
             <span class="dn-b">No pagar</span>
-            <span class="dn-b peligro">Pagar igual${dedo(52.5, -420, 160)}</span>
+            <span class="dn-b peligro">Pagar igual${dedo(TOQUE_MARTA, -420, 160)}</span>
           </div>
         </div>`);
-    esc_("quorum", `
-        <h1 class="dn-titular">${escribe("«Pagar igual» pide 2 aprobaciones", 53.9, { cps: 30 })}</h1>
-        <div class="dn-dos">
-          <div class="dn-ficha"${ap(54.9, "pop")}>${fotoMarta("dn-m")}<p>Marta</p></div>
-          <div class="dn-ficha"${ap(55.25, "pop")}><span class="dn-sin-foto">${ic("person")}</span><p>Pablo, su hijo</p></div>
-        </div>
-        <p class="dn-contador dato"${ap(55.7, "pop")}>0 de 2</p>`, "dn-centro");
+    const S7 = E.codigo;
     esc_("codigo", `
-        <div class="dn-notif"${ap(56.8, "cae")}>${ic("mail")}<div><p class="dn-notif-de">Grifter · correo</p><p>Tu código para aprobar el pago de $650.000: <b class="dato">482 913</b></p></div></div>
-        <p class="dn-etiqueta"${ap(57.4, "sube")}>Marta ingresa su código</p>
-        <div class="dn-digitos">${[...CODIGO].map((d, i) => `<span><b${ap(57.9 + i * 0.28, "pop")}>${d}</b></span>`).join("")}</div>
-        <span class="dn-tag verde"${ap(59.6, "pop")}>${ic("check")}Marta aprobó con su código</span>`, "dn-centro");
-    esc_("uno", `
-        <p class="dn-gigante dato"${ap(60.3, "golpe")}>1 de 2</p>
-        <div class="dn-dos">
-          <div class="dn-ficha"${ap(60.6, "pop")}>${fotoMarta("dn-m")}<p>Marta <span class="dn-ok">${ic("check")}</span></p></div>
-          <div class="dn-ficha dn-pulsa"${ap(60.9, "pop")}><span class="dn-sin-foto">${ic("person")}</span><p>Pablo · falta</p></div>
-        </div>
-        <p class="dn-etiqueta"${ap(61.3, "sube")}>Falta Pablo, su hijo</p>`, "dn-centro");
+        <p class="dn-etiqueta dn-arriba">${escribe("«Pagar igual» pide 2 aprobaciones: Marta y Pablo", S7 + 0.05, { cps: 45 })}</p>
+        <div class="dn-notif dn-notif-medio"${ap(S7 + 0.3, "cae")}>${ic("mail")}<div><p class="dn-notif-de">Grifter · correo a Marta</p><p>Tu código para aprobar el pago de $650.000: <b class="dato">482 913</b></p></div></div>
+        <div class="dn-digitos">${[...CODIGO].map((d, i) => `<span><b${ap(S7 + 0.9 + i * 0.18, "pop")}>${d}</b></span>`).join("")}</div>
+        <span class="dn-tag verde"${ap(S7 + 2.0, "pop")}>${ic("check")}1 de 2 · Marta aprobó con su código</span>`, "dn-centro");
+    const S8 = E.pablo;
     esc_("pablo", `
         <div class="dn-chat dn-chat-ancho">
-          <div class="dn-chat-cab"><span class="dn-chat-av escudo">${ic("shield")}</span><p><b>Grifter</b><span class="dn-estado"><span>WhatsApp de Pablo, su hijo</span></span></p></div>
+          <div class="dn-chat-cab dn-de-pablo"><span class="dn-chat-av foto"><img src="img/pablo.jpg" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{className:'dn-sin-pablo',textContent:'P'}))" alt="" width="88" height="88"></span><p><b>Pablo, su hijo</b><span class="dn-estado"><span>WhatsApp · chat con Grifter</span></span></p></div>
           <div class="dn-msgs">
-            ${puntos(62.55, 63.1)}
-            <div class="dn-burbuja ag"${ap(63.1, "pop")}>Marta quiere pagar <b class="dato">$650.000</b> a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser Tomás, su nieto.</div>
-            <div class="dn-burbuja ag dn-chica"${ap(63.6, "pop")}>${ic("check")}1 de 2: Marta ya aprobó con su código</div>
-            <div class="dn-wa-botones"${ap(64.0, "sube", 65.75)}>
-              <span class="dn-b">Aprobar (pide tu código)</span>
-              <span class="dn-b rechazar">Rechazar${dedo(65.0, -380, 220)}</span>
+            <p class="dn-sistema dn-remitente"${ap(S8 + 0.05, "nada")}>${ic("shield")}Grifter</p>
+            ${puntos(S8 + 0.05, S8 + 0.4)}
+            <div class="dn-burbuja ag"${ap(S8 + 0.4, "pop")}>Marta quiere pagar <b class="dato">$650.000</b> a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser Tomás, su nieto.</div>
+            <div class="dn-burbuja ag dn-chica"${ap(S8 + 0.75, "pop")}>${ic("check")}1 de 2: Marta ya aprobó con su código</div>
+            <div class="dn-wa-botones"${ap(S8 + 1.05, "sube", TOQUE_PABLO + 0.75)}>
+              <span class="dn-b">Solicitar código</span>
+              <span class="dn-b rechazar">Rechazar${dedo(TOQUE_PABLO, -380, 220)}</span>
             </div>
-            <p class="dn-sistema dn-resultado"${ap(65.95, "sube")}>${ic("block")}<span>Pablo rechazó.</span><b>No se pagó nada.</b></p>
+            <p class="dn-sistema dn-resultado"${ap(TOQUE_PABLO + 0.95, "sube")}>${ic("block")}<span>Pablo rechazó.</span><b>No se pagó nada.</b></p>
           </div>
         </div>`);
-    esc_("nada", `
-        <span class="dn-escudo-ok"${ap(67.05, "golpe")}>${ic("check")}</span>
-        <h1 class="dn-titular dn-enorme">${escribe("No se pagó nada.", 67.2, { cps: 18 })}</h1>
-        <p class="dn-tachado dato"${ap(68.2, "sube")}><span>$650.000</span><i${ap(68.5, "raya")}></i></p>
-        <p class="dn-etiqueta"${ap(69.0, "sube")}>Un solo «no» basta para cancelar</p>`, "dn-centro");
 
     // 5. Dos estafas más: el código del banco y la tienda que cobra de más
+    const S9 = E.banco;
     esc_("banco", `
-        <p class="dn-rotulo"${ap(70.65, "cae")}>Otra estafa: el falso Banco Cordillera</p>
+        <p class="dn-rotulo"${ap(S9 + 0.05, "cae")}>Otra estafa: el falso Banco Cordillera</p>
         <div class="dn-correo">
-          <p class="dn-correo-de"${ap(70.8, "izq")}>${ic("mail")}<span>seguridad@<mark class="dn-marca">bancocordillera-alertas.cl</mark></span></p>
-          <p class="dn-correo-asunto"${ap(71.2, "sube")}>Cargo no reconocido por $389.990 en tu tarjeta</p>
-          <p class="dn-correo-cuerpo">${escribe("Para revertirlo antes de 30 minutos, responde con el [[código que te llegó por SMS]]. Si no, tu tarjeta será bloqueada.", 71.7, { cps: 75 })}</p>
+          <p class="dn-correo-de"${ap(S9 + 0.15, "izq")}>${ic("mail")}<span>seguridad@<mark class="dn-marca">bancocordillera-alertas.cl</mark></span></p>
+          <p class="dn-correo-asunto"${ap(S9 + 0.35, "sube")}>Cargo no reconocido por $389.990 en tu tarjeta</p>
+          <p class="dn-correo-cuerpo">${escribe("Para revertirlo antes de 30 minutos, responde con el [[código que te llegó por SMS]]. Si no, tu tarjeta será bloqueada.", S9 + 0.6, { cps: 95 })}</p>
         </div>`);
+    const S10 = E.responde;
     esc_("responde", `
         <div class="dn-con-agente">
           <div class="dn-lado">${agente("grande")}<p class="dn-nombre">Agente de Marta</p></div>
           <div class="dn-respuesta">
             <p class="dn-rot">Respuesta del agente a seguridad@<mark class="dn-marca">bancocordillera-alertas.cl</mark></p>
-            <p class="dn-resp-txt">${escribe("Hola, el código de verificación es", 74.2, { cps: 30 })}</p>
-            <p class="dn-resp-codigo dato">${escribe("[[482 913]]", 75.35, { cps: 12 })}</p>
-            <span class="dn-b principal dn-enviar"${ap(74.9, "pop")} data-on="75.7">Enviar ${ic("arrow_forward", "chico")}</span>
+            <p class="dn-resp-txt">${escribe("Hola, el código de verificación es", S10 + 0.05, { cps: 36 })}</p>
+            <p class="dn-resp-codigo dato">${escribe("[[482 913]]", S10 + 1.0, { cps: 16 })}</p>
+            <span class="dn-b principal dn-enviar"${ap(S10 + 0.5, "pop")} data-on="${S10 + 1.55}">Enviar ${ic("arrow_forward", "chico")}</span>
           </div>
         </div>`);
+    const S11 = E.clave;
     esc_("clave", `
-        <div class="dn-escudo-nube"${ap(76.0, "nada")}>${agente("medio", 76.05)}</div>
-        <h1 class="dn-titular">${escribe("La clave del dueño no sale sin su confirmación.", 0, desdePalabra("clave", 0))}</h1>
-        <p class="dn-tachado dato chico"${ap(78.3, "sube")}><span>Código 482 913 · no se envió</span><i${ap(78.6, "raya")}></i></p>`, "dn-centro");
+        <div class="dn-escudo-nube">${agente("medio")}</div>
+        <h1 class="dn-titular">${escribe("Tu clave no sale sin tu confirmación.", 0, desdePalabra("clave", 0))}</h1>
+        <p class="dn-tachado dato chico"${ap(S11 + 1.35, "sube")}><span>Código 482 913 · no se envió</span><i${ap(S11 + 1.55, "raya")}></i></p>`, "dn-centro");
+    const S12 = E.aprobaste;
     esc_("aprobaste", `
-        <p class="dn-rotulo"${ap(79.65, "cae")}>${ic("shopping_cart")}Componentes Volcán · Orden VOL-5512 · 10.000 × chip MX-3 de 3 nm</p>
-        <p class="dn-etiqueta"${ap(79.8, "sube")}>Aprobaste</p>
-        <p class="dn-monto">${cuenta(0, 412000, palabra("tienda", 1) - 0.1, 1.2, { pesos: true })}</p>`, "dn-centro");
+        <p class="dn-rotulo"${ap(S12 + 0.05, "cae")}>${ic("shopping_cart")}Componentes Volcán · Orden VOL-5512 · 10.000 × chip MX-3 de 3 nm</p>
+        <p class="dn-etiqueta"${ap(S12 + 0.15, "sube")}>Aprobaste</p>
+        <p class="dn-monto">${cuenta(0, 412000, palabra("tienda", 1) - 0.1, 0.9, { pesos: true })}</p>`, "dn-centro");
+    const S13 = E.cobra;
     esc_("cobra", `
-        <p class="dn-etiqueta"${ap(82.45, "cae")}>La tienda cobra</p>
-        <p class="dn-monto dn-sube-rojo" data-on="83.5">${cuenta(412000, 4120000, 82.6, 0.9, { pesos: true })}</p>
-        <span class="dn-tag ext"${ap(83.7, "pop")}>10 veces lo que aprobaste</span>`, "dn-centro");
+        <p class="dn-etiqueta"${ap(S13 + 0.05, "cae")}>La tienda cobra</p>
+        <p class="dn-monto dn-sube-rojo" data-on="${S13 + 0.95}">${cuenta(412000, 4120000, S13 + 0.15, 0.8, { pesos: true })}</p>
+        <span class="dn-tag ext"${ap(S13 + 1.05, "pop")}>10 veces lo que aprobaste</span>`, "dn-centro");
+    const S14 = E.calza;
     esc_("calza", `
-        <div class="dn-escudo-nube"${ap(85.0, "nada")}>${agente("medio", 85.05)}</div>
+        <div class="dn-escudo-nube">${agente("medio")}</div>
         <h1 class="dn-titular">${escribe("No calza con lo que aprobaste.", 0, desdePalabra("calza", 0))}</h1>
         <div class="dn-versus">
-          <span class="dn-tag"${ap(86.2, "izq")}>Aprobaste <b class="dato">$412.000</b></span>
-          <span class="dn-tag rojo"${ap(86.5, "pop")}>Cobra <b class="dato">$4.120.000</b></span>
-          <span class="dn-tag verde"${ap(86.8, "der")}>${ic("block")}No se pagó</span>
+          <span class="dn-tag"${ap(S14 + 0.9, "izq")}>Aprobaste <b class="dato">$412.000</b></span>
+          <span class="dn-tag rojo"${ap(S14 + 1.1, "pop")}>Cobra <b class="dato">$4.120.000</b></span>
+          <span class="dn-tag verde"${ap(S14 + 1.3, "der")}>${ic("block")}No se pagó</span>
         </div>`, "dn-centro");
 
     // 6. Cifras (docs/cifras.md: 150 estafas de 32 tipos, 0 pasan Grifter completo; 5.280 intentos, 0 cruzan la capa 2)
     // La cifra: las partículas la arman; el texto real aparece encima en «v» (y siempre está para lectores de pantalla).
     const cifra = (txt, v, cls = "") => `<p class="dn-cifra dato ${cls}" data-ancla="cifra"><span class="oculto">${txt}</span><span aria-hidden="true"${ap(v, "nada")}>${txt}</span></p>`;
+    const S15 = E.estafas, S16 = E.pasan, S17 = E.atacante, S18 = E.cruzan;
     esc_("estafas", `
-        ${cifra("150", 89.0)}
+        ${cifra("150", S15 + 1.1)}
         <p class="dn-cifra-txt"${ap(palabra("estafas", 2), "pop")}>estafas</p>
-        <p class="dn-cifra-txt dn-2"${ap(palabra("estafas", 3), "sube")}>de <b class="dato">${cuenta(0, 32, palabra("estafas", 4), 0.7)}</b> tipos</p>
-        <p class="dn-fuente dato"${ap(90.0, "nada")}>Agente que hace todo lo que lee · grifter bench</p>`, "dn-centro");
+        <p class="dn-cifra-txt dn-2"${ap(S15 + 1.5, "sube")}>de <b class="dato">${cuenta(0, 32, S15 + 1.55, 0.5)}</b> tipos</p>
+        <p class="dn-fuente dato"${ap(S15 + 1.7, "nada")}>Agente que hace todo lo que lee · grifter bench</p>`, "dn-centro");
     esc_("pasan", `
-        ${cifra("0", 93.4, "c-verde")}
-        <p class="dn-cifra-txt"${ap(palabra("estafas", 8), "pop")}>pasan con Grifter completo</p>
-        <p class="dn-fuente dato"${ap(92.2, "nada")}>150 de 150 frenadas · capas 2 y 3 · docs/cifras.md</p>`, "dn-centro");
+        ${cifra("0", S16 + 1.3, "c-verde")}
+        <p class="dn-cifra-txt"${ap(palabra("estafas", 3), "pop")}>pasan con Grifter completo</p>
+        <p class="dn-fuente dato"${ap(S16 + 0.8, "nada")}>150 de 150 frenadas · capas 2 y 3 · docs/cifras.md</p>`, "dn-centro");
     esc_("atacante", `
-        ${cifra("5.280", 96.6)}
+        ${cifra("5.280", S17 + 1.3)}
         <p class="dn-cifra-txt"${ap(palabra("atacante", 0), "pop")}>intentos de un atacante que aprende</p>
-        <p class="dn-fuente dato"${ap(96.6, "nada")}>120 generaciones · 6 corridas · grifter duelo</p>`, "dn-centro");
+        <p class="dn-fuente dato"${ap(S17 + 1.6, "nada")}>120 generaciones · 6 corridas · grifter duelo</p>`, "dn-centro");
     esc_("cruzan", `
-        ${cifra("0", 99.6, "c-verde")}
-        <p class="dn-cifra-txt"${ap(palabra("atacante", 11), "pop")}>cruzan la capa 2</p>
-        <p class="dn-fuente dato"${ap(99.0, "nada")}>5.280 intentos contra la capa 2 · grifter duelo · docs/cifras.md</p>`, "dn-centro");
+        ${cifra("0", S18 + 1.2, "c-verde")}
+        <p class="dn-cifra-txt"${ap(palabra("atacante", 10), "pop")}>cruzan la capa 2</p>
+        <p class="dn-fuente dato"${ap(S18 + 0.6, "nada")}>5.280 intentos contra la capa 2 · grifter duelo · docs/cifras.md</p>`, "dn-centro");
 
-    // 7. Cierre: la frase final se escribe con la voz; después el escudo se dibuja, «Grifter» cae letra por letra y el lema se escribe con la voz
+    // 7. Cierre: la frase final con la voz; las partículas arman la marca, la marca nítida la reemplaza con un fundido
+    // cruzado de 0,2 s (nunca hay dos marcas a la vista) y «Grifter» cae letra por letra
     esc_("remate", `
         <h1 class="dn-titular dn-frase-final">${escribe(FRASE_FINAL[0], 0, desdePalabra("remate", 0))}<span class="dn-remate-2">${escribe(FRASE_FINAL[1], 0, desdePalabra("remate", FRASE_FINAL[0].split(" ").length))}</span></h1>`, "dn-centro");
     esc_("cierre", `
@@ -395,8 +397,8 @@
           <span class="dn-logo-txt">${[..."Grifter"].map((c, i) => `<span${ap(palabra("cierre", 0) - 0.05 + i * 0.07, "cae")}>${c}</span>`).join("")}</span>
         </div>
         <p class="dn-lema">${escribe("Escudo para agentes que pagan", 0, desdePalabra("cierre", 1))}</p>
-        <p class="dn-url dato"${ap(108.6, "sube")}>grifter.onrender.com</p>
-        <p class="dn-aviso"${ap(109.0, "nada")}>Personas y marcas ficticias · voces sintéticas</p>`, "dn-centro");
+        <p class="dn-url dato"${ap(E.cierre + 2.8, "sube")}>grifter.onrender.com</p>
+        <p class="dn-aviso"${ap(E.cierre + 3.1, "nada")}>Personas y marcas ficticias · voces sintéticas</p>`, "dn-centro");
 
     h.push(`<div class="dn-progreso" aria-hidden="true"><i id="dn-barra"></i></div>
       <div class="dn-portada" aria-hidden="true">
@@ -530,16 +532,6 @@
     }
     return MUESTRAS.get(clave);
   }
-  // Una persona (el ícono person) hecha de puntos, en la caja del ancla.
-  function puntosPersona(a, n, i) {
-    const clave = `p|${i}|${n}|${Math.round(a.x)}`;
-    if (!MUESTRAS.has(clave)) {
-      const lado = Math.min(a.w, a.h), e = lado / 960;
-      const pts = rasterizar(lado, lado, (g) => { g.setTransform(e, 0, 0, e, 0, 960 * e); g.fillStyle = "#fff"; g.fill(new Path2D(P.person)); }, 3);
-      MUESTRAS.set(clave, elegir(pts, n, clave).map((p) => ({ x: a.x - lado / 2 + p.x, y: a.y - lado / 2 + p.y })));
-    }
-    return MUESTRAS.get(clave);
-  }
   // La marca (LOGO): puntos repartidos a lo largo de cada trazo, según su peso.
   function puntosLogo(a, n) {
     const clave = `l|${n}|${Math.round(a.x)}|${Math.round(a.w)}`;
@@ -591,21 +583,12 @@
     const op = tenue !== null && tt >= tenue ? 0.18 : 0.95;   // cuando aparece el texto real encima, los puntos quedan de fondo
     return { centro: { x: a.x, y: a.y, R: a.h * 0.45 }, p: pts.map((q) => ({ x: q.x, y: q.y, c: RGB[color], a: op, s: 3.2 })) };
   };
-  const figPersonas = (tt) => {
-    const por = NM / 4, cae = palabra("gancho", 7);
-    const out = [];
-    for (let i = 0; i < NM; i++) {
-      const g = Math.floor(i / por), a = ancla("gancho", `persona-${g}`), pts = puntosPersona(a, por, g), q = pts[i % por];
-      const llega = quieto ? +(tt >= palabra("gancho", 4)) : salida(clamp((tt - palabra("gancho", 4) - g * 0.08 - RAND_M[i].retraso * 0.6) / 0.7));
-      const r = RAND_M[i];
-      const tinte = g === 3 ? clamp((tt - cae) / 0.3) : 0;
-      out.push({ x: r.x + (q.x - r.x) * llega, y: r.y + (q.y - r.y) * llega, c: mezcla(RGB["texto-2"], RGB.ambar, quieto ? +(tt >= cae) * (g === 3) : tinte), a: 0.15 + 0.8 * llega, s: 2.6 });
-    }
-    const a = ancla("gancho", "persona-3");
-    return { centro: { x: a.x, y: a.y, R: a.w / 2 }, p: out };
-  };
+  // Antes del agente, la nube está dispersa y tenue (parte del fondo) y se junta en la esfera cuando él aparece.
+  const figDispersa = (tt) => ({ centro: { x: 960, y: 540, R: 300 }, p: RAND_M.map((r, i) => ({
+    x: r.x + (quieto ? 0 : Math.sin(tt * 0.4 + i) * 12), y: r.y + (quieto ? 0 : Math.cos(tt * 0.3 + i) * 9), c: RGB["texto-3"], a: 0.14, s: 1.4,
+  })) });
   const figLogo = (tt) => {
-    const a = ancla("cierre", "logo"), pts = puntosLogo(a, NM), tenue = tt >= 106.5 ? 0.3 : 0.95;
+    const a = ancla("cierre", "logo"), pts = puntosLogo(a, NM), tenue = quieto ? +(tt < MARCA_NITIDA) * 0.95 : 0.95 * (1 - clamp((tt - MARCA_NITIDA) / 0.2));
     return { centro: { x: a.x, y: a.y, R: a.w / 2 }, p: pts.map((q) => ({ x: q.x, y: q.y, c: RGB[q.color], a: tenue, s: 2.6 })) };
   };
   const ESQUINA = { x: 190, y: 925, R: 58 };     // donde espera el agente mientras habla otro (abajo a la izquierda)
@@ -613,32 +596,33 @@
   const nube = (id) => () => ancla(id, "nube");
 
   // La línea de tiempo de la nube: [desde, figura, duración de la transición, dispersión en el camino (px)].
+  const MARCA_NITIDA = E.cierre + 1.15;   // cuando la marca SVG reemplaza a la de partículas (ya en su lugar)
   const FIGURAS = [
-    [0, figPersonas, 0.8, 40],
-    [4.6, figEsfera(nube("agentes")), 0.9, 80],
-    [8.0, figEsfera(nube("encargo"), { habla: true }), 0.8, 60],
-    [11.2, figEsfera(ESQUINA), 0.8, 60],
-    [40.9, figEsfera(nube("paga"), { habla: true }), 0.8, 60],
-    [44.25, figEscudo(nube("frena")), 0.9, 50],
-    [45.8, figEscudo(ARRIBA), 0.7, 40],
-    [50.0, figEscudo(ESQUINA), 0.8, 40],
-    [70.6, figEsfera(ESQUINA), 0.8, 50],
-    [74.0, figEsfera(nube("responde"), { habla: true }), 0.7, 60],
-    [76.05, figEscudo(nube("clave")), 0.9, 50],
-    [79.6, figEsfera(ESQUINA), 0.8, 50],
-    [85.05, figEscudo(nube("calza")), 0.9, 50],
-    [87.7, figTexto("estafas", "150", "texto", { tenue: 89.0 }), 0.9, 90],
-    [91.2, figTexto("pasan", "0", "verde", { tenue: 93.4 }), 1.4, 260],
-    [94.3, figTexto("atacante", "5.280", "texto", { tenue: 96.6 }), 1.2, 180],
-    [98.0, figTexto("cruzan", "0", "verde", { tenue: 99.6 }), 1.4, 260],
-    [101.0, figEsfera(ARRIBA), 0.9, 120],
+    [0, figDispersa, 0.8, 0],
+    [E.agentes, figEsfera(nube("agentes")), 1.0, 80],
+    [E.encargo, figEsfera(nube("encargo"), { habla: true }), 0.8, 60],
+    [E.suena, figEsfera(ESQUINA), 0.8, 60],
+    [E.paga, figEsfera(nube("paga"), { habla: true }), 0.8, 60],
+    [E.frena + 0.05, figEscudo(nube("frena")), 0.9, 50],
+    [E.motivo, figEscudo(ARRIBA), 0.7, 40],
+    [E.alerta, figEsfera(ESQUINA), 0.8, 40],   // en espera vuelve a ser esfera: un escudo de partículas no convive con otro
+    [E.banco, figEsfera(ESQUINA), 0.8, 50],
+    [E.responde, figEsfera(nube("responde"), { habla: true }), 0.7, 60],
+    [E.clave + 0.05, figEscudo(nube("clave")), 0.9, 50],
+    [E.aprobaste, figEsfera(ESQUINA), 0.8, 50],
+    [E.calza + 0.05, figEscudo(nube("calza")), 0.9, 50],
+    [E.estafas + 0.05, figTexto("estafas", "150", "texto", { tenue: E.estafas + 1.1 }), 0.8, 90],
+    [E.pasan + 0.05, figTexto("pasan", "0", "verde", { tenue: E.pasan + 1.3 }), 1.0, 220],
+    [E.atacante + 0.05, figTexto("atacante", "5.280", "texto", { tenue: E.atacante + 1.3 }), 1.0, 160],
+    [E.cruzan + 0.05, figTexto("cruzan", "0", "verde", { tenue: E.cruzan + 1.2 }), 1.0, 220],
+    [E.remate, figEsfera(ARRIBA), 0.9, 120],
     [palabra("remate", 6), figEscudo(ARRIBA), 0.7, 40],
-    [105.0, figLogo, 0.9, 80],
+    [E.cierre + 0.05, figLogo, 0.8, 80],
   ];
 
   // La amenaza: tramos en que el grupo rojo se acerca y segundos en que Grifter lo hace rebotar.
-  const ACECHO = [[13.6, 40.9], [40.9, 44.25], [70.6, 74.0], [74.0, 76.05], [82.4, 85.05]];
-  const REBOTES = [44.25, 76.05, 85.05];
+  const ACECHO = [[LL.abuela, E.paga], [E.paga, E.frena + 0.05], [E.banco, E.responde], [E.responde, E.clave + 0.05], [E.cobra, E.calza + 0.05]];
+  const REBOTES = [E.frena + 0.05, E.clave + 0.05, E.calza + 0.05];
   function amenaza(tt, centro) {
     const tramo = ACECHO.find(([a, b]) => tt >= a && tt < b);
     const rebote = REBOTES.find((r) => tt >= r && tt < r + 1.3);
@@ -719,6 +703,7 @@
       vibra: el.querySelector(".dn-vibra"),
       contestar: el.querySelector(".contestar"),
       marca: [...el.querySelectorAll(".dn-marca-cierre path")],
+      marcaSvg: el.querySelector(".dn-marca-cierre"),
     }));
   }
 
@@ -836,11 +821,9 @@
       const seg = Math.max(0, Math.floor(Math.min(tt, LL.cuelga) - LL.contesta));
       s.relojes.forEach((r) => { r.textContent = `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, "0")}`; });
       s.pulsa.forEach((p) => p.style.setProperty("--pulso", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(tt * 2 * Math.PI * 0.9))).toFixed(3)));
-      // La marca nítida del cierre se dibuja sobre la de partículas: primero el escudo y después el check.
-      s.marca.forEach((p, i) => {
-        const desde = i ? 106.45 : 105.95, dura = i ? 0.3 : 0.5;
-        p.style.strokeDashoffset = (quieto ? 0 : 1 - salida(clamp((tt - desde) / dura))).toFixed(3);
-      });
+      // La marca nítida del cierre reemplaza a la de partículas con un fundido cruzado de 0,2 s, cuando ya calzan.
+      s.marca.forEach((p) => { p.style.strokeDashoffset = 0; });
+      if (s.marcaSvg) s.marcaSvg.style.opacity = (quieto ? +(tt >= MARCA_NITIDA) : clamp((tt - MARCA_NITIDA) / 0.2)).toFixed(3);
     }
     // El borde rojo de alerta, mientras el pago está retenido y nadie lo rechazó. Late en opacidad (fijo si reducido).
     const alarma = tt >= ALARMA[0] && tt < ALARMA[1];
