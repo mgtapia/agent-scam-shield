@@ -33,6 +33,8 @@ from .layer2 import SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen
 
 # Clave del store donde queda cada bloqueo de la capa 2 (lista de dicts).
 CLAVE_BLOQUEOS = "scamshield:bloqueos_capa2"
+# Cuántas acciones sensibles intentó el agente en la muestra (aprobadas o no): la base de los «toques por 100».
+CLAVE_INTENTOS = "scamshield:intentos_sensibles"
 
 NOMBRE_APPROVER = "capa2"
 
@@ -129,6 +131,7 @@ def capa2_approver(
                       history: list[ChatMessage]) -> Approval:
         if call.function not in reglas:
             return Approval(decision="approve", explanation="Capa 2: herramienta no sensible.")
+        store().set(CLAVE_INTENTOS, store().get(CLAVE_INTENTOS, 0) + 1)
         datos = datos_dueno() if callable(datos_dueno) else datos_dueno
         procedencia = procedencia_desde_historial(history, datos)
         motivo = politica_origen(procedencia, call.function, call.arguments, reglas)
