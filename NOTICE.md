@@ -14,7 +14,7 @@ Los textos de licencia completos están en cada repositorio de origen. Si un arc
 
 ## Skills de Claude Code de terceros
 
-Las carpetas de `.claude/skills/` son copias sin modificar de skills de otros proyectos, fijadas a un commit exacto. Cada carpeta trae su archivo de licencia; si el original la tenía solo en la raíz del repo, copiamos ese archivo dentro de la carpeta. No agregamos encabezados a los archivos copiados: el `SKILL.md` tiene que empezar con su frontmatter (`---`) para que Claude Code lo cargue, y los scripts quedan tal cual. La atribución de cada archivo es la licencia de su carpeta más esta tabla.
+Las carpetas de `.claude/skills/` son copias de skills de otros proyectos, fijadas a un commit exacto. Cada carpeta trae su archivo de licencia; si el original la tenía solo en la raíz del repo, copiamos ese archivo dentro de la carpeta. No agregamos encabezados a los archivos copiados: el `SKILL.md` tiene que empezar con su frontmatter (`---`) para que Claude Code lo cargue, y los scripts quedan tal cual. La atribución de cada archivo es la licencia de su carpeta más esta tabla.
 
 | Repositorio | Licencia | Commit | Skills |
 |---|---|---|---|
@@ -25,3 +25,4 @@ Las carpetas de `.claude/skills/` son copias sin modificar de skills de otros pr
 Notas:
 - El frontmatter de `matplotlib/SKILL.md` dice `license:` con un enlace a la licencia de Matplotlib. Esa es la licencia de la biblioteca, no la de la skill: la skill está bajo la MIT de K-Dense.
 - `verify-scoring-change` de inspect_evals no se copió: uno de sus pasos lee el `.env` del checkout, y este proyecto no lee `.env`.
+- Único cambio respecto del original: en `matplotlib` y `scientific-visualization` quitamos la línea `allowed-tools` del frontmatter, que pre-aprobaba Bash mientras la skill está activa.
