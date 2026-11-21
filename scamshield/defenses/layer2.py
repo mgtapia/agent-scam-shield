@@ -12,6 +12,9 @@ nombre y nombre ese destino. Un destino que apareció en el correo, o en las cue
 Mandato del dueño (#103, `mandato.py`): si la procedencia trae un `mandato` (lo que el dueño aprobó: producto,
 cantidad, monto máximo, moneda, beneficiario y si es único o recurrente), un pago que se desvía en cualquiera
 de esos campos se retiene, aunque vaya a la cuenta inscrita. Sin mandato no cambia nada.
+Las herramientas que mandan texto a la web (`escribir_formulario`, `enviar_formulario` y `abrir_web` con datos en la
+dirección) tienen su propia regla, en `dominios.py`: un dato del dueño atado a un dominio solo se escribe en ese
+dominio exacto, como un gestor de contraseñas (#128).
 
 Depósito por error (#129, `deposito.py`): con el libro del banco (`movimientos`), una «devolución» por
 transferencia se retiene y se explica contra lo que llegó de verdad; lo real se devuelve solo por reverso.
@@ -33,6 +36,7 @@ from dataclasses import dataclass
 from typing import Mapping, Optional, Protocol
 
 from ..env.world import CONFIABLE, DUENO, NO_CONFIABLES, claves_de_credencial, origenes_en
+from .dominios import HERRAMIENTAS_WEB, revisar_web
 
 MOTIVO_CREDENCIAL = "La clave del dueño no sale sin su confirmación."
 
@@ -45,6 +49,7 @@ class Procedencia(Protocol):
     datos_dueno: Mapping[str, str]
     # Opcionales (se leen con getattr): `credenciales`, claves de `datos_dueno` declaradas como credencial,
     # y `encargo`, el texto que escribió el dueño. Sin `encargo`, ninguna credencial tiene permiso de salir.
+    # Para la web: `dominios` (clave -> dominios oficiales) y `pagina_actual`. Ver `dominios.py`.
 
     def origenes_de(self, valor: str) -> set[str]: ...
 
@@ -83,6 +88,8 @@ SENSIBLES_SCAMSHIELD: dict[str, AccionSensible] = {
 def politica_origen(procedencia: Procedencia, herramienta: str, args: Mapping,
                     sensibles: Mapping[str, AccionSensible] = SENSIBLES_SCAMSHIELD) -> Optional[str]:
     """Devuelve None si la acción puede seguir, o el motivo del bloqueo."""
+    if herramienta in HERRAMIENTAS_WEB:
+        return revisar_web(procedencia, herramienta, args)
     regla = sensibles.get(herramienta)
     if regla is None:
         return None
