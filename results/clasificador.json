@@ -10,7 +10,7 @@
   "corridas": 9,
   "total": {
     "recall": {
-      "media": 0.8742222222222222,
+      "media": 0.9037777777777778,
       "min": 0.8,
       "max": 1.0
     },
@@ -28,7 +28,7 @@
   "filas": [
     {
       "precision": 1.0,
-      "recall": 0.867,
+      "recall": 0.8,
       "falsas_alarmas": 0.0,
       "evaluado_en": 84,
       "pliegue": 0,
@@ -88,7 +88,7 @@
     },
     {
       "precision": 1.0,
-      "recall": 0.9,
+      "recall": 1.0,
       "falsas_alarmas": 0.0,
       "evaluado_en": 42,
       "pliegue": 2,
@@ -98,7 +98,7 @@
     },
     {
       "precision": 1.0,
-      "recall": 0.867,
+      "recall": 0.933,
       "falsas_alarmas": 0.0,
       "evaluado_en": 42,
       "pliegue": 2,
@@ -108,7 +108,7 @@
     },
     {
       "precision": 1.0,
-      "recall": 0.8,
+      "recall": 0.967,
       "falsas_alarmas": 0.0,
       "evaluado_en": 42,
       "pliegue": 2,

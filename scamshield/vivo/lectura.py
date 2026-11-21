@@ -28,22 +28,34 @@ LEXICO: dict[str, re.Pattern] = {
         r"\burgente\b|hoy mismo|de inmediato|inmediatamente|cuanto antes|antes de (?:las|\d+)|"
         r"vence hoy|se cierra|último aviso|bloquead[ao]s?|suspendid[ao]|quedará firme|"
         r"\d+ minutos|\burgent\b|immediately|right away|as soon as possible|within \d+|"
-        r"last notice|will be (?:blocked|suspended|closed)|closes? (?:on|this)|expires? today", _F),
+        r"last notice|will be (?:blocked|suspended|closed)|closes? (?:on|this)|expires? today|"
+        # Las llamadas apuran con una ventana corta y con lo que pasa si uno no actúa.
+        r"queda firme|cada minuto cuenta|ventana de \w+ minutos|every minute counts|goes through|"
+        r"cortar(?:le)? el servicio|cut (?:off )?your service", _F),
     "pide_codigo": re.compile(
         r"c[oó]digo|\bclave\b|contraseña|\bpin\b|\bsms\b|\.env\b|api[ _-]?key|password|"
-        r"passcode|verification code|\bcode\b|\btoken\b", _F),
+        r"passcode|verification code|\bcode\b|\btoken\b|"
+        # Soporte técnico falso: que uno les abra la computadora.
+        r"acceso remoto|de manera remota|\banydesk\b|teamviewer|connect remotely|remote access", _F),
     "cambio_cuenta": re.compile(
         r"cambi\w* de (?:banco|cuenta)|cuenta nueva|nueva cuenta|actualiz\w* (?:los |sus |tus )?datos|"
         r"cuenta (?:anterior|antigua)|recaudaci[oó]n centralizada|new (?:bank )?account|"
         r"chang\w* (?:our |of )?(?:bank|account)|updated? (?:bank|account|payment) details|"
-        r"(?:old|previous) account|centrali[sz]ed collection", _F),
+        r"(?:old|previous) account|centrali[sz]ed collection|"
+        # La «cuenta segura» de los falsos monitoreos del banco.
+        r"cuenta (?:de )?(?:resguardo|segura|temporal|de protecci[oó]n)|"
+        r"(?:safe|secure|temporary holding|holding) account", _F),
     "autoridad": re.compile(
         r"\bgerente\b|departamento de \w+|\bseguridad\b|tesorer[ií]a|ministerio|servicio de \w+|"
         r"\bsoporte\b|\bjefe\b|\bdirector\b|\bmanager\b|security (?:team|department)|"
-        r"\bdepartment\b|\bgovernment\b|\bsupport team\b|\btreasury\b|\bceo\b|\bboss\b", _F),
+        r"\bdepartment\b|\bgovernment\b|\bsupport team\b|\btreasury\b|\bceo\b|\bboss\b|"
+        r"prevenci[oó]n de fraudes?|monitoreo de fraudes?|fraud (?:prevention|monitoring)", _F),
     "secreto": re.compile(
         r"confidencial|no (?:lo|se lo) (?:comentes|menciones|digas)|con nadie|"
-        r"confidential|do not (?:tell|mention|share)|don't tell|with anyone", _F),
+        r"confidential|do not (?:tell|mention|share)|don't tell|with anyone|"
+        # Aislar a la víctima: que no verifique ni devuelva la llamada.
+        r"a nadie m[aá]s|no se (?:la|lo) (?:d[eé]|des|pase) a nadie|no (?:me )?llames\b|no puedo hablar|"
+        r"(?:do not|don't) call (?:me back|my number)|cannot talk|can't talk|to anyone else", _F),
 }
 INYECCION = [re.compile(p, _F) for p in PATRONES_INYECCION] + [
     re.compile(r"display\s*:\s*none", _F),
