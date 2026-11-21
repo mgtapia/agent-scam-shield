@@ -65,6 +65,9 @@
         "Anota la cuenta del abogado: Banco Austral, cuenta vista 48-2210-7735.",
         "Hazlo rápido, por favor, no me cortí.",
       ],
+      golpe_sin: "Sin Grifter", golpe_pagado: "Pagado · $650.000 al estafador", golpe_saldo: "Saldo de Marta",
+      golpe_con: "Con Grifter", golpe_retiene: "El pago no sale: Grifter lo retiene",
+      golpe_banco: "Tu banco", golpe_notif: "Transferencia enviada: $650.000 a J. Contreras V.",
       escucho: "Escuchó", intento: "Intentó", grifter: "Grifter", eligio: "Eligió",
       escucho_v: "Llamada de Tomás (nieto) · número privado · 25 s", llamada: "Llamada",
       retuvo: "Retuvo", motivo1: "la cuenta de destino (48-2210-7735) viene solo de contenido no confiable (llamada), no del encargo ni de las cuentas inscritas del dueño",
@@ -131,6 +134,9 @@
         "Write down the lawyer's account: Banco Austral, savings account 48-2210-7735.",
         "Do it fast, grandma, please, don't hang up.",
       ],
+      golpe_sin: "Without Grifter", golpe_pagado: "Paid · $650,000 to the scammer", golpe_saldo: "Marta's balance",
+      golpe_con: "With Grifter", golpe_retiene: "The payment doesn't go out: Grifter holds it",
+      golpe_banco: "Your bank", golpe_notif: "Transfer sent: $650,000 to J. Contreras V.",
       escucho: "Heard", intento: "Tried", grifter: "Grifter", eligio: "Chose",
       escucho_v: "Call from Tomás (grandson) · private number · 25 s", llamada: "Call",
       retuvo: "Held", motivo1: "the destination account (48-2210-7735) comes only from untrusted content (call), not from the owner's request or registered accounts",
@@ -190,12 +196,16 @@
   // Después de la llamada: Grifter retiene y muestra la alerta; Marta toca «Pagar igual», le llega el código por correo
   // y aprueba (1 de 2); Pablo recibe el pedido por WhatsApp y rechaza. Con ?whatsapp=1 su rechazo puede ser real
   // (ver avisarEnVivo). Cada línea nueva queda al menos ~0,6 s antes de la siguiente.
+  // El golpe «Sin Grifter / Con Grifter» (2,8 s, justo después del intento): primero el pago sale y el saldo de Marta
+  // baja; luego se tacha, el saldo vuelve y entra «Con Grifter». Después, «Retuvo…» como siempre.
   const AUT = (() => {
-    const c = LLAMADA.cuelga, igual = r2(c + 4.8), digitos = r2(igual + 1.8), uno = r2(digitos + 6 * 0.2 + 0.3);
-    const pablo = r2(uno + 0.6), rechaza = r2(pablo + 3), rechazado = r2(rechaza + 0.9), nada = r2(rechazado + 0.6);
-    return { escucho: r2(c + 0.3), intento: r2(c + 1), retuvo: r2(c + 1.8), alerta: r2(c + 2.3), igual, pide: r2(igual + 0.7),
+    const c = LLAMADA.cuelga, golpe = r2(c + 1.6), con = r2(golpe + 1.5), retuvo = r2(golpe + 2.8), alerta = r2(retuvo + 0.5);
+    const igual = r2(alerta + 2), digitos = r2(igual + 1.8), uno = r2(digitos + 6 * 0.2 + 0.3);
+    const pablo = r2(uno + 0.6), rechaza = r2(pablo + 2.6), rechazado = r2(rechaza + 0.9), nada = r2(rechazado + 0.6);
+    return { escucho: r2(c + 0.3), intento: r2(c + 1), golpe, con, retuvo, alerta, igual, pide: r2(igual + 0.7),
       correo: r2(igual + 1.2), digitos, digito: 0.2, uno, pablo, rechaza, rechazado, nada, frase: r2(nada + 0.6) };
   })();
+  const SALDO = 1180000;   // el saldo de Marta en el golpe: un dibujo, como la cuenta y el código
   const CODIGO = "482913";   // el código del correo de ejemplo: es un dibujo, no un código real
   // Actos 2 y 3 y el cierre: la narradora (demo/audio/narracion_*.mp3). Cada escena dura lo que su audio más un
   // respiro, y lo que aparece en pantalla sigue a la voz: los números son el segundo en que empieza cada palabra,
@@ -203,7 +213,7 @@
   // escena del acto 2 entra después de la voz, palabra por palabra, y queda 2 s a pantalla completa.
   const REGLA = 2, PASO = 0.12;   // cuánto queda la regla y cada cuánto entra una palabra
   const pasos = (n) => Array.from({ length: n }, (_, i) => r2(i * PASO));
-  const CL = r2(AUT.frase + 3.2);   // escena del correo del falso banco
+  const CL = r2(AUT.frase + 2.8);   // escena del correo del falso banco
   const NK = { en: r2(CL + 0.3), dura: 6, cargo: 0.613, codigo: 1.349, agente: 2.987, frena: 4.68 };
   NK.regla = r2(NK.en + NK.dura + 0.4);   // «La clave no sale sin el dueño.»
   const CO = r2(NK.regla + REGLA);   // escena del checkout con el monto cambiado
@@ -219,7 +229,7 @@
     con: r2(N3.en + N3.ninguno), cae: r2(N3.en + N3.ninguno), dc: 0.5 };
   const CI = r2(N3.en + N3.dura + 1.5);   // cierre
   const NF = { en: r2(CI + 0.3), dura: 3.12, frase: [0.147, 0.213, 0.627, 1, 1.44, 1.552, 2.188, 2.308, 2.961] };   // «Tu agente puede creerle a cualquiera. Tu plata, no.»
-  const DURACION = r2(NF.en + NF.dura + 4.5);
+  const DURACION = r2(NF.en + NF.dura + 4);
   const NARRA = { correo: NK, compra: NC, cifras: N3, cierre: NF };
   const ACTOS = [
     { id: "intro", desde: 0 }, { id: "a1", desde: A1 }, { id: "a2", desde: CL }, { id: "a3", desde: A3 }, { id: "cierre", desde: CI },
@@ -308,6 +318,10 @@
             <ol class="md-pasos">
               <li data-v="${AUT.escucho}">${ic("call")}<span class="md-quien">${esc(t("escucho"))}</span><span>${esc(t("escucho_v"))}</span><span class="tag externo">${esc(t("llamada"))}</span></li>
               <li data-v="${AUT.intento}">${ic("payments")}<span class="md-quien">${esc(t("intento"))}</span><span class="dato">${idioma === "en" ? "Pay" : "Pagar"} $${f(650000)} ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="tag externo">${esc(t("llamada"))}</span></li>
+              <li class="md-golpe" data-v="${AUT.golpe}" data-h="${AUT.retuvo}">
+                <div class="md-golpe-sin" data-on="${AUT.con}"><p class="md-golpe-rot">${esc(t("golpe_sin"))}</p><p class="md-golpe-txt">${ic("payments")}<span>${esc(t("golpe_pagado"))}</span></p><p class="md-golpe-saldo dato">${esc(t("golpe_saldo"))} <b id="md-saldo">$${f(SALDO)}</b></p></div>
+                <div class="md-golpe-con" data-v="${AUT.con}"><p class="md-golpe-rot">${esc(t("golpe_con"))}</p><p class="md-golpe-txt">${ic("block")}<span>${esc(t("golpe_retiene"))}</span></p></div>
+              </li>
               <li class="md-retuvo md-motivo" data-v="${AUT.retuvo}">${ic("block")}<span class="md-quien">${esc(t("grifter"))}</span><span><b>${esc(t("retuvo"))}</b> ${esc(t("motivo1"))}</span></li>
               <li data-v="${AUT.igual + 0.3}">${ic("person")}<span class="md-quien">${esc(t("eligio"))}</span><span>${esc(t("dueno"))}: ${esc(t("igual_v"))}</span></li>
               <li data-v="${AUT.pide}">${ic("gpp_good")}<span class="md-quien">${esc(t("grifter"))}</span><span>${esc(t("pide_v"))}</span></li>
@@ -359,6 +373,7 @@
                 <div class="md-digitos">${[...CODIGO].map((d, i) => `<span><b data-v="${r2(AUT.digitos + i * AUT.digito)}">${d}</b></span>`).join("")}</div>
                 <p class="dato md-esperando">${esc(t("quorum"))}</p>
               </div>
+              <div class="md-notif md-notif-rojo" data-v="${r2(AUT.golpe + 0.2)}" data-h="${AUT.con}">${ic("account_balance")}<div><p class="md-notif-de">${esc(t("golpe_banco"))}</p><p>${esc(t("golpe_notif"))}</p></div></div>
               <div class="md-notif" data-v="${AUT.correo}" data-h="${AUT.uno}">${ic("mail")}<div><p class="md-notif-de">${esc(t("mail_de"))}</p><p>${esc(t("mail_txt"))}</p></div></div>
               <div class="md-espera" data-v="${AUT.uno}" data-h="${AUT.rechazado}">${ic("check", "grande")}<p>${esc(t("uno_de_dos"))}</p><p class="md-esperando">${esc(t("falta"))}</p></div>
               <div class="md-al-hecho" data-v="${AUT.rechazado}">${ic("block", "grande")}<p>${esc(t("al_hecho"))}</p><p class="dato">${esc(t("al_hecho_det"))}</p></div>
@@ -485,6 +500,8 @@
     const cuenta = (c, n, fin) => Math.round(sube(c.sube, c.ds, n, tt) - sube(c.cae, c.dc, n - fin, tt));
     if (cifras.estafas !== null) $("#md-n1").textContent = num(cuenta(C1, cifras.estafas, cifras.pasan ?? 0));
     if (cifras.ataques !== null) $("#md-n2").textContent = num(cuenta(C2, cifras.ataques, cifras.cruzan ?? 0));
+    const saldo = $("#md-saldo");
+    if (saldo) saldo.textContent = `$${num(SALDO - sube(AUT.golpe + 0.3, 0.8, 650000, tt) + sube(AUT.con, 0.5, 650000, tt))}`;
     // data-on: una marca que se enciende desde ese segundo (el subrayado del correo, la cifra que queda en verde).
     document.querySelectorAll("[data-on]").forEach((el) => el.classList.toggle("on", tt >= +el.dataset.on));
     // El toque de un dedo: primero el botón se hunde con la yema encima y después suelta una onda. La fase q va de 0

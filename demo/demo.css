@@ -171,6 +171,26 @@ body.md-aut .md-a1 .md-consola { height: 680px; }   /* el alto final del log con
 .md-notif .md-ic { width: 22px; height: 22px; color: var(--texto-2); }
 .md-notif p { margin: 0; font-size: 15px; line-height: 20px; }
 .md-notif .md-notif-de { color: var(--texto-2); font-size: 13px; line-height: 18px; }
+.md-notif-rojo { border-color: var(--rojo); }
+.md-notif-rojo .md-ic, .md-notif-rojo .md-notif-de { color: var(--rojo); }
+
+/* El golpe «Sin Grifter / Con Grifter» del acto 1: dos columnas que se leen de un vistazo. Sin Grifter el pago sale
+   (rojo) y el saldo baja; enseguida se tacha, el saldo vuelve y entra Con Grifter (verde). */
+.md-pasos li.md-golpe:not(.ve) { display: none; }
+.md-pasos li.md-golpe { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 24px; }
+.md-golpe > div { display: grid; align-content: start; gap: 10px; padding: 20px 24px; background: var(--superficie); border: 1px solid var(--rojo); }
+.md-golpe p { margin: 0; }
+.md-golpe-rot { font: var(--p-fuerte) 24px / 32px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--rojo); }
+.md-golpe-txt { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 28px; line-height: 36px; font-weight: var(--p-fuerte); }
+.md-golpe-sin .md-golpe-txt, .md-pasos .md-golpe-sin .md-ic { color: var(--rojo); }
+.md-golpe-saldo { color: var(--texto-2); font-size: 22px; line-height: 28px; }
+.md-golpe-saldo b { color: var(--texto); font-variant-numeric: tabular-nums; }
+.md-golpe-sin { transition: opacity 320ms ease-out; }
+.md-golpe-sin.on { opacity: 0.45; }
+.md-golpe-sin.on .md-golpe-txt span { text-decoration: line-through; text-decoration-thickness: 3px; }
+.md-golpe-con.md-golpe-con { border-color: var(--verde); }
+.md-golpe-con .md-golpe-rot, .md-golpe-con .md-golpe-txt, .md-pasos .md-golpe-con .md-ic { color: var(--verde); }
+.md-cuadro .md-golpe-sin { transition: none; }
 .md-wa-avance { margin-top: 8px !important; color: var(--texto-2); font-size: 14px !important; line-height: 20px !important; }
 /* Con la doble autorización, el log de la izquierda crece: filas más compactas para que quepa todo */
 body.md-aut .md-a1 .md-pasos li { padding: 8px 20px; font-size: 22px; line-height: 28px; }
