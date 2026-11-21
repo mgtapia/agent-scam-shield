@@ -5,7 +5,7 @@ services:
   - type: web
     name: grifter
     runtime: python
-    plan: starter
+    plan: free   # sin cobro; con el crédito de Render canjeado, pasar a starter (no se duerme)
     region: oregon
     buildCommand: pip install ".[demo]"
     startCommand: python -m demo.server --host 0.0.0.0 --puerto $PORT
