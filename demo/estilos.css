@@ -395,6 +395,7 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .res-bench { grid-column: 1 / span 7; grid-row: 1; }
 .res-reales { grid-column: 8 / span 5; grid-row: 1 / span 2; align-self: stretch; }
 .res-atacante { grid-column: 1 / span 7; grid-row: 2; }
+.res-colados { grid-column: 1 / -1; grid-row: 3; }
 .res-cmd { font-weight: var(--p-normal); font-size: var(--t-1); }
 .res-bloque .titulo .nota { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -412,6 +413,13 @@ mark.cuenta { background: var(--borde); color: var(--texto); font-family: var(--
 .r-barra { position: relative; flex: none; width: 128px; height: 8px; background: var(--borde); }
 .r-barra .r-ic { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--rojo) 35%, transparent); }
 .r-barra .r-tasa { position: absolute; top: 0; bottom: 0; left: 0; background: var(--rojo); }
+/* Qué se cuela: conteos n/de en mono; el 0 en gris, y en rojo solo lo que cruza el escudo completo */
+.r-colados td { text-align: right; }
+.r-colados thead th + th { text-align: right; }
+.r-colados tbody th .tag { margin-left: var(--e-1); font-weight: var(--p-normal); }
+.r-colados .r-cero { color: var(--texto-3); }
+.r-colados tr.r-total { border-top: var(--linea); }
+.r-colados tr.r-total th, .r-colados tr.r-total td { font-weight: var(--p-fuerte); }
 
 /* Mediciones con modelos reales: una fila por medición, el número grande y su intervalo */
 .res-lista > li + li { border-top: var(--linea); }
@@ -638,6 +646,15 @@ mark.tramo { background: transparent; color: inherit; }
 .pesos .dato { text-align: right; }
 .pesos .p-delta { color: var(--texto-2); }
 .pesos li.golpe { animation: golpe var(--dur-dato) ease-out; }
+/* Se colaron: bajo los pesos, las estafas apartadas que el modelo dejó pasar, por tipo. Sin color: no es un pago. */
+.modelo-lado { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.modelo-lado .pesos { flex: 1 1 0; }
+.colados { flex: 0 1 auto; display: flex; flex-direction: column; min-height: 0; max-height: 55%; border-top: var(--linea); }
+.co-titulo { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--e-1); min-height: 32px; padding: 0 var(--e-2); font-size: var(--t-1); line-height: var(--l-1); font-weight: var(--p-fuerte); }
+.co-lista { min-height: 0; overflow-y: auto; padding-bottom: var(--e-1); }
+.co-lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--e-1); padding: 0 var(--e-2); font-size: var(--t-1); line-height: var(--l-2); }
+.co-lista .co-nombre { color: var(--texto-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.co-lista .vacio { padding: 0 var(--e-2); }
 
 /* --- Duelo: el hacker que aprende, contra el escudo congelado y contra el que aprende ---
    Cabe en una pantalla desde 1100 de ancho (un laptop a 1280×609): la franja y la ayuda toman su alto y los dos
@@ -769,11 +786,12 @@ mark.tramo { background: transparent; color: inherit; }
   .metricas .linea { width: 8px; margin-top: var(--e-1); }
   .pesos li { grid-template-columns: minmax(0, 1fr) 40px 40px; padding: 0 var(--e-1); }
   .pesos .p-delta { display: none; }
+  .co-titulo, .co-lista li, .co-lista .vacio { padding: 0 var(--e-1); }
 }
 @media (max-width: 1099px) {
   .vista.duelo { height: auto; min-height: 0; grid-template-rows: none; }
   .du-congelado, .du-aprende { grid-column: 1 / -1; height: 360px; }
-  .res-bench, .res-reales, .res-atacante { grid-column: 1 / -1; grid-row: auto; }
+  .res-bench, .res-reales, .res-atacante, .res-colados { grid-column: 1 / -1; grid-row: auto; }
   .barra { grid-template-columns: auto minmax(0, 1fr); height: auto; padding: var(--e-1) var(--e-2); row-gap: var(--e-1); }
   .pestanas { grid-row: 2; grid-column: 1 / -1; height: 48px; margin-left: 0; }
   .panel-lateral { top: 0; }
@@ -786,7 +804,7 @@ mark.tramo { background: transparent; color: inherit; }
 }
 @media (max-width: 899px) {
   :root { --pad: var(--e-2); }
-  .carril, .res-bench, .res-reales, .res-atacante { grid-column: 1 / -1; grid-row: auto; }
+  .carril, .res-bench, .res-reales, .res-atacante, .res-colados { grid-column: 1 / -1; grid-row: auto; }
   .franja { grid-template-columns: minmax(0, 1fr) auto; }
   .franja .celda-tarea { grid-column: 1 / -1; grid-row: 2; border-left: 0; border-top: var(--linea); }
   .franja .celda-inscrita { grid-column: 1 / -1; border-left: 0; border-top: var(--linea); }

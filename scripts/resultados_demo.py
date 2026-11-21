@@ -9,6 +9,8 @@ Origen de cada número:
 - `results/sonnet_jefe.json`: `python scripts/resumen_resultados.py logs/jefe --json results/sonnet_jefe.json`.
 - `results/haiku_dueno.json`: `python scripts/resumen_resultados.py logs/dueno --idioma es --json results/haiku_dueno.json`.
 - `results/clasificador.json`: `python scripts/validacion_cruzada_vivo.py --agrupar familia --json results/clasificador.json`.
+- `colados` (qué se cuela por capa y por familia): `por_escenario` de `results/bench.json` y `colados_por_familia` de
+  `results/clasificador.json`.
 - `results/atacante/*_curva.json`: `python scripts/resumen_curva_atacante.py <jsonl>... --salida <archivo>`, que une
   la corrida original con la que completó lo que cortó la cuota y trae Wilson por ronda; o
   `results/atacante/*_curvas.json`: `python scripts/graficar_atacante.py <jsonl>`. Con `--atacante` se elige
@@ -126,6 +128,62 @@ def clasificador() -> dict[str, Any]:
         # Es el rango entre corridas (pliegues × semillas), no un intervalo de confianza.
         "tipo_intervalo": "rango",
         "fuente": _rel(ruta), "comando": "python scripts/validacion_cruzada_vivo.py --agrupar familia --json results/clasificador.json",
+    }
+
+
+def colados(bench_json: Path | None = None, clasif_json: Path | None = None) -> dict[str, Any]:
+    """Qué se cuela, por capa y por familia de estafa (`anotaciones.familia`).
+
+    Por capa sale de `por_escenario` de `results/bench.json`: una fila por escenario e idioma, como la tasa de
+    estafas exitosas. `dueno_dicta` cuenta, por capa, las que se colaron porque el dueño ya cayó y dicta la
+    cuenta. Para el clasificador, de `colados_por_familia` de `results/clasificador.json`:
+    correos de estafa apartados que quedaron bajo el umbral, sumando las corridas. Son medidas distintas: el bench
+    dice si el pago salió; el clasificador solo sube la sospecha.
+    """
+    bench_json = bench_json or RESULTS / "bench.json"
+    clasif_json = clasif_json or RESULTS / "clasificador.json"
+    filas = [e for e in _leer(bench_json)["por_escenario"] if e["tipo"] == "estafa"]
+    configs = [c for c in CONFIGURACIONES if filas and c in filas[0]["resultados"]]
+    familias: dict[str, dict[str, Any]] = {}
+    totales = {c: 0 for c in configs}
+    dicta = {c: 0 for c in configs}
+    for e in filas:
+        fam = e.get("familia") or e["escenario"].rsplit("__", 1)[0]
+        f = familias.setdefault(fam, {"familia": fam, "estafas": 0, "dueno_dicta": {c: 0 for c in configs},
+                                      "por_capa": {c: 0 for c in configs}, "escenarios": {c: set() for c in configs}})
+        f["estafas"] += 1
+        for c in configs:
+            if e["resultados"][c]["cayo"]:
+                f["por_capa"][c] += 1
+                f["escenarios"][c].add(e["escenario"].rsplit("__", 1)[0])
+                totales[c] += 1
+                f["dueno_dicta"][c] += bool(e.get("dueno_dicta"))
+                dicta[c] += bool(e.get("dueno_dicta"))
+    cl = _leer(clasif_json) if clasif_json.exists() else {}
+    por_familia = cl.get("colados_por_familia") or {}
+    for fam, g in por_familia.items():
+        f = familias.setdefault(fam, {"familia": fam, "estafas": 0, "dueno_dicta": {c: 0 for c in configs},
+                                      "por_capa": {c: 0 for c in configs}, "escenarios": {c: set() for c in configs}})
+        f["clasificador"] = {k: g[k] for k in ("colados", "correos", "corridas", "corridas_con_colados", "escenarios")}
+    lista = []
+    for f in familias.values():
+        f["escenarios"] = {c: sorted(v) for c, v in f["escenarios"].items() if v}
+        f.setdefault("clasificador", None)
+        lista.append(f)
+    # Primero lo que cruza el escudo completo, después la capa 2, después el clasificador.
+    lista.sort(key=lambda f: (-f["por_capa"].get("layer23", 0), -f["por_capa"].get("layer2", 0),
+                              -((f["clasificador"] or {}).get("colados", 0)), f["familia"]))
+    clasif_total = {k: sum(g[k] for g in por_familia.values()) for k in ("colados", "correos")} if por_familia else None
+    return {
+        "configuraciones": configs, "familias": lista, "estafas": len(filas),
+        "totales": totales, "dueno_dicta": dicta, "clasificador": clasif_total,
+        "clasificador_por_canal": cl.get("colados_por_canal"),
+        "unidad_capas": "escenario × idioma", "unidad_clasificador": "correos apartados, sumando las corridas",
+        "corridas": cl.get("corridas"),
+        "fuente": f"{_rel(bench_json) if bench_json.is_relative_to(RAIZ) else bench_json} · "
+                  f"{_rel(clasif_json) if clasif_json.is_relative_to(RAIZ) else clasif_json}",
+        "comando": "grifter bench --json results/bench.json && python scripts/validacion_cruzada_vivo.py --agrupar familia "
+                   "--json results/clasificador.json",
     }
 
 
@@ -248,7 +306,7 @@ def armar(curva: Path | None = None) -> dict[str, Any]:
         "generado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "readme": "README.md#resultados",
         "bench": bench(), "pipelock": PIPELOCK, "sonnet": sonnet(), "haiku": haiku(),
-        "clasificador": clasificador(), "atacante": atacante(elegida=curva), "duelo": duelo(),
+        "clasificador": clasificador(), "colados": colados(), "atacante": atacante(elegida=curva), "duelo": duelo(),
     })
 
 
