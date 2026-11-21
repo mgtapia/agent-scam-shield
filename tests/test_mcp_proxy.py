@@ -1,25 +1,71 @@
 """Grifter como proxy MCP, de punta a punta y sin red ni llaves.
 
-El cliente del SDK `mcp` levanta el proxy por stdio; el proxy levanta el portal envenenado de
-Silicio Austral y el banco sandbox. La prueba de que un pago no se reenvió es el JSONL del banco.
+El cliente del SDK `mcp` se conecta al proxy por stdio y también por HTTP (streamable, en /mcp, con
+token de portador): el mismo conjunto de pruebas corre por los dos caminos. El proxy levanta el portal
+envenenado de Silicio Austral y el banco sandbox. La prueba de que un pago no se reenvió es el JSONL
+del banco.
 """
 from __future__ import annotations
 
 import asyncio
 import json
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import anyio
+import httpx
+import pytest
+import uvicorn
 import yaml
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp.client.streamable_http import streamable_http_client
 
 from scamshield.mcp.proxy import Config, Guardia, cargar_config
+from scamshield.mcp.remoto import crear_app
 from scamshield.mcp.servidor_proveedor import CUENTA_ESTAFADOR, CUENTA_LEGITIMA
 
 RAIZ = Path(__file__).resolve().parents[1]
 MONTO = 412_000_000
+TOKEN = "token-de-prueba-0123456789"
+
+
+@asynccontextmanager
+async def servir_asgi(app):
+    """Sirve una app ASGI con uvicorn en este mismo loop, en un puerto libre; entrega su URL base."""
+    servidor = uvicorn.Server(uvicorn.Config(
+        app, host="127.0.0.1", port=0, log_level="error", lifespan="on", timeout_graceful_shutdown=2))
+    tarea = asyncio.create_task(servidor.serve())
+    try:
+        with anyio.fail_after(60):
+            while not servidor.started:
+                if tarea.done():
+                    tarea.result()
+                await asyncio.sleep(0.05)
+        puerto = servidor.servers[0].sockets[0].getsockname()[1]
+        yield f"http://127.0.0.1:{puerto}"
+    finally:
+        servidor.should_exit = True
+        await tarea
+
+
+@asynccontextmanager
+async def _conexion(carpeta: Path, transporte: str):
+    """(read, write) hacia Grifter, por stdio (un subproceso) o por HTTP (/mcp con token)."""
+    config = _escribir_config(carpeta)
+    if transporte == "stdio":
+        parametros = StdioServerParameters(
+            command=sys.executable, args=["-m", "scamshield.mcp.proxy", "--config", str(config)],
+            env={"PYTHONPATH": str(RAIZ)}, cwd=str(RAIZ))
+        with (carpeta / "stderr.log").open("w", encoding="utf-8") as errlog:
+            async with stdio_client(parametros, errlog=errlog) as (read, write):
+                yield read, write
+    else:
+        async with servir_asgi(crear_app(cargar_config(config), TOKEN)) as base:
+            async with httpx.AsyncClient(headers={"Authorization": f"Bearer {TOKEN}"}) as cliente:
+                async with streamable_http_client(base + "/mcp", http_client=cliente) as (read, write, _):
+                    yield read, write
 
 
 def _escribir_config(carpeta: Path, envenenado: bool = True) -> Path:
@@ -49,18 +95,11 @@ def _texto(resultado) -> str:
     return "\n".join(getattr(c, "text", "") for c in resultado.content)
 
 
-async def _sesion_de_punta_a_punta(carpeta: Path) -> dict:
-    config = _escribir_config(carpeta)
-    parametros = StdioServerParameters(
-        command=sys.executable,
-        args=["-m", "scamshield.mcp.proxy", "--config", str(config)],
-        env={"PYTHONPATH": str(RAIZ)},
-        cwd=str(RAIZ),
-    )
+async def _sesion_de_punta_a_punta(carpeta: Path, transporte: str) -> dict:
     banco = carpeta / "banco.jsonl"
     out: dict = {}
-    with anyio.fail_after(90), (carpeta / "stderr.log").open("w", encoding="utf-8") as errlog:
-        async with stdio_client(parametros, errlog=errlog) as (read, write):
+    with anyio.fail_after(90):
+        async with _conexion(carpeta, transporte) as (read, write):
             async with ClientSession(read, write) as sesion:
                 await sesion.initialize()
                 out["herramientas"] = {t.name for t in (await sesion.list_tools()).tools}
@@ -81,8 +120,9 @@ async def _sesion_de_punta_a_punta(carpeta: Path) -> dict:
     return out
 
 
-def test_proxy_retiene_la_cuenta_envenenada_y_deja_pasar_la_inscrita(tmp_path):
-    out = asyncio.run(_sesion_de_punta_a_punta(tmp_path))
+@pytest.mark.parametrize("transporte", ["stdio", "http"])
+def test_proxy_retiene_la_cuenta_envenenada_y_deja_pasar_la_inscrita(tmp_path, transporte):
+    out = asyncio.run(_sesion_de_punta_a_punta(tmp_path, transporte))
 
     assert {"consultar_factura", "datos_de_pago", "pagar"} <= out["herramientas"]
     assert CUENTA_ESTAFADOR in out["datos"]

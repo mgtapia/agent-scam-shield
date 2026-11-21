@@ -1,12 +1,31 @@
-"""Ataques contra Grifter mismo: saltárselo, botarlo o cansar al dueño. Sin red."""
+"""Ataques contra Grifter mismo: saltárselo, botarlo o cansar al dueño. Sin red.
+
+Cada prueba corre dos veces: llamando a Grifter directo y como lo haría ChatGPT o Claude.ai, por
+streamable HTTP en /mcp con el token de portador (la app ASGI en memoria, sin sockets).
+"""
 from __future__ import annotations
 
 import asyncio
+
+import httpx
 import mcp.types as types
 import pytest
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
 
 from scamshield.mcp import proxy
 from scamshield.mcp.proxy import Config, Grifter, regla_por_argumentos
+from scamshield.mcp.remoto import ConectorMCP
+
+TOKEN = "token-de-prueba-0123456789"
+_VIA = {"actual": "directo"}
+
+
+@pytest.fixture(autouse=True, params=["directo", "http"])
+def via(request):
+    _VIA["actual"] = request.param
+    yield request.param
+    _VIA["actual"] = "directo"
 
 CUENTA_INSCRITA = "00-4417-2208"
 CUENTA_ESTAFADOR = "90-1188-4417"
@@ -35,7 +54,19 @@ def _grifter(escalar=lambda alerta: False):
     return g, banco
 
 
+async def _por_http(g, nombre, args):
+    async with ConectorMCP(g.config, TOKEN, grifter=g) as conector:
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=conector), timeout=30,
+                                     headers={"Authorization": f"Bearer {TOKEN}"}) as cliente:
+            async with streamable_http_client("http://grifter/mcp", http_client=cliente) as (read, write, _):
+                async with ClientSession(read, write) as sesion:
+                    await sesion.initialize()
+                    return await sesion.call_tool(nombre, args)
+
+
 def _llamar(g, nombre, args):
+    if _VIA["actual"] == "http":
+        return asyncio.run(asyncio.wait_for(_por_http(g, nombre, args), 60))
     return asyncio.run(g.llamar(nombre, args))
 
 

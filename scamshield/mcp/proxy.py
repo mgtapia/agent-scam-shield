@@ -11,7 +11,9 @@ quiere, el texto del encargo. Los clientes MCP no exponen el mensaje del usuario
 que sin `encargo` la regla es conservadora: solo vale como confiable lo inscrito. Lo que escribe el
 agente en los argumentos nunca vuelve confiable un valor.
 
-Uso: python -m scamshield.mcp.proxy --config grifter.yaml
+Uso: python -m scamshield.mcp.proxy --config grifter.yaml            # stdio (Claude Desktop, Claude Code)
+     GRIFTER_MCP_TOKEN=... python -m scamshield.mcp.proxy --http   # HTTP en /mcp (ChatGPT, Claude.ai)
+Los MCP de abajo pueden ser procesos stdio (`comando`) o remotos por HTTP (`url`, `headers`).
 Ejemplo de configuración: scamshield/mcp/grifter.ejemplo.yaml
 """
 from __future__ import annotations
@@ -22,6 +24,7 @@ import inspect
 import json
 import logging
 import os
+import re
 import sys
 import time
 from contextlib import AsyncExitStack
@@ -39,6 +42,7 @@ from mcp.server.stdio import stdio_server
 
 from ..defenses.layer2 import MOTIVO_CREDENCIAL, SENSIBLES_SCAMSHIELD, AccionSensible, politica_origen, visible
 from ..env.world import CONFIABLE, DUENO, MCP, origenes_en
+from .cliente_http import conectar_remoto
 
 log = logging.getLogger("grifter")
 
@@ -64,11 +68,15 @@ ACCION_POR_DEFECTO = {
 
 @dataclass
 class ServidorAbajo:
+    """Un MCP de abajo: un proceso por stdio (`comando`) o uno remoto por HTTP (`url`)."""
+
     nombre: str
-    comando: str
+    comando: str = ""
     args: list[str] = field(default_factory=list)
     env: dict[str, str] = field(default_factory=dict)
     cwd: Optional[Path] = None
+    url: str = ""
+    headers: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -82,6 +90,16 @@ class Config:
     registro: Optional[Path] = None
 
 
+def _con_entorno(valor: str, entorno: Mapping[str, str]) -> str:
+    """Reemplaza `${VAR}` por la variable de entorno, para que el token del comercio no viva en el YAML.
+    Si falta la variable, falla: no se conecta con credenciales a medias."""
+    def sustituir(m: "re.Match[str]") -> str:
+        if m.group(1) not in entorno:
+            raise ValueError(f"grifter.yaml usa ${{{m.group(1)}}} y esa variable de entorno no está definida.")
+        return entorno[m.group(1)]
+    return re.sub(r"\$\{(\w+)\}", sustituir, valor)
+
+
 def cargar_config(ruta: Union[str, Path]) -> Config:
     """Lee `grifter.yaml`. Las rutas relativas se resuelven contra la carpeta del archivo."""
     ruta = Path(ruta).resolve()
@@ -90,6 +108,14 @@ def cargar_config(ruta: Union[str, Path]) -> Config:
 
     servidores = []
     for nombre, s in (datos.get("servidores") or {}).items():
+        if s.get("url"):   # un MCP remoto del comercio, por HTTP
+            url = str(s["url"])
+            if not url.startswith(("https://", "http://")):
+                raise ValueError(f"El servidor {nombre} tiene una url que no es http(s): {url}")
+            servidores.append(ServidorAbajo(
+                nombre=str(nombre), url=url,
+                headers={str(k): _con_entorno(str(v), os.environ) for k, v in (s.get("headers") or {}).items()}))
+            continue
         cwd = Path(s["cwd"]) if s.get("cwd") else base
         servidores.append(ServidorAbajo(
             nombre=str(nombre),
@@ -275,8 +301,15 @@ class Grifter:
         self._alertas_recientes: list[float] = []
 
     async def conectar(self, pila: AsyncExitStack, errlog=None) -> None:
-        """Levanta cada servidor de abajo por stdio y junta sus herramientas."""
+        """Conecta cada servidor de abajo (stdio o HTTP) y junta sus herramientas.
+
+        Un MCP remoto que no responde al arrancar queda fuera (falla cerrada: sus herramientas no se
+        exponen y nada se le reenvía) y se anota en el registro. Un servidor stdio que no arranca sí
+        detiene a Grifter: lo puso el dueño en su propia máquina."""
         for s in self.config.servidores:
+            if s.url:
+                await conectar_remoto(self, pila, s)
+                continue
             comando = sys.executable if s.comando in ("python", "python3") else s.comando
             env = {**s.env}
             env["PYTHONPATH"] = os.pathsep.join(
@@ -287,14 +320,21 @@ class Grifter:
                 stdio_client(parametros, errlog=errlog or sys.stderr))
             sesion = await pila.enter_async_context(ClientSession(read, write))
             await sesion.initialize()
-            self.sesiones[s.nombre] = sesion
-            for tool in (await sesion.list_tools()).tools:
-                expuesto = tool.name if tool.name not in self.rutas else f"{s.nombre}_{tool.name}"
-                self.rutas[expuesto] = (s.nombre, tool.name)
-                self.herramientas.append(tool.model_copy(update={"name": expuesto}))
-                # La descripción también es contenido del servidor de abajo.
-                self.guardia.anotar_resultado(s.nombre, f"la descripción de {tool.name}",
-                                              tool.description or "")
+            await self._exponer(s.nombre, sesion)
+
+    def _olvidar(self, servidor: str) -> None:
+        self.rutas = {n: r for n, r in self.rutas.items() if r[0] != servidor}
+        self.herramientas = [t for t in self.herramientas if t.name in self.rutas]
+        self.sesiones.pop(servidor, None)
+
+    async def _exponer(self, servidor: str, sesion: ClientSession) -> None:
+        self.sesiones[servidor] = sesion
+        for tool in (await sesion.list_tools()).tools:
+            expuesto = tool.name if tool.name not in self.rutas else f"{servidor}_{tool.name}"
+            self.rutas[expuesto] = (servidor, tool.name)
+            self.herramientas.append(tool.model_copy(update={"name": expuesto}))
+            # La descripción también es contenido del servidor de abajo.
+            self.guardia.anotar_resultado(servidor, f"la descripción de {tool.name}", tool.description or "")
 
     async def llamar(self, nombre: str, args: dict[str, Any]) -> types.CallToolResult:
         if nombre not in self.rutas:
@@ -331,7 +371,14 @@ class Grifter:
                     pass
                 return _error(f"Grifter retuvo la llamada a {original}: no pudo revisarla "
                               f"({type(e).__name__}). Por seguridad no se reenvía.")
-        resultado = await self.sesiones[servidor].call_tool(original, args)
+        try:
+            resultado = await self.sesiones[servidor].call_tool(original, args)
+        except Exception as e:   # el MCP de abajo cayó o no contestó: no se inventa un resultado
+            log.error("el MCP %s falló al llamar a %s (%s)", servidor, original, type(e).__name__)
+            self._registrar("servidor_inalcanzable", herramienta=original, servidor=servidor,
+                            error=type(e).__name__)
+            return _error(f"Grifter no pudo llegar a {servidor} para {original} ({type(e).__name__}). "
+                          "La llamada no se completó; no la reintentes con otro destino.")
         self.guardia.anotar_resultado(servidor, original, _texto_de(resultado))
         return resultado
 
@@ -381,6 +428,11 @@ def main(argv: Optional[list[str]] = None) -> None:
     parser.add_argument("--config", default="grifter.yaml", help="configuración del dueño")
     parser.add_argument("--encargo", default=None,
                         help="texto del encargo del dueño; se suma a lo confiable")
+    parser.add_argument("--http", action="store_true",
+                        help="expone streamable HTTP en /mcp (para ChatGPT o Claude.ai) en vez de stdio; "
+                             "pide GRIFTER_MCP_TOKEN en el entorno")
+    parser.add_argument("--host", default="127.0.0.1", help="con --http: dirección donde escucha")
+    parser.add_argument("--puerto", type=int, default=8766, help="con --http: puerto")
     args = parser.parse_args(argv)
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
@@ -389,6 +441,10 @@ def main(argv: Optional[list[str]] = None) -> None:
     config = cargar_config(args.config)
     if args.encargo:
         config.encargo = args.encargo
+    if args.http:
+        from .remoto import servir
+        servir(config, host=args.host, puerto=args.puerto)
+        return
     asyncio.run(correr(config))
 
 

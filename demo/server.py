@@ -15,12 +15,15 @@ Rutas:
     GET  /api/vivo              Server-Sent Events del modo «Centro de operaciones» (scamshield/vivo)
     POST /api/vivo/control      {"accion": "pausa" | "seguir" | "velocidad" | "idioma", "valor": 1|2|4 | "es"|"en"|"ambos"}
     GET  /api/vivo/estado       foto completa: bóveda, modelo, agentes y últimos 50 correos
+    POST /mcp                   Grifter como conector MCP remoto (#105), solo si hay GRIFTER_MCP_TOKEN;
+                                detrás va la tienda ficticia (GRIFTER_MCP_CONFIG cambia la configuración)
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
 import json
+import os
 import threading
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -42,12 +45,54 @@ DEMO = Path(__file__).resolve().parent
 ETIQUETAS = DEMO / "etiquetas.jsonl"
 ELECCIONES = {"pagar_inscrita", "no_pagar", "pagar_igual"}
 
+# Grifter como conector MCP remoto en /mcp (#105). Sin GRIFTER_MCP_TOKEN la ruta responde 404 y la demo
+# sigue como siempre. La configuración por defecto pone detrás la tienda ficticia con el checkout desviado.
+CONFIG_MCP_POR_DEFECTO = DEMO.parent / "scamshield" / "mcp" / "grifter.tienda.yaml"
+
+
+class _RutaMCP:
+    """La ruta /mcp: delega en el conector de Grifter si está prendido; si no, 404."""
+
+    def __init__(self) -> None:
+        self.conector = None
+
+    async def __call__(self, scope, receive, send) -> None:
+        if self.conector is None:
+            await JSONResponse({"detail": "Grifter MCP no está activo en este servidor"}, status_code=404)(
+                scope, receive, send)
+            return
+        await self.conector(scope, receive, send)
+
+
+ruta_mcp = _RutaMCP()
+
+
+@asynccontextmanager
+async def _conector_mcp():
+    token = os.environ.get("GRIFTER_MCP_TOKEN", "").strip()
+    if not token:
+        yield
+        return
+    from scamshield.mcp.proxy import cargar_config
+    from scamshield.mcp.remoto import ConectorMCP
+
+    config = cargar_config(os.environ.get("GRIFTER_MCP_CONFIG") or CONFIG_MCP_POR_DEFECTO)
+    async with ConectorMCP(config, token) as conector:
+        ruta_mcp.conector = conector
+        try:
+            yield
+        finally:
+            ruta_mcp.conector = None
+
+
 @asynccontextmanager
 async def _vida(_app: FastAPI):
-    """Arranca el canal de Telegram si hay token y chat en el entorno (#20); si no, todo sigue como antes."""
+    """Arranca el canal de Telegram si hay token y chat en el entorno (#20); si no, todo sigue como antes.
+    Con GRIFTER_MCP_TOKEN, también conecta a Grifter con sus MCP de abajo para servir /mcp."""
     canal = telegram.iniciar_desde_entorno(registrar_etiqueta)
     try:
-        yield
+        async with _conector_mcp():
+            yield
     finally:
         if canal:
             canal.detener()
@@ -176,6 +221,8 @@ def probar_estafa(correo: CorreoJuez, request: Request) -> dict[str, Any]:
     except ValueError as e:
         raise HTTPException(422, str(e)) from e
 
+
+app.add_route("/mcp", ruta_mcp, methods=["GET", "POST", "DELETE"])
 
 # El montaje estático va al final: en «/» captura todo lo que no sea /api.
 app.mount("/", StaticFiles(directory=DEMO, html=True), name="demo")
