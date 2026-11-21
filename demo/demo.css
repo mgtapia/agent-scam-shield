@@ -65,14 +65,12 @@ body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--f
    textos van a 1,1-1,3 veces su tamaño real en sp para leerse proyectados.
    Escenas con teléfono (acto 1 y las dos del acto 2): dos bloques con el mismo margen a los lados (96 px). El teléfono
    ocupa el 85 % del alto (918 de 1080) y la columna de la izquierda queda centrada en vertical respecto de él. */
-.md-comp.activo { display: grid; grid-template-columns: minmax(0, 1fr) 437px; grid-template-rows: 1fr auto auto auto 1fr;
-  column-gap: 96px; row-gap: 32px; padding: 81px 96px; }
-.md-comp > .md-rotulo { grid-column: 1; grid-row: 2; margin: 0; }
-.md-comp > .md-frase { grid-column: 1; grid-row: 3; }
+.md-comp.activo { display: flex; flex-direction: column; justify-content: center; gap: 32px; padding: 81px 629px 81px 96px; }
+.md-comp > .md-rotulo { margin: 0; }
 .md-a1 .md-frase { min-height: 64px; font-size: 52px; line-height: 64px; }   /* las dos frases caben en una línea de la columna */
 .md-comp > .md-cols { display: contents; }
-.md-a1 .md-consola { grid-column: 1; grid-row: 4; min-height: 420px; align-content: start; }
-.md-comp .md-celular { grid-column: 2; grid-row: 1 / -1; position: relative; right: auto; top: auto; width: 437px; height: 918px; }
+.md-a1 .md-consola { height: 472px; align-content: start; }   /* fija: lo que aún no aparece no corre el bloque */
+.md-comp .md-celular { right: 96px; top: 81px; width: 437px; height: 918px; }
 .md-celular {
   position: absolute; right: 96px; top: 108px; width: 412px; height: 864px; padding: 12px;
   border-radius: 56px; background: #16171A; border: 2px solid var(--borde);
@@ -140,7 +138,7 @@ body.md-contestada .md-avatar { transform: scale(0.82); }
 .md-al-hecho .md-ic { color: var(--verde); }
 
 /* Acto 2: un caso a la vez. Tres líneas que se leen desde el fondo de la sala; lo clave, resaltado */
-.md-tres { grid-column: 1; grid-row: 3 / 5; margin: 0; padding: 0; list-style: none; display: grid; align-content: start; gap: 40px; }
+.md-tres { margin: 0; padding: 0; list-style: none; display: grid; align-content: start; gap: 40px; }
 .md-tres li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 32px; font-size: 56px; line-height: 68px; font-weight: var(--p-fuerte); letter-spacing: -0.02em; }
 .md-tres .md-ic { width: 48px; height: 48px; margin-top: 10px; color: var(--texto-3); }
 .md-tres .md-ret .md-ic { color: var(--verde); }
