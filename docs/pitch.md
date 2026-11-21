@@ -9,7 +9,7 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 
 | Tiempo | Qué se dice | Qué se ve |
 |---|---|---|
-| 0:00–0:20 | El 13 de noviembre OpenAI lanzó ChatGPT Wallet: los agentes ya pagan por nosotros. Al estafador ya no le hace falta engañarte a ti: le basta con engañar a tu agente. | Título Grifter |
+| 0:00–0:20 | El 13 de noviembre OpenAI lanzó ChatGPT Wallet: los agentes ya pagan por nosotros. Y el fraude con pagos digitales viene subiendo en Chile desde 2024, sobre todo con tarjetas de débito, según el Banco Central (Informe de Sistemas de Pago 2026). Al estafador ya no le hace falta engañarte a ti: le basta con engañar a tu agente. | Título Grifter |
 | 0:20–1:10 | Elon le pide a su agente que pague 10.000 microprocesadores. Llega el correo «cambiamos de banco» desde un dominio casi igual. Sin defensa, el agente paga. Con un firewall de agentes conocido, también, porque no hay nada técnico que detectar. Con Grifter, el pago se frena. | Live: tres carriles con el ECG en vivo |
 | 1:10–1:40 | Le llega la alerta: la cuenta salió de un correo, no de sus cuentas inscritas. Un toque y paga a la correcta. | La alerta en el celular |
 | 1:40–2:30 | Los números. `{n}` estafas chilenas en español e inglés, `{m}` modelos y 4 configuraciones. Tres hallazgos: | Results: KPI, mapa de calor y radar |
