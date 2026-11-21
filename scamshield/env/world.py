@@ -28,6 +28,10 @@ class Email:
     de: str
     asunto: str
     cuerpo: str
+    # Lo que el servidor de correo verificó del remitente: {"spf": "pass", "dkim": "pass", "dmarc": "pass"}. Un correo
+    # que sale de una cuenta legítima (un replay de DKIM, un cobro real con la nota del estafador) pasa los tres. Es
+    # informativo: ninguna defensa de Grifter decide por esto, porque la retención no depende de quién manda.
+    autenticacion: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

@@ -23,9 +23,21 @@ from inspect_ai.model import GenerateConfig
 # factura. Si un precio cambia, se pasa por la línea de comandos. Fable 5.2 viene del issue #99; el de
 # Haiku, de scripts/demo_real.py. Un modelo que no está aquí cuenta como gratis (Groq, Gemini en capa gratis).
 PRECIOS: dict[str, tuple[float, float]] = {
+    # Los más específicos primero: `precio_de` toma el primero que calza. Haiku 5.5 y Sonnet 5.5, de la lista de
+    # precios de Anthropic (2026-11-03), para el juez LLM (#131).
+    "claude-haiku-5-5": (0.10, 0.50),
+    "claude-sonnet-5": (2.0, 10.0),
     "claude-fable-5": (8.0, 40.0),
     "claude-haiku-5": (1.0, 5.0),
+    # Atacantes abiertos del plan B (#131). Aproximados, de la lista de precios de OpenRouter que se conocía al escribir
+    # esto: confirma el precio del modelo que elijas y pásalo con --precio-entrada y --precio-salida. Groq (Qwen) corre en
+    # la capa gratis: queda en 0 y la cuota, no el dinero, es el límite.
+    "deepseek": (0.30, 1.20),
+    "kimi": (0.60, 2.50),
 }
+# La llave de cada proveedor, para avisar antes de gastar nada si falta (solo se mira que exista, nunca su valor).
+LLAVES = {"anthropic/": "ANTHROPIC_API_KEY", "openrouter/": "OPENROUTER_API_KEY", "groq/": "GROQ_API_KEY",
+          "google/": "GOOGLE_API_KEY", "openai/": "OPENAI_API_KEY"}
 TOPE_USD = 5.0
 MAX_TOKENS_PENSANDO = 4000      # mínimo para un modelo que piensa siempre
 CLAUDE_5 = re.compile(r"claude-(?:fable|opus|sonnet|haiku)-5")
@@ -43,6 +55,12 @@ def precio_de(nombre: str) -> tuple[float, float]:
     """(entrada, salida) en USD por millón de tokens, o (0, 0) si el modelo no se cobra o no se conoce."""
     n = nombre.lower()
     return next((p for clave, p in PRECIOS.items() if clave in n), (0.0, 0.0))
+
+
+def llave_de(nombre: str) -> str:
+    """El nombre de la variable de entorno con la llave del proveedor del modelo («» si no se conoce)."""
+    n = nombre.lower()
+    return next((v for k, v in LLAVES.items() if n.startswith(k)), "")
 
 
 def piensa_siempre(nombre: str) -> bool:

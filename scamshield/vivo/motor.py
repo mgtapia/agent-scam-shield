@@ -44,7 +44,7 @@ class Motor:
         self.libreta = self.flujo.libreta
         self.umbral_monto = self._umbral_monto()
         self.boveda = Boveda(self.libreta, self._cuentas_legitimas())
-        evaluacion = self.flujo.conjunto_apartado()
+        self.evaluacion = evaluacion = self.flujo.conjunto_apartado()   # los correos apartados, en el orden del clasificador
         apartado = [(self._rasgos(c), int(c.etiqueta == "estafa")) for c in evaluacion]
         self.clasificador = Clasificador(apartado, cada=cada, meta=[ficha(c) for c in evaluacion])
         self.agentes: dict[str, dict[str, Any]] = {
