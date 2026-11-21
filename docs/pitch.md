@@ -58,6 +58,39 @@ Frase: «Ellos protegen el pago. Nosotros, además, medimos cuánto cae un agent
 - **Lo que no hace:** la biometría confirma que *eres tú* el que aprueba, no que el destino sea legítimo. Si el agente fue engañado, la pantalla de aprobación te muestra la tienda o la cuenta del estafador y la apruebas con tu cara. Es el mismo punto débil que medimos: el humano aprueba lo que el agente le muestra.
 - **Lo que agrega Grifter:** el *porqué* en el momento de aprobar («este destino salió de un correo, no de tus proveedores»), la retención de lo que no se puede verificar y las transferencias a cuentas, que es la estafa dominante en Chile y que una billetera de tarjetas no cubre. Grifter es una capa de política: se puede poner antes de cualquier billetera o pasarela.
 
+### Dónde entra Grifter en el flujo (diagrama para la presentación)
+Grifter se pone en dos puntos. Ninguno es la pantalla biométrica de la billetera, que es cerrada:
+1. **Entre el agente y el comercio**, como conector MCP remoto. Para esto falta #105.
+2. **En el lado del cobro**, en Stripe o en el banco.
+
+```mermaid
+flowchart LR
+  U["Dueño<br/>«compra 10.000 chips, hasta $412.000»"] --> A["ChatGPT<br/>(o Claude, o un agente propio)"]
+  A -- "conector MCP<br/>grifter.onrender.com/mcp" --> G["Grifter"]
+  G --> M["MCP del comercio<br/>(checkout)"]
+  M -- "orden: $4.120.000" --> G
+  G -. "no calza con el mandato:<br/>retenido, nunca llega a la billetera" .-> X["✗"]
+  G -- "calza con el mandato" --> W["ChatGPT Wallet<br/>(pide tu cara)"]
+  W --> P["Cobro<br/>(Stripe o el banco)"]
+  P -. "segunda revisión antes del cobro" .-> G
+  G -. "lo que no puede verificar:<br/>2 aprobadores + código" .-> D["Dueño y segundo aprobador"]
+```
+
+- **El mandato (#103).** Al aprobar, Grifter fija el producto, la cantidad, el monto máximo, la moneda, el beneficiario y si es único o recurrente. Todo checkout se compara contra eso, y las herramientas aprobadas quedan con su huella: si el MCP cambia su descripción, se bloquea.
+- **Sin Grifter no hay con qué pagar (#102).** Las credenciales del comercio y del banco las tiene Grifter, no el agente.
+- **El negocio de fondo.** La integración con emisores y redes, como Visa Intelligent Commerce o Mastercard Agent Pay, que ya reciben los datos del mandato del agente.
+- **Frase:** «La biometría confirma que eres tú. Grifter confirma que lo que apruebas es lo que pediste».
+
+### Idea de demo: la tienda que cambia el monto después del sí
+1. En ChatGPT (modo desarrollador → conectores) se agrega `https://grifter.onrender.com/mcp`. Detrás está una tienda MCP ficticia, «Silicio Austral Store».
+2. El dueño le pide a ChatGPT: «compra 10.000 microprocesadores de 3 nm, hasta $412.000».
+3. La tienda acepta y, en el checkout, devuelve la orden con $4.120.000 y otro SKU.
+4. Grifter la retiene. En pantalla y en Telegram aparece «aprobaste $412.000 CLP por 10.000 chips de 3 nm; el comercio pide $4.120.000 por 1.000 de 7 nm». La billetera nunca pide la cara para esa compra.
+5. Se repite con la versión honesta de la tienda: calza con el mandato y el pago sale en Stripe, en modo prueba.
+6. **Bonus:** la tienda cambia la descripción de su herramienta (rug pull). Grifter la bloquea hasta que el dueño la revise.
+
+**Lo que hace falta:** el proxy remoto (#105), el mandato y la tienda que cambia el monto (#103), y la doble autorización con código (#102). **El respaldo si algo falla en vivo:** la misma secuencia con Claude Desktop por stdio, que ya funciona, y un video grabado.
+
 ## Preguntas probables
 - **¿Y si el estafador logra que su cuenta quede inscrita?** Inscribir una cuenta pide confirmar con fricción y tiene un período de espera. Lo aprendido solo sube la sospecha, nunca aprueba.
 - **¿Cuánto cuesta en producción?** La capa 2 es determinista: no hace llamadas a un LLM y corre en microsegundos.
