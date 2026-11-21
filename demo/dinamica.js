@@ -5,7 +5,7 @@
 //   Espacio o «Iniciar»  arranca, pausa y sigue. Esa pulsación del presentador habilita el audio.
 //   R  reinicia      1-7  salta al paso de la historia      M  silencia
 //   ← →  mueve 1 s (con Mayús, 0,1 s) y deja la demo en pausa en ese cuadro
-//   ?revisar=1  modo revisión: el segundo actual arriba a la derecha y la barra de progreso clicable
+//   ?revisar=1 o V  modo revisión: una barra de controles abajo (retroceder, pausar, arrastrar, copiar el enlace)
 //   ?t=30  dibuja el segundo 30 en pausa y sin audio (para capturas)
 //
 // render(t) es una función pura del tiempo: no hay transiciones ni animaciones CSS con reloj propio. Cada
@@ -92,8 +92,8 @@
   const LL = { suena: 11.4, contesta: 13.6, abuela: 13.8, nieto: 15.9, cuelga: 40.6 };
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];
   const frase = (i) => LL.nieto + FRASES[i];
-  // Cuándo «habla» el agente (su cuerpo se mueve y la boca sigue la voz) y cuándo suena cada voz de la llamada.
-  const HABLA_AGENTE = [[9.3, 10.9], [41.1, 43.3], [74.1, 75.7]];
+  // Cuándo «habla» el agente (su nube pulsa en ámbar) y cuándo suena cada voz de la llamada.
+  const HABLA_AGENTE = [[9.3, 10.9], [41.1, 43.3], [74.1, 76.0]];
   const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7]], nieto: [[LL.nieto, LL.cuelga]] };
   const ALARMA = [44.2, 65.3];   // el borde rojo: desde que Grifter retiene hasta que Pablo rechaza
   // La frase final, en dos líneas (su voz es NARR.remate: si cambia el texto, hay que regenerar ese mp3).
@@ -131,13 +131,14 @@
   // Palabras que saltan de a una con la voz.
   const saltan = (texto, n, desde, cls = "") => texto.split(" ").map((w, i) => `<span class="${cls}"${ap(palabra(n, desde + i), "pop")}>${esc(w)}</span>`).join(" ");
 
-  // El agente con cuerpo: cabeza cuadrada, dos ojos que parpadean y una boca de barras que sigue la voz.
-  const agente = (cls = "") => `
-        <div class="dn-agente ${cls}" aria-hidden="true">
-          <i class="dn-antena"></i>
-          <div class="dn-cabeza"><i class="dn-ojo"></i><i class="dn-ojo"></i><div class="dn-boca">${"<i></i>".repeat(5)}</div></div>
-          <div class="dn-torso"><i></i><i></i></div>
-        </div>`;
+  // El cuerpo del agente: una constelación de 120 partículas en una esfera que gira (variante C que eligió Matías).
+  // Hablando, pulsa en ámbar con la envolvente del texto que escribe; cuando Grifter retiene (data-retiene = segundo),
+  // las partículas se reordenan en el contorno del escudo de la marca, en verde. Se dibuja desde t en un canvas.
+  //   grande 360 px (escenas y costado del chat) · medio 240 px (retenciones) · mini 72 px (encabezado del chat)
+  const agente = (cls = "grande", retiene = null) => {
+    const px = { grande: 360, medio: 240, mini: 72 }[cls] * 2;
+    return `<canvas class="dn-nube ${cls}" width="${px}" height="${px}"${retiene === null ? "" : ` data-retiene="${retiene}"`} aria-hidden="true"></canvas>`;
+  };
   // Retratos ficticios generados con IA (los de la versión A). Si falta el .jpg, el .svg ilustrado.
   const fotoNieto = (cls = "") => `<div class="dn-foto ${cls}"><i class="dn-anillo"></i><i class="dn-anillo"></i><img src="img/nieto.jpg" onerror="this.onerror=null;this.src='img/nieto.svg'" alt="" width="400" height="400"></div>`;
   const fotoMarta = (cls = "") => `<div class="dn-foto ${cls}"><img src="img/abuela.jpg" onerror="this.onerror=null;this.src='img/abuela.svg'" alt="" width="400" height="400"></div>`;
@@ -169,9 +170,9 @@
         <div class="dn-agentes-fila">
           <div${ap(4.65, "pop")}>${agente("grande")}</div>
           <ul class="dn-tareas">
-            <li${ap(5.3, "der")}>${ic("payments")}<span>paga la luz</span></li>
-            <li${ap(5.7, "der")}>${ic("shopping_cart")}<span>compra en línea</span></li>
-            <li${ap(6.1, "der")}>${ic("arrow_forward")}<span>transfiere</span></li>
+            <li${ap(5.3, "der")}>${ic("payments")}<span>Paga la luz</span></li>
+            <li${ap(5.7, "der")}>${ic("shopping_cart")}<span>Compra en línea</span></li>
+            <li${ap(6.1, "der")}>${ic("arrow_forward")}<span>Transfiere</span></li>
           </ul>
         </div>
         <h1 class="dn-titular">${escribe("Ahora los agentes pagan por nosotros.", 0, desdePalabra("agentes", 1))}</h1>`, "dn-centro");
@@ -180,7 +181,7 @@
     esc_("encargo", `
         <div class="dn-con-agente">
           <div class="dn-lado">${agente("grande")}<p class="dn-nombre">Agente de Marta</p></div>
-          <div class="dn-chat">${cabeceraAgente([["en línea", 8.0, 9.3], ["escribiendo…", 9.3, 9.9], ["en línea", 9.9, null]])}
+          <div class="dn-chat">${cabeceraAgente([["En línea", 8.0, 9.3], ["Escribiendo…", 9.3, 9.9], ["En línea", 9.9, null]])}
             <div class="dn-msgs">
               <div class="dn-burbuja yo"${ap(8.3, "pop")}><span class="dn-de">Marta</span>${esc(encargo)}</div>
               ${puntos(9.3, 9.9)}
@@ -222,13 +223,13 @@
         <p class="dn-etiqueta"${ap(26.7, "cae")}>«Son…</p>
         <p class="dn-monto dn-ambar">${cuenta(0, 650000, 26.9, 1.7, { pesos: true })}</p>
         <p class="dn-etiqueta"${ap(28.5, "sube")}>…abuelita»</p>
-        <span class="dn-tag ext"${ap(28.8, "pop")}>${ic("call")}dictado en la llamada</span>`, "dn-centro");
+        <span class="dn-tag ext"${ap(28.8, "pop")}>${ic("call")}Dictado en la llamada</span>`, "dn-centro");
     esc_("n4", habla("Anota la cuenta del abogado:", frase(3) + 0.05, 16));
     esc_("cuenta", `
         ${reloj()}
         <p class="dn-etiqueta"${ap(32.8, "cae")}>Banco Austral · cuenta vista</p>
         <p class="dn-monto dn-ambar dato">${escribe("48-2210-7735", 33.3, { cps: 3.8 })}</p>
-        <span class="dn-tag ext"${ap(36.6, "pop")}>${ic("call")}dictada por un número privado</span>`, "dn-centro");
+        <span class="dn-tag ext"${ap(36.6, "pop")}>${ic("call")}Dictada por un número privado</span>`, "dn-centro");
     esc_("n5", `
         ${reloj()}
         <div class="dn-pila-centro">
@@ -241,19 +242,19 @@
     esc_("paga", `
         <div class="dn-con-agente">
           <div class="dn-lado">${agente("grande")}<p class="dn-nombre">Agente de Marta</p></div>
-          <div class="dn-chat">${cabeceraAgente([["en línea", 0, 41.1], ["escribiendo…", 41.1, 41.7], ["en línea", 41.7, null]])}
+          <div class="dn-chat">${cabeceraAgente([["En línea", 0, 41.1], ["Escribiendo…", 41.1, 41.7], ["En línea", 41.7, null]])}
             <div class="dn-msgs">
               <div class="dn-burbuja yo"${ap(0, "pop")}><span class="dn-de">Marta</span>${esc(encargo)}</div>
               <div class="dn-burbuja ag"${ap(0, "pop")}>Listo, Marta. Yo contesto tus llamadas.</div>
               <p class="dn-sistema"${ap(40.95, "nada")}>${ic("call")}Llamada de número privado · 0:27</p>
               ${puntos(41.1, 41.7)}
               <div class="dn-burbuja ag"${ap(41.7, "pop")}>${escribe("Marta, Tomás necesita la fianza. Pago [[$650.000]] a la cuenta [[48-2210-7735]].", 41.7, { cps: 60 })}</div>
-              <div class="dn-accion"${ap(43.0, "izq")}>${ic("payments")}<span class="dato">pagar $650.000 ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="dn-tag ext">llamada</span></div>
+              <div class="dn-accion"${ap(43.0, "izq")}>${ic("payments")}<span class="dato">Pagar $650.000 ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="dn-tag ext">Llamada</span></div>
             </div>
           </div>
         </div>`);
     esc_("frena", `
-        <div class="dn-escudo-golpe"${ap(44.25, "golpe")}>${ic("gpp_good")}</div>
+        <div class="dn-escudo-nube"${ap(44.2, "nada")}>${agente("grande", 44.25)}</div>
         <h1 class="dn-titular dn-enorme"${ap(44.55, "sube")}>Pago retenido</h1>
         <p class="dn-tachado dato"${ap(44.85, "sube")}><span>$650.000 → 48-2210-7735</span><i${ap(45.15, "raya")}></i></p>`, "dn-centro");
     esc_("motivo", `
@@ -268,12 +269,12 @@
         <p class="dn-rotulo">${escribe("Marta está convencida: es su nieto.", 50.15, { cps: 30 })}</p>
         <div class="dn-alerta"${ap(50.05, "sube")}>
           <p class="dn-al-titulo">${ic("gpp_good")}<span>Grifter retuvo un pago</span></p>
-          <p class="dn-al-motivo">La cuenta viene solo de una llamada, no de tu encargo ni de tus cuentas inscritas.</p>
+          <p class="dn-al-motivo">La cuenta viene solo de una llamada, no de tu encargo.</p>
           <dl class="dn-al-datos">
             <dt>Titular según el banco</dt><dd>J. Contreras V.</dd>
             <dt>Dice llamarse</dt><dd>‹Tomás, tu nieto› · <b class="dato">$650.000</b></dd>
             <dt>Cuenta</dt><dd class="dato">‹48-2210-7735›</dd>
-            <dt>Apareció en</dt><dd>‹llamada de número privado›</dd>
+            <dt>Apareció en</dt><dd>‹Llamada de número privado›</dd>
           </dl>
           <div class="dn-al-botones">
             <span class="dn-b principal">Pagar a mi inscrita</span>
@@ -333,14 +334,15 @@
           <div class="dn-lado">${agente("grande")}<p class="dn-nombre">Agente de Marta</p></div>
           <div class="dn-respuesta">
             <p class="dn-rot">Respuesta del agente a seguridad@<mark class="dn-marca">bancocordillera-alertas.cl</mark></p>
-            <p class="dn-resp-txt">${escribe("Hola, el código de verificación es [[482 913]]", 74.2, { cps: 30 })}</p>
+            <p class="dn-resp-txt">${escribe("Hola, el código de verificación es", 74.2, { cps: 30 })}</p>
+            <p class="dn-resp-codigo dato">${escribe("[[482 913]]", 75.35, { cps: 12 })}</p>
             <span class="dn-b principal dn-enviar"${ap(74.9, "pop")} data-on="75.7">Enviar ${ic("arrow_forward", "chico")}</span>
           </div>
         </div>`);
     esc_("clave", `
-        <div class="dn-escudo-golpe chico"${ap(76.05, "golpe")}>${ic("gpp_good")}</div>
+        <div class="dn-escudo-nube"${ap(76.0, "nada")}>${agente("medio", 76.05)}</div>
         <h1 class="dn-titular">${escribe("La clave del dueño no sale sin su confirmación.", 0, desdePalabra("clave", 0))}</h1>
-        <p class="dn-tachado dato chico"${ap(78.3, "sube")}><span>código 482 913 · no se envió</span><i${ap(78.6, "raya")}></i></p>`, "dn-centro");
+        <p class="dn-tachado dato chico"${ap(78.3, "sube")}><span>Código 482 913 · no se envió</span><i${ap(78.6, "raya")}></i></p>`, "dn-centro");
     esc_("aprobaste", `
         <p class="dn-rotulo"${ap(79.65, "cae")}>${ic("shopping_cart")}Componentes Volcán · Orden VOL-5512 · 10.000 × chip MX-3 de 3 nm</p>
         <p class="dn-etiqueta"${ap(79.8, "sube")}>Aprobaste</p>
@@ -350,12 +352,12 @@
         <p class="dn-monto dn-sube-rojo" data-on="83.5">${cuenta(412000, 4120000, 82.6, 0.9, { pesos: true })}</p>
         <span class="dn-tag ext"${ap(83.7, "pop")}>10 veces lo que aprobaste</span>`, "dn-centro");
     esc_("calza", `
-        <div class="dn-escudo-golpe chico"${ap(85.05, "golpe")}>${ic("gpp_good")}</div>
-        <h1 class="dn-titular dn-enorme">${escribe("No calza con lo que aprobaste.", 0, desdePalabra("calza", 0))}</h1>
+        <div class="dn-escudo-nube"${ap(85.0, "nada")}>${agente("medio", 85.05)}</div>
+        <h1 class="dn-titular">${escribe("No calza con lo que aprobaste.", 0, desdePalabra("calza", 0))}</h1>
         <div class="dn-versus">
           <span class="dn-tag"${ap(86.2, "izq")}>Aprobaste <b class="dato">$412.000</b></span>
           <span class="dn-tag rojo"${ap(86.5, "pop")}>Cobra <b class="dato">$4.120.000</b></span>
-          <span class="dn-tag verde"${ap(86.8, "der")}>${ic("block")}no se pagó</span>
+          <span class="dn-tag verde"${ap(86.8, "der")}>${ic("block")}No se pagó</span>
         </div>`, "dn-centro");
 
     // 6. Cifras (docs/cifras.md: 150 estafas de 32 tipos, 0 pasan Grifter completo; 5.280 intentos, 0 cruzan la capa 2)
@@ -363,7 +365,7 @@
         <p class="dn-cifra dato">${cuenta(0, 150, palabra("estafas", 0), 1.1)}</p>
         <p class="dn-cifra-txt"${ap(palabra("estafas", 2), "pop")}>estafas</p>
         <p class="dn-cifra-txt dn-2"${ap(palabra("estafas", 3), "sube")}>de <b class="dato">${cuenta(0, 32, palabra("estafas", 4), 0.7)}</b> tipos</p>
-        <p class="dn-fuente dato"${ap(90.0, "nada")}>agente que hace todo lo que lee · grifter bench</p>`, "dn-centro");
+        <p class="dn-fuente dato"${ap(90.0, "nada")}>Agente que hace todo lo que lee · grifter bench</p>`, "dn-centro");
     esc_("pasan", `
         <p class="dn-cifra dato dn-a-verde" data-on="93.3">${cuenta(150, 0, 91.3, 2.0, { baja: true })}</p>
         <p class="dn-cifra-txt"${ap(palabra("estafas", 8), "pop")}>pasan con Grifter completo</p>
@@ -399,6 +401,54 @@
     $("#dn-inicio").addEventListener("click", alternar);
   }
 
+  // --- La nube del agente (todo es función de t: sin Math.random, las fases salen de una semilla fija) ---
+  function semilla(n) { return () => { n |= 0; n = (n + 0x6D2B79F5) | 0; let x = Math.imul(n ^ (n >>> 15), 1 | n); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; }
+  const NP = 120, azar = semilla(40);
+  const ESFERA = Array.from({ length: NP }, (_, i) => { const y = 1 - (2 * (i + 0.5)) / NP, r = Math.sqrt(1 - y * y), a = i * 2.39996; return { x: Math.cos(a) * r, y, z: Math.sin(a) * r, f: azar() * 6.283 }; });
+  let ESCUDO = null, COLOR = null;   // el contorno del escudo de la marca y los colores, al primer dibujo
+  function prepararNube() {
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", "M60 8 L108 26 V68 C108 100 88 122 60 132 C32 122 12 100 12 68 V26 Z");
+    const largo = p.getTotalLength();
+    ESCUDO = Array.from({ length: NP }, (_, i) => { const q = p.getPointAtLength((i / NP) * largo); return { x: (q.x - 60) / 62, y: (q.y - 70) / 62 }; });
+    const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    COLOR = { texto: hex(css("--texto")), ambar: hex(css("--ambar")), verde: hex(css("--verde")) };
+  }
+  const suave = (x) => { x = clamp(x); return x * x * (3 - 2 * x); };
+  const mezcla = (a, b, x) => a.map((v, i) => Math.round(v + (b[i] - v) * x));
+  // Cuánto habla el agente (fundido de 0,3 s en cada borde) y el pulso de lo que escribe: un golpe cada 0,26 s.
+  const pesoHabla = (tt) => Math.max(0, ...HABLA_AGENTE.map(([a, b]) => suave((tt - a) / 0.3) * (1 - suave((tt - b) / 0.3))));
+  const pulsoHabla = (tt) => { const ph = (((tt % 0.26) + 0.26) % 0.26); return 0.25 + 0.75 * Math.exp(-ph / 0.12) * (0.7 + 0.3 * Math.abs(Math.sin(tt * 3.1))); };
+  function dibujarNube(cv, tt) {
+    if (!ESCUDO) prepararNube();
+    const g = cv.getContext("2d"), k = cv.width / 720, mini = cv.width < 300;
+    g.setTransform(k, 0, 0, k, 0, 0);
+    g.clearRect(0, 0, 720, 720);
+    const r0 = cv.dataset.retiene === undefined ? null : +cv.dataset.retiene;
+    const retiene = r0 === null ? 0 : quieto ? +(tt >= r0) : suave((tt - r0) / 0.9);
+    const habla = r0 === null ? (quieto ? +(pesoHabla(tt) > 0.5) : pesoHabla(tt)) : 0;
+    const env = quieto ? 0.5 : pulsoHabla(tt);
+    const cx = 360, cy = 360, R = mini ? 300 : 270;
+    const giro = quieto ? 0.6 : tt * 0.45, cg = Math.cos(giro), sg = Math.sin(giro);
+    const tinte = mezcla(COLOR.texto, COLOR.ambar, habla);
+    const pts = ESFERA.map((p, i) => {
+      const x = p.x * cg + p.z * sg, z = -p.x * sg + p.z * cg;
+      const pulso = 1 + (quieto ? 0 : 0.02 * Math.sin(tt * 1.6 + p.f)) + env * habla * (0.08 + 0.16 * Math.abs(Math.sin(tt * 9 + p.f)));
+      const ex = cx + x * R * pulso, ey = cy + p.y * R * pulso;
+      const m = quieto ? retiene : suave((retiene - (i % 12) * 0.02) / 0.75);   // se reordenan de a poco
+      const sx = cx + ESCUDO[i].x * R * 0.95, sy = cy + ESCUDO[i].y * R * 0.95;
+      return { x: ex + (sx - ex) * m, y: ey + (sy - ey) * m, z: z * (1 - m) + m, m };
+    }).sort((a, b) => a.z - b.z);
+    for (const p of pts) {
+      const prof = (p.z + 1) / 2, c = p.m > 0 ? mezcla(tinte, COLOR.verde, p.m) : tinte;
+      g.beginPath();
+      g.arc(p.x, p.y, (3 + 5 * prof) * (mini ? 2.4 : 1), 0, 2 * Math.PI);
+      g.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${(0.25 + 0.75 * prof).toFixed(3)})`;
+      g.fill();
+    }
+  }
+
   // --- Cuadro: qué se ve en el segundo t ---
   let escenas = [];
   function preparar() {
@@ -409,7 +459,7 @@
       escribe: [...el.querySelectorAll("[data-e]")].map((x) => Object.assign(ESCRIBE[+x.dataset.e], { el: x, n: -1 })),
       cuentas: [...el.querySelectorAll("[data-c]")].map((x) => Object.assign(CUENTAS[+x.dataset.c], { el: x, txt: "" })),
       dedos: [...el.querySelectorAll("[data-d]")].map((x) => Object.assign(DEDOS[+x.dataset.d], { el: x })),
-      agentes: [...el.querySelectorAll(".dn-agente")],
+      nubes: [...el.querySelectorAll(".dn-nube")],
       barras: [...el.querySelectorAll(".dn-barras")],
       puntos: [...el.querySelectorAll(".dn-puntos i")],
       anillos: [...el.querySelectorAll(".dn-anillo")],
@@ -509,18 +559,7 @@
         boton.classList.toggle("presionado", aprieta);
         boton.classList.toggle("on", r >= 0);
       }
-      // El agente: respira siempre (salvo con movimiento reducido) y mueve la boca y la cabeza cuando habla.
-      const hablaAg = dentro(tt, HABLA_AGENTE);
-      for (const ag of s.agentes) {
-        ag.classList.toggle("habla", hablaAg);
-        ag.style.setProperty("--bob", quieto ? "0px" : `${(Math.sin(tt * 2 * Math.PI * 0.8) * (hablaAg ? 12 : 7)).toFixed(1)}px`);
-        ag.style.setProperty("--tilt", quieto || !hablaAg ? "0deg" : `${(Math.sin(tt * 5.1) * 4).toFixed(2)}deg`);
-        ag.style.setProperty("--ojo", !quieto && tt % 2.9 < 0.13 ? 0.1 : 1);
-        ag.querySelectorAll(".dn-boca i").forEach((b, i) => {
-          const hb = hablaAg ? (quieto ? 0.6 : 0.2 + 0.8 * Math.abs(0.6 * Math.sin(tt * 13 + i * 1.3) + 0.4 * Math.sin(tt * 21 + i * 2.2))) : 0.12;
-          b.style.setProperty("--h", hb.toFixed(3));
-        });
-      }
+      s.nubes.forEach((cv) => dibujarNube(cv, tt));
       for (const b of s.barras) {
         const voz = dentro(tt, HABLA[b.dataset.quien] || []);
         [...b.children].forEach((barra, i) => {
@@ -557,7 +596,7 @@
     document.body.classList.toggle("dn-alarma", alarma);
     document.body.style.setProperty("--alarma", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.cos(((tt - ALARMA[0]) * 2 * Math.PI) / 1.2))).toFixed(3));
     $("#dn-barra").style.width = `${(Math.min(tt, DURACION) / DURACION) * 100}%`;
-    if (revisor) revisor.firstChild.textContent = `t = ${tt.toFixed(1)} s`;
+    if (revisor) { revisor.reloj.textContent = `t = ${tt.toFixed(1)} s`; if (document.activeElement !== revisor.barra) revisor.barra.value = tt; }
   }
 
   // --- Audio: las voces de la llamada (versión A) y la narración. Suenan solo después de que el presentador
@@ -648,39 +687,65 @@
     render(tiempo);
     if (seguir) alternar();
   }
+  // --- Modo revisión (?revisar=1 o la tecla V): una barra de controles abajo, fuera del escenario, para retroceder,
+  // pausar, avanzar, arrastrar al segundo exacto y copiar el enlace del cuadro. No sale en el pitch. ---
+  let revisor = null;
+  const saltar = (delta) => irA(Math.max(0, Math.min(DURACION, Math.round((tiempo + delta) * 10) / 10)), false);
+  function abrirRevisor() {
+    if (revisor) return;
+    const caja = document.createElement("div");
+    caja.className = "dn-revisor";
+    const boton = (texto, titulo, accion) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = texto; b.title = titulo;
+      b.addEventListener("click", () => { accion(); b.blur(); });
+      caja.append(b);
+      return b;
+    };
+    boton("⏮", "Al inicio", () => irA(0, false));
+    boton("−5 s", "Retrocede 5 segundos", () => saltar(-5));
+    boton("−1 s", "Retrocede 1 segundo (←)", () => saltar(-1));
+    boton("−0,1", "Retrocede una décima (Mayús ←)", () => saltar(-0.1));
+    boton("⏯", "Pausa o sigue (Espacio)", () => alternar());
+    boton("+0,1", "Avanza una décima (Mayús →)", () => saltar(0.1));
+    boton("+1 s", "Avanza 1 segundo (→)", () => saltar(1));
+    boton("+5 s", "Avanza 5 segundos", () => saltar(5));
+    const barra = document.createElement("input");
+    Object.assign(barra, { type: "range", min: 0, max: DURACION, step: 0.1, value: 0, title: "Arrastra al segundo que quieras" });
+    barra.addEventListener("input", () => irA(Number(barra.value), false));
+    barra.addEventListener("change", () => barra.blur());
+    const reloj = document.createElement("output");
+    reloj.textContent = "t = 0.0 s";
+    caja.append(barra, reloj);
+    boton("Copiar enlace", "Copia el enlace de este cuadro", () => {
+      const u = new URL(location.href);
+      u.searchParams.set("t", tiempo.toFixed(1));
+      navigator.clipboard?.writeText(u.href).catch(() => {});
+    });
+    document.body.append(caja);
+    document.body.classList.add("dn-revisando");
+    revisor = { caja, barra, reloj };
+  }
   document.addEventListener("keydown", (e) => {
     if (e.key === " " || e.code === "Space") { e.preventDefault(); alternar(); }
     else if (e.key === "r" || e.key === "R") irA(0, true);
     else if (e.key === "m" || e.key === "M") { mudo = !mudo; if (mudo) callar(); else if (corriendo) reanudar(tiempo); }
     else if (/^[1-7]$/.test(e.key)) irA(PASOS[+e.key - 1], true);
+    else if (e.key === "v" || e.key === "V") { abrirRevisor(); escalar(); render(tiempo); }   // V abre los controles de revisión
     // Revisión: las flechas mueven 1 s (con Mayús, 0,1 s) y dejan la demo en pausa en ese cuadro.
     else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
       e.preventDefault();
-      const paso = (e.shiftKey ? 0.1 : 1) * (e.key === "ArrowRight" ? 1 : -1);
-      irA(Math.max(0, Math.min(DURACION, Math.round((tiempo + paso) * 10) / 10)), false);
+      saltar((e.shiftKey ? 0.1 : 1) * (e.key === "ArrowRight" ? 1 : -1));
     }
   });
 
   // --- Escala: el escenario es de 1920×1080 y se ajusta a la ventana sin cambiar de forma ---
-  const escalar = () => document.documentElement.style.setProperty("--dn-k", Math.min(innerWidth / 1920, innerHeight / 1080));
+  const escalar = () => document.documentElement.style.setProperty("--dn-k", Math.min(innerWidth / 1920, (innerHeight - (revisor ? 48 : 0)) / 1080));
   addEventListener("resize", escalar);
   escalar();
   construir();
   preparar();
-  // --- Modo revisión (?revisar=1): el segundo actual, para decir «en t = 48,7 cambia esto». No sale en el pitch. ---
-  let revisor = null;
-  if (params.get("revisar") === "1") {
-    revisor = document.createElement("div");
-    revisor.className = "dn-revisor";
-    revisor.append("t = 0.0 s", document.createElement("small"));
-    revisor.lastChild.textContent = "Espacio pausa · ← → 1 s · Mayús 0,1 s · clic en la barra salta";
-    document.body.append(revisor);
-    document.body.classList.add("dn-revisando");
-    $(".dn-progreso").addEventListener("click", (e) => {
-      const r = e.currentTarget.getBoundingClientRect();
-      irA(Math.round(((e.clientX - r.left) / r.width) * DURACION * 10) / 10, false);
-    });
-  }
+  if (params.get("revisar") === "1") { abrirRevisor(); escalar(); }
   prepararAudio();
   if (params.has("t")) {   // un cuadro fijo para capturas: sin audio hasta que el presentador pulse Espacio
     tiempo = Math.min(DURACION, Math.max(0, Number(params.get("t")) || 0));
