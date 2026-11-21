@@ -26,7 +26,20 @@ Guion para el jurado de Platanus, track AI Security. Las cifras entre `{llaves}`
 - **Si al dueño ya lo engañaron y dicta él la cuenta:** la capa 2 la deja pasar por diseño, y ahí entra la **capa 3, confirmación de beneficiario**: el titular de la cuenta tiene que calzar con el RUT de la cuenta que el dueño inscribió, no con el de la factura, que se puede falsificar. Un beneficiario nuevo tiene un tope en el primer pago. Es una garantía probada con un agente guionado (3 de 3 retenidos, 2 controles que pasan), no una medición con modelo real. Frase: «para engañarte a ti, además tiene que pasar la confirmación de beneficiario».
 - **Límite honesto que queda:** un estafador con una cuenta a nombre de quien dice ser, o un dueño que decide pagar igual.
 
+## Proyectos parecidos de otras hackathons (si el jurado pregunta)
+No encontramos ninguno con la combinación completa, pero sí algunos con piezas parecidas. Conviene nombrarlos antes de que lo haga el jurado:
+
+| Proyecto | Qué hace | Qué no hace y Grifter sí |
+|---|---|---|
+| **Lookout** (PayPal AI Hackathon 2026) | Retiene el pago entre aprobar y capturar. Usa señales y un contacto de confianza, y verifica que el beneficiario no cambió. | No sabe de dónde salió la cuenta (correo, web o MCP). No tiene benchmark. |
+| **Sentinel MCP Wallet** (HackMoney 2026, premio ENS) | Política determinista en MCP: tope, lista blanca y slippage. | La lista blanca no distingue una cuenta nueva legítima de una que puso el estafador; Grifter mira el origen y le pide un toque al dueño. |
+| **The Citadel** (AI Tinkerers SF, Secure Agents) | Firewall MCP en stdio contra la inyección y la fuga de datos. | Es la capa 1. Pipelock hace lo mismo y lo medimos: 4 de 42. |
+| **ClawGuard** (HackMoney 2026, premio ENS) | Aprende los hábitos del usuario y escala lo raro por Telegram. | Lo aprendido decide. En Grifter solo sube la sospecha, y la garantía es determinista. |
+
+Frase: «Ellos protegen el pago. Nosotros, además, medimos cuánto cae un agente en español y sabemos de dónde salió cada cuenta».
+
 ## Lo que no se dice
+- «Somos los primeros en defender pagos de agentes»: hay antecedentes (tabla de arriba). Lo primero es el benchmark en español chileno contra inglés y la regla por origen del valor.
 - «Grifter le devuelve la utilidad al agente»: medido en #38, no es cierto.
 - Los números con dueño simulado son un techo: el dueño idealizado sabe cuál es la cuenta buena, y en un hilo secuestrado un dueño real podría no saberlo.
 
