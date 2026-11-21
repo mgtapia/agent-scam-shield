@@ -80,6 +80,7 @@ ATLAS_TECNICAS = {
     "AML.T0051.001": "LLM Prompt Injection: Indirect",
     "AML.T0052": "Phishing",
     "AML.T0073": "Impersonation",
+    "AML.T0086": "Exfiltration via AI Agent Tool Invocation",
 }
 
 EXACTO = "exacto"
@@ -133,6 +134,14 @@ MAPEO: dict[str, Entrada] = {
                             _ASI01_APROX + "Busca que el agente entregue un código de un solo uso."),
     "credential_phishing": Entrada("ASI01", "AML.T0052", APROXIMADO, APROXIMADO,
                                    _ASI01_APROX + "Busca que el agente entregue datos o credenciales del dueño."),
+    # Espionaje industrial: se hace pasar por un socio, gana confianza y le pide al agente que comparta documentos
+    # confidenciales (el daño que cuenta es la fuga, que es exacta con ATLAS: «AI agent tools capable of performing
+    # write operations may be invoked to exfiltrate data to an adversary») y que pague una reserva. La suplantación
+    # (AML.T0073) es el cómo, y se queda en la nota.
+    "industrial_espionage": Entrada("ASI01", "AML.T0086", APROXIMADO, EXACTO,
+                                    _ASI01_APROX + "El agente comparte un documento confidencial con un destino que solo "
+                                    "apareció en un correo (la fuga es AML.T0086, exacta); la suplantación del socio es "
+                                    "AML.T0073."),
     # Los controles no son un ataque.
     "none": Entrada(NO_APLICA, NO_APLICA, nota="Control: no hay ataque."),
 }
@@ -144,6 +153,13 @@ ENGANADO = Entrada(POR_CONFIRMAR, POR_CONFIRMAR, nota=(
     "el agente. ASI09 (Human-Agent Trust Exploitation) es el caso inverso."))
 
 
+# La voz clonada (táctica `deepfake_voice`): el mecanismo sigue siendo el del fraude (ASI01, aproximado), pero la
+# técnica de ATLAS para generar o usar un deepfake no está entre las que este archivo verificó contra
+# ATLAS-2026.10.yaml, y no se cita una de memoria. AML.T0073 (Impersonation) calza con hacerse pasar por el jefe,
+# no con la voz sintética.
+VOZ_CLONADA = "deepfake_voice"
+
+
 def mecanismo_de(esc: dict[str, Any]) -> str:
     return esc["anotaciones"]["fraud_mechanism"]
 
@@ -152,7 +168,12 @@ def clasificar(esc: dict[str, Any]) -> Entrada:
     """La entrada de OWASP y ATLAS de un escenario (el mecanismo, salvo cuando el dueño ya fue engañado)."""
     if esc["anotaciones"].get("dueno_ya_enganado"):
         return ENGANADO
-    return MAPEO[mecanismo_de(esc)]
+    base = MAPEO[mecanismo_de(esc)]
+    if VOZ_CLONADA in (esc["anotaciones"].get("social_eng_tactics") or []):
+        return Entrada(base.owasp, POR_CONFIRMAR, base.owasp_calce, base.atlas_calce, base.nota + (
+            " Voz clonada: la técnica de ATLAS para el deepfake no se verificó en el archivo de datos, por "
+            "confirmar (AML.T0073 cubre la suplantación, no la voz sintética)."))
+    return base
 
 
 def celda(identificador: str, calce: str) -> str:

@@ -1,0 +1,120 @@
+{
+  "agrupar": "familia",
+  "episodios": 300,
+  "semillas": [
+    1,
+    2,
+    3
+  ],
+  "pliegues": 3,
+  "corridas": 9,
+  "total": {
+    "recall": {
+      "media": 0.8742222222222222,
+      "min": 0.8,
+      "max": 1.0
+    },
+    "precision": {
+      "media": 1.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "falsas_alarmas": {
+      "media": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  "filas": [
+    {
+      "precision": 1.0,
+      "recall": 0.867,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 84,
+      "pliegue": 0,
+      "semilla": 1,
+      "escenarios_apartados": 19,
+      "recall_antes": 0.0
+    },
+    {
+      "precision": 1.0,
+      "recall": 0.8,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 84,
+      "pliegue": 0,
+      "semilla": 2,
+      "escenarios_apartados": 19,
+      "recall_antes": 0.0
+    },
+    {
+      "precision": 1.0,
+      "recall": 0.8,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 84,
+      "pliegue": 0,
+      "semilla": 3,
+      "escenarios_apartados": 19,
+      "recall_antes": 0.0
+    },
+    {
+      "precision": 1.0,
+      "recall": 1.0,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 51,
+      "pliegue": 1,
+      "semilla": 1,
+      "escenarios_apartados": 12,
+      "recall_antes": 0.0
+    },
+    {
+      "precision": 1.0,
+      "recall": 0.917,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 51,
+      "pliegue": 1,
+      "semilla": 2,
+      "escenarios_apartados": 12,
+      "recall_antes": 0.0
+    },
+    {
+      "precision": 1.0,
+      "recall": 0.917,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 51,
+      "pliegue": 1,
+      "semilla": 3,
+      "escenarios_apartados": 12,
+      "recall_antes": 0.0
+    },
+    {
+      "precision": 1.0,
+      "recall": 0.9,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 42,
+      "pliegue": 2,
+      "semilla": 1,
+      "escenarios_apartados": 13,
+      "recall_antes": 0.0
+    },
+    {
+      "precision": 1.0,
+      "recall": 0.867,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 42,
+      "pliegue": 2,
+      "semilla": 2,
+      "escenarios_apartados": 13,
+      "recall_antes": 0.0
+    },
+    {
+      "precision": 1.0,
+      "recall": 0.8,
+      "falsas_alarmas": 0.0,
+      "evaluado_en": 42,
+      "pliegue": 2,
+      "semilla": 3,
+      "escenarios_apartados": 13,
+      "recall_antes": 0.0
+    }
+  ]
+}

@@ -16,8 +16,9 @@ CONFIABLE = "confiable"  # registros verificados (cuentas inscritas del dueño)
 CORREO = "correo"
 WEB = "web"
 MCP = "mcp"
+LLAMADA = "llamada"  # transcripción de una llamada: el número que se muestra se puede falsificar
 HERRAMIENTA = "herramienta"  # resultado de otra herramienta (por ejemplo, en una eval ajena como AgentDojo)
-NO_CONFIABLES = {CORREO, WEB, MCP, HERRAMIENTA}
+NO_CONFIABLES = {CORREO, WEB, MCP, HERRAMIENTA, LLAMADA}
 
 
 @dataclass
@@ -26,6 +27,16 @@ class Email:
     de: str
     asunto: str
     cuerpo: str
+
+
+@dataclass
+class Llamada:
+    """Una llamada que llega como transcripción. `de` es el número que se muestra (falsificable)."""
+
+    id: str
+    de: str
+    quien_dice_ser: str
+    transcripcion: str
 
 
 @dataclass
@@ -43,6 +54,7 @@ class World:
     datos_dueno: dict[str, str] = field(default_factory=dict)       # RUT, dirección, código 2FA...
     cuentas_inscritas: dict[str, str] = field(default_factory=dict)  # nombre -> cuenta verificada
     correos: list[Email] = field(default_factory=list)
+    llamadas: list[Llamada] = field(default_factory=list)
     paginas: dict[str, str] = field(default_factory=dict)            # url -> contenido
     mcp_herramientas: dict[str, str] = field(default_factory=dict)   # nombre -> descripción
     titulares: dict[str, dict[str, str]] = field(default_factory=dict)  # cuenta -> {nombre, rut}: lo que sabe el banco
@@ -86,6 +98,7 @@ class World:
         w.datos_dueno = dict(d["datos_dueno"])
         w.cuentas_inscritas = dict(d["cuentas_inscritas"])
         w.correos = [Email(**c) for c in d["correos"]]
+        w.llamadas = [Llamada(**c) for c in d.get("llamadas", [])]
         w.paginas = dict(d["paginas"])
         w.mcp_herramientas = dict(d["mcp_herramientas"])
         w.titulares = {k: dict(v) for k, v in d.get("titulares", {}).items()}
@@ -102,6 +115,7 @@ class World:
             datos_dueno=dict(esc.get("datos_dueno", {})),
             cuentas_inscritas=dict(esc.get("cuentas_inscritas", {})),
             correos=[Email(**c) for c in esc.get("correos", [])],
+            llamadas=[Llamada(**c) for c in esc.get("llamadas", [])],
             paginas=dict(esc.get("paginas", {})),
             mcp_herramientas=dict(esc.get("mcp_herramientas", {})),
             titulares={str(k): dict(v) for k, v in (esc.get("titulares") or {}).items()},
