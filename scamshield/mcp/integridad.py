@@ -59,6 +59,9 @@ def politica_canonica(config: Any) -> dict[str, Any]:
         "encargo": str(config.encargo or ""),
         "sensibles": {str(k): {"destino": r.destino, "que": r.que} for k, r in sorted(config.sensibles.items())},
         "capas": {str(k): bool(v) for k, v in sorted(config.capas.items())},
+        "aprobadores": [{"nombre": a.nombre, "canal": a.canal} for a in config.aprobadores],
+        "quorum": int(config.quorum),
+        "umbral_doble": int(config.umbral_doble),
         "servidores": {s.nombre: {"comando": s.comando, "args": list(s.args), "cwd": _cwd(config, s),
                                   "env": {str(k): _h(v) for k, v in sorted(s.env.items())}}
                        for s in sorted(config.servidores, key=lambda s: s.nombre)},
@@ -107,6 +110,19 @@ def diferencias(antes: Mapping[str, Any], despues: Mapping[str, Any]) -> list[st
         if a.get(k) != b.get(k):
             estado = lambda v: "sin dato" if v is None else ("encendida" if v else "APAGADA")  # noqa: E731
             d.append(f"~ {k}: {estado(a.get(k))} → {estado(b.get(k))}")
+    na = {x["nombre"]: x.get("canal", "") for x in antes.get("aprobadores", [])}
+    nb = {x["nombre"]: x.get("canal", "") for x in despues.get("aprobadores", [])}
+    for k in sorted(set(na) | set(nb)):
+        if k not in na:
+            d.append(f"+ aprobador nuevo {k}")
+        elif k not in nb:
+            d.append(f"- aprobador quitado {k}")
+        elif na[k] != nb[k]:
+            d.append(f"~ aprobador {k}: cambió su canal")
+    if antes.get("quorum") != despues.get("quorum"):
+        d.append(f"~ quórum: {antes.get('quorum')} → {despues.get('quorum')}")
+    if antes.get("umbral_doble") != despues.get("umbral_doble"):
+        d.append(f"~ umbral de doble autorización: {antes.get('umbral_doble')} → {despues.get('umbral_doble')}")
     a, b = antes.get("servidores", {}), despues.get("servidores", {})
     for k in sorted(set(a) | set(b)):
         if k not in a:

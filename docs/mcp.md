@@ -35,6 +35,29 @@ La capa 2 se puede apagar con `capas: {capa2: false}`, pero es un cambio de pol�
 
 **Límite honesto:** alguien con acceso a la máquina, a la clave del registro *y* al teléfono del dueño puede todo.
 
+### Doble autorización: dos personas, no una
+Como en un banco para los montos grandes: nadie solo puede debilitar el escudo ni aprobar un pago grande. En `grifter.yaml`:
+```yaml
+aprobadores:
+  - {nombre: Sam, canal: "123456789"}     # el chat de Telegram de cada persona
+  - {nombre: Reed, canal: "987654321"}
+quorum: 2
+umbral_doble: 5000000                     # los pagos sobre este monto piden quórum, aunque la cuenta esté inscrita
+semillas: ../fuera-del-repo/semillas.json # o GRIFTER_SEMILLAS en el .env; nunca dentro del repo
+```
+**Piden quórum** (dos personas distintas): cualquier cambio de la política (cuenta inscrita nueva, apagar o bajar una capa, umbrales, aprobadores o quórum), los pagos sobre `umbral_doble` y los pagos que la capa 2 o 3 retuvo sobre ese umbral.
+
+**Reglas:** quien inició el cambio no cuenta como aprobador; un solo «no» rechaza (sin código); vence si no hay quórum (30 min un pago, 24 h la política) y queda rechazada; cambiar la lista de aprobadores o el quórum se aprueba con la lista *anterior*, así que nadie se agrega a sí mismo; un pago aprobado sale una sola vez.
+
+**Segundo factor tipo digipass:** el toque en Telegram no basta. Cada «Aprobar» pide el código de esa persona: un TOTP de RFC 6238 (HMAC, 30 s, 6 dígitos), de un solo uso y atado a la solicitud (su id, el monto y la cuenta), con la clave derivada de la semilla y del desafío, al estilo de la vinculación dinámica de PSD2. Un código sacado para otro pago no sirve para este. Tres códigos malos bloquean a ese aprobador para esa operación. El «digipass simulado» de la demo:
+```bash
+python -m scamshield.mcp.aprobaciones semillas Sam Reed --salida ../fuera-del-repo/semillas.json
+python -m scamshield.mcp.aprobaciones codigo --nombre Sam --id 3fa91c07 --monto 8000000 --cuenta 90-1188-4417
+```
+**Registro encadenado:** cada voto queda en `grifter_aprobaciones.jsonl` con quién, cuándo y por qué canal, y con el hash de la línea anterior. Cambiar o borrar una línea del medio rompe la cadena (`RegistroEncadenado.verificar()`); el código nunca se guarda. Quitar solo la última línea no rompe la cadena, por eso cada voto también le llega al otro aprobador.
+
+La alerta muestra el avance («1 de 2 aprobaciones») y el pago sale con la segunda aprobación. **Límite honesto:** quien tenga a la vez los dos teléfonos y los dos digipass puede todo.
+
 ## Claude Code
 Desde la raíz del repo, con el Python del venv:
 ```bash
