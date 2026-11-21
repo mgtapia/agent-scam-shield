@@ -506,6 +506,7 @@
     document.body.classList.toggle("md-aut", tt >= AUT.igual && tt < ACTOS[2].desde);
     $("#md-pablo-v").textContent = vivo.real ? t("pablo_real", { s: vivo.real.toLocaleString(t("locale")) }) : t("pablo_v");
     $("#md-barra").style.width = `${(Math.min(tt, DURACION) / DURACION) * 100}%`;
+    if (revisor) revisor.firstChild.textContent = `t = ${tt.toFixed(1)} s`;
   }
 
   // --- Audio: los mp3 del #171 (ElevenLabs, voces sintéticas de biblioteca); sin mp3 o si no cargan,
@@ -632,6 +633,17 @@
   }
   function callar() { timbre.forEach((o) => { try { o.stop(); } catch (_) { /* ya paró */ } }); timbre = []; Object.values(pistas).forEach((a) => a.pause()); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
 
+  // --- Modo revisión (?revisar=1): muestra el segundo actual para decir «en t = 48,7 cambia esto». No sale en el pitch. ---
+  let revisor = null;
+  if (params.get("revisar") === "1") {
+    revisor = document.createElement("div");
+    revisor.className = "md-revisor";
+    revisor.append("t = 0.0 s", document.createElement("small"));
+    revisor.lastChild.textContent = "Espacio pausa · ← → 1 s · Mayús 0,1 s · clic en la barra salta";
+    document.body.append(revisor);
+    document.body.classList.add("md-revisando");
+  }
+
   // --- Reloj: un solo requestAnimationFrame; el tiempo avanza solo mientras corre ---
   let tiempo = 0, corriendo = false, previo = 0;
   function cuadro(ahora) {
@@ -678,6 +690,12 @@
     else if (e.key === "r" || e.key === "R") irA(0, true);
     else if (e.key === "m" || e.key === "M") { mudo = !mudo; if (mudo) callar(); }
     else if (/^[1-4]$/.test(e.key)) irA(ACTOS[+e.key].desde, true);
+    // Revisión: las flechas mueven 1 s (con Mayús, 0,1 s) y dejan la demo en pausa en ese cuadro.
+    else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      const paso = (e.shiftKey ? 0.1 : 1) * (e.key === "ArrowRight" ? 1 : -1);
+      irA(Math.max(0, Math.min(DURACION, Math.round((tiempo + paso) * 10) / 10)), false);
+    }
   });
 
   // --- Escala: el escenario es de 1920×1080 y se ajusta a la ventana sin cambiar de forma ---
@@ -688,6 +706,10 @@
   escalar();
   leerCifras(await cargarResultados());
   construir();
+  if (revisor) document.querySelector(".md-progreso").addEventListener("click", (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    irA(Math.round(((e.clientX - r.left) / r.width) * DURACION * 10) / 10, false);
+  });
   prepararAudio();
   if ("speechSynthesis" in window) speechSynthesis.getVoices();   // carga las voces antes de necesitarlas
   if (params.has("t")) {   // un cuadro fijo para capturas
