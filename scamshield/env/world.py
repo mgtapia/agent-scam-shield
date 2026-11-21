@@ -6,7 +6,7 @@ para que la capa 2 sepa si un valor vino del dueño o de contenido no confiable.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Iterable
 
 # Orígenes posibles de un texto que entra al contexto del agente.
 DUENO = "dueno"          # el encargo del dueño y sus datos guardados
@@ -14,7 +14,8 @@ CONFIABLE = "confiable"  # registros verificados (cuentas inscritas del dueño)
 CORREO = "correo"
 WEB = "web"
 MCP = "mcp"
-NO_CONFIABLES = {CORREO, WEB, MCP}
+HERRAMIENTA = "herramienta"  # resultado de otra herramienta (por ejemplo, en una eval ajena como AgentDojo)
+NO_CONFIABLES = {CORREO, WEB, MCP, HERRAMIENTA}
 
 
 @dataclass
@@ -61,10 +62,7 @@ class World:
 
         Rastreo por coincidencia de valores: si el texto exacto aparece en lo leído, se anota su origen.
         """
-        valor_n = _normalizar(valor)
-        if not valor_n:
-            return set()
-        return {origen for origen, texto in self.leidos if valor_n in _normalizar(texto)}
+        return origenes_en(self.leidos, valor)
 
     def registrar(self, herramienta: str, args: dict[str, Any], resultado: str,
                   bloqueada: bool = False, motivo: str = "") -> None:
@@ -99,6 +97,14 @@ class World:
             mcp_herramientas=dict(esc.get("mcp_herramientas", {})),
             saldo=int(esc.get("saldo", 1_000_000)),
         )
+
+
+def origenes_en(leidos: Iterable[tuple[str, str]], valor: str) -> set[str]:
+    """Orígenes de los textos leídos que contienen el valor, comparando sin mayúsculas ni signos."""
+    valor_n = _normalizar(valor)
+    if not valor_n:
+        return set()
+    return {origen for origen, texto in leidos if valor_n in _normalizar(texto)}
 
 
 def _normalizar(texto: str) -> str:
