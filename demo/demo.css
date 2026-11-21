@@ -143,7 +143,8 @@ body.md-con-pablo .md-a1.activo { padding-right: 929px; }   /* el teléfono de P
 /* Con Pablo a la vista la columna se angosta: frases más chicas y en dos líneas, y el log crece con la doble autorización */
 body.md-con-pablo .md-a1 .md-frase { min-height: 112px; font-size: 44px; line-height: 56px; }
 body.md-con-pablo .md-a1 > .md-rotulo { font-size: 24px; line-height: 32px; }
-body.md-aut .md-a1 .md-consola { height: auto; }
+body.md-aut .md-a1 .md-consola { height: 680px; }   /* el alto final del log con la doble autorización: crece una vez, sin saltos */
+.md-a1 .md-consola { transition: height 480ms ease-out; }
 .md-espera { position: absolute; left: 16px; right: 16px; top: 200px; display: grid; justify-items: center; gap: 12px; padding: 40px 24px; text-align: center; border: var(--linea); background: var(--superficie); }
 .md-espera p { margin: 0; font-size: 22px; line-height: 28px; font-weight: var(--p-fuerte); }
 .md-espera .md-ic { color: var(--texto-2); }
