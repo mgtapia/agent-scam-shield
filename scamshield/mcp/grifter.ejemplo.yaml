@@ -11,6 +11,11 @@ servidores:
     args: ["-m", "scamshield.mcp.servidor_banco", "--registro", "banco_sandbox.jsonl", "--clave-env", "BANCO_CLAVE"]
     # La credencial del banco vive aquí, en el proxy, y no en el agente (#102). Sin ella el banco no paga.
     env: {BANCO_CLAVE: "cambia-esto"}
+  # Un MCP remoto del comercio, por streamable HTTP. Los headers pueden traer ${VAR} del entorno, así
+  # la credencial del comercio la tiene Grifter y no el agente. Si no responde, queda fuera (falla cerrada).
+  # tienda:
+  #   url: https://tienda.example/mcp
+  #   headers: {Authorization: "Bearer ${TOKEN_TIENDA}"}
 
 # Lo confiable: las cuentas que el dueño inscribió y sus datos (para no compartirlos con extraños).
 cuentas_inscritas:
