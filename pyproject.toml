@@ -1,5 +1,5 @@
 [project]
-name = "agent-scam-shield"
+name = "grifter"
 version = "0.1.0"
 description = "Benchmark y monitor contra estafas de ingeniería social a agentes de IA que pagan, en español y en inglés."
 readme = "README.md"

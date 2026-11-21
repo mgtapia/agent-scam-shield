@@ -1,4 +1,4 @@
-# CLAUDE.md: agent-scam-shield
+# CLAUDE.md: Grifter (github.com/mgtapia/grifter; el módulo de Python sigue siendo `scamshield`)
 
 Proyecto para la hackathon de Platanus (36 h, track AI Security). Es un benchmark de estafas chilenas contra agentes de IA que pagan, más una defensa en capas. La tesis y el alcance están en `README.md`; las tareas, en los Issues y en el tablero «Hackathon Platanus» de GitHub.
 

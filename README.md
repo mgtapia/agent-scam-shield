@@ -1,6 +1,8 @@
-# ¡Hola Platanus! 🍌
+# ¡Hola Platanus!
 
-# agent-scam-shield
+# Grifter
+
+**Red-teaming y escudo para agentes de IA que pagan.**
 
 **¿Caen los agentes de IA que pagan por nosotros en las estafas de siempre? ¿Caen más en español? ¿Las defensas actuales lo ven?**
 
