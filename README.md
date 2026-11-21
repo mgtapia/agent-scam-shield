@@ -58,6 +58,8 @@ herramientas = escudo(herramientas, cuentas_inscritas={"Silicio Austral": "Banco
 
 Ejemplos, sin llaves: [`examples/funciones_python.py`](examples/funciones_python.py) y [`examples/anthropic_tool_use.py`](examples/anthropic_tool_use.py) (`--mock`; sin él usa `claude-haiku-4-5` con `ANTHROPIC_API_KEY`).
 
+Con pagos de verdad en modo prueba: [`examples/stripe_test_mode.py`](examples/stripe_test_mode.py) cobra en la API de Stripe (el legítimo se confirma; el de la estafa queda retenido a la vista en el panel). Paso a paso en [`docs/stripe-test-mode.md`](docs/stripe-test-mode.md).
+
 ## Cómo funciona
 
 ```mermaid
