@@ -209,6 +209,17 @@ addEventListener("hashchange", () => irA(location.hash.slice(1)));
 
 // Episodios abre el escenario de la estafa más reciente que vio Operaciones y que tenga episodio exportado.
 const hayEpisodio = (escenario) => CARRILES.some((c) => episodioDe(escenario, estado.idioma, c.defensas));
+// Abrir un episodio desde otra vista (las celdas de Resultados): «escenario» o «escenario__idioma».
+const partirEscenario = (id) => { const [e, i] = String(id || "").split("__"); return { e, i: i === "en" || i === "es" ? i : estado.idioma }; };
+window.hayEpisodioDe = (id) => { const { e, i } = partirEscenario(id); return CARRILES.some((c) => episodioDe(e, i, c.defensas)); };
+window.abrirEpisodio = (id) => {
+  const { e, i } = partirEscenario(id);
+  if (i !== estado.idioma) { estado.idioma = i; llenarEscenarios(); estado.analisisPintado = false; }
+  if (window.hayEpisodioDe(id)) { estado.escenario = e; $("#sel-escenario").value = e; }
+  location.hash = "vivo";
+  cargarEscenario();
+  scrollTo({ top: 0 });
+};
 // Al llegar desde Operaciones, además arranca a reproducir (salvo con movimiento reducido): la pantalla no
 // queda en tres carriles vacíos.
 function abrirUltimaEstafa(reproducirAlLlegar = false) {

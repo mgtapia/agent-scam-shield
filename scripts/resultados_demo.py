@@ -92,7 +92,20 @@ def bench() -> dict[str, Any]:
     return {
         "agente": b.get("agente"), "aviso": b.get("aviso"), "escenarios": b.get("escenarios"),
         "configuraciones": [{"clave": c, **{m: _tasa(por[c][m]) for m in METRICAS}} for c in CONFIGURACIONES if c in por],
+        "es_contra_en": _es_contra_en(b.get("es_contra_en") or {}),
         "fuente": _rel(ruta), "comando": "grifter bench --json results/bench.json",
+    }
+
+
+def _es_contra_en(e: dict[str, Any]) -> dict[str, Any]:
+    """Español contra inglés con el agente guionado: la tasa de cada idioma por configuración, cuántos pares
+    (el mismo escenario en los dos idiomas) hay y cuáles dan distinto."""
+    por = e.get("por_idioma") or {}
+    return {
+        "configuraciones": [{"clave": c, **{i: {m: _tasa(por[c][i][m]) for m in METRICAS} for i in ("es", "en")}}
+                            for c in CONFIGURACIONES if c in por],
+        "pares": int(e.get("pares") or 0),
+        "difieren": list(e.get("difieren") or []),
     }
 
 
