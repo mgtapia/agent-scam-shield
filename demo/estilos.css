@@ -194,6 +194,7 @@ body:not([data-vista="operaciones"]) .solo-ops { display: none; }
 .boton.texto { border-color: transparent; }
 .boton.peligro { color: var(--rojo); }
 
+.boton.icono[aria-pressed="true"] { background: var(--texto); color: var(--fondo); }
 .segmentado { display: inline-flex; border: var(--linea); height: 40px; }
 .segmentado button {
   min-width: 40px;

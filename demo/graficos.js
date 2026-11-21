@@ -283,7 +283,14 @@ const Graficos = (() => {
       tooltip: { trigger: "axis", formatter: (ps) => [`n ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`)].join("<br>") },
       series: [serie("P", C.texto, "solid"), serie("R", C.texto2, "solid"), serie("FA", C.texto3, [4, 3])],
     });
-    return { poner(datos) { g.setOption({ series: datos.map((data) => ({ data, showSymbol: data.length < 3 })) }); } };
+    return {
+      poner(datos, aviso = "") {
+        g.setOption({
+          series: datos.map((data) => ({ data, showSymbol: data.length < 3 })),
+          graphic: [{ type: "text", right: 24, top: 24, invisible: !aviso, style: { text: aviso, fill: C.texto2, font: `${T1}px ${MONO}` } }],
+        });
+      },
+    };
   }
 
   return { C, hay, tasa, pct, monitor, radar, calor, curvas, redimensionar, sinMovimiento };

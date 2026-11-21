@@ -26,6 +26,8 @@ Reglas:
 - Los KPI van en blanco. El delta va en gris con una flecha, y en rojo o verde solo si empeora o mejora.
 - Los mapas de calor usan una escala secuencial de `--superficie` a `--rojo`: más rojo es más estafa exitosa.
 - Los radares son grises, y pasan a rojo solo si alguna táctica tiene éxito.
+- En Operaciones, el rojo marca el veredicto «Estafa», los tramos de riesgo alto (0,6 o más) y una acción de ataque que pasó. El verde marca la acción retenida, que es el mismo «Bloqueado». «Seguro» y «Sospechoso» van en blanco y se distinguen por el ícono.
+- Las capas de defensa son tres grises: Firewall en `--texto`, Escudo en `--texto-2` y Bóveda en `--texto-3`. En la barra por familia, una acción legítima que se ejecutó va en `--borde`.
 - No hay brillo, degradados, sombras de color ni scanlines, salvo el estado de alerta (ver abajo).
 
 ## Tipografía
@@ -66,6 +68,12 @@ Reglas:
 
 La barra tiene el logotipo «Grifter» a la izquierda, las pestañas al centro y los controles de la vista a la derecha. Cada vista tiene un solo propósito.
 
+- **Operaciones** (primera pestaña): el centro de operaciones en vivo, alimentado por `/api/vivo`.
+  - Arriba va una fila de agentes con su estado, su tarea y su cola. El agente cuyo correo está en Lectura se subraya como la pestaña activa.
+  - Al medio van Entrada (un correo por fila, el más nuevo arriba), Lectura (el correo activo, sus tramos y el veredicto con señales y acción) y Registro (todos los eventos en mono, el más nuevo abajo).
+  - Abajo van Defensa en capas (contadores y una barra apilada por familia), Bóveda (los indicadores, como una cuarentena) y Modelo (versión, métricas, curva y pesos).
+  - Desde 1600 px todo cabe en una pantalla y cada bloque desplaza lo suyo. Bajo 1600 px, Registro baja a la fila de Bóveda y Modelo ocupa el ancho.
+  - El sello de la barra dice «Simulación · motor real» con el motor, y «Simulación · emisor local» con el respaldo. Al lado van pausa y 1x/2x/4x.
 - **En vivo:**
   - una franja con el escenario: dueño, tarea en una línea, monto y cuenta inscrita;
   - los tres carriles («Sin defensa», «Firewall», «Escudo»), cada uno con ECG, pasos y veredicto;
@@ -89,6 +97,13 @@ Hay un solo nivel de contenedores. Dentro de un bloque solo hay filas separadas 
 ## Movimiento
 
 - Las transiciones duran 160 ms con `ease-out`, y solo para estados.
+- `--dur-dato` (480 ms) es solo para un dato que cambia por un evento: una fila que entra, un contador que sube o un peso que cambia. El dato destella una vez con fondo `--borde`.
+- **En Operaciones nada se mueve en loop.** Todo movimiento responde a un evento del flujo:
+  - `correo_nuevo` hace entrar la fila;
+  - `lectura` abre el correo y el cursor lo recorre token a token, entre 0,9 y 2,6 s, y la mitad si hay cola. Cada tramo se subraya con su etiqueta cuando el cursor lo alcanza;
+  - un veredicto de la bóveda abre el correo de una vez, como «Firma conocida»;
+  - una acción retenida hace parpadear el borde de alerta por 2,6 s;
+  - `modelo` suma un punto a la curva y anima los pesos que cambiaron.
 - **Monitor ECG:**
   - es un canvas por carril, con un solo `requestAnimationFrame` para todos;
   - corre siempre de derecha a izquierda, con un latido base en `--texto-3` y un barrido vertical de escaneo;
@@ -109,3 +124,7 @@ Hay un solo nivel de contenedores. Dentro de un bloque solo hay filas separadas 
 - Una configuración sin datos se muestra como «—» y «Sin datos», nunca como 0.
 - Si la fuente es mockllm, la barra muestra «Datos de prueba».
 - El escenario que abre En vivo está en `ESCENARIO_POR_DEFECTO`, en `app.js`. `?escenario=` en la URL manda sobre esa constante.
+- Operaciones lee la foto de `api/vivo/estado` y después el SSE de `api/vivo`, en el mismo origen. El contrato está en el motor (`scamshield/vivo`).
+  - `?motor=http://host:puerto/` apunta a otro origen.
+  - Si el motor no responde, o con `?sim`, usa `vivo_simulado.js`, que emite el mismo contrato con textos de los escenarios.
+  - ES/EN también cambia el idioma del flujo del motor.

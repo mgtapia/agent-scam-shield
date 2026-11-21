@@ -26,7 +26,7 @@ const Operaciones = (() => {
     ayuda_precision: "De lo que marcó como estafa, cuánto lo era. Evaluado en un conjunto apartado que nunca se usa para entrenar",
     ayuda_recall: "De las estafas, cuántas marcó",
     ayuda_falsas: "Correos legítimos marcados como estafa",
-    o_sin_correo: "Sin correos", o_bv_vacia: "Sin indicadores", o_sin_modelo: "Sin versión",
+    o_curva_una: "La curva suma un punto por versión", o_sin_correo: "Sin correos", o_bv_vacia: "Sin indicadores", o_sin_modelo: "Sin versión",
     bv_cuenta: "cuenta", bv_dominio: "dominio", bv_plantilla: "plantilla", bv_origen: "origen {o} · primera vez {h}",
     o_pesos: "Pesos",
     s_dominio_parecido: "dominio parecido", s_cambio_cuenta: "cambio de cuenta", s_pide_codigo: "pide código", s_pide_secreto: "pide secreto",
@@ -58,7 +58,7 @@ const Operaciones = (() => {
     ayuda_precision: "Of what it flagged as a scam, how much was. Evaluated on a held-out set never used for training",
     ayuda_recall: "Of the scams, how many it flagged",
     ayuda_falsas: "Legitimate emails flagged as scams",
-    o_sin_correo: "No emails", o_bv_vacia: "No indicators", o_sin_modelo: "No version",
+    o_curva_una: "The curve adds a point per version", o_sin_correo: "No emails", o_bv_vacia: "No indicators", o_sin_modelo: "No version",
     bv_cuenta: "account", bv_dominio: "domain", bv_plantilla: "template", bv_origen: "source {o} · first seen {h}",
     o_pesos: "Weights",
     s_dominio_parecido: "lookalike domain", s_cambio_cuenta: "account change", s_pide_codigo: "asks for code", s_pide_secreto: "asks for secret",
@@ -153,6 +153,7 @@ const Operaciones = (() => {
     if (!c || !c.de) return;
     let li = o.filas.get(id);
     if (!li) {
+      $("#ops-cola .vacio")?.remove();
       li = document.createElement("li");
       li.className = "fila-op";
       o.filas.set(id, li);
@@ -469,7 +470,7 @@ const Operaciones = (() => {
     const el = $("#ops-curva");
     if (!o.curva || !el.isConnected || !echarts.getInstanceByDom(el)) o.curva = Graficos.curvas(el);
     const h = o.historial.slice(-MAX_CURVA);
-    o.curva?.poner([h.map((m) => [m.ejemplos, m.precision * 100]), h.map((m) => [m.ejemplos, m.recall * 100]), h.map((m) => [m.ejemplos, m.falsas_alarmas * 100])]);
+    o.curva?.poner([h.map((m) => [m.ejemplos, m.precision * 100]), h.map((m) => [m.ejemplos, m.recall * 100]), h.map((m) => [m.ejemplos, m.falsas_alarmas * 100])], h.length < 2 ? t("o_curva_una") : "");
   }
 
   // --- Estado de alerta: el borde rojo parpadea cuando la defensa retiene una acción ---
@@ -610,7 +611,7 @@ const Operaciones = (() => {
       L.marcado = 0;
       marcarHasta(L, L.total, true);
       pintarVeredicto(o.correos.get(o.mostrado), false);
-    }
+    } else if (!o.mostrado) $("#ops-lectura").innerHTML = `<p class="vacio">${esc(t("o_sin_correo"))}</p>`;
   }
 
   // --- Fuente: el motor real por SSE o el emisor local ---
@@ -651,6 +652,7 @@ const Operaciones = (() => {
       const foto = await r.json();
       o.sello = "conectando";
       cargarFoto(foto);
+      o.idiomaMotor = foto.idioma;
     } catch (_) { return usarSimulado(); }
     const es = new EventSource(`${base}api/vivo`);
     o.fuente = {
@@ -660,6 +662,8 @@ const Operaciones = (() => {
         if (!r.ok) throw new Error(String(r.status));
       },
     };
+    // El motor arranca en español; si la página está en inglés, se lo pide.
+    if (o.idiomaMotor && o.idiomaMotor !== estado.idioma && o.idiomaMotor !== "ambos") control("idioma", estado.idioma);
     es.onopen = () => { o.sello = "real"; pintarControles(); };
     es.onerror = () => { o.sello = "reconectando"; pintarControles(); };
     es.onmessage = (m) => { try { aplicar(JSON.parse(m.data)); } catch (err) { console.warn("evento ilegible", err); } };
@@ -688,7 +692,10 @@ const Operaciones = (() => {
     alCambiarVista(estado.vista);
     $("#ops-pausa").addEventListener("click", () => control(o.pausa ? "seguir" : "pausa"));
     document.querySelectorAll("[data-ops-velocidad]").forEach((b) => b.addEventListener("click", () => control("velocidad", Number(b.dataset.opsVelocidad))));
-    document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => pintarTodo()));
+    document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => {
+      pintarTodo();
+      if (o.fuente?.tipo === "real") control("idioma", estado.idioma);
+    }));
     conectar();
   }
 
