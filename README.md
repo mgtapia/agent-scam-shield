@@ -1,10 +1,10 @@
-# ¡Hola Platanus!
-
 # Grifter
 
 **Red-teaming y escudo para agentes de IA que pagan.**
 
 **El agente no tiene que ser listo para no caer: la garantía vive fuera del modelo. Lo que no puede verificar, te lo pregunta con un toque.**
+
+**Demo en vivo:** [grifter.onrender.com](https://grifter.onrender.com) (el modo pitch, con el cuento del tío y la doble autorización, está en [`/demo.html`](https://grifter.onrender.com/demo.html)).
 
 **Instálalo según quién eres** (ChatGPT, Claude Desktop o Claude Code, tu propio agente, un banco o comercio, o para investigar): [docs/instalar.md](docs/instalar.md). Cada camino tiene a lo más cinco pasos.
 
@@ -94,7 +94,7 @@ En la demo:
 - **Operaciones:** el centro de operaciones en vivo. Los agentes y los correos son simulados; las defensas, la bóveda de indicadores y el clasificador que aprende son reales y corren sobre cada correo.
 - **Resultados:** las tablas de la evaluación con modelos reales.
 
-Con `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env`, la alerta de un pago retenido llega al celular del dueño con tres botones.
+Con `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env`, la alerta de un pago retenido llega al celular del dueño con tres botones. Por WhatsApp llega con `KAPSO_API_KEY`, `KAPSO_PHONE_NUMBER_ID` y `KAPSO_OWNER_NUMBER` (ver [`.env.example`](.env.example)).
 
 ## Úsalo en tu agente
 
@@ -125,12 +125,13 @@ flowchart LR
   C1 --> C2["Capa 2<br/>origen del valor: ¿la cuenta salió de un correo?"]
   C2 --> C3["Capa 3<br/>titular de la cuenta contra la inscrita"]
   C3 --> H["Banco, correo y MCP"]
-  C2 -. "no se puede verificar" .-> D["Dueño: un toque<br/>(web o Telegram)"]
+  C2 -. "no se puede verificar" .-> D["Dueño: un toque<br/>(web, Telegram o WhatsApp)"]
 ```
 
 - **Capa 1** ([`scamshield/defenses/pipelock.py`](scamshield/defenses/pipelock.py)): un firewall de agentes abierto para lo técnico, con falla cerrada.
 - **Capa 2** ([`scamshield/defenses/layer2.py`](scamshield/defenses/layer2.py)): cada valor lleva su origen (dueño, correo, web o MCP). Un destinatario o una cuenta que no aparece completa en el encargo ni en las cuentas inscritas no llega a un pago sin el toque del dueño. Además, una credencial del dueño (clave, código, token o API key) no sale por `compartir_dato` ni por `responder` sin su toque, a ningún destino, salvo que el encargo pida ese envío (en base64, con separadores o con letras de otro alfabeto también se reconoce). Con un **mandato** del dueño ([`scamshield/defenses/mandato.py`](scamshield/defenses/mandato.py), #103), lo que aprobó (producto, cantidad, monto máximo, moneda, cuenta y si es único o recurrente) se compara con lo que de verdad se cobra, aunque vaya a la cuenta inscrita: «aprobaste $412.000 CLP por 10.000 chip MX-3 de 3 nm; el MCP pide $4.120.000». Con el **libro del banco** ([`scamshield/defenses/deposito.py`](scamshield/defenses/deposito.py), #129), una «devolución» de un depósito por error se compara con lo que llegó de verdad («no llegó ningún depósito de $500.000; el comprobante es falso»), lo real se devuelve solo por reverso al mismo origen, y lo que pide ir al banco, retirar efectivo o comprar tarjetas de regalo avisa al dueño y a un contacto de confianza. Es determinista: no depende de que un LLM acierte, y pruebas de propiedad con semilla fija lo verifican.
 - **Capa 3** ([`scamshield/defenses/layer3.py`](scamshield/defenses/layer3.py)): para cuando al dueño ya lo engañaron y dicta él la cuenta. El titular tiene que calzar con el RUT de la cuenta inscrita, no con el de la factura, y un beneficiario nuevo tiene un tope en lo que se le paga, sumado por RUT, en la sesión y en los últimos 30 días que recuerda el banco (#149), para que ni un pago partido en varios chicos ni aportes que van creciendo mes a mes lo salten; un beneficiario ya inscrito (el arriendo mensual) no pasa por ese tope.
+- **Doble autorización** ([`docs/mcp.md`](docs/mcp.md#doble-autorización-dos-personas-no-una)): como en un banco, los pagos sobre `umbral_doble`, los que la capa 2 o 3 retuvo sobre ese umbral y cualquier cambio de la política piden dos personas distintas (por ejemplo, el dueño y su hijo). Cada «Aprobar» lleva un código de un solo uso atado a ese pago (TOTP, al estilo de PSD2), un solo «no» rechaza y todo queda en un registro encadenado. Cubre el caso en que el dueño ya cayó y quiere pagar igual.
 - **Proxy MCP** ([`scamshield/mcp/`](scamshield/mcp/)): se pone delante de cualquier agente que hable MCP. Revisa también las herramientas de pago que no se declararon, falla cerrada si algo revienta y no se deja cansar con una inundación de alertas. Con mandato, retiene además la orden que devuelve el MCP si se desvía de lo aprobado, y con `herramientas_fijadas` (la huella SHA-256 de la descripción y el esquema, como el *tool pinning* de mcp-scan) bloquea una herramienta que cambió después de aprobada (rug pull), aunque cambie a mitad de la sesión.
 - **Atacante adaptativo** ([`scamshield/attacker/`](scamshield/attacker/)): un LLM que reescribe cada estafa, ronda tras ronda, contra cada defensa.
 - **Eval reproducible** con [Inspect](https://inspect.aisi.org.uk/) ([`scamshield/evals/`](scamshield/evals/)): configuraciones de defensa × modelos × idiomas, con repeticiones e intervalos.
@@ -576,7 +577,7 @@ tests/        pruebas sin API
 - FraudBench: *Stress-Testing Policy-Grounded Banking Agents Against Adaptive Fraud* (arXiv 2608.18136).
 - AgentDojo: benchmark de inyección de prompts en agentes (ETH Zúrich).
 - CaMeL: *Defeating Prompt Injections by Design* (Google DeepMind). De aquí viene la idea de separar los datos confiables de los no confiables.
-- Firewalls abiertos: [Pipelock](https://github.com/luckyPipewrench/pipelock), [mcp-watchdog](https://pypi.org/project/mcp-watchdog), [Snyk Agent Scan](https://github.com/snyk/agent-scan).
+- Firewalls abiertos: [Pipelock](https://github.com/pipelab-org/pipelock), [mcp-watchdog](https://pypi.org/project/mcp-watchdog), [Snyk Agent Scan](https://github.com/snyk/agent-scan).
 
 ## De dónde salen las estafas
 Las siete estafas que evolucionaron con IA del corpus (`deepfake_autoridad_inversion`, `credito_falso_comision`, `suplantacion_regulador`, `soporte_falso_buscador`, `qr_en_factura`, `agente_vendedor_estafador` y `tareas_pagadas`) se escribieron a partir de estas fuentes. Todo lo que aparece en los escenarios es inventado: marcas, bancos, reguladores, dominios, cuentas y personas.
