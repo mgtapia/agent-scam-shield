@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import logging
 import threading
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
@@ -87,8 +88,8 @@ def canal(servidor, etiquetas):
     return CanalTelegram(TOKEN, CHAT, etiquetas.append, api=servidor.url, timeout=3)
 
 
-def _enviar(canal, servidor):
-    canal(ALERTA)
+def _enviar(canal, servidor, alerta=ALERTA):
+    canal(alerta)
     mensaje = servidor.de("sendMessage")[-1]
     id_ = mensaje["reply_markup"]["inline_keyboard"][0][0]["callback_data"].split(":")[0]
     return mensaje, id_
@@ -124,6 +125,33 @@ def test_el_boton_deja_la_etiqueta_con_la_alerta_y_confirma_en_el_chat(canal, se
     editado = servidor.de("editMessageText")[-1]
     assert editado["reply_markup"] == {"inline_keyboard": []}  # los botones desaparecen
     assert servidor.de("answerCallbackQuery")
+
+
+@pytest.mark.parametrize("acciones,eleccion", [
+    (["np"], "no_pagar"), (["pi"], "pagar_inscrita"), (["pg", "pgc"], "pagar_igual"),
+])
+def test_la_alerta_no_sobrescribe_la_eleccion_el_canal_ni_la_hora(canal, servidor, etiquetas, monkeypatch,
+                                                              acciones, eleccion):
+    instante = datetime(2026, 11, 21, 15, 30, tzinfo=timezone.utc)
+
+    class Reloj:
+        @staticmethod
+        def now(zona):
+            assert zona is timezone.utc
+            return instante
+
+    monkeypatch.setattr(telegram, "datetime", Reloj)
+    alerta = {**ALERTA, "eleccion": "no_pagar" if eleccion == "pagar_igual" else "pagar_igual",
+              "canal": "otro_canal", "ts": "2000-01-01T00:00:00+00:00", "contexto": {"factura": "F-42"}}
+    _, id_ = _enviar(canal, servidor, alerta)
+    for accion in acciones:
+        servidor.apretar(id_, accion)
+        canal.sondear_una_vez()
+        if accion == "pg":
+            assert etiquetas == []
+    assert etiquetas == [{**alerta, "eleccion": eleccion, "canal": "telegram", "ts": instante.isoformat()}]
+    assert alerta["canal"] == "otro_canal" and alerta["ts"] == "2000-01-01T00:00:00+00:00"
+    assert servidor.de("answerCallbackQuery")[-1]["text"] == telegram.TEXTOS["es"]["hecho_" + eleccion]
 
 
 def test_pagar_igual_pide_una_segunda_confirmacion_y_no_etiqueta_todavia(canal, servidor, etiquetas):
