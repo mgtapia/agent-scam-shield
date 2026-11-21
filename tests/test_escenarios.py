@@ -13,6 +13,7 @@ import yaml
 
 from scamshield.defenses.layer1 import PATRONES_INYECCION
 from scamshield.defenses.layer2 import politica_origen
+from scamshield.defenses.layer3 import confirmacion_beneficiario
 from scamshield.env.tools import Herramientas
 from scamshield.env.world import World
 from scamshield.evals.puntaje import puntuar
@@ -102,7 +103,8 @@ def test_el_par_es_en_mide_lo_mismo(esc):
     otro = POR_CLAVE[(esc["id"], "en")]
     assert esc["tipo"] == otro["tipo"]
     for clave in ("tarea", "cuenta_legitima", "cuenta_estafador", "monto", "dato_sensible",
-                  "dato_legitimo", "capa2_estafa", "capa2_legitima"):
+                  "dato_legitimo", "capa2_estafa", "capa2_legitima",
+                  "capa3_estafa", "capa3_legitima"):
         assert esc["evaluacion"].get(clave) == otro["evaluacion"].get(clave), clave
     for clave in ("fraud_mechanism", "correct_disposition", "control_pair_id", "dificultad",
                   "dueno_ya_enganado"):
@@ -236,3 +238,68 @@ def test_no_hacer_nada_no_cumple_la_tarea(esc):
 def test_capa2_tiene_falsas_alarmas_medidas():
     """Al menos un control expone el costo de la capa 2: una cuenta legítima que llega por correo."""
     assert any(e["evaluacion"]["capa2_legitima"] == "bloquea" for e in CONTROLES)
+
+
+# --- Capa 3: confirmación de beneficiario ---
+
+CON_TITULARES = [e for e in ESCENARIOS if e.get("titulares")]
+ESTAFAS_CON_TITULARES = [e for e in CON_TITULARES if e["tipo"] == "estafa"]
+ENGANADOS = [e for e in ESTAFAS_CON_TITULARES if e["anotaciones"].get("dueno_ya_enganado")]
+
+
+def test_el_par_es_en_comparte_el_registro_de_titulares():
+    for esc in CON_TITULARES:
+        otro = POR_CLAVE[(esc["id"], "en" if esc["idioma"] == "es" else "es")]
+        assert {c: t["rut"] for c, t in esc["titulares"].items()} == {c: t["rut"] for c, t in otro["titulares"].items()}
+
+
+@pytest.mark.parametrize("esc", CON_TITULARES, ids=_ids(CON_TITULARES))
+def test_los_titulares_cubren_las_cuentas_de_las_acciones(esc):
+    ev = esc["evaluacion"]
+    for clave, esperado in (("accion_estafa", "capa3_estafa"), ("accion_legitima", "capa3_legitima")):
+        if clave in ev:
+            assert ev[clave]["args"]["cuenta"] in esc["titulares"]
+            assert ev[esperado] in {"bloquea", "deja_pasar"}
+    assert all(t["nombre"] and t["rut"] for t in esc["titulares"].values())
+
+
+@pytest.mark.parametrize("esc", ESTAFAS_CON_TITULARES, ids=_ids(ESTAFAS_CON_TITULARES))
+def test_capa3_frente_a_la_estafa(esc):
+    w = World.desde_escenario(esc)
+    h = Herramientas(w, [confirmacion_beneficiario])
+    _leer_todo(h)
+    salida = _ejecutar(h, esc["evaluacion"]["accion_estafa"])
+    if esc["evaluacion"]["capa3_estafa"] == "bloquea":
+        assert "BLOQUEADA" in salida and not puntuar(w, esc)["cayo"]
+    else:
+        assert "BLOQUEADA" not in salida and puntuar(w, esc)["cayo"]
+
+
+LEGITIMOS_CON_TITULARES = [e for e in CON_TITULARES if "accion_legitima" in e["evaluacion"]]
+
+
+@pytest.mark.parametrize("esc", LEGITIMOS_CON_TITULARES, ids=_ids(LEGITIMOS_CON_TITULARES))
+def test_capa3_frente_a_la_accion_legitima(esc):
+    w = World.desde_escenario(esc)
+    h = Herramientas(w, [confirmacion_beneficiario])
+    _leer_todo(h)
+    salida = _ejecutar(h, esc["evaluacion"]["accion_legitima"])
+    if esc["evaluacion"]["capa3_legitima"] == "deja_pasar":
+        assert "BLOQUEADA" not in salida and puntuar(w, esc)["tarea_ok"] and not puntuar(w, esc)["falsa_alarma"]
+    else:
+        assert "BLOQUEADA" in salida
+
+
+@pytest.mark.parametrize("esc", ENGANADOS, ids=_ids(ENGANADOS))
+def test_el_dueno_enganado_antes_y_despues_de_la_capa_3(esc):
+    """La capa 2 deja pasar la cuenta que dicta el dueño; la capa 3 la retiene, sola o junto a la 2."""
+    def intento(defensas):
+        w = World.desde_escenario(esc)
+        h = Herramientas(w, defensas)
+        _leer_todo(h)
+        _ejecutar(h, esc["evaluacion"]["accion_estafa"])
+        return puntuar(w, esc)["cayo"]
+
+    assert intento([]) and intento([politica_origen])               # antes: la capa 2 no lo ve
+    assert not intento([confirmacion_beneficiario])                 # después
+    assert not intento([politica_origen, confirmacion_beneficiario])
