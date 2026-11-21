@@ -92,7 +92,17 @@ flowchart LR
 
 **Lo que hace falta:** el proxy remoto (#105), el mandato y la tienda que cambia el monto (#103), y la doble autorización con código (#102). **El respaldo si algo falla en vivo:** la misma secuencia con Claude Desktop por stdio, que ya funciona, y un video grabado.
 
+## Frases para usar (las vamos juntando)
+- «El estafador puede robarse el teléfono, la voz y la identidad. No puede robarse la cuenta de destino: la plata tiene que llegar a una cuenta suya, y esa cuenta es nueva.»
+- «A Grifter no le importa quién manda el mensaje, sino de dónde salió el dato.»
+- «El estafador te habla por WhatsApp. Grifter también, pero para avisarte.»
+- «La biometría confirma que eres tú. Grifter confirma que lo que apruebas es lo que pediste.»
+
 ## Preguntas probables
+- **¿Y si el mensaje viene del número real del hijo, porque le robaron el teléfono o la cuenta de WhatsApp?** Da lo mismo: Grifter confía solo en lo que ordena el dueño. Todo lo que entra por WhatsApp, correo o web es externo, aunque venga de un contacto conocido, y una cuenta que salió de ahí se retiene. Si el dueño ya cayó y dicta él la cuenta, entra la capa 3: la cuenta es nueva, se ve a nombre de quién está y el primer pago tiene tope. El escenario medido está en #117; hasta tenerlo, esto se dice como diseño, no como resultado.
+- **¿Grifter lee mi WhatsApp?** No. Se para entre el agente y sus herramientas (proxy o MCP): ve solo lo que el agente lee y marca de dónde vino. No va en tu teléfono.
+- **¿Y si el estafador escribe la cuenta en palabras, con espacios o con letras de otro alfabeto?** La regla es una lista blanca, no una lista negra: un destino que no aparece completo en el encargo ni en las cuentas inscritas se retiene siempre. Disfrazar la cuenta solo hace que se retenga.
+- **¿Y si el modelo más capaz se niega a hacer de atacante?** Eso también es un hallazgo: los modelos abiertos sí atacan, y el estafador usa esos (#131).
 - **¿Y si el estafador logra que su cuenta quede inscrita?** Inscribir una cuenta pide confirmar con fricción y tiene un período de espera. Lo aprendido solo sube la sospecha, nunca aprueba.
 - **¿Cuánto cuesta en producción?** La capa 2 es determinista: no hace llamadas a un LLM y corre en microsegundos.
 - **¿Por qué no basta con un mejor modelo?** Porque el estafador también itera. Un modelo mejor sube la vara; la garantía por origen no depende de la vara.
