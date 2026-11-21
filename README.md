@@ -6,6 +6,8 @@
 
 **El agente no tiene que ser listo para no caer: la garantía vive fuera del modelo. Lo que no puede verificar, te lo pregunta con un toque.**
 
+**Instálalo según quién eres** (ChatGPT, Claude Desktop o Claude Code, tu propio agente, un banco o comercio, o para investigar): [docs/instalar.md](docs/instalar.md). Cada camino tiene a lo más cinco pasos.
+
 Proyecto para la hackathon de Platanus, track **AI Security**: *AI control* (un monitor que limita lo que puede hacer el agente), *Guardrails & adversarial robustness* (ataques nuevos y un clasificador) y *def/acc* (detectar el phishing asistido por IA).
 
 > *English summary:* Grifter is a benchmark of Chilean, Spanish-language social-engineering scams against payment-capable AI agents (with English counterparts), an adaptive attacker, and a layered defense you can put in front of any agent as an MCP proxy: an open-source agent firewall (Pipelock) as layer 1, a deterministic provenance policy as layer 2 (a payee or account that only appears in untrusted content never reaches a payment without the owner's tap), and payee-name confirmation as layer 3.
