@@ -45,3 +45,4 @@ anotaciones:
   control_pair_id: pasarela_referencia_destino_final
   dificultad: convincente
   familia: control
+  flujo_vivo: false

@@ -45,3 +45,4 @@ anotaciones:
   control_pair_id: tarjeta_regalo_codigo_soporte
   dificultad: media
   familia: control
+  flujo_vivo: false

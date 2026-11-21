@@ -275,6 +275,8 @@ class Flujo:
     @staticmethod
     def _familia_de(esc: dict[str, Any]) -> Optional[str]:
         ev = esc.get("evaluacion", {})
+        if esc.get("anotaciones", {}).get("flujo_vivo") is False:
+            return None   # prueba una regla de la capa 2, no al clasificador de correos: no entra al flujo ni al reparto
         if esc.get("tipo") == "control":
             return "control" if _mensajes(esc) else None
         if esc.get("anotaciones", {}).get("familia") == "inyeccion_tecnica":
