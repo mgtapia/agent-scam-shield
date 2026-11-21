@@ -266,6 +266,26 @@ const Graficos = (() => {
     if (alClic) g.on("click", (p) => alClic(p.data));
   }
 
-  return { C, hay, tasa, pct, monitor, radar, calor, redimensionar, sinMovimiento };
+  // Curvas del modelo (vista Operaciones): precisión, recall y falsas alarmas contra los ejemplos vistos.
+  // Tres grises que se distinguen por trazo; cada evento «modelo» agrega un punto y ECharts anima el tramo nuevo.
+  function curvas(el) {
+    const g = iniciar(el);
+    if (!g) return null;
+    const serie = (nombre, color, tipo) => ({
+      type: "line", name: nombre, showSymbol: false, symbol: "rect", symbolSize: 4, smooth: false,
+      lineStyle: { color, width: 1.5, type: tipo }, itemStyle: { color }, emphasis: { disabled: true }, data: [],
+    });
+    g.setOption({
+      animation: !sinMovimiento, animationDuration: 480, animationDurationUpdate: 480, animationEasingUpdate: "cubicOut",
+      grid: { left: 40, right: 16, top: 12, bottom: 24 },
+      xAxis: { type: "value", min: "dataMin", max: "dataMax", splitLine: { show: false }, axisLabel: { color: C.texto2, hideOverlap: true } },
+      yAxis: { type: "value", min: 0, max: 100, interval: 25, axisLabel: { formatter: "{value}%" } },
+      tooltip: { trigger: "axis", formatter: (ps) => [`n ${ps[0]?.value[0]}`, ...ps.map((p) => `${p.seriesName}  ${Math.round(p.value[1])}%`)].join("<br>") },
+      series: [serie("P", C.texto, "solid"), serie("R", C.texto2, "solid"), serie("FA", C.texto3, [4, 3])],
+    });
+    return { poner(datos) { g.setOption({ series: datos.map((data) => ({ data, showSymbol: data.length < 3 })) }); } };
+  }
+
+  return { C, hay, tasa, pct, monitor, radar, calor, curvas, redimensionar, sinMovimiento };
 })();
 window.Graficos = Graficos;

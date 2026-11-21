@@ -13,14 +13,14 @@ const CARRILES = [
   { clave: "layer1", defensas: ["layer1"], icono: "shield" },
   { clave: "layer2", defensas: ["layer2", "both"], icono: "shield", escudo: true },
 ];
-const VISTAS = ["vivo", "resultados", "probar"];
+const VISTAS = ["operaciones", "vivo", "resultados", "probar"];
 const HERRAMIENTAS_PAGO = ["pagar", "transferir"];
 const HERRAMIENTAS_LECTURA = ["leer_correos", "abrir_web", "usar_mcp"];
 const RE_BLOQUEO = /^(ACCIÓN BLOQUEADA|ACTION BLOCKED)/i;
 
 const T = {
   es: {
-    v_vivo: "En vivo", v_resultados: "Resultados", v_probar: "Pruébalo",
+    v_operaciones: "Operaciones", v_vivo: "En vivo", v_resultados: "Resultados", v_probar: "Pruébalo",
     escenario: "Escenario", reproducir: "Reproducir", reproduciendo: "Reproduciendo", reiniciar: "Reiniciar",
     correos: "Correos", calor_tactica: "Táctica × defensa", calor_modelo: "Modelo × idioma",
     d_none: "Sin defensa", d_layer1: "Firewall", d_layer2: "Escudo", d_both: "Firewall + escudo", d_layer2_approver: "Escudo (approver)",
@@ -56,7 +56,7 @@ const T = {
     locale: "es-CL",
   },
   en: {
-    v_vivo: "Live", v_resultados: "Results", v_probar: "Try it",
+    v_operaciones: "Operations", v_vivo: "Live", v_resultados: "Results", v_probar: "Try it",
     escenario: "Scenario", reproducir: "Play", reproduciendo: "Playing", reiniciar: "Reset",
     correos: "Emails", calor_tactica: "Tactic × defense", calor_modelo: "Model × language",
     d_none: "No defense", d_layer1: "Firewall", d_layer2: "Shield", d_both: "Firewall + shield", d_layer2_approver: "Shield (approver)",
@@ -157,12 +157,13 @@ document.addEventListener("scroll", ocultarAyuda, true);
 
 // --- Vistas ---
 function irA(vista) {
-  if (!VISTAS.includes(vista)) vista = "vivo";
+  if (!VISTAS.includes(vista)) vista = "operaciones";
   estado.vista = vista;
   document.body.dataset.vista = vista;
   for (const v of VISTAS) $(`#vista-${v}`).hidden = v !== vista;
   document.querySelectorAll("[role=tab]").forEach((a) => a.setAttribute("aria-selected", String(a.dataset.vista === vista)));
   if (vista !== "vivo") cerrarCorreo();
+  window.Operaciones?.alCambiarVista(vista);
   if (vista === "resultados") {
     if (!estado.analisisPintado) pintarAnalisis();
     requestAnimationFrame(Graficos.redimensionar);
@@ -747,7 +748,7 @@ const params = new URLSearchParams(location.search);
 if (params.get("idioma") === "en") estado.idioma = "en";
 if (params.get("escenario")) estado.escenario = params.get("escenario");
 llenarEscenarios();
-irA(location.hash.slice(1) || "vivo");
+irA(location.hash.slice(1) || "operaciones");
 cargarEscenario();
 cargarResultados().then((R) => { estado.resultados = R; pintarAnalisis(); });
 if (params.has("auto")) reproducir();

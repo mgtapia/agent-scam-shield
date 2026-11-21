@@ -17,7 +17,8 @@
       <span class="nombre">Grifter</span>
     </div>
     <nav class="pestanas" role="tablist" aria-label="Vistas">
-      <a role="tab" href="#vivo" data-vista="vivo" aria-selected="true"><span class="ms" aria-hidden="true">monitor_heart</span><span data-t="v_vivo">En vivo</span></a>
+      <a role="tab" href="#operaciones" data-vista="operaciones" aria-selected="true"><span class="ms" aria-hidden="true">radar</span><span data-t="v_operaciones">Operaciones</span></a>
+      <a role="tab" href="#vivo" data-vista="vivo" aria-selected="false"><span class="ms" aria-hidden="true">monitor_heart</span><span data-t="v_vivo">En vivo</span></a>
       <a role="tab" href="#resultados" data-vista="resultados" aria-selected="false"><span class="ms" aria-hidden="true">grid_view</span><span data-t="v_resultados">Resultados</span></a>
       <a role="tab" href="#probar" data-vista="probar" aria-selected="false"><span class="ms" aria-hidden="true">science</span><span data-t="v_probar">Pruébalo</span></a>
     </nav>
@@ -36,6 +37,15 @@
         <button type="button" data-velocidad="1" aria-pressed="true">1x</button>
         <button type="button" data-velocidad="2" aria-pressed="false">2x</button>
       </div>
+      <span class="tag sello solo-ops" id="ops-sello" data-ayuda-t="ayuda_sello"></span>
+      <button type="button" class="boton icono solo-ops" id="ops-pausa" aria-pressed="false" aria-label="Pausa">
+        <span class="ms" aria-hidden="true">pause</span>
+      </button>
+      <div class="segmentado solo-ops" role="group" aria-label="Velocidad del flujo" id="ops-velocidad">
+        <button type="button" data-ops-velocidad="1" aria-pressed="true">1x</button>
+        <button type="button" data-ops-velocidad="2" aria-pressed="false">2x</button>
+        <button type="button" data-ops-velocidad="4" aria-pressed="false">4x</button>
+      </div>
       <span class="fuente solo-resultados" id="fuente"></span>
       <div class="segmentado" role="group" aria-label="Idioma">
         <button type="button" data-idioma="es" aria-pressed="true">ES</button>
@@ -45,7 +55,47 @@
   </header>
 
   <main>
-    <section class="vista" id="vista-vivo" data-vista="vivo" aria-label="En vivo">
+    <section class="vista ops" id="vista-operaciones" data-vista="operaciones" aria-label="Operaciones">
+      <ul class="ops-agentes" id="ops-agentes" aria-label="Agentes"></ul>
+
+      <section class="ops-bloque ops-cola" aria-labelledby="t-cola">
+        <h2 class="titulo" id="t-cola"><span class="ms" aria-hidden="true">inbox</span><span data-t="o_cola">Entrada</span><span class="nota" id="n-cola"></span></h2>
+        <ol class="ops-lista" id="ops-cola"></ol>
+      </section>
+
+      <section class="ops-bloque ops-lectura" aria-labelledby="t-lectura" aria-live="off">
+        <h2 class="titulo" id="t-lectura"><span class="ms" aria-hidden="true">document_scanner</span><span data-t="o_lectura">Lectura</span><span class="nota" id="n-lectura"></span></h2>
+        <div class="lectura" id="ops-lectura"></div>
+      </section>
+
+      <section class="ops-bloque ops-registro" aria-labelledby="t-registro">
+        <h2 class="titulo" id="t-registro"><span class="ms" aria-hidden="true">terminal</span><span data-t="o_registro">Registro</span><span class="nota" id="n-registro"></span></h2>
+        <ol class="registro" id="ops-registro"></ol>
+      </section>
+
+      <section class="ops-bloque ops-capas" aria-labelledby="t-capas">
+        <h2 class="titulo" id="t-capas"><span class="ms" aria-hidden="true">stacks</span><span data-t="o_capas">Defensa en capas</span><span class="nota" id="n-capas"></span></h2>
+        <div id="ops-capas"></div>
+      </section>
+
+      <section class="ops-bloque ops-boveda" aria-labelledby="t-boveda">
+        <h2 class="titulo" id="t-boveda"><span class="ms" aria-hidden="true">lock</span><span data-t="o_boveda">Bóveda</span><span class="nota" id="n-boveda"></span></h2>
+        <ol class="ops-lista" id="ops-boveda"></ol>
+      </section>
+
+      <section class="ops-bloque ops-modelo" aria-labelledby="t-modelo">
+        <h2 class="titulo" id="t-modelo"><span class="ms" aria-hidden="true">model_training</span><span data-t="o_modelo">Modelo</span><span class="dato version" id="ops-version"></span><span class="nota" id="n-modelo"></span></h2>
+        <div class="modelo">
+          <div class="modelo-curvas">
+            <div class="metricas" id="ops-metricas"></div>
+            <div class="lienzo" id="ops-curva"></div>
+          </div>
+          <ol class="pesos" id="ops-pesos" aria-label="Pesos de las señales"></ol>
+        </div>
+      </section>
+    </section>
+
+    <section class="vista" id="vista-vivo" data-vista="vivo" aria-label="En vivo" hidden>
       <div class="franja" id="franja"></div>
       <div class="carril-hueco" id="carriles" role="presentation"></div>
       <section class="correos" aria-labelledby="t-correos">
@@ -87,5 +137,7 @@
   <script src="resultados.js"></script>
   <script src="graficos.js"></script>
   <script src="app.js"></script>
+  <script src="vivo_simulado.js"></script>
+  <script src="operaciones.js"></script>
 </body>
 </html>
