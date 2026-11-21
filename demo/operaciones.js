@@ -10,7 +10,8 @@ const Operaciones = (() => {
     o_sello_reconectando: "Reconectando", ayuda_sello: "Los agentes y los correos son simulados. La defensa (firewall, escudo, bóveda y clasificador) corre sobre cada evento",
     o_pausa: "Pausa", o_seguir: "Seguir",
     ea_leyendo: "Leyendo", ea_pensando: "Pensando", ea_pagando: "Pagando", ea_esperando: "Esperando", ea_inactivo: "Inactivo", ea_retenido: "Retenido",
-    o_en_cola: "{n} en cola", o_cola_n: "{n}", o_estado_cola: "En cola", o_estado_leyendo: "Leyendo",
+    o_mas_agentes: "+{n} agentes", o_menos_agentes: "Ver solo {n}", ayuda_mas_agentes: "No caben todos: se ven los de más peligro y los más recientes. También están {nombres}",
+    ayuda_menos_agentes: "Mostrar solo los {n} de más peligro y más recientes", o_en_cola: "{n} en cola", o_cola_n: "{n}", o_estado_cola: "En cola", o_estado_leyendo: "Leyendo",
     o_dec_seguro: "Seguro", o_dec_sospechoso: "Sospechoso", o_dec_estafa: "Estafa",
     capa_1: "Firewall", capa_2: "Escudo", capa_boveda: "Bóveda",
     ayuda_capa_1: "Acciones retenidas por la capa 1: reglas contra lo técnico (instrucciones inyectadas, MCP envenenado, fuga de secretos)",
@@ -42,7 +43,8 @@ const Operaciones = (() => {
     o_sello_reconectando: "Reconnecting", ayuda_sello: "Agents and emails are simulated. The defense (firewall, shield, vault and classifier) runs on every event",
     o_pausa: "Pause", o_seguir: "Resume",
     ea_leyendo: "Reading", ea_pensando: "Thinking", ea_pagando: "Paying", ea_esperando: "Waiting", ea_inactivo: "Idle", ea_retenido: "Held",
-    o_en_cola: "{n} queued", o_cola_n: "{n}", o_estado_cola: "Queued", o_estado_leyendo: "Reading",
+    o_mas_agentes: "+{n} agents", o_menos_agentes: "Show only {n}", ayuda_mas_agentes: "They do not all fit: the most dangerous and most recent are shown. Also here: {nombres}",
+    ayuda_menos_agentes: "Show only the {n} most dangerous and most recent", o_en_cola: "{n} queued", o_cola_n: "{n}", o_estado_cola: "Queued", o_estado_leyendo: "Reading",
     o_dec_seguro: "Safe", o_dec_sospechoso: "Suspicious", o_dec_estafa: "Scam",
     capa_1: "Firewall", capa_2: "Shield", capa_boveda: "Vault",
     ayuda_capa_1: "Layer 1: rules against technical attacks (injected instructions, poisoned MCP, secret leaks)",
@@ -82,7 +84,7 @@ const Operaciones = (() => {
 
   const o = {
     fuente: null, sello: "conectando", pausa: false, velocidad: 1,
-    agentes: new Map(),
+    agentes: new Map(), tick: 0, agentesTodos: false,
     correos: new Map(), orden: [], filas: new Map(),
     lecturas: [], leyendo: null, mostrado: null, espera: null,
     boveda: new Map(), modelo: null, historial: [], pesos: {}, cambios: {},
@@ -125,19 +127,53 @@ const Operaciones = (() => {
         <span class="ag-estado">${iconoEstado(est)}<span>${esc(t(`ea_${est}`))}</span></span></div>
       <div class="ag-l2"><span class="ag-tarea" data-ayuda="${esc(a.tarea || "")}">${esc(a.tarea || "")}</span>${a.retenido ? tagCapa(a.retenido) : ""}${n ? `<span class="tag" data-ayuda="${esc(t("o_en_cola", { n }))}">+${n}</span>` : ""}</div></li>`;
   }
-  function pintarAgentes() {
-    for (const a of o.agentes.values()) {
-      const li = document.getElementById(`ag-${a.agente}`);
-      if (li) li.outerHTML = htmlAgente(a);
-      else $("#ops-agentes").insertAdjacentHTML("beforeend", htmlAgente(a));
+  // Una celda nueva entra antes del botón «+N», que va siempre al final.
+  function ponerAgente(a) {
+    const li = document.getElementById(`ag-${a.agente}`);
+    if (li) li.outerHTML = htmlAgente(a);
+    else {
+      const mas = $("#ops-agentes").querySelector(".ag-mas");
+      if (mas) mas.insertAdjacentHTML("beforebegin", htmlAgente(a)); else $("#ops-agentes").insertAdjacentHTML("beforeend", htmlAgente(a));
     }
+  }
+  function pintarAgentes() {
+    for (const a of o.agentes.values()) ponerAgente(a);
+    ajustarAgentes();
   }
   function pintarAgente(nombre, cambio) {
     const a = o.agentes.get(nombre);
     if (!a) return;
-    const li = document.getElementById(`ag-${nombre}`);
-    if (li) li.outerHTML = htmlAgente(a); else $("#ops-agentes").insertAdjacentHTML("beforeend", htmlAgente(a));
+    ponerAgente(a);
     if (cambio) reanimar(document.getElementById(`ag-${nombre}`), "cambia");
+    ajustarAgentes();
+  }
+
+  // Si no caben todos en una fila, se ven los 4 de más peligro y, a igual peligro, los que cambiaron hace menos.
+  // El que está en Lectura siempre se ve. El orden del DOM no cambia: solo se esconden las celdas que sobran.
+  const AG_ANCHO = 176, AG_GAP = 16, AG_VISIBLES = 4;
+  function peligroAgente(a) {
+    if (o.mostrado && o.correos.get(o.mostrado)?.agente === a.agente) return 4;   // el que se está leyendo
+    if (a.retenido) return 3;                                                       // acaba de frenarse un ataque
+    const est = a.estado || "inactivo";
+    if (est === "pagando") return 2;                                                // está por mover plata
+    return est === "esperando" || est === "inactivo" ? 0 : 1;
+  }
+  function ajustarAgentes() {
+    const ul = document.getElementById("ops-agentes");
+    if (!ul) return;
+    const celdas = [...ul.querySelectorAll(".agente")];
+    ul.querySelector(".ag-mas")?.remove();
+    celdas.forEach((li) => { li.hidden = false; });
+    const caben = Math.floor((ul.clientWidth + AG_GAP) / (AG_ANCHO + AG_GAP));
+    if (!ul.clientWidth || celdas.length <= AG_VISIBLES || caben >= celdas.length) return;
+    const orden = celdas
+      .map((li) => o.agentes.get(li.id.slice(3)) || { agente: li.id.slice(3) })
+      .sort((x, y) => peligroAgente(y) - peligroAgente(x) || (y.t || 0) - (x.t || 0));
+    const ocultos = orden.slice(AG_VISIBLES).map((a) => a.agente);
+    if (!o.agentesTodos) for (const nombre of ocultos) document.getElementById(`ag-${nombre}`).hidden = true;
+    const texto = o.agentesTodos ? t("o_menos_agentes", { n: AG_VISIBLES }) : t("o_mas_agentes", { n: ocultos.length });
+    const ayuda = o.agentesTodos ? t("ayuda_menos_agentes", { n: AG_VISIBLES }) : t("ayuda_mas_agentes", { nombres: ocultos.join(", ") });
+    ul.insertAdjacentHTML("beforeend", `<li class="ag-mas"><button type="button" class="ag-mas-b" aria-expanded="${o.agentesTodos}" data-ayuda="${esc(ayuda)}">${esc(texto)}</button></li>`);
   }
 
   // --- Entrada: un correo por fila, el más nuevo arriba ---
@@ -343,7 +379,7 @@ const Operaciones = (() => {
     if (!animar) return;
     if (detenida && e.agente && e.capa) {
       const a = o.agentes.get(e.agente);
-      if (a) { a.retenido = e.capa; pintarAgente(e.agente, true); }
+      if (a) { a.retenido = e.capa; a.t = ++o.tick; pintarAgente(e.agente, true); }
     }
     if (e.resultado === "retenida") alarma();
   }
@@ -610,7 +646,7 @@ const Operaciones = (() => {
       case "agente_estado": {
         const a = o.agentes.get(e.agente) || { agente: e.agente };
         const cambio = a.estado !== e.estado;
-        o.agentes.set(e.agente, { ...a, estado: e.estado, tarea: e.tarea, retenido: null });
+        o.agentes.set(e.agente, { ...a, estado: e.estado, tarea: e.tarea, retenido: null, t: ++o.tick });
         pintarAgente(e.agente, cambio);
         break;
       }
@@ -843,6 +879,18 @@ const Operaciones = (() => {
     pintarTextos();
     pintarTodo();
     alCambiarVista(estado.vista);
+    $("#ops-agentes").addEventListener("click", (ev) => {
+      if (!ev.target.closest(".ag-mas-b")) return;
+      o.agentesTodos = !o.agentesTodos;
+      ajustarAgentes();
+    });
+    if (window.ResizeObserver) {
+      let ancho = 0;   // solo importa el ancho: esconder celdas cambia el alto y no debe disparar otra vuelta
+      new ResizeObserver(() => {
+        const w = $("#ops-agentes").clientWidth;
+        if (w !== ancho) { ancho = w; ajustarAgentes(); }
+      }).observe($("#ops-agentes"));
+    }
     $("#ops-pausa").addEventListener("click", () => control(o.pausa ? "seguir" : "pausa"));
     document.querySelectorAll("[data-ops-velocidad]").forEach((b) => b.addEventListener("click", () => control("velocidad", Number(b.dataset.opsVelocidad))));
     document.querySelectorAll("[data-idioma]").forEach((b) => b.addEventListener("click", () => {
