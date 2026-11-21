@@ -52,11 +52,16 @@
       escucho: "escuchó", intento: "intentó", grifter: "Grifter", eligio: "eligió",
       escucho_v: "llamada de número privado · 25 s", llamada: "llamada",
       retuvo: "Retuvo", motivo1: "la cuenta de destino (48-2210-7735) viene solo de contenido no confiable (llamada), no del encargo ni de las cuentas inscritas del dueño",
-      no_pagar_v: "no pagar · saldo intacto",
+      igual_v: "pagar igual", pablo_v: "rechazó · no se pagó nada", pablo: "Pablo",
+      espera: "Necesita la aprobación de Pablo (tu hijo)", esperando: "esperando…",
+      pablo_de: "Pablo, su hijo", pablo_chat: "Grifter",
+      pablo_msg: "Marta quiere pagar $650.000 a J. Contreras V. La cuenta salió de una llamada de número privado que dice ser su nieto.",
+      pablo_aprobar: "Aprobar (pide tu código)", pablo_rechazar: "Rechazar",
+      a1_frase3: "Si la abuela ya cayó, su hijo tiene que aprobar con su código.",
       al_titulo: "Grifter retuvo un pago", al_titular: "Titular según el banco", al_a: "Dice llamarse", al_cuenta: "Cuenta",
       al_de: "Apareció en", al_de_v: "llamada de número privado",
       b_inscrita: "Pagar a mi inscrita", b_no: "No pagar", b_igual: "Pagar igual",
-      al_hecho: "No se pagó", al_hecho_det: "Saldo intacto · Grifter avisó a Marta",
+      al_hecho: "Pablo rechazó el pago", al_hecho_det: "No se pagó nada.",
       a2_frase: "Por WhatsApp o en el checkout, la regla es la misma",
       llega: "Llega", intenta: "Intenta", retiene: "Grifter",
       w_de: "WhatsApp · Mark, tu hijo (está en tu agenda)",
@@ -90,11 +95,16 @@
       escucho: "heard", intento: "tried", grifter: "Grifter", eligio: "chose",
       escucho_v: "call from a private number · 25 s", llamada: "call",
       retuvo: "Held", motivo1: "the destination account (48-2210-7735) comes only from untrusted content (call), not from the owner's request or registered accounts",
-      no_pagar_v: "don't pay · balance untouched",
+      igual_v: "pay anyway", pablo_v: "rejected · nothing was paid", pablo: "Pablo",
+      espera: "Needs approval from Pablo (your son)", esperando: "waiting…",
+      pablo_de: "Pablo, her son", pablo_chat: "Grifter",
+      pablo_msg: "Marta wants to pay $650,000 to J. Contreras V. The account came from a call from a private number claiming to be her grandson.",
+      pablo_aprobar: "Approve (asks for your code)", pablo_rechazar: "Reject",
+      a1_frase3: "If grandma already fell for it, her son has to approve with his code.",
       al_titulo: "Grifter held a payment", al_titular: "Account holder per the bank", al_a: "Says its name is", al_cuenta: "Account",
       al_de: "Appeared in", al_de_v: "call from a private number",
       b_inscrita: "Pay my registered", b_no: "Don't pay", b_igual: "Pay anyway",
-      al_hecho: "Not paid", al_hecho_det: "Balance untouched · Grifter warned Marta",
+      al_hecho: "Pablo rejected the payment", al_hecho_det: "Nothing was paid.",
       a2_frase: "On WhatsApp or at checkout, the rule is the same",
       llega: "Arrives", intenta: "Tries", retiene: "Grifter",
       w_de: "WhatsApp · Mark, your son (in your contacts)",
@@ -114,13 +124,14 @@
 
   // --- Línea de tiempo (segundos) ---
   const ACTOS = [
-    { id: "intro", desde: 0 }, { id: "a1", desde: 3 }, { id: "a2", desde: 44 }, { id: "a3", desde: 53 }, { id: "cierre", desde: 64 },
+    { id: "intro", desde: 0 }, { id: "a1", desde: 3 }, { id: "a2", desde: 52 }, { id: "a3", desde: 59 }, { id: "cierre", desde: 70 },
   ];
-  const DURACION = 72;
+  const DURACION = 78;
   const LLAMADA = { suena: 4.4, contesta: 7, abuela: 7.3, nieto: 9.3, cuelga: 34.6 };
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
-  const TOQUE = 41.5;                      // el dedo toca «No pagar»
+  // Marta toca «Pagar igual»; la doble autorización espera a Pablo, que rechaza desde su teléfono.
+  const AUT = { igual: 40.2, espera: 41, pablo: 42, rechaza: 45.5, rechazado: 46.5, frase: 47.5 };
 
   const Graficos = { quieto: matchMedia("(prefers-reduced-motion: reduce)").matches };
   const params = new URLSearchParams(location.search);
@@ -165,9 +176,9 @@
         <p class="md-lema">${esc(t("lema"))}</p>
       </section>
 
-      <section class="md-acto md-a1" data-desde="3" data-hasta="44">
+      <section class="md-acto md-a1" data-desde="3" data-hasta="52">
         <p class="md-rotulo" data-v="3">${esc(t("a1_rotulo"))}</p>
-        <h1 class="md-frase"><span data-v="3.3" data-h="37">${esc(t("a1_frase"))}</span><span class="md-frase-2" data-v="37">${esc(t("a1_frase2"))}</span></h1>
+        <h1 class="md-frase"><span data-v="3.3" data-h="37">${esc(t("a1_frase"))}</span><span class="md-frase-2" data-v="37" data-h="${AUT.frase}">${esc(t("a1_frase2"))}</span><span class="md-frase-2 md-frase-3" data-v="${AUT.frase}">${esc(t("a1_frase3"))}</span></h1>
         <div class="md-cols">
           <div class="md-consola">
             <div class="md-encargo" data-v="4">${ic("person")}<div><p class="md-rot">${esc(t("encargo_de", { d: t("dueno") }))}</p><p>${esc(t("encargo"))}</p></div></div>
@@ -179,7 +190,8 @@
               <li data-v="${LLAMADA.cuelga + 0.3}">${ic("call")}<span class="md-quien">${esc(t("escucho"))}</span><span>${esc(t("escucho_v"))}</span><span class="tag externo">${esc(t("llamada"))}</span></li>
               <li data-v="${LLAMADA.cuelga + 1.3}">${ic("payments")}<span class="md-quien">${esc(t("intento"))}</span><span class="dato">pagar $${f(650000)} ${ic("arrow_forward", "chico")} 48-2210-7735</span><span class="tag externo">${esc(t("llamada"))}</span></li>
               <li class="md-retuvo" data-v="37">${ic("block")}<span class="md-quien">${esc(t("grifter"))}</span><span><b>${esc(t("retuvo"))}</b> ${esc(t("motivo1"))}</span></li>
-              <li data-v="${TOQUE + 1}">${ic("person")}<span class="md-quien">${esc(t("eligio"))}</span><span>${esc(t("dueno"))}: ${esc(t("no_pagar_v"))}</span></li>
+              <li data-v="${AUT.igual + 0.4}">${ic("person")}<span class="md-quien">${esc(t("eligio"))}</span><span>${esc(t("dueno"))}: ${esc(t("igual_v"))}</span></li>
+              <li class="md-retuvo" data-v="${AUT.rechazado}">${ic("block")}<span class="md-quien">${esc(t("pablo"))}</span><span>${esc(t("pablo_v"))}</span></li>
             </ol>
           </div>
 
@@ -194,7 +206,7 @@
                 <div class="md-ll-botones" data-h="${LLAMADA.contesta}"><span class="md-ll-b colgar">${ic("call_end")}</span><span class="md-ll-b contestar">${ic("call")}</span></div>
                 <div class="md-ll-botones" data-v="${LLAMADA.contesta}" data-h="${LLAMADA.cuelga}"><span class="md-ll-b colgar">${ic("call_end")}</span></div>
               </div>
-              <div class="md-alerta" data-v="38" data-h="${TOQUE + 1}">
+              <div class="md-alerta" data-v="38" data-h="${AUT.espera}">
                 <p class="md-al-titulo">${ic("gpp_good")}<span>${esc(t("al_titulo"))}</span></p>
                 <p class="md-al-motivo">${esc(t("motivo1"))}</p>
                 <dl class="md-al-datos">
@@ -205,44 +217,61 @@
                 </dl>
                 <div class="md-al-botones">
                   <button type="button" class="md-b principal" tabindex="-1">${esc(t("b_inscrita"))}</button>
-                  <button type="button" class="md-b" tabindex="-1">${esc(t("b_no"))}<span class="md-toque" data-v="${TOQUE}"></span></button>
-                  <button type="button" class="md-b peligro" tabindex="-1">${esc(t("b_igual"))}</button>
+                  <button type="button" class="md-b" tabindex="-1">${esc(t("b_no"))}</button>
+                  <button type="button" class="md-b peligro" tabindex="-1">${esc(t("b_igual"))}<span class="md-toque" data-v="${AUT.igual}"></span></button>
                 </div>
               </div>
-              <div class="md-al-hecho" data-v="${TOQUE + 1}">${ic("check", "grande")}<p>${esc(t("al_hecho"))}</p><p class="dato">${esc(t("al_hecho_det"))}</p></div>
+              <div class="md-espera" data-v="${AUT.espera}" data-h="${AUT.rechazado}">${ic("person", "grande")}<p>${esc(t("espera"))}</p><p class="dato md-esperando">${esc(t("esperando"))}</p></div>
+              <div class="md-al-hecho" data-v="${AUT.rechazado}">${ic("block", "grande")}<p>${esc(t("al_hecho"))}</p><p class="dato">${esc(t("al_hecho_det"))}</p></div>
+            </div>
+          </div>
+
+          <div class="md-celular md-pablo" data-v="${AUT.pablo}">
+            <p class="md-pablo-de">${esc(t("pablo_de"))}</p>
+            <div class="md-pantalla">
+              <i class="md-camara" aria-hidden="true"></i>
+              <div class="md-estado"><span>16:08</span><span class="md-estado-ic"><i class="md-senal"></i>5G<i class="md-bateria"></i></span></div>
+              <div class="md-wa">
+                <p class="md-wa-cab">${ic("shield")}<span>${esc(t("pablo_chat"))}</span></p>
+                <div class="md-wa-msg"><p>${esc(t("pablo_msg"))}</p></div>
+                <div class="md-wa-botones">
+                  <span class="md-wa-b">${esc(t("pablo_aprobar"))}</span>
+                  <span class="md-wa-b">${esc(t("pablo_rechazar"))}<span class="md-toque" data-v="${AUT.rechaza}"></span></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="md-acto md-a2" data-desde="44" data-hasta="53">
-        <h1 class="md-frase"><span data-v="44">${esc(t("a2_frase"))}</span></h1>
+      <section class="md-acto md-a2" data-desde="52" data-hasta="59">
+        <h1 class="md-frase"><span data-v="52">${esc(t("a2_frase"))}</span></h1>
         <div class="md-tarjetas">
           ${tarjeta("chat", t("w_de"), esc(t("w_llega")).replace("62-3340-1157", '<mark class="md-cuenta">62-3340-1157</mark>'),
-            `pagar $${f(380000)} ${ic("arrow_forward", "chico")} 62-3340-1157 <span class="tag externo">${esc(t("whatsapp"))}</span>`, t("w_motivo"), "", 44.6)}
+            `pagar $${f(380000)} ${ic("arrow_forward", "chico")} 62-3340-1157 <span class="tag externo">${esc(t("whatsapp"))}</span>`, t("w_motivo"), "", 52.4)}
           ${tarjeta("shopping_cart", t("c_de"), esc(t("c_llega")).replace(/\$4[.,]120[.,]000/, (m) => `<mark class="md-cuenta">${m}</mark>`),
-            `pagar $${f(4120000)} ${ic("arrow_forward", "chico")} 21-5530-8814 <span class="tag">${esc(t("inscrita"))}</span>`, t("c_motivo"), "", 46.4)}
+            `pagar $${f(4120000)} ${ic("arrow_forward", "chico")} 21-5530-8814 <span class="tag">${esc(t("inscrita"))}</span>`, t("c_motivo"), "", 53.6)}
         </div>
       </section>
 
-      <section class="md-acto md-a3" data-desde="53" data-hasta="64">
-        <h1 class="md-frase"><span data-v="53">${esc(t("a3_frase"))}</span></h1>
+      <section class="md-acto md-a3" data-desde="59" data-hasta="70">
+        <h1 class="md-frase"><span data-v="59">${esc(t("a3_frase"))}</span></h1>
         <div class="md-cifras">
-          <div class="md-cifra" data-v="53.8">
-            <p class="md-linea"><span class="md-n dato" id="md-n1">0</span><span>${esc(t("c1_de"))}</span>${ic("arrow_forward")}<span class="md-n dato c-verde" data-v="56">${cifras.pasan ?? "—"}</span><span data-v="56">${esc(t("c1_a"))}</span></p>
+          <div class="md-cifra" data-v="59.8">
+            <p class="md-linea"><span class="md-n dato" id="md-n1">0</span><span>${esc(t("c1_de"))}</span>${ic("arrow_forward")}<span class="md-n dato c-verde" data-v="62">${cifras.pasan ?? "—"}</span><span data-v="62">${esc(t("c1_a"))}</span></p>
             <p class="md-det">${esc(t("c1_det", { f: cifras.tipos ?? "—" }))}</p>
           </div>
-          <div class="md-cifra" data-v="57.5">
-            <p class="md-linea"><span class="md-n dato" id="md-n2">0</span><span>${esc(t("c2_de"))}</span>${ic("arrow_forward")}<span class="md-n dato c-verde" data-v="60">${cifras.cruzan ?? "—"}</span><span data-v="60">${esc(t("c2_a"))}</span></p>
+          <div class="md-cifra" data-v="63.5">
+            <p class="md-linea"><span class="md-n dato" id="md-n2">0</span><span>${esc(t("c2_de"))}</span>${ic("arrow_forward")}<span class="md-n dato c-verde" data-v="66">${cifras.cruzan ?? "—"}</span><span data-v="66">${esc(t("c2_a"))}</span></p>
             <p class="md-det">${esc(t("c2_det", { g: cifras.generaciones ?? "—" }))}</p>
           </div>
         </div>
       </section>
 
-      <section class="md-acto md-cierre" data-desde="64" data-hasta="72">
-        <h1 class="md-frase"><span data-v="64.3">${esc(t("cierre1"))}</span><span class="md-frase-2" data-v="66.3">${esc(t("cierre2"))}</span></h1>
-        <div class="md-logo" data-v="68.5">${ic("shield", "grande")}<span>Grifter</span></div>
-        <p class="md-url dato" data-v="69">${esc(t("url"))}</p>
+      <section class="md-acto md-cierre" data-desde="70" data-hasta="78">
+        <h1 class="md-frase"><span data-v="70.3">${esc(t("cierre1"))}</span><span class="md-frase-2" data-v="72.3">${esc(t("cierre2"))}</span></h1>
+        <div class="md-logo" data-v="74.5">${ic("shield", "grande")}<span>Grifter</span></div>
+        <p class="md-url dato" data-v="75">${esc(t("url"))}</p>
       </section>
 
       <div class="md-progreso" aria-hidden="true"><i id="md-barra"></i></div>
@@ -275,10 +304,12 @@
     document.querySelectorAll(".md-ll-b.contestar").forEach((b) => b.style.setProperty("--md-latido", latido.toFixed(3)));
     const s = Math.max(0, Math.floor(tt - LLAMADA.contesta));
     $("#md-reloj").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-    if (cifras.estafas !== null) $("#md-n1").textContent = num(sube(54.1, 1.8, cifras.estafas, tt));
-    if (cifras.ataques !== null) $("#md-n2").textContent = num(sube(57.8, 2.2, cifras.ataques, tt));
+    if (cifras.estafas !== null) $("#md-n1").textContent = num(sube(60.1, 1.8, cifras.estafas, tt));
+    if (cifras.ataques !== null) $("#md-n2").textContent = num(sube(63.8, 2.2, cifras.ataques, tt));
     // El borde rojo de alerta, mientras el pago está retenido y nadie respondió (como en Episodios).
-    document.body.classList.toggle("md-alarma", tt >= 37 && tt < TOQUE + 1);
+    document.body.classList.toggle("md-alarma", tt >= 37 && tt < AUT.rechazado);
+    // Con el teléfono de Pablo a la vista, el texto de la izquierda le deja espacio.
+    document.body.classList.toggle("md-con-pablo", tt >= AUT.pablo && tt < ACTOS[2].desde);
     $("#md-barra").style.width = `${(Math.min(tt, DURACION) / DURACION) * 100}%`;
   }
 
@@ -328,6 +359,15 @@
       }
     }
   }
+  let avisado = false;
+  function avisarEnVivo() {
+    if (params.get("whatsapp") !== "1" || avisado || location.protocol === "file:") return;
+    avisado = true;
+    const corte = new AbortController();
+    setTimeout(() => corte.abort(), 5000);
+    fetch("api/demo/alerta-en-vivo", { method: "POST", headers: { "Content-Type": "application/json" }, signal: corte.signal,
+      body: JSON.stringify({ clave: params.get("clave") || "", idioma }) }).catch(() => { /* la demo sigue con el teléfono dibujado */ });
+  }
   const SONIDOS = [
     { en: LLAMADA.suena, hacer: () => sonarTimbre(LLAMADA.suena) },
     { en: LLAMADA.abuela, hacer: () => (pistas.abuela ? reproducir(pistas.abuela, () => sintetica(t("abuela"), true)) : sintetica(t("abuela"), true)) },
@@ -351,6 +391,7 @@
     const antes = tiempo;
     tiempo = Math.min(DURACION, tiempo + dt);
     sonar(antes, tiempo);
+    if (antes < AUT.pablo && tiempo >= AUT.pablo) avisarEnVivo();   // aunque esté en silencio
     render(tiempo);
     if (tiempo >= DURACION) { corriendo = false; document.body.classList.remove("md-corriendo"); return; }
     requestAnimationFrame(cuadro);
@@ -370,6 +411,7 @@
   function irA(s, seguir) {
     callar();
     tiempo = s;
+    if (s === 0) avisado = false;   // una corrida nueva puede volver a avisar (el servidor igual limita a uno cada 30 s)
     hecho.clear();
     SONIDOS.forEach((x, i) => { if (x.en < s) hecho.add(i); });
     corriendo = false;
