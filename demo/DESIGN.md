@@ -66,7 +66,7 @@ Reglas:
 
 ## Arquitectura
 
-La barra tiene el logotipo «Grifter» a la izquierda, las pestañas al centro y los controles de la vista a la derecha. Cada vista tiene un solo propósito.
+La barra tiene el logotipo «Grifter» a la izquierda, las pestañas justo después y los controles de la vista a la derecha. Las pestañas no cambian de lugar entre vistas: cada vista trae otros controles, y si estuvieran centradas saltarían al cambiar de pestaña. Cada vista tiene un solo propósito.
 
 - **Operaciones** (primera pestaña): el centro de operaciones en vivo, alimentado por `/api/vivo`.
   - Arriba va una fila de agentes con su estado, su tarea y su cola. El agente cuyo correo está en Lectura se subraya como la pestaña activa.
@@ -81,15 +81,17 @@ La barra tiene el logotipo «Grifter» a la izquierda, las pestañas al centro y
 - **Un solo estado para todas las pestañas:** el idioma ES/EN y la velocidad 1x/2x/4x. La velocidad se ve en Operaciones y en Episodios, y mueve a la vez el flujo del motor y la reproducción del episodio.
 - **Episodios** (`#vivo`): episodios exportados de Inspect, en tres carriles. Un carril corrido con mockllm lleva la etiqueta «Datos de prueba».
   - Al entrar, abre el escenario de la estafa más reciente que vio Operaciones y que tenga episodio exportado, con la etiqueta «Visto en Operaciones».
+  - Si se llega desde Operaciones, arranca a reproducir sola, salvo con `prefers-reduced-motion`. Desde otra pestaña espera a «Reproducir».
   - Elegir otro escenario en el selector manda sobre eso.
   - una franja con el escenario: dueño, tarea en una línea, monto y cuenta inscrita;
   - los tres carriles («Sin defensa», «Firewall», «Escudo»), cada uno con ECG, pasos y veredicto;
   - la lista de correos, de una línea por correo. El cuerpo se abre en un panel lateral, y ahí solo se resalta la cuenta que usó el agente.
   - La alerta del escudo es una capa propia sobre el carril, debajo de su ECG.
-- **Resultados:**
-  - KPI (estafas exitosas, utilidad, falsas alarmas y brecha entre ES y EN);
-  - un radar por configuración;
-  - los mapas de calor táctica × defensa y modelo × idioma. Un clic en una celda abre ese episodio en Episodios.
+- **Resultados:** los números de la tabla «Resultados» del README, cada uno con su intervalo.
+  - «Agente que hace todo lo que lee» (`grifter bench`): una fila por configuración. Las estafas exitosas llevan una barra en `--rojo`, con la tasa en sólido y el intervalo al 95 % en rojo al 35 %. Las tres configuraciones del README van en blanco, y las otras dos (firewall de referencia y beneficiario solo) en `--texto-2`.
+  - «Modelos y firewall reales»: una fila por medición (Pipelock, Sonnet, Haiku y el clasificador), con el número en `--t-4` y su intervalo al lado. Para el clasificador va el rango entre corridas, y se dice que es un rango.
+  - «Atacante adaptativo»: las estafas exitosas acumuladas por ronda, una línea gris por defensa, distinta por trazo y con su nombre al final. Pasa a rojo solo si una estafa le ganó a esa defensa. Si no hay curva con rondas, va un estado vacío que dice qué falta y con qué comando se regenera.
+  - La fuente y el comando de cada número van en la ayuda (`data-ayuda`). Un número sin archivo de origen lleva la etiqueta «sin archivo».
 - **Pruébalo:** «Intenta estafarlo» (#21), conectado a `POST /api/probar`.
   - A la izquierda va el formulario, con el encargo del dueño y su cuenta inscrita arriba para que el juez sepa a qué apunta. A la derecha va el resultado.
   - El resultado lleva el veredicto («Frenada» en verde, «Pasó» en rojo o «Sin acción» en gris), la acción que intentó el agente y una fila por capa con su resultado («Retenida» o «Ejecutada», como en Operaciones) y su motivo. La fila del escudo completo no repite el motivo: dice qué partes la frenan.
@@ -132,9 +134,9 @@ Hay un solo nivel de contenedores. Dentro de un bloque solo hay filas separadas 
 
 ## Datos
 
-- Los gráficos de Resultados leen `resultados.json`, o `resultados.js` si la página se abre como archivo. Ese archivo lo genera `scripts/exportar_resultados.py` desde los registros de Inspect.
+- Resultados lee `resultados.json`, o `resultados.js` si la página se abre como archivo. Los genera `scripts/resultados_demo.py` desde los JSON de `results/`; cada bloque dice su `fuente` y su `comando`. La página no calcula ninguna tasa.
 - Una configuración sin datos se muestra como «—» y «Sin datos», nunca como 0.
-- Si la fuente es mockllm, la barra muestra «Datos de prueba».
+- En Episodios, un carril corrido con mockllm lleva la etiqueta «Datos de prueba».
 - El escenario que abre Episodios está en `ESCENARIO_POR_DEFECTO`, en `app.js`. `?escenario=` en la URL manda sobre esa constante.
 - Operaciones lee la foto de `api/vivo/estado` y después el SSE de `api/vivo`, en el mismo origen. El contrato está en el motor (`scamshield/vivo`).
   - `?motor=http://host:puerto/` apunta a otro origen.

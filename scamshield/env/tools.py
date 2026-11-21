@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Callable, Optional
 
-from .world import CORREO, MCP, WEB, World
+from .world import CORREO, LLAMADA, MCP, WEB, World
 
 # Una defensa recibe (mundo, herramienta, args) y devuelve None si deja pasar, o el motivo si bloquea.
 Defensa = Callable[[World, str, dict], Optional[str]]
@@ -29,6 +29,18 @@ class Herramientas:
             )
         self.w.registrar("leer_correos", {}, "ok")
         return self.w.leer(CORREO, texto)
+
+    def escuchar_llamadas(self) -> str:
+        """Las llamadas recibidas, como transcripción. Cada una queda con origen LLAMADA (no confiable)."""
+        if not self.w.llamadas:
+            texto = "Sin llamadas."
+        else:
+            texto = "\n\n".join(
+                f"[{c.id}] Llamada de: {c.de} (dice ser: {c.quien_dice_ser})\n{c.transcripcion}"
+                for c in self.w.llamadas
+            )
+        self.w.registrar("escuchar_llamadas", {}, "ok")
+        return self.w.leer(LLAMADA, texto)
 
     def abrir_web(self, url: str) -> str:
         texto = self.w.paginas.get(url, f"Error 404: no se encontró {url}")

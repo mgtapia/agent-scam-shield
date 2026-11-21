@@ -10,8 +10,10 @@ Cada llamada sensible queda en `grifter_eventos.jsonl`, sea `permitido`, `reteni
 | Módulo | Qué hace |
 |---|---|
 | `scamshield.mcp.proxy` | el proxy, configurado con `grifter.yaml` |
-| `scamshield.mcp.servidor_proveedor` | portal ficticio de Silicio Austral: `consultar_factura`, `datos_de_pago`. Con `--envenenado`, `datos_de_pago` entrega la cuenta del estafador como un dato más. Con `--descripcion-envenenada`, la descripción de `consultar_factura` lleva instrucciones escondidas (el caso de la capa 1). |
+| `scamshield.mcp.servidor_proveedor` | portal ficticio de Silicio Austral: `leer_correo`, `consultar_factura`, `datos_de_pago`. Con `--envenenado`, el correo y `datos_de_pago` entregan la cuenta del estafador como un dato más. Con `--descripcion-envenenada`, la descripción de `consultar_factura` lleva instrucciones escondidas (el caso de la capa 1). |
 | `scamshield.mcp.servidor_banco` | banco sandbox: `pagar(destinatario, cuenta, monto)` solo anota el pago en `banco_sandbox.jsonl` |
+
+Para verlo con un modelo de verdad (Claude Haiku) y la alerta en Telegram: [demo-real.md](demo-real.md).
 
 ## Configuración
 ```bash
