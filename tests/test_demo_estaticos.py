@@ -151,7 +151,7 @@ def test_la_demo_en_grafo_y_sus_activos_son_publicos(demo):
     assert {"/grafo.css", "/grafo.js", "/estilos.css"} <= referencias.rutas
     desde_js = {"/" + r for r in re.findall(r"[\"'`]((?:img|audio)/[\w./-]+\.(?:svg|png|jpg|webp|mp3))", (raiz / "grafo.js").read_text(encoding="utf-8"))}
     narracion = {r for r in desde_js if r.startswith("/audio/grafo_")}
-    assert len(narracion) == 16 and {"/audio/cuento_del_tio_nieto.mp3", "/audio/cuento_del_tio_abuela_tomas.mp3", "/img/nieto.jpg", "/img/abuela.jpg", "/img/pablo.jpg", "/img/marca.png"} <= desde_js
+    assert len(narracion) == 17 and {"/audio/cuento_del_tio_nieto.mp3", "/audio/cuento_del_tio_abuela_tomas.mp3", "/img/nieto.jpg", "/img/abuela.jpg", "/img/pablo.jpg", "/img/marca.png"} <= desde_js
     # La versión C no depende de los mp3 de la versión B: los que reusa están copiados con nombre propio.
     assert not any(r.startswith("/audio/dinamica_") for r in desde_js)
     for ruta in referencias.rutas | desde_js | {"/grafo.html"}:

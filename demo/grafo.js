@@ -7,6 +7,7 @@
 //
 //   Espacio o «Iniciar»  arranca, pausa y sigue. Esa pulsación del presentador habilita el audio.
 //   R  reinicia      1-7  salta al paso de la historia      M  silencia
+//   ?whatsapp=1&clave=…  en vivo: el pedido le llega de verdad a Pablo y la demo espera su rechazo (S sigue sin él)
 //   ← →  mueve 1 s (con Mayús, 0,1 s) y deja la demo en pausa en ese cuadro
 //   ?revisar=1 o V  modo revisión: una barra de controles abajo (retroceder, pausar, arrastrar, copiar el enlace)
 //   ?t=30  dibuja el segundo 30 en pausa y sin audio (para capturas)
@@ -48,6 +49,10 @@
 
   const params = new URLSearchParams(location.search);
   const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // La clave del WhatsApp en vivo no queda a la vista en el proyector: se guarda en la pestaña y sale de la barra.
+  let claveVivo = params.get("clave") || "";
+  try { if (claveVivo) sessionStorage.setItem("grifter-clave", claveVivo); else claveVivo = sessionStorage.getItem("grifter-clave") || ""; } catch { /* sin almacenamiento, sirve la de la URL */ }
+  if (params.has("clave")) { const u = new URL(location.href); u.searchParams.delete("clave"); history.replaceState(null, "", u); }
 
   // --- La narración (ElevenLabs, voz sintética de biblioteca). `dur` es la duración del mp3 y `pal` el inicio de cada
   // palabra, sacados de /with-timestamps (están también en la ficha .json de cada pista): el texto de pantalla se
@@ -62,7 +67,8 @@
     retiene:  { src: "audio/grafo_05_retiene.mp3", dur: 4.7, pal: [0.13, 0.51, 0.64, 1.28, 1.82, 2.22, 2.51, 2.6, 2.77, 3.55, 3.81, 3.95, 4.06] },
     pasa:     { src: "audio/grafo_06_pasa.mp3", dur: 2.06, pal: [0, 0.12, 0.28, 0.53, 0.7, 1.28] },
     insiste:  { src: "audio/grafo_07_insiste.mp3", dur: 4.08, pal: [0, 0.38, 1.42, 1.81, 2.19, 2.74, 3.08] },
-    aprueban: { src: "audio/grafo_08_aprueban.mp3", dur: 5.36, pal: [0, 0.3, 0.76, 0.93, 1.1, 1.67, 2.53, 2.7, 3.25, 3.95, 4.4, 4.6, 4.88] },
+    aprueban: { src: "audio/grafo_08_aprueban.mp3", dur: 4.62, pal: [0, 0.32, 0.84, 1.01, 1.19, 1.83, 2.69, 2.86, 3.5, 3.87, 3.98] },
+    rechaza:  { src: "audio/grafo_08b_rechaza.mp3", dur: 2.38, pal: [0, 0.13, 0.32, 1.23, 1.52, 1.72, 1.98] },
     banco:    { src: "audio/grafo_09_banco.mp3", dur: 2.06, pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
     clave:    { src: "audio/grafo_10_clave.mp3", dur: 2.22, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
     tienda:   { src: "audio/grafo_11_tienda.mp3", dur: 4.23, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
@@ -112,7 +118,10 @@
   // 4. Pagar igual: doble aprobación, Marta aprueba con su código y Pablo rechaza
   E.alerta = r5(fin + 0.05); fin = pista("insiste", E.alerta + 0.1);
   E.codigo = r5(fin + 0.05); fin = pista("aprueban", E.codigo + 0.05);
-  E.pablo = r5(enPalabra("aprueban", 5) - 0.07);          // «Pablo, su hijo…»
+  E.pablo = r5(enPalabra("aprueban", 5) - 0.07);          // «Pablo, su hijo, recibe un mensaje.»
+  // Aquí termina la pista (a). En vivo (?whatsapp=1) el tiempo se detiene en este punto hasta que Pablo rechaza de
+  // verdad desde su WhatsApp; sin eso, la demo sigue de corrido con el toque dibujado y la pista (b).
+  E.rechaza = r5(fin + 0.05); fin = pista("rechaza", E.rechaza + 0.4);
   // 5. Dos estafas más sobre el mismo grafo
   E.banco = r5(fin + 0.05); fin = pista("banco", E.banco + 0.1);
   E.responde = r5(fin - 0.05); E.clave = r5(E.responde + 0.75); fin = pista("clave", E.clave + 0.05);
@@ -144,7 +153,8 @@
   const frase = (i) => nieto(FRASES[i]);
   const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7], [LL.abuela2, LL.abuela2 + 2.75]], nieto: [[LL.nieto, LL.nieto + 2.45], [nieto(2.85), nieto(23.45)]] };
   const DUR_LLAMADA = `0:${String(Math.floor(LL.cuelga - LL.contesta)).padStart(2, "0")}`;
-  const TOQUE_PABLO = palabra("aprueban", 8) + 0.05;   // el toque en «Rechazar», con la voz («rechaza»)
+  // El toque en «Rechazar», con la voz («…rechaza»); el dedo no asoma antes del punto donde la demo en vivo espera.
+  const TOQUE_PABLO = Math.max(palabra("rechaza", 2) + 0.05, E.rechaza + 0.95);
 
   // Los momentos del grafo (segundos de la demo), atados a las palabras de la voz donde importa.
   const K = {
@@ -165,6 +175,7 @@
     dos: palabra("insiste", 5),               // «dos aprobaciones»: los dos cupos y Pablo
     codigo0: palabra("aprueban", 0) + 0.1,    // el código de Marta sale
     codigo1: palabra("aprueban", 4),          // «…código»: 1 de 2
+    mensaje: palabra("aprueban", 8),          // «…recibe un mensaje»: el pedido viaja de la compuerta a Pablo
     rechaza0: TOQUE_PABLO + 0.3,              // «Rechazar» sale de Pablo
     rechaza1: TOQUE_PABLO + 0.75,             // la compuerta se cierra: no se pagó nada
     pide: palabra("banco", 2),                // el correo pide el código
@@ -369,7 +380,7 @@
     // 4. Pagar igual: doble aprobación. El panel chico junto a Pablo es su chat con Grifter (el toque va en «Rechazar»).
     const panel = (conDedo) => `
         <div class="gf-panel"${ap(K.dos + 0.5, "sube")}>
-          <p class="gf-panel-de">Grifter · WhatsApp a Pablo</p>
+          <p class="gf-panel-de"><span>Grifter · WhatsApp a Pablo</span><span class="gf-panel-vivo"></span></p>
           <p class="gf-panel-msg">Marta quiere pagar <b class="dato">$650.000</b> a J. Contreras V.</p>
           <div class="gf-panel-botones">
             <span class="dn-b">Solicitar código</span>
@@ -389,7 +400,13 @@
         ${panel(false)}`, "gf-capa");
     esc_("pablo", `
         ${modo()}
-        ${pie(escribe("Pablo, su hijo, rechaza: {{no se pagó nada.}}", 0, desdePalabra("aprueban", 5)))}
+        ${pie(escribe("Pablo, su hijo, recibe un mensaje.", 0, desdePalabra("aprueban", 5)))}
+        ${cupos("1 de 2", 0, null, "gf-verde")}
+        ${panel(false)}`, "gf-capa");
+    // En vivo, la demo espera justo antes de esta escena a que Pablo toque «Rechazar» en su WhatsApp.
+    esc_("rechaza", `
+        ${modo()}
+        ${pie(escribe("Y él rechaza. {{No se pagó nada.}}", 0, desdePalabra("rechaza", 0)))}
         ${cupos("1 de 2", 0, K.rechaza1 - 0.15, "gf-verde")}${cupos("Cerrada", K.rechaza1, null, "gf-verde")}
         ${panel(true)}`, "gf-capa");
 
@@ -941,6 +958,7 @@
     enArista(E6, "Pago retenido", "verde", K.aviso, K.aviso + 0.6, true, null);
     enArista(E6, "Pagar igual", "texto", K.insiste, K.insiste + 0.8, false, "person");
     enArista(E6, "Código 482 913", tt >= K.codigo1 - 0.1 ? "verde" : "texto", K.codigo0, K.codigo1, false, "person");
+    enArista(E7, "¿Apruebas?", "verde", K.mensaje, K.mensaje + 0.6, true, null);
     enArista(E7, "Rechazar", "texto", K.rechaza0, K.rechaza1, false, "person");
     // --- el falso banco: «Pide tu código» entra, y el agente intenta mandar «482 913» ---
     if (tt >= K.pide && tt < E.aprobaste + 0.3) {
@@ -1079,7 +1097,7 @@
       contestar: el.querySelector(".contestar"),
       marcaCierre: el.querySelector(".dn-marca-cierre"),
     }));
-    hud = { caja: $("#gf-hud"), num: $("#gf-bloqueos"), n: -1 };
+    hud = { caja: $("#gf-hud"), num: $("#gf-bloqueos"), n: -1, vivo: "", paneles: [...document.querySelectorAll(".gf-panel-vivo")] };
     marco = $("#dn-escenario");
     cursor = $("#gf-cursor");
   }
@@ -1198,6 +1216,10 @@
       // La marca nítida del cierre reemplaza a la de partículas con un fundido cruzado de 0,2 s, cuando ya calzan.
       if (s.marcaCierre) s.marcaCierre.style.opacity = (quieto ? +(tt >= MARCA_NITIDA) : clamp((tt - MARCA_NITIDA) / 0.2)).toFixed(3);
     }
+    // El panel de Pablo, en vivo: dice que la demo lo espera y, si rechazó de verdad, cuánto tardó.
+    const retenida = vivo.esperando && tt >= E.rechaza - 0.002 && tt < E.rechaza;
+    const estadoVivo = retenida ? "Esperando a Pablo…" : vivo.real !== null && tt >= K.rechaza1 ? `Rechazo real · ${Number(vivo.real).toLocaleString("es-CL")} s` : "";
+    if (estadoVivo !== hud.vivo) { hud.vivo = estadoVivo; hud.paneles.forEach((p) => { p.textContent = estadoVivo; }); }
     // El cursor del texto que se escribe: una barra ámbar a la derecha de la última letra, puesta desde su caja.
     if (conCursor) {
       const base = marco.getBoundingClientRect(), k = base.width / 1920, c = conCursor.getBoundingClientRect(), alto = c.height / k;
@@ -1287,6 +1309,39 @@
     PISTAS.forEach((p) => p.a && p.a.pause());
   }
 
+  // --- En vivo. Con ?whatsapp=1, el pedido a Pablo llega de verdad a su WhatsApp cuando aparece su panel, y su rechazo
+  // también puede ser real: al terminar la pista (a) la demo espera su respuesta sin límite (el presentador toca
+  // «Rechazar» en su teléfono) y sigue con el toque dibujado y la pista (b). Con ?espera=N espera como mucho N s y sigue
+  // con el rechazo simulado; si el WhatsApp no llega, la tecla S hace lo mismo. Si el envío falla, no espera. Sin
+  // ?whatsapp=1 nada de esto corre. Es la lógica de demo.js (versión A) ---
+  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : Infinity;
+  const T_PANEL = K.dos + 0.5;   // cuando aparece el panel «Grifter · WhatsApp a Pablo»
+  let avisado = false;
+  const vivo = { id: null, desde: 0, esperando: false, real: null };
+  function avisarEnVivo() {
+    if (params.get("whatsapp") !== "1" || avisado || location.protocol === "file:") return;
+    avisado = true;
+    const clave = claveVivo;
+    const corte = new AbortController();
+    setTimeout(() => corte.abort(), 5000);
+    fetch("api/demo/alerta-en-vivo", { method: "POST", headers: { "Content-Type": "application/json" }, signal: corte.signal,
+      body: JSON.stringify({ clave, idioma: "es" }) })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => { if (r?.id) { Object.assign(vivo, { id: r.id, desde: performance.now(), esperando: true }); sondear(clave); } })
+      .catch(() => { /* la demo sigue con el panel dibujado */ });
+  }
+  async function sondear(clave) {
+    while (vivo.esperando && (performance.now() - vivo.desde) / 1000 < ESPERA_S) {
+      try {
+        const r = await fetch(`api/demo/alerta-en-vivo/estado?id=${encodeURIComponent(vivo.id)}`, { headers: { "X-Grifter-Demo-Clave": clave }, cache: "no-store" });
+        const e = r.ok ? await r.json() : null;
+        if (e?.estado === "rechazado") { vivo.real = e.latencia_s; break; }
+      } catch (_) { /* reintenta */ }
+      await new Promise((ok) => setTimeout(ok, 500));
+    }
+    vivo.esperando = false;
+  }
+
   // --- Reloj: un solo requestAnimationFrame; el tiempo avanza solo mientras corre ---
   let tiempo = 0, corriendo = false, previo = 0;
   function cuadro(ahora) {
@@ -1295,7 +1350,10 @@
     previo = ahora;
     const antes = tiempo;
     tiempo = Math.min(DURACION, tiempo + dt);
+    // En vivo, la demo espera a Pablo justo al terminar «…recibe un mensaje.»; cuando él rechaza, sigue desde ahí.
+    if (vivo.esperando && antes < E.rechaza && tiempo >= E.rechaza) tiempo = E.rechaza - 0.001;
     sonar(antes, tiempo);
+    if (antes < T_PANEL && tiempo >= T_PANEL) avisarEnVivo();   // aunque esté en silencio
     render(tiempo);
     if (tiempo >= DURACION) { corriendo = false; document.body.classList.remove("dn-corriendo"); return; }
     requestAnimationFrame(cuadro);
@@ -1317,6 +1375,7 @@
   function irA(s, seguir) {
     callar();
     document.body.classList.remove("dn-en-portada", "dn-saliendo");
+    if (s === 0) { avisado = false; Object.assign(vivo, { id: null, esperando: false, real: null }); }   // una corrida nueva (el servidor limita a un envío cada 30 s)
     tiempo = s;
     corriendo = false;
     document.body.classList.remove("dn-corriendo");
@@ -1401,6 +1460,7 @@
     if (e.key === " " || e.code === "Space") { e.preventDefault(); alternar(); }
     else if (e.key === "r" || e.key === "R") irA(0, true);
     else if (e.key === "m" || e.key === "M") { mudo = !mudo; if (mudo) callar(); else if (corriendo) reanudar(tiempo); }
+    else if ((e.key === "s" || e.key === "S") && vivo.esperando) vivo.esperando = false;   // respaldo: el WhatsApp no llegó
     else if (/^[1-7]$/.test(e.key)) irA(PASOS[+e.key - 1], true);
     else if (e.key === "v" || e.key === "V") { abrirRevisor(); escalar(); render(tiempo); }   // V abre los controles de revisión
     // Revisión: las flechas mueven 1 s (con Mayús, 0,1 s) y dejan la demo en pausa en ese cuadro.
@@ -1435,6 +1495,7 @@
     estado: () => ({ tiempo: Math.round(tiempo * 100) / 100, corriendo, mudo, duracion: DURACION,
       escena: escenas.find((s) => tiempo >= s.desde && tiempo < s.hasta)?.el.dataset.id,
       bloqueos: BLOQUEOS.filter((b) => tiempo >= b).length,
+      vivo: { activo: params.get("whatsapp") === "1", avisado, esperando: vivo.esperando, real: vivo.real, espera_en: E.rechaza },
       narracion: Object.entries(NARR).map(([k, n]) => ({ pista: k, desde: n.en, hasta: Math.round((n.en + n.dur) * 100) / 100 })),
       audio: PISTAS.map((p) => ({ src: p.src, listo: p.a ? p.a.readyState : null, sonando: p.a ? !p.a.paused : false })) }),
   };
