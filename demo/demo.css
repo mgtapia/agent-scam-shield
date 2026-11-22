@@ -113,7 +113,9 @@ body.md-habla-marta .md-foto-marta { opacity: 1; }
 body.md-habla-marta .md-n-nieto, body.md-nombrado .md-n-nieto { opacity: 0; }
 body.md-nombrado:not(.md-habla-marta) .md-n-habla-nieto, body.md-habla-marta .md-n-marta { opacity: 1; }
 /* La foto del que llama, desenfocada hasta que tiene nombre; clip-path deja el desenfoque dentro del círculo */
-.md-foto-nieto { filter: blur(14px); clip-path: circle(50%); transition: opacity 400ms ease-out, filter 400ms ease-out; }
+.md-foto-nieto { filter: blur(14px); clip-path: circle(50%); transition: opacity 400ms ease-out, filter 1800ms ease-in-out; }
+/* El nombre aparece despacio, a la par del desenfoque: se nota que es la abuela la que lo reconoce */
+.md-ll-nombre > p.md-n-nieto, .md-ll-nombre > p.md-n-habla-nieto { transition: opacity 1200ms ease-in-out; }
 body.md-nombrado .md-foto-nieto { filter: none; }
 .md-cuadro .md-foto-nieto { transition: opacity 400ms ease-out; }
 /* La barra de voz bajo la foto: siete barras cuya altura fija render() mientras alguien habla */
