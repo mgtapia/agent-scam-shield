@@ -1,0 +1,27 @@
+{
+  "escenario": "demo_grafo",
+  "paso": "6. Cifras",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "Ciento cincuenta estafas. Pasan cero.",
+  "texto_enviado": "Ciento cincuenta estafas. Pasan cero.",
+  "voz": "femenina",
+  "nombre_de_la_voz": "Catalina",
+  "voz_id": "5yNXxdAaHAkq8N8bGqwQ",
+  "clase_de_voz": "library",
+  "descripcion_de_la_voz": "Narradora chilena joven de la biblioteca de ElevenLabs: cálida, cercana y natural, sin tono de noticiero.",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "duracion_s": 3.5,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
+  "caracteres": 37,
+  "inicios_de_palabra_s": [
+    0,
+    0.52,
+    1.2,
+    2.08,
+    2.88
+  ],
+  "copia_de": "dinamica_08_estafas.mp3"
+}

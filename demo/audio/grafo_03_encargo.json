@@ -1,0 +1,29 @@
+{
+  "escenario": "demo_grafo",
+  "paso": "2. El encargo",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "Marta le encarga sus llamadas a su agente.",
+  "texto_enviado": "Marta le encarga sus llamadas a su agente.",
+  "voz": "femenina",
+  "nombre_de_la_voz": "Catalina",
+  "voz_id": "5yNXxdAaHAkq8N8bGqwQ",
+  "clase_de_voz": "library",
+  "descripcion_de_la_voz": "Narradora chilena joven de la biblioteca de ElevenLabs: cálida, cercana y natural, sin tono de noticiero.",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "duracion_s": 2.3,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
+  "caracteres": 42,
+  "inicios_de_palabra_s": [
+    0.0,
+    0.35,
+    0.44,
+    0.84,
+    1.01,
+    1.48,
+    1.57,
+    1.73
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "escenario": "demo_grafo",
+  "paso": "7. Cierre",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "Tu agente puede creerle a cualquiera. Tu plata, no.",
+  "texto_enviado": "Tu agente puede creerle a cualquiera. [confident] Tu plata, no.",
+  "voz": "femenina",
+  "nombre_de_la_voz": "Catalina",
+  "voz_id": "5yNXxdAaHAkq8N8bGqwQ",
+  "clase_de_voz": "library",
+  "descripcion_de_la_voz": "Narradora chilena joven de la biblioteca de ElevenLabs: cálida, cercana y natural, sin tono de noticiero.",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "duracion_s": 3.58,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
+  "caracteres": 63,
+  "inicios_de_palabra_s": [
+    0,
+    0.13,
+    0.6,
+    0.86,
+    1.32,
+    1.41,
+    2.47,
+    2.56,
+    3.28
+  ],
+  "copia_de": "dinamica_11_remate.mp3"
+}

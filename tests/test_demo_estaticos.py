@@ -142,6 +142,29 @@ def test_la_demo_dinamica_y_sus_activos_son_publicos(demo):
         assert ficha["sintetica"] is True and ficha["voz_id"] and ficha["modelo"] == "eleven_v3" and ficha["aviso"]
 
 
+def test_la_demo_en_grafo_y_sus_activos_son_publicos(demo):
+    # La versión C del modo demo (grafo.html): la página, su CSS y su JS, y las fotos y los audios que arma grafo.js.
+    cliente, raiz = demo
+    assert {"grafo.html", "grafo.css", "grafo.js"} <= server.ACTIVOS_PUBLICOS
+    referencias = _Referencias()
+    referencias.feed((raiz / "grafo.html").read_text(encoding="utf-8"))
+    assert {"/grafo.css", "/grafo.js", "/estilos.css"} <= referencias.rutas
+    desde_js = {"/" + r for r in re.findall(r"[\"'`]((?:img|audio)/[\w./-]+\.(?:svg|png|jpg|webp|mp3))", (raiz / "grafo.js").read_text(encoding="utf-8"))}
+    narracion = {r for r in desde_js if r.startswith("/audio/grafo_")}
+    assert len(narracion) == 16 and {"/audio/cuento_del_tio_nieto.mp3", "/audio/cuento_del_tio_abuela_tomas.mp3", "/img/nieto.jpg", "/img/abuela.jpg", "/img/pablo.jpg", "/img/marca.png"} <= desde_js
+    # La versión C no depende de los mp3 de la versión B: los que reusa están copiados con nombre propio.
+    assert not any(r.startswith("/audio/dinamica_") for r in desde_js)
+    for ruta in referencias.rutas | desde_js | {"/grafo.html"}:
+        respuesta = cliente.get(ruta)
+        assert respuesta.status_code == 200, ruta
+        assert respuesta.content == (raiz / ruta.lstrip("/")).read_bytes()
+    # Cada narración tiene su ficha, que dice que la voz es sintética y trae los tiempos por palabra.
+    for ruta in narracion:
+        ficha = json.loads((raiz / ruta.lstrip("/")).with_suffix(".json").read_text(encoding="utf-8"))
+        assert ficha["sintetica"] is True and ficha["voz_id"] and ficha["modelo"] == "eleven_v3" and ficha["aviso"]
+        assert ficha["duracion_s"] > 0 and len(ficha["inicios_de_palabra_s"]) == len(ficha["texto"].split())
+
+
 def test_todos_los_episodios_exportados_siguen_publicos(demo):
     cliente, raiz = demo
     for archivo in (raiz / "episodios").iterdir():

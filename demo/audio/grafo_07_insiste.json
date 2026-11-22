@@ -1,0 +1,28 @@
+{
+  "escenario": "demo_grafo",
+  "paso": "4. Doble aprobación",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "Marta insiste. Pagar igual exige dos aprobaciones.",
+  "texto_enviado": "Marta insiste. Pagar igual exige dos aprobaciones.",
+  "voz": "femenina",
+  "nombre_de_la_voz": "Catalina",
+  "voz_id": "5yNXxdAaHAkq8N8bGqwQ",
+  "clase_de_voz": "library",
+  "descripcion_de_la_voz": "Narradora chilena joven de la biblioteca de ElevenLabs: cálida, cercana y natural, sin tono de noticiero.",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "duracion_s": 4.08,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
+  "caracteres": 50,
+  "inicios_de_palabra_s": [
+    0.0,
+    0.38,
+    1.42,
+    1.81,
+    2.19,
+    2.74,
+    3.08
+  ]
+}
