@@ -60,7 +60,8 @@
       abuela: "¿Aló? ¿Quién habla?", abuela2: "¿Tomás? ¿Qué te pasó, mijo?", desconocido: "Desconocido",
       tu: "Tú", otra_estafa: "Otra estafa",
       nieto: [
-        "Abuelita, soy yo po, tu nieto. No le digai a nadie, por favor.",
+        "Abuelita, soy yo po, tu nieto.",
+        "No le digai a nadie, por favor.",
         "Choqué el auto y me tienen detenido.",
         "El carabinero dice que si pago la fianza ahora me sueltan altiro. Son $650.000, abuelita.",
         "Anota la cuenta del abogado: Banco Austral, cuenta vista 48-2210-7735.",
@@ -134,7 +135,8 @@
       abuela: "Hello? Who's speaking?", abuela2: "Tomás? What happened, sweetie?", desconocido: "Unknown",
       tu: "You", otra_estafa: "Another scam",
       nieto: [
-        "Grandma, it's me, your grandson. Don't tell anyone, please.",
+        "Grandma, it's me, your grandson.",
+        "Don't tell anyone, please.",
         "I crashed the car and they're holding me.",
         "The officer says if I pay the bail now they'll let me go, it's $650,000.",
         "Write down the lawyer's account: Banco Austral, savings account 48-2210-7735.",
@@ -207,8 +209,8 @@
   // Cuelga apenas termina el nieto: su mp3 dura 23,52 s (medido decodificándolo en el navegador), más un respiro.
   const NIETO_S = 23.52;
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
-  const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
-  // El que llama es un «Desconocido» con la foto desenfocada. Después de la primera frase del nieto, su mp3 se pausa y
+  const FRASES = [0, 2.65, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas; «tu nieto.» termina en 2,44 s y «No le digai» empieza en 2,87 s)
+  // El que llama es un «Desconocido» con la foto desenfocada. Después de «Abuelita, soy yo po, tu nieto.», su mp3 se pausa y
   // la abuela pregunta «¿Tomás? ¿Qué te pasó, mijo?» (cuento_del_tio_abuela_tomas, 2,88 s): al decir «Tomás» (0,16 s)
   // le pone el nombre y se quita el desenfoque. El estafador nunca dijo quién era. Después el nieto sigue donde iba.
   const ABUELA2_S = 2.88, NOMBRE_EN = 0.16, CORTE = FRASES[1];
@@ -226,13 +228,13 @@
   // Marta insiste: ahora hacen falta dos aprobaciones. Ella aprueba con su código. Falta Pablo, su hijo… y Pablo
   // rechaza. No se pagó nada.» Con ?whatsapp=1 el rechazo de Pablo puede ser real (ver avisarEnVivo).
   const NA = { en: r2(LLAMADA.cuelga + 0.2), dura: 16.24, va: 0.72, sin: 1.61, seva: 2.933, con: 3.4, cuenta: 5.227,
-    insiste: 7.48, dos: 9.14, aprueba: 10.7, falta: 11.94, rechaza: 14.293, no: 15.093 };
+    insiste: 7.48, dos: 9.14, aprueba: 10.7, falta: 11.94, hijo: 13.55, rechaza: 14.293, no: 15.093 };   // hijo: fin de «…su hijo…», antes de «y Pablo»
   const AUT = (() => {
     const a = (k, d = 0) => r2(NA.en + NA[k] + d);
     const igual = a("insiste", -0.05), digitos = a("aprueba", -0.1), digito = 0.12;
     return { escucho: r2(NA.en - 0.1), intento: a("va", -0.1), golpe: a("sin", -0.05), saldo: a("seva", -0.1), con: a("con", -0.05),
       retuvo: a("cuenta", -0.05), alerta: a("cuenta", 0.4), igual, pide: a("dos", -0.05), correo: a("dos", 0.45), digitos, digito,
-      uno: r2(digitos + 6 * digito + 0.3), pablo: a("falta", -0.05), rechaza: a("rechaza", -0.1), rechazado: a("rechaza", 0.6),
+      uno: r2(digitos + 6 * digito + 0.3), pablo: a("falta", -0.05), rechaza: a("rechaza", -0.1), espera: a("hijo"), rechazado: a("rechaza", 0.6),
       nada: a("no", -0.05), frase: a("falta", -0.05) };
   })();
   const SALDO = 1180000;   // el saldo de Marta en el golpe: un dibujo, como la cuenta y el código
@@ -625,10 +627,11 @@
     }
   }
   // Con ?whatsapp=1, el pedido a Pablo llega de verdad y su rechazo también puede ser real. La demo espera su
-  // respuesta como mucho ESPERA_S desde el envío; si no llega, sigue con el rechazo simulado. Nunca se queda colgada.
-  const ESPERA_S = 12;
+  // respuesta hasta 7 s desde que el video se detiene (?espera=N cambia el máximo): el presentador toca «Rechazar» y la demo sigue; si no, sigue con el
+  // rechazo simulado. Si el WhatsApp no llega, la tecla S sigue con el rechazo simulado. Si el envío falla, no espera.
+  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : 7;   // máximo de la pausa, contado desde que el video se detiene
   let avisado = false;
-  const vivo = { id: null, desde: 0, esperando: false, real: null };
+  const vivo = { id: null, desde: 0, esperando: false, real: null, limite: null };
   function avisarEnVivo() {
     if (params.get("whatsapp") !== "1" || avisado || location.protocol === "file:") return;
     avisado = true;
@@ -642,7 +645,7 @@
       .catch(() => { /* la demo sigue con el teléfono dibujado */ });
   }
   async function sondear(clave) {
-    while (vivo.esperando && (performance.now() - vivo.desde) / 1000 < ESPERA_S) {
+    while (vivo.esperando && (vivo.limite === null || performance.now() < vivo.limite)) {
       try {
         const r = await fetch(`api/demo/alerta-en-vivo/estado?id=${encodeURIComponent(vivo.id)}`, { headers: { "X-Grifter-Demo-Clave": clave }, cache: "no-store" });
         const e = r.ok ? await r.json() : null;
@@ -785,8 +788,9 @@
     previo = ahora;
     const antes = tiempo;
     tiempo = Math.min(DURACION, tiempo + dt);
-    if (vivo.esperando && antes < AUT.rechaza && tiempo >= AUT.rechaza) tiempo = AUT.rechaza - 0.001;   // espera a Pablo
-    if (vivo.real && tiempo < AUT.rechazado && antes >= AUT.rechaza - 0.01) tiempo = Math.max(tiempo, AUT.rechazado);
+    // En vivo, la demo espera a Pablo justo después de «Falta Pablo, su hijo…», con la frase completa. Cuando él rechaza
+    // desde su WhatsApp, sigue desde ahí y la narradora dice «y Pablo rechaza. No se pagó nada.».
+    if (vivo.esperando && antes < AUT.espera && tiempo >= AUT.espera) { tiempo = AUT.espera - 0.001; if (vivo.limite === null) vivo.limite = performance.now() + ESPERA_S * 1000; }
     esperarConVoz();
     sonar(antes, tiempo);
     if (antes < AUT.pablo && tiempo >= AUT.pablo) avisarEnVivo();   // aunque esté en silencio
@@ -794,12 +798,12 @@
     if (tiempo >= DURACION) { corriendo = false; document.body.classList.remove("md-corriendo"); return; }
     requestAnimationFrame(cuadro);
   }
-  // Mientras la demo espera el rechazo real de Pablo, la narradora se calla justo antes de «rechaza» y sigue desde ahí.
+  // Mientras la demo espera el rechazo real de Pablo, la narradora se calla después de «su hijo…» y sigue desde ahí.
   let vozEnEspera = false;
   function esperarConVoz() {
     const a = pistas.autoriza;
     if (!a) return;
-    const retenida = vivo.esperando && tiempo >= AUT.rechaza - 0.002 && tiempo < AUT.rechaza;
+    const retenida = vivo.esperando && tiempo >= AUT.espera - 0.002 && tiempo < AUT.espera;
     if (retenida && !a.paused) { a.pause(); vozEnEspera = true; }
     else if (!retenida && vozEnEspera) {
       vozEnEspera = false;
@@ -838,6 +842,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === " " || e.code === "Space") { e.preventDefault(); alternar(); }
     else if (e.key === "r" || e.key === "R") irA(0, true);
+    else if ((e.key === "s" || e.key === "S") && vivo.esperando) vivo.esperando = false;   // respaldo: el WhatsApp no llegó
     else if (e.key === "m" || e.key === "M") { mudo = !mudo; if (mudo) callar(); }
     else if (/^[1-4]$/.test(e.key)) irA(ACTOS[+e.key].desde, true);
     else if (e.key === "v" || e.key === "V") { abrirRevisor(); escalar(); render(tiempo); }   // V abre los controles de revisión
