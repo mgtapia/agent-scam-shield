@@ -1310,14 +1310,14 @@
   }
 
   // --- En vivo. Con ?whatsapp=1, el pedido a Pablo llega de verdad a su WhatsApp cuando aparece su panel, y su rechazo
-  // también puede ser real: al terminar la pista (a) la demo espera su respuesta sin límite (el presentador toca
-  // «Rechazar» en su teléfono) y sigue con el toque dibujado y la pista (b). Con ?espera=N espera como mucho N s y sigue
+  // también puede ser real: al terminar la pista (a) la demo espera su respuesta (el presentador toca
+  // «Rechazar» en su teléfono) hasta 7 s desde que se detiene (?espera=N cambia el máximo) y sigue
   // con el rechazo simulado; si el WhatsApp no llega, la tecla S hace lo mismo. Si el envío falla, no espera. Sin
   // ?whatsapp=1 nada de esto corre. Es la lógica de demo.js (versión A) ---
-  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : Infinity;
+  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : 7;   // máximo de la pausa, contado desde que el video se detiene
   const T_PANEL = K.dos + 0.5;   // cuando aparece el panel «Grifter · WhatsApp a Pablo»
   let avisado = false;
-  const vivo = { id: null, desde: 0, esperando: false, real: null };
+  const vivo = { id: null, desde: 0, esperando: false, real: null, limite: null };
   function avisarEnVivo() {
     if (params.get("whatsapp") !== "1" || avisado || location.protocol === "file:") return;
     avisado = true;
@@ -1331,7 +1331,7 @@
       .catch(() => { /* la demo sigue con el panel dibujado */ });
   }
   async function sondear(clave) {
-    while (vivo.esperando && (performance.now() - vivo.desde) / 1000 < ESPERA_S) {
+    while (vivo.esperando && (vivo.limite === null || performance.now() < vivo.limite)) {
       try {
         const r = await fetch(`api/demo/alerta-en-vivo/estado?id=${encodeURIComponent(vivo.id)}`, { headers: { "X-Grifter-Demo-Clave": clave }, cache: "no-store" });
         const e = r.ok ? await r.json() : null;
@@ -1351,7 +1351,7 @@
     const antes = tiempo;
     tiempo = Math.min(DURACION, tiempo + dt);
     // En vivo, la demo espera a Pablo justo al terminar «…recibe un mensaje.»; cuando él rechaza, sigue desde ahí.
-    if (vivo.esperando && antes < E.rechaza && tiempo >= E.rechaza) tiempo = E.rechaza - 0.001;
+    if (vivo.esperando && antes < E.rechaza && tiempo >= E.rechaza) { tiempo = E.rechaza - 0.001; if (vivo.limite === null) vivo.limite = performance.now() + ESPERA_S * 1000; }
     sonar(antes, tiempo);
     if (antes < T_PANEL && tiempo >= T_PANEL) avisarEnVivo();   // aunque esté en silencio
     render(tiempo);
@@ -1375,7 +1375,7 @@
   function irA(s, seguir) {
     callar();
     document.body.classList.remove("dn-en-portada", "dn-saliendo");
-    if (s === 0) { avisado = false; Object.assign(vivo, { id: null, esperando: false, real: null }); }   // una corrida nueva (el servidor limita a un envío cada 30 s)
+    if (s === 0) { avisado = false; Object.assign(vivo, { id: null, esperando: false, real: null, limite: null }); }   // una corrida nueva (el servidor limita a un envío cada 30 s)
     tiempo = s;
     corriendo = false;
     document.body.classList.remove("dn-corriendo");
