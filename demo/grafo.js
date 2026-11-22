@@ -86,19 +86,21 @@
   E.gancho = 0; fin = pista("gancho", 0.3);
   E.agentes = r5(fin + 0.4); fin = pista("agentes", E.agentes + 0.1);   // medio segundo de aire después de «…estafa digital»: la cifra respira
   E.encargo = r5(fin); fin = pista("encargo", E.encargo + 0.1);
-  // La llamada. Suena 1,3 s y Marta contesta. El nieto dice su primera frase (hasta el segundo 4,75 de su mp3, que no
-  // se corta: se pausa ahí), Marta le pone nombre («¿Tomás? ¿Qué te pasó, mijo?») y el nieto sigue desde 4,75. Cada
-  // escena va a su segundo del mp3 del nieto: nieto(s) es el segundo de la demo en que el mp3 va en s.
+  // La llamada. Suena 1,3 s y Marta contesta. El nieto dice «Abuelita, soy yo po, tu nieto.» y Marta lo interrumpe y
+  // le pone nombre («¿Tomás? ¿Qué te pasó, mijo?»); después él sigue con «No le digai a nadie, por favor. Choqué el
+  // auto…». El mp3 del nieto no se corta: se pausa en CORTE y sigue desde ahí. En ese mp3, «tu nieto.» termina en
+  // 2,44 s y «No le digai» empieza en 2,87 s (medido con la envolvente del audio): el corte va al medio del silencio.
+  // Cada escena va a su segundo del mp3 del nieto: nieto(s) es el segundo de la demo en que el mp3 va en s.
   E.suena = r5(fin); E.contesta = r5(E.suena + 1.3);
-  const CORTE = 4.75, DUR_NIETO = 23.52, DUR_ABUELA = 1.92, DUR_TOMAS = 2.88;   // duraciones de los mp3 de la llamada
+  const CORTE = 2.65, DUR_NIETO = 23.52, DUR_ABUELA = 1.92, DUR_TOMAS = 2.88;   // duraciones de los mp3 de la llamada
   const LL = { suena: E.suena + 0.1, contesta: E.contesta, abuela: E.contesta + 0.2, nieto: r5(E.contesta + 2.1) };
   LL.abuela2 = r5(LL.nieto + CORTE + 0.05);                   // «¿Tomás? ¿Qué te pasó, mijo?»
   LL.tomas = LL.abuela2 + 0.16;                               // cuando Marta dice «Tomás»: el que llama deja de ser «Desconocido»
   LL.nieto2 = r5(LL.abuela2 + DUR_TOMAS + 0.05);              // el nieto sigue
   LL.cuelga = r5(LL.nieto2 + 24.7 - CORTE);                  // «Llamada finalizada», con el mismo respiro de la versión B tras la última frase
   const nieto = (s) => (s < CORTE ? LL.nieto + s : LL.nieto2 + s - CORTE);
-  E.n1 = LL.nieto; E.tomas = r5(LL.abuela2 - 0.05); E.n2 = LL.nieto2;
-  for (const [id, s] of [["n3", 6.7], ["fianza", 10.3], ["n4", 13.65], ["cuenta", 16.7], ["n5", 21.45]]) E[id] = r5(nieto(s));
+  E.n1 = LL.nieto; E.tomas = r5(LL.abuela2 - 0.05); E.n1b = LL.nieto2;
+  for (const [id, s] of [["n2", 4.75], ["n3", 6.7], ["fianza", 10.3], ["n4", 13.65], ["cuenta", 16.7], ["n5", 21.45]]) E[id] = r5(nieto(s));
   E.paga = r5(LL.cuelga + 0.3);
   // 3. El grafo a pantalla completa: el agente paga (sin Grifter), se rebobina, Grifter retiene y lo de Marta pasa
   fin = pista("sin", E.paga + 0.1);
@@ -127,7 +129,7 @@
   E.cierre = r5(fin + 0.05); fin = pista("cierre", E.cierre + 0.2);
   const DURACION = r5(fin + 0.3);
   // Cómo entra cada escena. Las del grafo son capas de rótulos sobre el mismo grafo: entran de corte.
-  const ENTRADA = { gancho: "zoom", agentes: "der", encargo: "abajo", suena: "zoom", contesta: "der", n1: "der", n2: "golpe", n3: "izq",
+  const ENTRADA = { gancho: "zoom", agentes: "der", encargo: "abajo", suena: "zoom", contesta: "der", n1: "der", n1b: "corte", n2: "golpe", n3: "izq",
     tomas: "corte", fianza: "zoom", n4: "der", cuenta: "zoom", n5: "abajo", remate: "zoom", cierre: "zoom" };
   const ESCENAS = Object.entries(E).sort((a, b) => a[1] - b[1]).map(([id, desde]) => [id, desde, ENTRADA[id] || "corte"]);
   const PASOS = [0, E.encargo, E.paga, E.alerta, E.banco, E.estafas, E.remate];   // teclas 1 a 7
@@ -140,7 +142,7 @@
   // FRASES son los inicios de cada frase del nieto en su mp3 (demo.js).
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];
   const frase = (i) => nieto(FRASES[i]);
-  const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7], [LL.abuela2, LL.abuela2 + 2.75]], nieto: [[LL.nieto, LL.nieto + 4.3], [LL.nieto2, nieto(23.45)]] };
+  const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7], [LL.abuela2, LL.abuela2 + 2.75]], nieto: [[LL.nieto, LL.nieto + 2.45], [nieto(2.85), nieto(23.45)]] };
   const DUR_LLAMADA = `0:${String(Math.floor(LL.cuelga - LL.contesta)).padStart(2, "0")}`;
   const TOQUE_PABLO = palabra("aprueban", 8) + 0.05;   // el toque en «Rechazar», con la voz («rechaza»)
 
@@ -296,7 +298,7 @@
           <div class="dn-habla-foto">${fotoNieto("dn-l", desconocido)}${barras("nieto")}<p class="dn-nombre">${desconocido ? "Desconocido" : "Tomás (nieto)"}<span>Número privado</span></p></div>
           <h1 class="dn-titular dn-izq">${escribe(texto, t0, { cps })}</h1>
         </div>`;
-    esc_("n1", habla("Abuelita, soy yo po, tu nieto. No le digai a nadie, por favor.", frase(0) + 0.1, 15.5, "", true));
+    esc_("n1", habla("Abuelita, soy yo po, tu nieto.", frase(0) + 0.1, 13, "", true));
     // Marta le pone nombre: desde que dice «Tomás», la foto se aclara en 1,8 s y «Desconocido» pasa a «Tomás (nieto)»
     // con un fundido de 1,2 s (render fija --desenfoque, --nombre-a y --nombre-b).
     esc_("tomas", `
@@ -306,6 +308,8 @@
           <h1 class="dn-titular">${escribe("¿Tomás?", LL.abuela2 + 0.12, { cps: 16 })}<span class="gf-linea-2">${escribe("¿Qué te pasó, mijo?", LL.abuela2 + 1.25, { cps: 14 })}</span></h1>
           <div class="dn-habla-foto">${fotoNieto("dn-l", true)}${barras("nieto")}<p class="dn-nombre gf-quien"><b>Desconocido</b><b>Tomás (nieto)</b><span>Número privado</span></p></div>
         </div>`);
+    // El nieto sigue donde lo interrumpieron, ya con nombre: esta frase queda pegada a «Choqué el auto…».
+    esc_("n1b", habla("No le digai a nadie, por favor.", nieto(2.85), 22));
     esc_("n2", `
         ${reloj()}
         <div class="dn-mini-quien"${ap(frase(1), "izq")}>${fotoNieto("dn-s")}${barras("nieto")}<p>Tomás (nieto)</p></div>
@@ -1224,8 +1228,8 @@
   const PISTAS = [
     ...Object.values(NARR).map((n) => ({ src: n.src, en: n.en, dur: n.dur })),
     { src: "audio/cuento_del_tio_abuela.mp3", en: LL.abuela, dur: DUR_ABUELA },
-    // El mp3 del nieto no se corta: suena su primera frase, se pausa en 4,75 s (corta) y sigue desde ahí (desde)
-    // cuando Marta termina de decir «¿Tomás? ¿Qué te pasó, mijo?».
+    // El mp3 del nieto no se corta: suena «Abuelita, soy yo po, tu nieto.», se pausa en CORTE (corta) y sigue desde
+    // ahí (desde) cuando Marta termina de decir «¿Tomás? ¿Qué te pasó, mijo?».
     { src: "audio/cuento_del_tio_nieto.mp3", en: LL.nieto, dur: CORTE, corta: true },
     { src: "audio/cuento_del_tio_abuela_tomas.mp3", en: LL.abuela2, dur: DUR_TOMAS },
     { src: "audio/cuento_del_tio_nieto.mp3", en: LL.nieto2, dur: DUR_NIETO - CORTE, desde: CORTE },
@@ -1269,7 +1273,7 @@
   function sonar(antes, ahora) {
     for (const p of PISTAS) {
       if (antes < p.en && ahora >= p.en) tocar(p, ahora - p.en);
-      if (p.corta && p.a && antes < p.en + p.dur && ahora >= p.en + p.dur) p.a.pause();   // la primera frase del nieto termina aquí
+      if (p.corta && p.a && antes < p.en + p.dur && ahora >= p.en + p.dur) p.a.pause();   // aquí Marta interrumpe al nieto
     }
     if (antes < LL.suena && ahora >= LL.suena) sonarTimbre(ahora);
   }
