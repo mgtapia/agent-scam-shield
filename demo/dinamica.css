@@ -343,3 +343,17 @@ body.dn-revisando .dn-marco { bottom: 48px; }
 .dn-rebobina .dn-ic { font-size: 64px; color: var(--verde); }
 .dn-e-sin, .dn-e-frena { gap: 28px; }
 .dn-e-sin .dn-monto { font-size: 180px; line-height: 190px; }
+
+/* La llamada: el que llama es «Desconocido» y su foto va desenfocada (sin salirse del círculo) hasta que la abuela
+   dice «Tomás». --dn-blur y .dn-nombrado los fija render() desde t. */
+.dn-recorte { position: relative; display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
+.dn-img-nieto { filter: blur(var(--dn-blur, 0px)); transform: scale(1.08); }
+.dn-quien-nombre { display: inline-grid; font: inherit; }
+.dn-quien-nombre > i { grid-area: 1 / 1; font-style: normal; white-space: nowrap; }
+.dn-tomas, body.dn-nombrado .dn-desconocido { visibility: hidden; }
+body.dn-nombrado .dn-tomas { visibility: visible; }
+/* La abuela le pone el nombre: Marta a la izquierda, lo que dice al medio y el que llama a la derecha */
+.dn-dos-voces { display: grid; grid-template-columns: 320px minmax(0, 1fr) 320px; align-items: center; gap: 56px; width: 100%; }
+.dn-dos-voces .dn-titular { font-size: 88px; line-height: 104px; }
+/* Las otras estafas son de «Tú» */
+.dn-correo-para { display: flex; align-items: center; gap: 16px; color: var(--texto-2); font-size: 36px; line-height: 44px; white-space: nowrap; }
