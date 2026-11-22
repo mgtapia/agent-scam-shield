@@ -56,21 +56,21 @@
     ["gancho", 0, "zoom"], ["agentes", 4.8, "der"],
     // 2. El cuento del tío: el encargo, la llamada y cada frase del nieto en su escena (la llamada dura lo que sus mp3)
     ["encargo", 7.6, "abajo"], ["suena", 9.5, "zoom"], ["contesta", 11.3, "der"],
-    ["n1", 13.4, "der"], ["tomas", 15.9, "der"], ["n1b", 19.03, "der"], ["n2", 20.91, "golpe"], ["n3", 22.86, "izq"], ["fianza", 26.46, "zoom"],
-    ["n4", 29.81, "der"], ["cuenta", 32.86, "zoom"], ["n5", 37.61, "abajo"],
+    ["n1", 13.4, "der"], ["tomas", 15.9, "der"], ["n1b", 19.25, "der"], ["n2", 21.13, "golpe"], ["n3", 23.08, "izq"], ["fianza", 26.68, "zoom"],
+    ["n4", 30.03, "der"], ["cuenta", 33.08, "zoom"], ["n5", 37.83, "abajo"],
     // 3. El agente va a pagar y Grifter retiene
-    ["paga", 41.16, "abajo"], ["sin", 43.26, "corte"], ["frena", 45.41, "golpe"], ["motivo", 47.81, "zoom"],
+    ["paga", 41.38, "abajo"], ["sin", 43.48, "corte"], ["frena", 45.63, "golpe"], ["motivo", 48.03, "zoom"],
     // 4. Pagar igual: doble autorización, Marta aprueba con su código y Pablo rechaza
-    ["alerta", 50.81, "abajo"], ["codigo", 53.21, "der"], ["pablo", 56.11, "der"],
+    ["alerta", 51.03, "abajo"], ["codigo", 53.43, "der"], ["pablo", 56.33, "der"],
     // 5. Dos estafas más
-    ["banco", 59.71, "abajo"], ["responde", 62.11, "der"], ["clave", 64.11, "golpe"],
-    ["aprobaste", 66.56, "zoom"], ["cobra", 68.66, "golpe"], ["calza", 70.96, "zoom"],
+    ["banco", 59.93, "abajo"], ["responde", 62.33, "der"], ["clave", 64.33, "golpe"],
+    ["aprobaste", 66.78, "zoom"], ["cobra", 68.88, "golpe"], ["calza", 71.18, "zoom"],
     // 6. Cifras
-    ["estafas", 72.96, "zoom"], ["pasan", 75.06, "corte"], ["atacante", 76.76, "der"], ["cruzan", 81.26, "corte"],
+    ["estafas", 73.18, "zoom"], ["pasan", 75.28, "corte"], ["atacante", 76.98, "der"], ["cruzan", 81.48, "corte"],
     // 7. Cierre: la frase final y la marca que se arma
-    ["remate", 82.51, "zoom"], ["cierre", 86.11, "zoom"],
+    ["remate", 82.73, "zoom"], ["cierre", 86.33, "zoom"],
   ];
-  const DURACION = 89.51;
+  const DURACION = 89.73;
   const E = Object.fromEntries(ESCENAS.map(([id, desde]) => [id, desde]));   // el inicio de cada escena
   const PASOS = [0, E.encargo, E.paga, E.alerta, E.banco, E.estafas, E.remate];   // teclas 1 a 7
 
@@ -81,21 +81,21 @@
     gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,   dur: 4.08, pal: [0.07, 0.36, 0.53, 0.7, 1.01, 1.33, 1.95, 2.2, 2.71, 2.91, 3, 3.16, 3.59] },
     agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.9,   dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
     encargo:  { src: "audio/dinamica_12_encargo.mp3",  en: 7.75,  dur: 2.8,  pal: [0, 0.37, 0.54, 0.76, 0.83, 0.93, 1.4, 1.57, 2.04, 2.21] },
-    paga:     { src: "audio/dinamica_13_paga.mp3",     en: 40.61,  dur: 2.24, pal: [0, 0.13, 0.51, 0.64, 1.32, 1.49, 1.64, 1.76] },
-    sin:      { src: "audio/dinamica_14_sin.mp3",      en: 43.31, dur: 1.84, pal: [0, 0.27, 1.01, 1.17, 1.49, 1.65] },
-    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 45.46, dur: 5.28, pal: [0, 0.13, 0.77, 0.94, 1.24, 1.49, 2.53, 2.7, 3.08, 3.39, 3.48, 3.65, 4.32, 4.51, 4.61, 4.76] },
-    alerta:   { src: "audio/dinamica_15_alerta.mp3",   en: 50.86, dur: 2.24, pal: [0, 0.21, 0.52, 1.15, 1.76] },
-    codigo:   { src: "audio/dinamica_16_codigo.mp3",   en: 53.21,  dur: 3.04, pal: [0, 0.2, 1.22, 2.04, 2.29, 2.48] },
-    pablo:    { src: "audio/dinamica_17_pablo.mp3",    en: 56.31,  dur: 3.28, pal: [0, 0.15, 0.61, 0.77, 1.2, 1.97, 2.48, 2.7, 2.94] },
-    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 59.81,  dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
-    responde: { src: "audio/dinamica_18_responde.mp3", en: 61.91,  dur: 2.08, pal: [0, 0.21, 0.72, 1.09, 1.49, 1.67] },
-    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 64.16, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
-    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 66.66, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
-    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 71.06, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
-    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 73.06, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
-    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 76.86, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
-    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 82.61, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
-    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 86.41, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
+    paga:     { src: "audio/dinamica_13_paga.mp3",     en: 40.83,  dur: 2.24, pal: [0, 0.13, 0.51, 0.64, 1.32, 1.49, 1.64, 1.76] },
+    sin:      { src: "audio/dinamica_14_sin.mp3",      en: 43.53, dur: 1.84, pal: [0, 0.27, 1.01, 1.17, 1.49, 1.65] },
+    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 45.68, dur: 5.28, pal: [0, 0.13, 0.77, 0.94, 1.24, 1.49, 2.53, 2.7, 3.08, 3.39, 3.48, 3.65, 4.32, 4.51, 4.61, 4.76] },
+    alerta:   { src: "audio/dinamica_15_alerta.mp3",   en: 51.08, dur: 2.24, pal: [0, 0.21, 0.52, 1.15, 1.76] },
+    codigo:   { src: "audio/dinamica_16_codigo.mp3",   en: 53.43,  dur: 3.04, pal: [0, 0.2, 1.22, 2.04, 2.29, 2.48] },
+    pablo:    { src: "audio/dinamica_17_pablo.mp3",    en: 56.53,  dur: 3.28, pal: [0, 0.15, 0.61, 0.77, 1.2, 1.97, 2.48, 2.7, 2.94] },
+    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 60.03,  dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
+    responde: { src: "audio/dinamica_18_responde.mp3", en: 62.13,  dur: 2.08, pal: [0, 0.21, 0.72, 1.09, 1.49, 1.67] },
+    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 64.38, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
+    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 66.88, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
+    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 71.28, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
+    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 73.28, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
+    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 77.08, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
+    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 82.83, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
+    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 86.63, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
   };
   // Cuándo empieza la palabra i de una narración, en segundos de la demo.
   const palabra = (n, i) => NARR[n].en + NARR[n].pal[i];
@@ -105,15 +105,16 @@
   // La llamada: los mp3 de la versión A. FRASES son los inicios de cada frase del nieto en su mp3 (demo.js).
   // El mp3 del nieto dura 23,52 s (medido). Tras su primera frase (4,75 s) se pausa, la abuela dice «¿Tomás? ¿Qué te
   // pasó, mijo?» y él sigue desde ahí: todo lo que viene después se corre CORTE segundos.
-  // Medido en la envolvente del mp3 del nieto: «tu nieto.» termina en 2,45 s y «No le digai» empieza en 2,87 s.
-  // El nieto se pausa ahí, la abuela lo interrumpe y él sigue desde «No le digai…».
-  const LL = { suena: 9.6, contesta: 11.3, abuela: 11.5, nieto: 13.4, pausa: 2.45, reanuda: 2.87, cuelga: 39.76 };
+  // Medido en la envolvente del mp3 del nieto: «tu nieto.» termina en 2,44 s y «No le digai» empieza en 2,87 s.
+  // El nieto se pausa en 2,65 s (en medio de ese silencio), la abuela lo interrumpe y él sigue desde 2,65 s.
+  // Son los mismos tiempos de las versiones A y C.
+  const LL = { suena: 9.6, contesta: 11.3, abuela: 11.5, nieto: 13.4, pausa: 2.65, reanuda: 2.65, cuelga: 39.98 };
   // La frase nueva de la abuela (cuento_del_tio_abuela_tomas.mp3, 2,88 s). «Tomás» empieza en 0,16 s: en ese
   // instante el que llama empieza a dejar de ser «Desconocido» (fundido de 1,2 s) y su foto se aclara (1,8 s).
   // Ella le pone el nombre, él nunca lo dijo.
-  const ABUELA2 = { en: LL.nieto + LL.pausa + 0.15, dur: 2.88, pal: [0, 1, 1.39, 1.52, 2.04] };
-  // Lo que se corre el resto del mp3 del nieto: la abuela y dos pausas cortas, menos el silencio que se salta.
-  const CORTE = Math.round((LL.pausa + 0.15 + ABUELA2.dur + 0.15 - LL.reanuda) * 100) / 100;   // 2,76 s
+  const ABUELA2 = { en: LL.nieto + LL.pausa + 0.05, dur: 2.88, pal: [0, 1, 1.39, 1.52, 2.04] };
+  // Lo que se corre el resto del mp3 del nieto: la frase de la abuela y dos pausas cortas.
+  const CORTE = Math.round((LL.pausa + 0.05 + ABUELA2.dur + 0.05 - LL.reanuda) * 100) / 100;   // 2,98 s
   const NOMBRE = ABUELA2.en + 0.16;
   const FRASES = [0, 2.87, 4.75, 6.7, 13.65, 21.45];   // «Abuelita…», «No le digai…», «Choqué…», «El carabinero…», «Anota…», «Hazlo…»
   const frase = (i) => LL.nieto + FRASES[i] + (i > 0 ? CORTE : 0);
