@@ -53,24 +53,24 @@
   // --- Línea de tiempo (segundos). Cada escena dura lo que dura su voz; ninguna narración se encima con la llamada ---
   const ESCENAS = [
     // 1. Gancho
-    ["gancho", 0, "zoom"], ["agentes", 4.5, "der"],
+    ["gancho", 0, "zoom"], ["agentes", 4.8, "der"],
     // 2. El cuento del tío: el encargo, la llamada y cada frase del nieto en su escena (la llamada dura lo que sus mp3)
-    ["encargo", 7.3, "abajo"], ["suena", 9.2, "zoom"], ["contesta", 11.0, "der"],
-    ["n1", 13.1, "der"], ["n2", 17.85, "golpe"], ["n3", 19.8, "izq"], ["fianza", 23.8, "zoom"],
-    ["n4", 26.75, "der"], ["cuenta", 29.8, "zoom"], ["n5", 34.55, "abajo"],
+    ["encargo", 7.6, "abajo"], ["suena", 9.5, "zoom"], ["contesta", 11.3, "der"],
+    ["n1", 13.4, "der"], ["tomas", 18.15, "der"], ["n2", 21.25, "golpe"], ["n3", 23.2, "izq"], ["fianza", 26.8, "zoom"],
+    ["n4", 30.15, "der"], ["cuenta", 33.2, "zoom"], ["n5", 37.95, "abajo"],
     // 3. El agente va a pagar y Grifter retiene
-    ["paga", 38.1, "abajo"], ["sin", 40.2, "corte"], ["frena", 42.6, "golpe"], ["motivo", 45.0, "zoom"],
+    ["paga", 41.5, "abajo"], ["sin", 43.6, "corte"], ["frena", 45.75, "golpe"], ["motivo", 48.15, "zoom"],
     // 4. Pagar igual: doble autorización, Marta aprueba con su código y Pablo rechaza
-    ["alerta", 48.0, "abajo"], ["codigo", 50.4, "der"], ["pablo", 53.3, "der"],
+    ["alerta", 51.15, "abajo"], ["codigo", 53.55, "der"], ["pablo", 56.45, "der"],
     // 5. Dos estafas más
-    ["banco", 56.9, "abajo"], ["responde", 59.3, "der"], ["clave", 61.3, "golpe"],
-    ["aprobaste", 63.75, "zoom"], ["cobra", 65.85, "golpe"], ["calza", 68.15, "zoom"],
+    ["banco", 60.05, "abajo"], ["responde", 62.45, "der"], ["clave", 64.45, "golpe"],
+    ["aprobaste", 66.9, "zoom"], ["cobra", 69, "golpe"], ["calza", 71.3, "zoom"],
     // 6. Cifras
-    ["estafas", 70.15, "zoom"], ["pasan", 72.25, "corte"], ["atacante", 73.95, "der"], ["cruzan", 78.45, "corte"],
+    ["estafas", 73.3, "zoom"], ["pasan", 75.4, "corte"], ["atacante", 77.1, "der"], ["cruzan", 81.6, "corte"],
     // 7. Cierre: la frase final y la marca que se arma
-    ["remate", 79.95, "zoom"], ["cierre", 83.75, "zoom"],
+    ["remate", 82.85, "zoom"], ["cierre", 86.45, "zoom"],
   ];
-  const DURACION = 87.6;
+  const DURACION = 89.85;
   const E = Object.fromEntries(ESCENAS.map(([id, desde]) => [id, desde]));   // el inicio de cada escena
   const PASOS = [0, E.encargo, E.paga, E.alerta, E.banco, E.estafas, E.remate];   // teclas 1 a 7
 
@@ -79,23 +79,23 @@
   // Ninguna se pisa con la siguiente ni con la llamada.
   const NARR = {
     gancho:   { src: "audio/dinamica_01_gancho.mp3",   en: 0.3,   dur: 4.08, pal: [0.07, 0.36, 0.53, 0.7, 1.01, 1.33, 1.95, 2.2, 2.71, 2.91, 3, 3.16, 3.59] },
-    agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.6,   dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
-    encargo:  { src: "audio/dinamica_12_encargo.mp3",  en: 7.45,  dur: 2.8,  pal: [0, 0.37, 0.54, 0.76, 0.83, 0.93, 1.4, 1.57, 2.04, 2.21] },
-    paga:     { src: "audio/dinamica_13_paga.mp3",     en: 37.55,  dur: 2.24, pal: [0, 0.13, 0.51, 0.64, 1.32, 1.49, 1.64, 1.76] },
-    sin:      { src: "audio/dinamica_14_sin.mp3",      en: 40.25, dur: 1.84, pal: [0, 0.27, 1.01, 1.17, 1.49, 1.65] },
-    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 42.65, dur: 5.28, pal: [0, 0.13, 0.77, 0.94, 1.24, 1.49, 2.53, 2.7, 3.08, 3.39, 3.48, 3.65, 4.32, 4.51, 4.61, 4.76] },
-    alerta:   { src: "audio/dinamica_15_alerta.mp3",   en: 48.05, dur: 2.24, pal: [0, 0.21, 0.52, 1.15, 1.76] },
-    codigo:   { src: "audio/dinamica_16_codigo.mp3",   en: 50.4,  dur: 3.04, pal: [0, 0.2, 1.22, 2.04, 2.29, 2.48] },
-    pablo:    { src: "audio/dinamica_17_pablo.mp3",    en: 53.5,  dur: 3.28, pal: [0, 0.15, 0.61, 0.77, 1.2, 1.97, 2.48, 2.7, 2.94] },
-    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 57.0,  dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
-    responde: { src: "audio/dinamica_18_responde.mp3", en: 59.1,  dur: 2.08, pal: [0, 0.21, 0.72, 1.09, 1.49, 1.67] },
-    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 61.35, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
-    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 63.85, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
-    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 68.25, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
-    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 70.25, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
-    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 74.05, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
-    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 80.05, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
-    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 84.25, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
+    agentes:  { src: "audio/dinamica_02_agentes.mp3",  en: 4.9,   dur: 2.64, pal: [0, 0.13, 0.65, 0.87, 1.35, 1.72, 1.91] },
+    encargo:  { src: "audio/dinamica_12_encargo.mp3",  en: 7.75,  dur: 2.8,  pal: [0, 0.37, 0.54, 0.76, 0.83, 0.93, 1.4, 1.57, 2.04, 2.21] },
+    paga:     { src: "audio/dinamica_13_paga.mp3",     en: 40.95,  dur: 2.24, pal: [0, 0.13, 0.51, 0.64, 1.32, 1.49, 1.64, 1.76] },
+    sin:      { src: "audio/dinamica_14_sin.mp3",      en: 43.65, dur: 1.84, pal: [0, 0.27, 1.01, 1.17, 1.49, 1.65] },
+    retiene:  { src: "audio/dinamica_03_retiene.mp3",  en: 45.8, dur: 5.28, pal: [0, 0.13, 0.77, 0.94, 1.24, 1.49, 2.53, 2.7, 3.08, 3.39, 3.48, 3.65, 4.32, 4.51, 4.61, 4.76] },
+    alerta:   { src: "audio/dinamica_15_alerta.mp3",   en: 51.2, dur: 2.24, pal: [0, 0.21, 0.52, 1.15, 1.76] },
+    codigo:   { src: "audio/dinamica_16_codigo.mp3",   en: 53.55,  dur: 3.04, pal: [0, 0.2, 1.22, 2.04, 2.29, 2.48] },
+    pablo:    { src: "audio/dinamica_17_pablo.mp3",    en: 56.65,  dur: 3.28, pal: [0, 0.15, 0.61, 0.77, 1.2, 1.97, 2.48, 2.7, 2.94] },
+    banco:    { src: "audio/dinamica_04_banco.mp3",    en: 60.15,  dur: 2.0,  pal: [0, 0.16, 0.56, 1, 1.33, 1.51] },
+    responde: { src: "audio/dinamica_18_responde.mp3", en: 62.25,  dur: 2.08, pal: [0, 0.21, 0.72, 1.09, 1.49, 1.67] },
+    clave:    { src: "audio/dinamica_05_clave.mp3",    en: 64.5, dur: 2.16, pal: [0, 0.15, 0.53, 0.7, 1, 1.15, 1.26] },
+    tienda:   { src: "audio/dinamica_06_tienda.mp3",   en: 67, dur: 4.16, pal: [0, 0.63, 1.41, 1.68, 2.13, 2.46, 2.96, 3.36, 3.84] },
+    calza:    { src: "audio/dinamica_07_calza.mp3",    en: 71.4, dur: 1.6,  pal: [0, 0.16, 0.6, 0.75, 0.82, 0.92] },
+    estafas:  { src: "audio/dinamica_08_estafas.mp3",  en: 73.4, dur: 3.44, pal: [0, 0.52, 1.2, 2.08, 2.88] },
+    atacante: { src: "audio/dinamica_09_atacante.mp3", en: 77.2, dur: 5.44, pal: [0, 0.32, 0.64, 1.28, 1.77, 2.48, 2.69, 2.85, 3.38, 3.51, 4.52, 4.86] },
+    remate:   { src: "audio/dinamica_11_remate.mp3",   en: 82.95, dur: 3.52, pal: [0, 0.13, 0.6, 0.86, 1.32, 1.41, 2.47, 2.56, 3.28] },
+    cierre:   { src: "audio/dinamica_10_cierre.mp3",   en: 86.75, dur: 2.88, pal: [0.13, 1.17, 1.71, 1.89, 2.36, 2.53] },
   };
   // Cuándo empieza la palabra i de una narración, en segundos de la demo.
   const palabra = (n, i) => NARR[n].en + NARR[n].pal[i];
@@ -103,14 +103,24 @@
   const desdePalabra = (n, i) => ({ t0: palabra(n, i), pal: NARR[n].pal.slice(i).map((x) => x - NARR[n].pal[i]) });
 
   // La llamada: los mp3 de la versión A. FRASES son los inicios de cada frase del nieto en su mp3 (demo.js).
-  const LL = { suena: 9.3, contesta: 11.0, abuela: 11.2, nieto: 13.1, cuelga: 36.7 };   // el mp3 del nieto dura 23,52 s (medido)
+  // El mp3 del nieto dura 23,52 s (medido). Tras su primera frase (4,75 s) se pausa, la abuela dice «¿Tomás? ¿Qué te
+  // pasó, mijo?» y él sigue desde ahí: todo lo que viene después se corre CORTE segundos.
+  const CORTE = 3.1;
+  const LL = { suena: 9.6, contesta: 11.3, abuela: 11.5, nieto: 13.4, pausa: 4.75, cuelga: 40.1 };
+  // La frase nueva de la abuela (cuento_del_tio_abuela_tomas.mp3, 2,88 s). «Tomás» empieza en 0,16 s: en ese
+  // instante el que llama deja de ser «Desconocido» y su foto se aclara. Ella le pone el nombre, él nunca lo dijo.
+  const ABUELA2 = { en: LL.nieto + LL.pausa + 0.1, dur: 2.88, pal: [0, 1, 1.39, 1.52, 2.04] };
+  const NOMBRE = ABUELA2.en + 0.16;
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];
-  const frase = (i) => LL.nieto + FRASES[i];
+  const frase = (i) => LL.nieto + FRASES[i] + (i > 0 ? CORTE : 0);
+  // Un segundo del mp3 del nieto (después de la pausa) en segundos de la demo. «Son» empieza en 10,35 s del mp3 y
+  // «seiscientas cincuenta» va de ~11,15 a ~11,75 s (medido en la envolvente del audio).
+  const enNieto = (x) => LL.nieto + CORTE + x;
   // Los toques: «Pagar igual» de Marta y «Rechazar» de Pablo.
   const TOQUE_MARTA = E.alerta + 1.7, TOQUE_PABLO = E.pablo + 1.65;
   // Cuándo «habla» el agente (su nube pulsa en ámbar) y cuándo suena cada voz de la llamada.
   const HABLA_AGENTE = [[E.encargo + 0.6, E.encargo + 1.7], [E.paga + 0.05, E.paga + 1.6], [E.responde + 0.05, E.responde + 1.5]];
-  const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7]], nieto: [[LL.nieto, LL.cuelga]] };
+  const HABLA = { marta: [[LL.abuela, LL.abuela + 1.7], [ABUELA2.en, ABUELA2.en + ABUELA2.dur]], nieto: [[LL.nieto, LL.nieto + LL.pausa], [LL.nieto + LL.pausa + CORTE, LL.cuelga]] };
   const ALARMA = [E.sin + 0.3, TOQUE_PABLO + 0.25];   // el borde rojo: desde que el pago sale (sin Grifter) hasta que Pablo rechaza
   // La frase final, en dos líneas (su voz es NARR.remate: si cambia el texto, hay que regenerar ese mp3).
   const FRASE_FINAL = ["Tu agente puede creerle a cualquiera.", "Tu plata, no."];
@@ -155,7 +165,9 @@
     ? `<canvas class="dn-nube mini" width="144" height="144" aria-hidden="true"></canvas>`
     : `<span class="dn-nube ${cls}" data-ancla="nube" aria-hidden="true"></span>`;;
   // Retratos ficticios generados con IA (los de la versión A). Si falta el .jpg, el .svg ilustrado.
-  const fotoNieto = (cls = "") => `<div class="dn-foto ${cls}"><i class="dn-anillo"></i><i class="dn-anillo"></i><img src="img/nieto.jpg" onerror="this.onerror=null;this.src='img/nieto.svg'" alt="" width="400" height="400"></div>`;
+  const fotoNieto = (cls = "") => `<div class="dn-foto ${cls}"><i class="dn-anillo"></i><i class="dn-anillo"></i><span class="dn-recorte"><img class="dn-img-nieto" src="img/nieto.jpg" onerror="this.onerror=null;this.src='img/nieto.svg'" alt="" width="400" height="400"></span></div>`;
+  // El nombre del que llama: «Desconocido» hasta que la abuela dice «Tomás»; ahí pasa a «Tomás (nieto)».
+  const quienLlama = (cls = "") => `<b class="dn-quien-nombre ${cls}"><i class="dn-desconocido">Desconocido</i><i class="dn-tomas">Tomás (nieto)</i></b>`;
   const fotoMarta = (cls = "") => `<div class="dn-foto ${cls}"><img src="img/abuela.jpg" onerror="this.onerror=null;this.src='img/abuela.svg'" alt="" width="400" height="400"></div>`;
   const barras = (quien) => `<div class="dn-barras" data-quien="${quien}" aria-hidden="true">${"<i></i>".repeat(9)}</div>`;
   const reloj = () => `<p class="dn-reloj dato">${ic("call")}<span>En llamada · <b class="dn-reloj-s">0:00</b></span></p>`;
@@ -210,8 +222,8 @@
         <p class="dn-rotulo"${ap(E.suena + 0.05, "cae")}>El cuento del tío · la estafa telefónica más conocida de Chile</p>
         <div class="dn-vibra">
           ${fotoNieto("dn-xl dn-llama")}
-          <p class="dn-quien-llama"${ap(E.suena + 0.15, "sube")}>Número privado</p>
-          <p class="dn-sub"${ap(E.suena + 0.3, "sube")}>Llamada entrante</p>
+          <p class="dn-quien-llama"${ap(E.suena + 0.15, "sube")}>${quienLlama()}</p>
+          <p class="dn-sub"${ap(E.suena + 0.3, "sube")}>Número privado · Llamada entrante</p>
           <div class="dn-ll-botones"${ap(E.suena + 0.4, "sube")}>
             <span class="dn-ll-b colgar">${ic("call_end")}</span>
             <span class="dn-ll-b contestar">${ic("call")}${dedo(LL.contesta - 0.45, -260, 180)}</span>
@@ -223,25 +235,33 @@
           <div class="dn-habla-foto">${fotoMarta("dn-l")}${barras("marta")}<p class="dn-nombre">Marta</p></div>
           <h1 class="dn-titular dn-izq">${escribe("¿Aló? ¿Quién habla?", LL.abuela + 0.05, { cps: 15 })}</h1>
         </div>`);
-    const habla = (texto, t0, cps, cls = "", foto = "dn-l") => `
+    const habla = (texto, t0, cps, cls = "", foto = "dn-l", nombre = "Tomás (nieto)") => `
         ${reloj()}
         <div class="dn-habla ${cls}">
-          <div class="dn-habla-foto">${fotoNieto(foto)}${barras("nieto")}<p class="dn-nombre">Tomás (nieto)<span>Número privado</span></p></div>
+          <div class="dn-habla-foto">${fotoNieto(foto)}${barras("nieto")}<p class="dn-nombre">${nombre}<span>Número privado</span></p></div>
           <h1 class="dn-titular dn-izq">${escribe(texto, t0, { cps })}</h1>
         </div>`;
-    esc_("n1", habla("Abuelita, soy yo po, tu nieto. No le digai a nadie, por favor.", frase(0) + 0.1, 15.5));
+    esc_("n1", habla("Abuelita, soy yo po, tu nieto. No le digai a nadie, por favor.", frase(0) + 0.1, 15.5, "", "dn-l", quienLlama()));
+    // La abuela le pone el nombre: «¿Tomás? ¿Qué te pasó, mijo?». En «Tomás» el que llama deja de ser «Desconocido».
+    esc_("tomas", `
+        ${reloj()}
+        <div class="dn-dos-voces">
+          <div class="dn-habla-foto">${fotoMarta("dn-m")}${barras("marta")}<p class="dn-nombre">Marta</p></div>
+          <h1 class="dn-titular">${escribe("¿Tomás? ¿Qué te pasó, mijo?", 0, { t0: ABUELA2.en, pal: ABUELA2.pal })}</h1>
+          <div class="dn-habla-foto">${fotoNieto("dn-m")}${barras("nieto")}<p class="dn-nombre">${quienLlama()}<span>Número privado</span></p></div>
+        </div>`, "dn-centro");
     esc_("n2", `
         ${reloj()}
         <div class="dn-mini-quien"${ap(frase(1), "izq")}>${fotoNieto("dn-s")}${barras("nieto")}<p>Tomás (nieto)</p></div>
         <h1 class="dn-titular dn-enorme">${escribe("Choqué el auto y me tienen detenido.", frase(1) + 0.05, { cps: 21 })}</h1>`, "dn-centro");
-    esc_("n3", habla("El carabinero dice que si pago la fianza ahora me sueltan altiro.", frase(2) + 0.05, 17.5, "dn-al-reves"));
+    esc_("n3", habla("El carabinero dice que si pago la fianza ahora me sueltan altiro.", frase(2) + 0.05, 19, "dn-al-reves"));
     const S2 = E.fianza;
     esc_("fianza", `
         ${reloj()}
-        <p class="dn-etiqueta"${ap(S2 + 0.1, "cae")}>«Son…</p>
-        <p class="dn-monto dn-ambar">${cuenta(0, 650000, S2 + 0.3, 1.7, { pesos: true })}</p>
-        <p class="dn-etiqueta"${ap(S2 + 1.9, "sube")}>…abuelita»</p>
-        <span class="dn-tag ext"${ap(S2 + 2.2, "pop")}>${ic("call")}Dictado en la llamada</span>`, "dn-centro");
+        <p class="dn-etiqueta"${ap(enNieto(10.35), "cae")}>«Son…</p>
+        <p class="dn-monto dn-ambar">${cuenta(0, 650000, enNieto(11.15), 0.6, { pesos: true })}</p>
+        <p class="dn-etiqueta"${ap(enNieto(12.1), "sube")}>…abuelita»</p>
+        <span class="dn-tag ext"${ap(enNieto(12.4), "pop")}>${ic("call")}Dictado en la llamada</span>`, "dn-centro");
     esc_("n4", habla("Anota la cuenta del abogado:", frase(3) + 0.05, 16, "dn-una-linea"));
     const S3 = E.cuenta;
     esc_("cuenta", `
@@ -279,9 +299,9 @@
     esc_("sin", `
         <p class="dn-modo sin"${ap(S5b + 0.02, "cae")}>Sin Grifter</p>
         <div class="dn-escudo-nube">${agente("medio")}</div>
-        <p class="dn-monto dn-rojo"${ap(S5b + 0.35, "pop", S5b + 1.9)}>$650.000</p>
-        <p class="dn-etiqueta"${ap(S5b + 0.7, "sube", S5b + 1.9)}>Pagado a J. Contreras V. · 48-2210-7735</p>
-        <p class="dn-rebobina"${ap(S5b + 1.9, "pop")}><svg class="dn-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 6v12L2.5 12 11 6Zm10.5 0v12L13 12l8.5-6Z"/></svg><span>Rebobinamos: con Grifter</span></p>`, "dn-centro");
+        <p class="dn-monto dn-rojo"${ap(S5b + 0.35, "pop", S5b + 1.7)}>$650.000</p>
+        <p class="dn-etiqueta"${ap(S5b + 0.7, "sube", S5b + 1.7)}>Pagado a J. Contreras V. · 48-2210-7735</p>
+        <p class="dn-rebobina"${ap(S5b + 1.7, "pop")}><svg class="dn-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 6v12L2.5 12 11 6Zm10.5 0v12L13 12l8.5-6Z"/></svg><span>Rebobinamos: con Grifter</span></p>`, "dn-centro");
     const S5 = E.frena;
     esc_("frena", `
         <p class="dn-modo con"${ap(S5 + 0.02, "cae")}>Con Grifter</p>
@@ -342,6 +362,7 @@
     esc_("banco", `
         <p class="dn-rotulo"${ap(S9 + 0.05, "cae")}>Otra estafa: el falso Banco Cordillera</p>
         <div class="dn-correo">
+          <p class="dn-correo-para"${ap(S9 + 0.1, "izq")}>${ic("person")}<span>Para: Tú</span></p>
           <p class="dn-correo-de"${ap(S9 + 0.15, "izq")}>${ic("mail")}<span>seguridad@<mark class="dn-marca">bancocordillera-alertas.cl</mark></span></p>
           <p class="dn-correo-asunto"${ap(S9 + 0.35, "sube")}>Cargo no reconocido por $389.990 en tu tarjeta</p>
           <p class="dn-correo-cuerpo">${escribe("Para revertirlo antes de 30 minutos, responde con el [[código que te llegó por SMS]]. Si no, tu tarjeta será bloqueada.", S9 + 0.6, { cps: 95 })}</p>
@@ -349,7 +370,7 @@
     const S10 = E.responde;
     esc_("responde", `
         <div class="dn-con-agente">
-          <div class="dn-lado">${agente("grande")}<p class="dn-nombre">Agente de Marta</p></div>
+          <div class="dn-lado">${agente("grande")}<p class="dn-nombre">Tu agente</p></div>
           <div class="dn-respuesta">
             <p class="dn-rot">Respuesta del agente a seguridad@<mark class="dn-marca">bancocordillera-alertas.cl</mark></p>
             <p class="dn-resp-txt">${escribe("Hola, el código de verificación es", S10 + 0.05, { cps: 36 })}</p>
@@ -364,13 +385,13 @@
         <p class="dn-tachado dato chico"${ap(S11 + 1.35, "sube")}><span>Código 482 913 · no se envió</span><i${ap(S11 + 1.55, "raya")}></i></p>`, "dn-centro");
     const S12 = E.aprobaste;
     esc_("aprobaste", `
-        <p class="dn-rotulo"${ap(S12 + 0.05, "cae")}>${ic("shopping_cart")}Componentes Volcán · Orden VOL-5512 · 10.000 × chip MX-3 de 3 nm</p>
+        <p class="dn-rotulo"${ap(S12 + 0.05, "cae")}>Otra estafa · ${ic("person")}Tú · ${ic("shopping_cart")}Componentes Volcán · Orden VOL-5512</p>
         <p class="dn-etiqueta"${ap(S12 + 0.15, "sube")}>Aprobaste</p>
-        <p class="dn-monto">${cuenta(0, 412000, palabra("tienda", 1) - 0.1, 0.9, { pesos: true })}</p>`, "dn-centro");
+        <p class="dn-monto">${cuenta(0, 412000, palabra("tienda", 1), 0.6, { pesos: true })}</p>`, "dn-centro");
     const S13 = E.cobra;
     esc_("cobra", `
         <p class="dn-etiqueta"${ap(S13 + 0.05, "cae")}>La tienda cobra</p>
-        <p class="dn-monto dn-sube-rojo" data-on="${S13 + 0.95}">${cuenta(412000, 4120000, S13 + 0.15, 0.8, { pesos: true })}</p>
+        <p class="dn-monto dn-sube-rojo" data-on="${S13 + 0.65}">${cuenta(412000, 4120000, S13 + 0.15, 0.5, { pesos: true })}</p>
         <span class="dn-tag ext"${ap(S13 + 1.05, "pop")}>10 veces lo que aprobaste</span>`, "dn-centro");
     const S14 = E.calza;
     esc_("calza", `
@@ -668,8 +689,8 @@
         d = R * 1.5 * q.d + (1 - (quieto ? 1 : cerca * cerca)) * 1000 + (quieto ? 0 : 10 * Math.sin(tt * 3 + q.f));
       }
       if (cruza) {
-        const ida = salida(clamp((tt - E.sin - 0.3) / 1.2)), vuelta = vaiven(clamp((tt - E.sin - 1.9) / (E.frena + 0.05 - E.sin - 1.9)));
-        const p = quieto ? +(tt < E.sin + 1.9) : ida * (1 - vuelta);
+        const ida = salida(clamp((tt - E.sin - 0.3) / 1.2)), vuelta = vaiven(clamp((tt - E.sin - 1.7) / (E.frena + 0.05 - E.sin - 1.7)));
+        const p = quieto ? +(tt < E.sin + 1.7) : ida * (1 - vuelta);
         return { x: centro.x + Math.cos(ang) * d * (1 - 0.7 * p) + 1150 * p * (0.75 + 0.25 * q.d), y: centro.y + Math.sin(ang) * d * (1 - 0.7 * p), c: RGB.rojo, a, s: 2.6 + 0.8 * p };
       }
       return { x: centro.x + Math.cos(ang) * d, y: centro.y + Math.sin(ang) * d, c: RGB.rojo, a, s: 2.6 };
@@ -769,7 +790,7 @@
       return Math.min(total, inicios[cfg.pal.length - 1] + Math.floor((r - cfg.pal[cfg.pal.length - 1]) * 24));
     }
     const fin = k + 1 < inicios.length ? inicios[k + 1] : total;
-    const dura = k + 1 < cfg.pal.length ? Math.max(0.08, (cfg.pal[k + 1] - cfg.pal[k]) * 0.9) : Math.max(0.2, (fin - inicios[k]) * 0.05);
+    const dura = k + 1 < cfg.pal.length ? Math.max(0.08, (cfg.pal[k + 1] - cfg.pal[k]) * 0.9) : Math.max(0.12, (fin - inicios[k]) * 0.04);
     return Math.min(total, inicios[k] + Math.round(clamp((r - cfg.pal[k]) / dura) * (fin - inicios[k])));
   }
   // Lo escrito y, oculto pero ocupando su lugar, lo que falta: así el texto no se reacomoda mientras se escribe.
@@ -862,6 +883,9 @@
     const alarma = tt >= ALARMA[0] && tt < ALARMA[1];
     document.body.classList.toggle("dn-alarma", alarma);
     document.body.style.setProperty("--alarma", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.cos(((tt - ALARMA[0]) * 2 * Math.PI) / 1.2))).toFixed(3));
+    const aclara = quieto ? +(tt >= NOMBRE) : clamp((tt - NOMBRE) / 0.4);
+    document.body.style.setProperty("--dn-blur", `${(14 * (1 - aclara)).toFixed(1)}px`);
+    document.body.classList.toggle("dn-nombrado", tt >= NOMBRE);
     $("#dn-barra").style.width = `${(Math.min(tt, DURACION) / DURACION) * 100}%`;
     motor(tt);
     if (revisor) { revisor.reloj.textContent = `t = ${tt.toFixed(1)} s`; if (document.activeElement !== revisor.barra) revisor.barra.value = tt; }
@@ -872,7 +896,9 @@
   const PISTAS = [
     ...Object.values(NARR).map((n) => ({ src: n.src, en: n.en, dur: n.dur + 0.5 })),
     { src: "audio/cuento_del_tio_abuela.mp3", en: LL.abuela, dur: 2.0 },
-    { src: "audio/cuento_del_tio_nieto.mp3", en: LL.nieto, dur: 25.5 },
+    { src: "audio/cuento_del_tio_nieto.mp3", en: LL.nieto, dur: LL.pausa, corta: true },
+    { src: "audio/cuento_del_tio_abuela_tomas.mp3", en: ABUELA2.en, dur: ABUELA2.dur + 0.2 },
+    { src: "audio/cuento_del_tio_nieto.mp3", en: LL.nieto + LL.pausa + CORTE, dur: 19.5, desde: LL.pausa },
   ];
   let mudo = false;
   function prepararAudio() {
@@ -884,7 +910,7 @@
   }
   function tocar(p, desde) {
     if (!p.a || mudo) return;
-    try { p.a.currentTime = Math.max(0, desde); } catch (_) { /* aún sin metadatos: parte del inicio */ }
+    try { p.a.currentTime = Math.max(0, (p.desde || 0) + desde); } catch (_) { /* aún sin metadatos: parte del inicio */ }
     p.a.play().catch(() => { /* sin permiso de audio: la demo sigue muda */ });
   }
   let ctx = null, timbre = [];
@@ -907,6 +933,8 @@
   }
   function sonar(antes, ahora) {
     for (const p of PISTAS) if (antes < p.en && ahora >= p.en) tocar(p, ahora - p.en);
+    // Un tramo que termina antes que su mp3 (el nieto tras su primera frase) se pausa justo en su fin.
+    for (const p of PISTAS) if (p.corta && p.a && !p.a.paused && ahora >= p.en + p.dur) p.a.pause();
     if (antes < LL.suena && ahora >= LL.suena) sonarTimbre(ahora);
   }
   function reanudar(tt) {
