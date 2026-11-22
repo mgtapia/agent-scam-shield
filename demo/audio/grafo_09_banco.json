@@ -6,23 +6,22 @@
   "texto": "Un falso banco pide tu código.",
   "texto_enviado": "Un falso banco pide tu código.",
   "voz": "femenina",
-  "nombre_de_la_voz": "Catalina",
-  "voz_id": "5yNXxdAaHAkq8N8bGqwQ",
-  "clase_de_voz": "library",
-  "descripcion_de_la_voz": "Narradora chilena joven de la biblioteca de ElevenLabs: cálida, cercana y natural, sin tono de noticiero.",
+  "nombre_de_la_voz": "Ignacio - Natural Chilean, unhurried pace",
+  "voz_id": "NDx3GTwfaeouBvRv4NrB",
+  "clase_de_voz": "professional",
+  "descripcion_de_la_voz": "Narrador chileno de la biblioteca de ElevenLabs, la misma voz de la narración de demo.html: natural y pausado.",
   "modelo": "eleven_v3",
   "formato": "mp3_44100_64",
-  "duracion_s": 2.06,
+  "duracion_s": 2.14,
   "sintetica": true,
   "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
   "caracteres": 30,
   "inicios_de_palabra_s": [
-    0,
-    0.16,
-    0.56,
-    1,
-    1.33,
-    1.51
-  ],
-  "copia_de": "dinamica_04_banco.mp3"
+    0.0,
+    0.2,
+    0.63,
+    1.08,
+    1.41,
+    1.59
+  ]
 }
