@@ -108,7 +108,8 @@
   const CORTE = 3.1;
   const LL = { suena: 9.6, contesta: 11.3, abuela: 11.5, nieto: 13.4, pausa: 4.75, cuelga: 40.1 };
   // La frase nueva de la abuela (cuento_del_tio_abuela_tomas.mp3, 2,88 s). «Tomás» empieza en 0,16 s: en ese
-  // instante el que llama deja de ser «Desconocido» y su foto se aclara. Ella le pone el nombre, él nunca lo dijo.
+  // instante el que llama empieza a dejar de ser «Desconocido» (fundido de 1,2 s) y su foto se aclara (1,8 s).
+  // Ella le pone el nombre, él nunca lo dijo.
   const ABUELA2 = { en: LL.nieto + LL.pausa + 0.1, dur: 2.88, pal: [0, 1, 1.39, 1.52, 2.04] };
   const NOMBRE = ABUELA2.en + 0.16;
   const FRASES = [0, 4.75, 6.7, 13.65, 21.45];
@@ -746,7 +747,7 @@
       el, desde: +el.dataset.desde, hasta: +el.dataset.hasta,
       aparecen: [...el.querySelectorAll("[data-v]")],
       on: [...el.querySelectorAll("[data-on]")],
-      escribe: [...el.querySelectorAll("[data-e]")].map((x) => Object.assign(ESCRIBE[+x.dataset.e], { el: x, n: -1 })),
+      escribe: [...el.querySelectorAll("[data-e]")].map((x) => armarTexto(Object.assign(ESCRIBE[+x.dataset.e], { el: x }))),
       cuentas: [...el.querySelectorAll("[data-c]")].map((x) => Object.assign(CUENTAS[+x.dataset.c], { el: x, txt: "" })),
       dedos: [...el.querySelectorAll("[data-d]")].map((x) => Object.assign(DEDOS[+x.dataset.d], { el: x })),
       nubes: [...el.querySelectorAll(".dn-nube.mini")],
@@ -793,17 +794,19 @@
     const dura = k + 1 < cfg.pal.length ? Math.max(0.08, (cfg.pal[k + 1] - cfg.pal[k]) * 0.9) : Math.max(0.12, (fin - inicios[k]) * 0.04);
     return Math.min(total, inicios[k] + Math.round(clamp((r - cfg.pal[k]) / dura) * (fin - inicios[k])));
   }
-  // Lo escrito y, oculto pero ocupando su lugar, lo que falta: así el texto no se reacomoda mientras se escribe.
-  function tecleado(segs, n, cursor) {
-    let quedan = n, vis = "", resto = "";
-    for (const s of segs) {
-      const a = s.txt.slice(0, Math.max(0, quedan)), b = s.txt.slice(a.length);
-      quedan -= a.length;
-      const abre = s.cls ? `<span class="${s.cls}">` : "", cierra = s.cls ? "</span>" : "";
-      if (a) vis += abre + esc(a) + cierra;
-      if (b) resto += abre + esc(b) + cierra;
-    }
-    return `<span class="dn-vis${cursor ? " dn-con-cursor" : ""}">${vis}</span><span class="dn-resto">${resto}</span>`;
+  // El texto que se escribe se arma una sola vez, completo: cada letra en su propio elemento, oculto
+  // (visibility) hasta que le toca. La estructura no cambia entre cuadros, así que el párrafo no se reacomoda ni
+  // se rebalancea mientras se escribe: cada palabra nace en su línea definitiva. Antes se partía en «lo escrito» y
+  // «lo que falta», y ese corte dentro de una palabra cambiaba el kerning lo justo para que text-wrap: balance
+  // moviera palabras de línea. El cursor es una raya en posición absoluta sobre la última letra escrita.
+  function armarTexto(cfg) {
+    cfg.el.innerHTML = cfg.segs.map((sg) => {
+      const letras = [...sg.txt].map((ch) => `<span class="ch">${esc(ch)}</span>`).join("");
+      return sg.cls ? `<span class="${sg.cls}">${letras}</span>` : letras;
+    }).join("");
+    cfg.letras = [...cfg.el.querySelectorAll(".ch")];
+    cfg.n = 0; cfg.cur = -1;
+    return cfg;
   }
 
   function valor(c, tt) {
@@ -824,8 +827,12 @@
       for (const cfg of s.escribe) {
         const n = letras(cfg, tt), total = cfg.segs.reduce((x, y) => x + y.txt.length, 0);
         const cursor = !quieto && n > 0 && n < total;
-        const clave = n * 2 + cursor;
-        if (clave !== cfg.n) { cfg.n = clave; cfg.el.innerHTML = tecleado(cfg.segs, n, cursor); }
+        if (n !== cfg.n) {   // solo las letras que cambian de estado
+          for (let i = Math.min(n, cfg.n); i < Math.max(n, cfg.n); i++) cfg.letras[i].classList.toggle("v", i < n);
+          cfg.n = n;
+        }
+        const cur = cursor ? n - 1 : -1;
+        if (cur !== cfg.cur) { if (cfg.cur >= 0) cfg.letras[cfg.cur].classList.remove("cur"); if (cur >= 0) cfg.letras[cur].classList.add("cur"); cfg.cur = cur; }
       }
       for (const c of s.cuentas) {
         const txt = (c.pesos ? "$" : "") + miles(valor(c, tt));
@@ -883,9 +890,10 @@
     const alarma = tt >= ALARMA[0] && tt < ALARMA[1];
     document.body.classList.toggle("dn-alarma", alarma);
     document.body.style.setProperty("--alarma", quieto ? 1 : (0.35 + 0.65 * (0.5 + 0.5 * Math.cos(((tt - ALARMA[0]) * 2 * Math.PI) / 1.2))).toFixed(3));
-    const aclara = quieto ? +(tt >= NOMBRE) : clamp((tt - NOMBRE) / 0.4);
+    const aclara = quieto ? +(tt >= NOMBRE) : vaiven(clamp((tt - NOMBRE) / 1.8));
+    const nombra = quieto ? +(tt >= NOMBRE) : vaiven(clamp((tt - NOMBRE) / 1.2));
     document.body.style.setProperty("--dn-blur", `${(14 * (1 - aclara)).toFixed(1)}px`);
-    document.body.classList.toggle("dn-nombrado", tt >= NOMBRE);
+    document.body.style.setProperty("--dn-nombre", nombra.toFixed(3));
     $("#dn-barra").style.width = `${(Math.min(tt, DURACION) / DURACION) * 100}%`;
     motor(tt);
     if (revisor) { revisor.reloj.textContent = `t = ${tt.toFixed(1)} s`; if (document.activeElement !== revisor.barra) revisor.barra.value = tt; }

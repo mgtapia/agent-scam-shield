@@ -43,7 +43,10 @@ body.modo-dinamica { margin: 0; height: 100vh; overflow: hidden; background: var
 
 /* Texto que se escribe: lo que falta ya ocupa su lugar, oculto, y el cursor ámbar va al final de lo escrito */
 .dn-resto { visibility: hidden; }
-.dn-con-cursor::after { content: ""; border-left: 0.07em solid var(--ambar); margin-right: -0.07em; }
+/* El texto que se escribe: todas las letras están desde el principio; las que faltan, ocultas sin mover nada.
+   El cursor es una raya ámbar pintada como fondo de la última letra escrita: no ocupa lugar ni cambia el kerning. */
+.dn-escribe .ch:not(.v) { visibility: hidden; }
+.dn-escribe .ch.cur { background: linear-gradient(var(--ambar), var(--ambar)) no-repeat right 0 bottom 0.06em / 0.07em 0.86em; }
 .dn-marca { background: transparent; color: var(--ambar); text-decoration: underline; text-decoration-thickness: 0.05em; text-underline-offset: 0.14em; }
 
 /* Tipografía del escenario */
@@ -350,8 +353,8 @@ body.dn-revisando .dn-marco { bottom: 48px; }
 .dn-img-nieto { filter: blur(var(--dn-blur, 0px)); transform: scale(1.08); }
 .dn-quien-nombre { display: inline-grid; font: inherit; }
 .dn-quien-nombre > i { grid-area: 1 / 1; font-style: normal; white-space: nowrap; }
-.dn-tomas, body.dn-nombrado .dn-desconocido { visibility: hidden; }
-body.dn-nombrado .dn-tomas { visibility: visible; }
+.dn-desconocido { opacity: calc(1 - var(--dn-nombre, 0)); }
+.dn-tomas { opacity: var(--dn-nombre, 0); }
 /* La abuela le pone el nombre: Marta a la izquierda, lo que dice al medio y el que llama a la derecha */
 .dn-dos-voces { display: grid; grid-template-columns: 320px minmax(0, 1fr) 320px; align-items: center; gap: 56px; width: 100%; }
 .dn-dos-voces .dn-titular { font-size: 88px; line-height: 104px; }
