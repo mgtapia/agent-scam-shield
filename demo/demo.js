@@ -625,8 +625,9 @@
     }
   }
   // Con ?whatsapp=1, el pedido a Pablo llega de verdad y su rechazo también puede ser real. La demo espera su
-  // respuesta como mucho ESPERA_S desde el envío; si no llega, sigue con el rechazo simulado. Nunca se queda colgada.
-  const ESPERA_S = 12;
+  // respuesta sin límite: el presentador toca «Rechazar» en su WhatsApp y la demo sigue. Con ?espera=N espera como mucho N s y
+  // sigue con el rechazo simulado. Si el WhatsApp no llega, la tecla S sigue con el rechazo simulado. Si el envío falla, no espera.
+  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : Infinity;
   let avisado = false;
   const vivo = { id: null, desde: 0, esperando: false, real: null };
   function avisarEnVivo() {
@@ -838,6 +839,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === " " || e.code === "Space") { e.preventDefault(); alternar(); }
     else if (e.key === "r" || e.key === "R") irA(0, true);
+    else if ((e.key === "s" || e.key === "S") && vivo.esperando) vivo.esperando = false;   // respaldo: el WhatsApp no llegó
     else if (e.key === "m" || e.key === "M") { mudo = !mudo; if (mudo) callar(); }
     else if (/^[1-4]$/.test(e.key)) irA(ACTOS[+e.key].desde, true);
     else if (e.key === "v" || e.key === "V") { abrirRevisor(); escalar(); render(tiempo); }   // V abre los controles de revisión

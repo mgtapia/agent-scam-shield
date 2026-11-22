@@ -67,7 +67,7 @@ En el acto 1 del modo demo (`/#demo`), Marta toca «Pagar igual», aprueba con e
 GRIFTER_DEMO_WHATSAPP=1 python -m demo.server --puerto 8765
 ```
 
-- Sin `GRIFTER_DEMO_WHATSAPP=1`, la ruta `POST /api/demo/alerta-en-vivo` da 404. En Render nunca está, así que el sitio público no puede mandar WhatsApp.
+- Sin `GRIFTER_DEMO_WHATSAPP=1`, la ruta `POST /api/demo/alerta-en-vivo` da 404. En Render está apagada salvo el día del pitch, que se prende en el panel (ver el punto 5); aun así, sin la clave de un solo uso nadie puede hacer sonar el teléfono.
 - **Pide una clave de un solo uso.** El servidor la genera al arrancar y la imprime en la consola («Clave de un solo uso de este arranque: …»).
   - Va en la URL, y la barra de direcciones se proyecta y queda en el historial y en el log de acceso. Por eso nunca es una clave fija: muere al reiniciar el servidor.
   - `GRIFTER_DEMO_CLAVE` ya no se usa. Si está en `.env`, el servidor avisa que la ignora.
@@ -88,11 +88,12 @@ La demo llama a Kapso una sola vez por corrida, a los 45 s, y no espera la respu
 
 **4. El teléfono en la pantalla grande:** con el Android conectado por USB y la depuración USB activada, `scrcpy --window-title Pablo --stay-awake` duplica la pantalla en una ventana que se pone al lado de la demo.
 
-**5. El rechazo de Pablo.** Puede ser real o simulado:
-- **Simulado (por defecto):** si el presentador no responde, o no hay túnel, la demo espera hasta 12 s desde el envío y sigue con «Pablo rechazó» simulado. Nunca se queda esperando más.
-- **Real:** si el presentador toca «Rechazar» en su WhatsApp y Kapso llega al notebook, el log de la izquierda dice «Pablo rechazó desde su WhatsApp · 2,4 s», con la latencia medida. Para eso hacen falta dos cosas:
-  1. **Un túnel público al servidor local**, por ejemplo `cloudflared tunnel --url http://127.0.0.1:8765`, que entrega una URL `https://….trycloudflare.com`.
-  2. **El webhook en Kapso.** En el panel de Kapso, en el número de WhatsApp, Webhooks: la URL `https://….trycloudflare.com/api/whatsapp/webhook`, el evento `whatsapp.message.received` y el secreto, que es el mismo `KAPSO_WEBHOOK_SECRET` de `.env`. El servidor revisa la firma HMAC de cada entrega (ver `docs/mcp.md`), y solo cuenta el botón del número de `KAPSO_OWNER_NUMBER` sobre el pedido recién enviado.
+**5. El rechazo de Pablo.** La demo se queda esperando a que el presentador toque «Rechazar» en su WhatsApp, sin límite de tiempo, con la narradora callada justo antes de «rechaza». Cuando llega, el log de la izquierda dice «Pablo rechazó desde su WhatsApp · 2,4 s», con la latencia medida.
+- **Respaldo:** si el WhatsApp no llega, la tecla **S** sigue con el rechazo simulado. Si el envío falla (sin llaves o Kapso no lo acepta), la demo no espera.
+- Con `?espera=12` vuelve el comportamiento anterior: espera como mucho 12 s y sigue sola.
+- Para que el toque llegue, Kapso tiene que poder llamar al servidor. **El webhook en Kapso**, en el número de WhatsApp, Webhooks: la URL `https://<servidor>/api/whatsapp/webhook`, el evento `whatsapp.message.received` y el secreto, que es el mismo `KAPSO_WEBHOOK_SECRET` del entorno. El servidor revisa la firma HMAC de cada entrega (ver `docs/mcp.md`) y solo cuenta el botón del número de `KAPSO_OWNER_NUMBER` sobre el pedido recién enviado.
+  - **En local:** un túnel público, por ejemplo `cloudflared tunnel --url http://127.0.0.1:8765`, y en Kapso la URL `https://….trycloudflare.com/api/whatsapp/webhook`.
+  - **En Render:** no hace falta túnel. En el panel de Render, Environment: `GRIFTER_DEMO_WHATSAPP=1`, `KAPSO_API_KEY`, `KAPSO_PHONE_NUMBER_ID`, `KAPSO_OWNER_NUMBER` y `KAPSO_WEBHOOK_SECRET`. En Kapso, la URL `https://grifter.onrender.com/api/whatsapp/webhook`. La clave de un solo uso sale en los logs de Render al arrancar; el plan gratis duerme el servicio y cada arranque cambia la clave, así que se copia de los logs justo antes de presentar.
 
   La página se entera consultando `GET /api/demo/alerta-en-vivo/estado`, que devuelve solo el estado y la latencia, con la clave en una cabecera.
 
