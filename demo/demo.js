@@ -627,9 +627,9 @@
     }
   }
   // Con ?whatsapp=1, el pedido a Pablo llega de verdad y su rechazo también puede ser real. La demo espera su
-  // respuesta hasta 7 s desde que el video se detiene (?espera=N cambia el máximo): el presentador toca «Rechazar» y la demo sigue; si no, sigue con el
+  // respuesta hasta 10 s desde que el video se detiene (?espera=N cambia el máximo): el presentador toca «Rechazar» y la demo sigue; si no, sigue con el
   // rechazo simulado. Si el WhatsApp no llega, la tecla S sigue con el rechazo simulado. Si el envío falla, no espera.
-  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : 7;   // máximo de la pausa, contado desde que el video se detiene
+  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : 10;   // máximo de la pausa, contado desde que el video se detiene
   let avisado = false;
   const vivo = { id: null, desde: 0, esperando: false, real: null, limite: null };
   function avisarEnVivo() {
