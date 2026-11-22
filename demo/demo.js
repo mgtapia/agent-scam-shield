@@ -627,11 +627,11 @@
     }
   }
   // Con ?whatsapp=1, el pedido a Pablo llega de verdad y su rechazo también puede ser real. La demo espera su
-  // respuesta sin límite: el presentador toca «Rechazar» en su WhatsApp y la demo sigue. Con ?espera=N espera como mucho N s y
-  // sigue con el rechazo simulado. Si el WhatsApp no llega, la tecla S sigue con el rechazo simulado. Si el envío falla, no espera.
-  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : Infinity;
+  // respuesta hasta 7 s desde que el video se detiene (?espera=N cambia el máximo): el presentador toca «Rechazar» y la demo sigue; si no, sigue con el
+  // rechazo simulado. Si el WhatsApp no llega, la tecla S sigue con el rechazo simulado. Si el envío falla, no espera.
+  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : 7;   // máximo de la pausa, contado desde que el video se detiene
   let avisado = false;
-  const vivo = { id: null, desde: 0, esperando: false, real: null };
+  const vivo = { id: null, desde: 0, esperando: false, real: null, limite: null };
   function avisarEnVivo() {
     if (params.get("whatsapp") !== "1" || avisado || location.protocol === "file:") return;
     avisado = true;
@@ -645,7 +645,7 @@
       .catch(() => { /* la demo sigue con el teléfono dibujado */ });
   }
   async function sondear(clave) {
-    while (vivo.esperando && (performance.now() - vivo.desde) / 1000 < ESPERA_S) {
+    while (vivo.esperando && (vivo.limite === null || performance.now() < vivo.limite)) {
       try {
         const r = await fetch(`api/demo/alerta-en-vivo/estado?id=${encodeURIComponent(vivo.id)}`, { headers: { "X-Grifter-Demo-Clave": clave }, cache: "no-store" });
         const e = r.ok ? await r.json() : null;
@@ -790,7 +790,7 @@
     tiempo = Math.min(DURACION, tiempo + dt);
     // En vivo, la demo espera a Pablo justo después de «Falta Pablo, su hijo…», con la frase completa. Cuando él rechaza
     // desde su WhatsApp, sigue desde ahí y la narradora dice «y Pablo rechaza. No se pagó nada.».
-    if (vivo.esperando && antes < AUT.espera && tiempo >= AUT.espera) tiempo = AUT.espera - 0.001;
+    if (vivo.esperando && antes < AUT.espera && tiempo >= AUT.espera) { tiempo = AUT.espera - 0.001; if (vivo.limite === null) vivo.limite = performance.now() + ESPERA_S * 1000; }
     esperarConVoz();
     sonar(antes, tiempo);
     if (antes < AUT.pablo && tiempo >= AUT.pablo) avisarEnVivo();   // aunque esté en silencio

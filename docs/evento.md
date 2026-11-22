@@ -88,9 +88,9 @@ La demo llama a Kapso una sola vez por corrida, a los 45 s, y no espera la respu
 
 **4. El teléfono en la pantalla grande:** con el Android conectado por USB y la depuración USB activada, `scrcpy --window-title Pablo --stay-awake` duplica la pantalla en una ventana que se pone al lado de la demo.
 
-**5. El rechazo de Pablo.** La demo se queda esperando a que el presentador toque «Rechazar» en su WhatsApp, sin límite de tiempo, con la narradora callada justo antes de «rechaza». Cuando llega, el log de la izquierda dice «Pablo rechazó desde su WhatsApp · 2,4 s», con la latencia medida.
+**5. El rechazo de Pablo.** La demo se detiene hasta 7 s esperando que el presentador toque «Rechazar» en su WhatsApp (si no llega, sigue con el rechazo simulado), con la narradora callada justo antes de «rechaza». Cuando llega, el log de la izquierda dice «Pablo rechazó desde su WhatsApp · 2,4 s», con la latencia medida.
 - **Respaldo:** si el WhatsApp no llega, la tecla **S** sigue con el rechazo simulado. Si el envío falla (sin llaves o Kapso no lo acepta), la demo no espera.
-- Con `?espera=12` vuelve el comportamiento anterior: espera como mucho 12 s y sigue sola.
+- Con `?espera=N` el máximo de la pausa pasa a N s.
 - Para que el toque llegue, Kapso tiene que poder llamar al servidor. **El webhook en Kapso**, en el número de WhatsApp, Webhooks: la URL `https://<servidor>/api/whatsapp/webhook`, el evento `whatsapp.message.received` y el secreto, que es el mismo `KAPSO_WEBHOOK_SECRET` del entorno. El servidor revisa la firma HMAC de cada entrega (ver `docs/mcp.md`) y solo cuenta el botón del número de `KAPSO_OWNER_NUMBER` sobre el pedido recién enviado.
   - **En local:** un túnel público, por ejemplo `cloudflared tunnel --url http://127.0.0.1:8765`, y en Kapso la URL `https://….trycloudflare.com/api/whatsapp/webhook`.
   - **En Render:** no hace falta túnel. En el panel de Render, Environment: `GRIFTER_DEMO_WHATSAPP=1`, `KAPSO_API_KEY`, `KAPSO_PHONE_NUMBER_ID`, `KAPSO_OWNER_NUMBER` y `KAPSO_WEBHOOK_SECRET`. En Kapso, la URL `https://grifter.onrender.com/api/whatsapp/webhook`. La clave de un solo uso sale en los logs de Render al arrancar; el plan gratis duerme el servicio y cada arranque cambia la clave, así que se copia de los logs justo antes de presentar.
