@@ -1,0 +1,33 @@
+{
+  "escenario": "demo_grafo",
+  "paso": "3. Sin Grifter",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "El agente le cree y paga. Sin Grifter, la plata se va.",
+  "texto_enviado": "El agente le cree y paga. [serious] Sin Grifter, la plata se va.",
+  "voz": "femenina",
+  "nombre_de_la_voz": "Ignacio - Natural Chilean, unhurried pace",
+  "voz_id": "NDx3GTwfaeouBvRv4NrB",
+  "clase_de_voz": "professional",
+  "descripcion_de_la_voz": "Narrador chileno de la biblioteca de ElevenLabs, la misma voz de la narración de demo.html: natural y pausado.",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "duracion_s": 4.08,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
+  "caracteres": 64,
+  "inicios_de_palabra_s": [
+    0.0,
+    0.21,
+    0.72,
+    0.94,
+    1.36,
+    1.6,
+    2.3,
+    2.37,
+    3.09,
+    3.27,
+    3.65,
+    3.81
+  ]
+}

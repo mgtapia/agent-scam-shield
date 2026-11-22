@@ -1,0 +1,33 @@
+{
+  "escenario": "demo_grafo",
+  "paso": "6. Cifras",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "Cinco mil doscientos ochenta intentos de un atacante que aprende. Cero cruzan.",
+  "texto_enviado": "Cinco mil doscientos ochenta intentos de un atacante que aprende. Cero cruzan.",
+  "voz": "femenina",
+  "nombre_de_la_voz": "Ignacio - Natural Chilean, unhurried pace",
+  "voz_id": "NDx3GTwfaeouBvRv4NrB",
+  "clase_de_voz": "professional",
+  "descripcion_de_la_voz": "Narrador chileno de la biblioteca de ElevenLabs, la misma voz de la narración de demo.html: natural y pausado.",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "duracion_s": 5.51,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
+  "caracteres": 78,
+  "inicios_de_palabra_s": [
+    0.0,
+    0.3,
+    0.56,
+    1.2,
+    1.69,
+    2.53,
+    2.67,
+    2.77,
+    3.44,
+    3.74,
+    4.68,
+    4.94
+  ]
+}

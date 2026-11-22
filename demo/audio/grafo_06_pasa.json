@@ -1,0 +1,27 @@
+{
+  "escenario": "demo_grafo",
+  "paso": "3. Lo legítimo pasa",
+  "idioma": "es",
+  "origen": "narración",
+  "texto": "Lo que viene de Marta, pasa.",
+  "texto_enviado": "Lo que viene de Marta, pasa.",
+  "voz": "femenina",
+  "nombre_de_la_voz": "Ignacio - Natural Chilean, unhurried pace",
+  "voz_id": "NDx3GTwfaeouBvRv4NrB",
+  "clase_de_voz": "professional",
+  "descripcion_de_la_voz": "Narrador chileno de la biblioteca de ElevenLabs, la misma voz de la narración de demo.html: natural y pausado.",
+  "modelo": "eleven_v3",
+  "formato": "mp3_44100_64",
+  "duracion_s": 1.91,
+  "sintetica": true,
+  "aviso": "Voz sintética de la biblioteca de ElevenLabs; no clonamos ninguna voz. Se usa solo como narradora de la demo.",
+  "caracteres": 28,
+  "inicios_de_palabra_s": [
+    0.0,
+    0.12,
+    0.28,
+    0.51,
+    0.62,
+    1.5
+  ]
+}
