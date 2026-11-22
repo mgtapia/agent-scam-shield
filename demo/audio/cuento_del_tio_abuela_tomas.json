@@ -1,0 +1,16 @@
+{
+  "escenario": "cuento_del_tio",
+  "idioma": "es",
+  "origen": "llamada",
+  "texto": "¿Tomás? ¿Qué te pasó, mijo?",
+  "voz": "femenina",
+  "voz_id": "KiFSnOkWlUTh37bqvrCZ",
+  "clase_de_voz": "generated",
+  "descripcion_de_la_voz": "Abuela chilena de unos 78 años, de Santiago, voz cálida y algo temblorosa, contesta el teléfono fijo.",
+  "modelo": "eleven_v3",
+  "sintetica": true,
+  "aviso": "Voz sintética creada con el Diseño de Voz de ElevenLabs a partir de una descripción escrita (sin clonar a nadie). No es la voz de ninguna persona real.",
+  "caracteres": 27,
+  "duracion_s": 2.88,
+  "nombre_en_s": [0.16, 0.64]
+}

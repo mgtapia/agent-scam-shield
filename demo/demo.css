@@ -43,6 +43,11 @@ body.modo-demo { margin: 0; height: 100vh; overflow: hidden; background: var(--f
 
 /* Rótulo neutro sobre la frase del acto */
 .md-rotulo { margin: 0 0 -24px; color: var(--texto-2); font-size: 28px; line-height: 36px; }
+/* En el acto 2 la dueña ya no es Marta: «Tú», con un ícono genérico, y el corte «Otra estafa» */
+.md-duena { margin: 0; display: flex; align-items: center; gap: 14px; color: var(--texto-2); font-size: 28px; line-height: 36px; }
+.md-duena .md-ic { width: 48px; height: 48px; padding: 8px; border: 1px solid var(--texto-3); border-radius: 50%; color: var(--texto-2); }
+.md-duena b { color: var(--texto); font-weight: var(--p-fuerte); }
+.md-duena span { padding-left: 12px; border-left: var(--linea); color: var(--texto-3); font-family: var(--mono); font-size: 22px; text-transform: uppercase; letter-spacing: 0.08em; }
 /* Subtítulos de la llamada: una frase a la vez, en el mismo lugar */
 .md-subtitulos:not(.ve) { display: none; }
 .md-subtitulos { position: relative; min-height: 200px; padding: 24px; border: var(--linea); background: var(--superficie); }
@@ -103,9 +108,14 @@ body.md-habla-marta .md-foto-marta { opacity: 1; }
 .md-ll-nombre > p { grid-area: 1 / 1; margin: 0; display: grid; gap: 6px; transition: opacity 400ms ease-out; }
 .md-ll-nombre b { font-size: 34px; line-height: 40px; font-weight: var(--p-normal); }
 .md-ll-nombre span { color: var(--texto-2); font-size: 20px; line-height: 26px; }
+/* El que llama es «Desconocido» hasta que la abuela dice «Tomás» (body.md-nombrado); cuando habla Marta, su tarjeta */
 .md-n-habla-nieto, .md-n-marta { opacity: 0; }
-body.md-habla-nieto .md-n-nieto, body.md-habla-marta .md-n-nieto { opacity: 0; }
-body.md-habla-nieto .md-n-habla-nieto, body.md-habla-marta .md-n-marta { opacity: 1; }
+body.md-habla-marta .md-n-nieto, body.md-nombrado .md-n-nieto { opacity: 0; }
+body.md-nombrado:not(.md-habla-marta) .md-n-habla-nieto, body.md-habla-marta .md-n-marta { opacity: 1; }
+/* La foto del que llama, desenfocada hasta que tiene nombre; clip-path deja el desenfoque dentro del círculo */
+.md-foto-nieto { filter: blur(14px); clip-path: circle(50%); transition: opacity 400ms ease-out, filter 400ms ease-out; }
+body.md-nombrado .md-foto-nieto { filter: none; }
+.md-cuadro .md-foto-nieto { transition: opacity 400ms ease-out; }
 /* La barra de voz bajo la foto: siete barras cuya altura fija render() mientras alguien habla */
 .md-voz-barras { display: flex; align-items: center; justify-content: center; gap: 5px; height: 28px; margin-top: -24px; opacity: 0; transition: opacity 240ms ease-out; }
 body.md-contestada .md-voz-barras { opacity: 1; }
