@@ -57,9 +57,11 @@
       dueno: "Marta", encargo: "Contesta mis llamadas y ayúdame con lo que me pidan mis nietos.", encargo_de: "Encargo de {d}",
       entrante: "Llamada entrante", privado: "Número privado", en_llamada: "En llamada",
       n_marta: "Marta", n_nieto: "Tomás (nieto)", al_a_v: "Tomás, tu nieto",
-      abuela: "¿Aló? ¿Quién habla?",
+      abuela: "¿Aló? ¿Quién habla?", abuela2: "¿Tomás? ¿Qué te pasó, mijo?", desconocido: "Desconocido",
+      tu: "Tú", otra_estafa: "Otra estafa",
       nieto: [
-        "Abuelita, soy yo po, tu nieto. No le digai a nadie, por favor.",
+        "Abuelita, soy yo po, tu nieto.",
+        "No le digai a nadie, por favor.",
         "Choqué el auto y me tienen detenido.",
         "El carabinero dice que si pago la fianza ahora me sueltan altiro. Son $650.000, abuelita.",
         "Anota la cuenta del abogado: Banco Austral, cuenta vista 48-2210-7735.",
@@ -69,7 +71,7 @@
       golpe_con: "Con Grifter", golpe_retiene: "El pago no sale: Grifter lo retiene",
       golpe_banco: "Tu banco", golpe_notif: "Transferencia enviada: $650.000 a J. Contreras V.",
       escucho: "Escuchó", intento: "Intentó", grifter: "Grifter", eligio: "Eligió",
-      escucho_v: "Llamada de Tomás (nieto) · número privado · 25 s", llamada: "Llamada",
+      escucho_v: "Llamada de Tomás (nieto) · número privado · 30 s", llamada: "Llamada",
       retuvo: "Retuvo", motivo1: "la cuenta de destino (48-2210-7735) viene solo de contenido no confiable (llamada), no del encargo ni de las cuentas inscritas del dueño",
       igual_v: "pagar igual", pablo: "Pablo",
       pide_v: "Pide 2 aprobaciones (Marta y Pablo)", correo_v: "Correo con código a Marta", envio: "Envió",
@@ -130,9 +132,11 @@
       dueno: "Marta", encargo: "Answer my calls and help me with whatever my grandchildren ask for.", encargo_de: "{d}'s request",
       entrante: "Incoming call", privado: "Private number", en_llamada: "On call",
       n_marta: "Marta", n_nieto: "Tomás (grandson)", al_a_v: "Tomás, your grandson",
-      abuela: "Hello? Who's speaking?",
+      abuela: "Hello? Who's speaking?", abuela2: "Tomás? What happened, sweetie?", desconocido: "Unknown",
+      tu: "You", otra_estafa: "Another scam",
       nieto: [
-        "Grandma, it's me, your grandson. Don't tell anyone, please.",
+        "Grandma, it's me, your grandson.",
+        "Don't tell anyone, please.",
         "I crashed the car and they're holding me.",
         "The officer says if I pay the bail now they'll let me go, it's $650,000.",
         "Write down the lawyer's account: Banco Austral, savings account 48-2210-7735.",
@@ -142,7 +146,7 @@
       golpe_con: "With Grifter", golpe_retiene: "The payment doesn't go out: Grifter holds it",
       golpe_banco: "Your bank", golpe_notif: "Transfer sent: $650,000 to J. Contreras V.",
       escucho: "Heard", intento: "Tried", grifter: "Grifter", eligio: "Chose",
-      escucho_v: "Call from Tomás (grandson) · private number · 25 s", llamada: "Call",
+      escucho_v: "Call from Tomás (grandson) · private number · 30 s", llamada: "Call",
       retuvo: "Held", motivo1: "the destination account (48-2210-7735) comes only from untrusted content (call), not from the owner's request or registered accounts",
       igual_v: "pay anyway", pablo: "Pablo",
       pide_v: "Asks for 2 approvals (Marta and Pablo)", correo_v: "Email with a code to Marta", envio: "Sent",
@@ -204,21 +208,33 @@
   // La llamada: los mp3 de la abuela y el nieto (#171) y su sincronía no cambian; todo se corre junto desde A1.
   // Cuelga apenas termina el nieto: su mp3 dura 23,52 s (medido decodificándolo en el navegador), más un respiro.
   const NIETO_S = 23.52;
-  const LLAMADA = { suena: r2(A1 + 1.4), contesta: r2(A1 + 4), abuela: r2(A1 + 4.3), nieto: r2(A1 + 6.9), cuelga: r2(A1 + 6.9 + NIETO_S + 0.08) };
   // Cuándo empieza cada frase del nieto, en segundos desde que empieza su audio (proporcional a lo que se dice).
-  const FRASES = [0, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas)
+  const FRASES = [0, 2.65, 4.75, 6.7, 13.65, 21.45];   // inicio de cada frase en el mp3 del nieto (pausas medidas; «tu nieto.» termina en 2,44 s y «No le digai» empieza en 2,87 s)
+  // El que llama es un «Desconocido» con la foto desenfocada. Después de «Abuelita, soy yo po, tu nieto.», su mp3 se pausa y
+  // la abuela pregunta «¿Tomás? ¿Qué te pasó, mijo?» (cuento_del_tio_abuela_tomas, 2,88 s): al decir «Tomás» (0,16 s)
+  // le pone el nombre y se quita el desenfoque. El estafador nunca dijo quién era. Después el nieto sigue donde iba.
+  const ABUELA2_S = 2.88, NOMBRE_EN = 0.16, CORTE = FRASES[1];
+  const LLAMADA = (() => {
+    const suena = r2(A1 + 1.4), contesta = r2(A1 + 4), abuela = r2(A1 + 4.3), nieto = r2(A1 + 6.9);
+    const pausa = r2(nieto + CORTE), abuela2 = r2(pausa + 0.25), sigue = r2(abuela2 + ABUELA2_S + 0.25);
+    return { suena, contesta, abuela, nieto, pausa, abuela2, nombre: r2(abuela2 + NOMBRE_EN), sigue,
+      cuelga: r2(sigue + (NIETO_S - CORTE) + 0.08) };
+  })();
+  // El segundo de la línea de tiempo en que se oye el segundo «off» del mp3 del nieto, y al revés.
+  const nietoT = (off) => r2(off < CORTE ? LLAMADA.nieto + off : LLAMADA.sigue + off - CORTE);
+  const nietoOff = (tt) => (tt < LLAMADA.pausa ? tt - LLAMADA.nieto : tt - LLAMADA.sigue + CORTE);
   // Después de colgar, la narradora cuenta todo de corrido (narracion_autoriza) y cada cosa aparece cuando la nombra:
   // «El agente va a pagar. Sin Grifter, la plata se va. Con Grifter, queda retenido: la cuenta salió de una llamada.
   // Marta insiste: ahora hacen falta dos aprobaciones. Ella aprueba con su código. Falta Pablo, su hijo… y Pablo
   // rechaza. No se pagó nada.» Con ?whatsapp=1 el rechazo de Pablo puede ser real (ver avisarEnVivo).
   const NA = { en: r2(LLAMADA.cuelga + 0.2), dura: 16.24, va: 0.72, sin: 1.61, seva: 2.933, con: 3.4, cuenta: 5.227,
-    insiste: 7.48, dos: 9.14, aprueba: 10.7, falta: 11.94, rechaza: 14.293, no: 15.093 };
+    insiste: 7.48, dos: 9.14, aprueba: 10.7, falta: 11.94, hijo: 13.55, rechaza: 14.293, no: 15.093 };   // hijo: fin de «…su hijo…», antes de «y Pablo»
   const AUT = (() => {
     const a = (k, d = 0) => r2(NA.en + NA[k] + d);
     const igual = a("insiste", -0.05), digitos = a("aprueba", -0.1), digito = 0.12;
     return { escucho: r2(NA.en - 0.1), intento: a("va", -0.1), golpe: a("sin", -0.05), saldo: a("seva", -0.1), con: a("con", -0.05),
       retuvo: a("cuenta", -0.05), alerta: a("cuenta", 0.4), igual, pide: a("dos", -0.05), correo: a("dos", 0.45), digitos, digito,
-      uno: r2(digitos + 6 * digito + 0.3), pablo: a("falta", -0.05), rechaza: a("rechaza", -0.1), rechazado: a("rechaza", 0.6),
+      uno: r2(digitos + 6 * digito + 0.3), pablo: a("falta", -0.05), rechaza: a("rechaza", -0.1), espera: a("hijo"), rechazado: a("rechaza", 0.6),
       nada: a("no", -0.05), frase: a("falta", -0.05) };
   })();
   const SALDO = 1180000;   // el saldo de Marta en el golpe: un dibujo, como la cuenta y el código
@@ -326,7 +342,8 @@
             <div class="md-encargo" data-v="${r2(A1 + 1)}">${ic("person")}<div><p class="md-rot">${esc(t("encargo_de", { d: t("dueno") }))}</p><p>${esc(t("encargo"))}</p></div></div>
             <div class="md-subtitulos" data-v="${LLAMADA.abuela}" data-h="${LLAMADA.cuelga + 0.6}">
               <p class="md-sub md-sub-dueno" data-v="${LLAMADA.abuela}" data-h="${LLAMADA.nieto}"><span class="md-quien">${esc(t("dueno"))}</span>${esc(t("abuela"))}</p>
-              ${t("nieto").map((s, i) => `<p class="md-sub" data-v="${LLAMADA.nieto + FRASES[i]}" data-h="${i < FRASES.length - 1 ? LLAMADA.nieto + FRASES[i + 1] : LLAMADA.cuelga + 0.6}"><span class="md-quien">${esc(t("privado"))}</span>${esc(s).replace(/48-2210-7735/, '<mark class="md-cuenta">48-2210-7735</mark>').replace(/\$650[.,]000/, (m) => `<mark class="md-cuenta">${m}</mark>`)}</p>`).join("")}
+              <p class="md-sub md-sub-dueno" data-v="${LLAMADA.abuela2}" data-h="${LLAMADA.sigue}"><span class="md-quien">${esc(t("dueno"))}</span>${esc(t("abuela2"))}</p>
+              ${t("nieto").map((s, i) => `<p class="md-sub" data-v="${i === 1 ? LLAMADA.sigue : nietoT(FRASES[i])}" data-h="${i === 0 ? LLAMADA.pausa + 0.2 : i < FRASES.length - 1 ? nietoT(FRASES[i + 1]) : LLAMADA.cuelga + 0.6}"><span class="md-quien">${esc(t("privado"))}</span>${esc(s).replace(/48-2210-7735/, '<mark class="md-cuenta">48-2210-7735</mark>').replace(/\$650[.,]000/, (m) => `<mark class="md-cuenta">${m}</mark>`)}</p>`).join("")}
             </div>
             <ol class="md-pasos">
               <li data-v="${AUT.escucho}">${ic("call")}<span class="md-quien">${esc(t("escucho"))}</span><span>${esc(t("escucho_v"))}</span><span class="tag externo">${esc(t("llamada"))}</span></li>
@@ -359,7 +376,7 @@
                 </div>
                 <div class="md-voz-barras" aria-hidden="true">${"<i></i>".repeat(7)}</div>
                 <div class="md-ll-nombre">
-                  <p class="md-n-nieto"><b>${esc(t("privado"))}</b></p>
+                  <p class="md-n-nieto"><b>${esc(t("desconocido"))}</b><span>${esc(t("privado"))}</span></p>
                   <p class="md-n-habla-nieto"><b>${esc(t("n_nieto"))}</b><span>${esc(t("privado"))}</span></p>
                   <p class="md-n-marta"><b>${esc(t("n_marta"))}</b><span>+56 9 5555 0142</span></p>
                 </div>
@@ -412,6 +429,7 @@
       </section>
 
       <section class="md-acto md-comp md-a2" data-desde="${CL}" data-hasta="${CO}">
+        <p class="md-duena" data-v="${CL}">${ic("person")}<b>${esc(t("tu"))}</b><span>${esc(t("otra_estafa"))}</span></p>
         <p class="md-rotulo" data-v="${CL}">${esc(t("k_rotulo"))}</p>${tres([["mail", "k_1"], ["agente", "k_2"], ["block", "k_3"]], [r2(NK.en + 0.1), r2(NK.en + NK.agente), r2(NK.en + NK.frena)])}${celular(`
             <div class="md-correo">
               <p class="md-correo-de">${ic("mail")}<span>${esc(t("k_usuario"))}@<mark class="md-clave">${esc(t("k_dominio"))}</mark></span></p>
@@ -423,6 +441,7 @@
       </section>
 
       <section class="md-acto md-comp md-a2" data-desde="${CO}" data-hasta="${A3}">
+        <p class="md-duena" data-v="${CO}">${ic("person")}<b>${esc(t("tu"))}</b><span>${esc(t("otra_estafa"))}</span></p>
         <p class="md-rotulo" data-v="${CO}">${esc(t("c_rotulo"))}</p>${tres([["check", "c_1"], ["shopping_cart", "c_2"], ["block", "c_3"]], [r2(NC.en + NC.aprobaste), r2(NC.en + NC.tienda), r2(NC.en + NC.retiene)])}${celular(`
             <div class="md-compra">
               <p class="md-compra-tienda">${ic("shopping_cart")}<span>${esc(t("c_tienda"))}</span></p>
@@ -478,10 +497,13 @@
     document.body.classList.toggle("md-suena", suena);
     document.body.classList.toggle("md-contestada", tt >= LLAMADA.contesta);
     const hablaMarta = tt >= LLAMADA.abuela && tt < LLAMADA.nieto;
-    const hablaNieto = tt >= LLAMADA.nieto && tt < LLAMADA.cuelga;
+    // Cuando la abuela pregunta «¿Tomás?», la pantalla sigue mostrando al que llama: así se ve el nombre que ella le pone.
+    const preguntaMarta = tt >= LLAMADA.abuela2 && tt < LLAMADA.sigue;
+    const hablaNieto = tt >= LLAMADA.nieto && tt < LLAMADA.cuelga && !preguntaMarta && !(tt >= LLAMADA.pausa && tt < LLAMADA.abuela2);
     document.body.classList.toggle("md-habla-marta", hablaMarta);
     document.body.classList.toggle("md-habla-nieto", tt >= LLAMADA.contesta && !hablaMarta);
-    const voz = (hablaMarta && tt < LLAMADA.abuela + 1.7) || hablaNieto;   // el audio de Marta dura 1,7 s
+    document.body.classList.toggle("md-nombrado", tt >= LLAMADA.nombre);
+    const voz = (hablaMarta && tt < LLAMADA.abuela + 1.7) || (preguntaMarta && tt < LLAMADA.abuela2 + ABUELA2_S) || hablaNieto;   // el audio de Marta dura 1,7 s
     document.body.classList.toggle("md-voz", voz);
     const real = voz && nivelesReales();
     document.querySelectorAll(".md-voz-barras i").forEach((b, i) => {
@@ -505,7 +527,8 @@
     document.querySelectorAll(".md-ll-b.contestar").forEach((b) => b.style.setProperty("--md-latido", latido.toFixed(3)));
     let enLlamada = Math.min(tt, LLAMADA.cuelga);
     const suenaPista = (a) => a && !a.paused && !a.ended;
-    if (suenaPista(pistas.nieto)) enLlamada = Math.min(LLAMADA.nieto + pistas.nieto.currentTime, LLAMADA.cuelga);
+    if (suenaPista(pistas.nieto)) enLlamada = Math.min(nietoT(pistas.nieto.currentTime), LLAMADA.cuelga);
+    else if (suenaPista(pistas.abuela_tomas)) enLlamada = LLAMADA.abuela2 + pistas.abuela_tomas.currentTime;
     else if (suenaPista(pistas.abuela)) enLlamada = LLAMADA.abuela + pistas.abuela.currentTime;
     const s = Math.max(0, Math.floor(enLlamada - LLAMADA.contesta));
     $("#md-reloj").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -557,7 +580,7 @@
   // --- Audio: los mp3 del #171 (ElevenLabs, voces sintéticas de biblioteca); sin mp3 o si no cargan,
   // speechSynthesis del navegador, frase por frase para que siga a los subtítulos ---
   // La narradora de los actos 2 y 3 es otra voz de la biblioteca (scripts/generar_narracion_demo.py).
-  const MP3 = { es: { abuela: "audio/cuento_del_tio_abuela.mp3", nieto: "audio/cuento_del_tio_nieto.mp3",
+  const MP3 = { es: { abuela: "audio/cuento_del_tio_abuela.mp3", abuela_tomas: "audio/cuento_del_tio_abuela_tomas.mp3", nieto: "audio/cuento_del_tio_nieto.mp3",
     ...Object.fromEntries(["entrada", "autoriza", "correo", "regla_correo", "compra", "regla_compra", "cifras", "cierre", "marca"]
       .map((k) => [k, `audio/narracion_${k}.mp3`])) } };
   const pistas = {};
@@ -604,10 +627,11 @@
     }
   }
   // Con ?whatsapp=1, el pedido a Pablo llega de verdad y su rechazo también puede ser real. La demo espera su
-  // respuesta como mucho ESPERA_S desde el envío; si no llega, sigue con el rechazo simulado. Nunca se queda colgada.
-  const ESPERA_S = 12;
+  // respuesta hasta 7 s desde que el video se detiene (?espera=N cambia el máximo): el presentador toca «Rechazar» y la demo sigue; si no, sigue con el
+  // rechazo simulado. Si el WhatsApp no llega, la tecla S sigue con el rechazo simulado. Si el envío falla, no espera.
+  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : 7;   // máximo de la pausa, contado desde que el video se detiene
   let avisado = false;
-  const vivo = { id: null, desde: 0, esperando: false, real: null };
+  const vivo = { id: null, desde: 0, esperando: false, real: null, limite: null };
   function avisarEnVivo() {
     if (params.get("whatsapp") !== "1" || avisado || location.protocol === "file:") return;
     avisado = true;
@@ -621,7 +645,7 @@
       .catch(() => { /* la demo sigue con el teléfono dibujado */ });
   }
   async function sondear(clave) {
-    while (vivo.esperando && (performance.now() - vivo.desde) / 1000 < ESPERA_S) {
+    while (vivo.esperando && (vivo.limite === null || performance.now() < vivo.limite)) {
       try {
         const r = await fetch(`api/demo/alerta-en-vivo/estado?id=${encodeURIComponent(vivo.id)}`, { headers: { "X-Grifter-Demo-Clave": clave }, cache: "no-store" });
         const e = r.ok ? await r.json() : null;
@@ -635,7 +659,10 @@
     { en: LLAMADA.suena, hacer: () => sonarTimbre(LLAMADA.suena) },
     { en: LLAMADA.abuela, hacer: () => (pistas.abuela ? reproducir(pistas.abuela, () => sintetica(t("abuela"), true)) : sintetica(t("abuela"), true)) },
     { en: LLAMADA.nieto, hacer: () => { if (pistas.nieto) reproducir(pistas.nieto, () => sintetica(t("nieto")[0])); else sintetica(t("nieto")[0]); } },
-    ...FRASES.slice(1).map((d, i) => ({ en: LLAMADA.nieto + d, hacer: () => { if (!pistas.nieto) sintetica(t("nieto")[i + 1]); } })),
+    { en: LLAMADA.pausa, hacer: () => { if (pistas.nieto) pistas.nieto.pause(); } },
+    { en: LLAMADA.abuela2, hacer: () => (pistas.abuela_tomas ? reproducir(pistas.abuela_tomas, () => sintetica(t("abuela2"), true)) : sintetica(t("abuela2"), true)) },
+    { en: LLAMADA.sigue, hacer: () => { if (pistas.nieto) { conectar(pistas.nieto); pistas.nieto.currentTime = CORTE; pistas.nieto.play().catch(() => {}); } } },
+    ...FRASES.slice(1).map((d, i) => ({ en: nietoT(d), hacer: () => { if (!pistas.nieto) sintetica(t("nieto")[i + 1]); } })),
     ...Object.entries(NARRA).map(([k, n]) => ({ en: n.en, hacer: () => { if (pistas[k]) reproducir(pistas[k], () => sintetica(t(`n_${k}`))); else sintetica(t(`n_${k}`)); } })),
   ];
   const hecho = new Set();
@@ -761,8 +788,9 @@
     previo = ahora;
     const antes = tiempo;
     tiempo = Math.min(DURACION, tiempo + dt);
-    if (vivo.esperando && antes < AUT.rechaza && tiempo >= AUT.rechaza) tiempo = AUT.rechaza - 0.001;   // espera a Pablo
-    if (vivo.real && tiempo < AUT.rechazado && antes >= AUT.rechaza - 0.01) tiempo = Math.max(tiempo, AUT.rechazado);
+    // En vivo, la demo espera a Pablo justo después de «Falta Pablo, su hijo…», con la frase completa. Cuando él rechaza
+    // desde su WhatsApp, sigue desde ahí y la narradora dice «y Pablo rechaza. No se pagó nada.».
+    if (vivo.esperando && antes < AUT.espera && tiempo >= AUT.espera) { tiempo = AUT.espera - 0.001; if (vivo.limite === null) vivo.limite = performance.now() + ESPERA_S * 1000; }
     esperarConVoz();
     sonar(antes, tiempo);
     if (antes < AUT.pablo && tiempo >= AUT.pablo) avisarEnVivo();   // aunque esté en silencio
@@ -770,12 +798,12 @@
     if (tiempo >= DURACION) { corriendo = false; document.body.classList.remove("md-corriendo"); return; }
     requestAnimationFrame(cuadro);
   }
-  // Mientras la demo espera el rechazo real de Pablo, la narradora se calla justo antes de «rechaza» y sigue desde ahí.
+  // Mientras la demo espera el rechazo real de Pablo, la narradora se calla después de «su hijo…» y sigue desde ahí.
   let vozEnEspera = false;
   function esperarConVoz() {
     const a = pistas.autoriza;
     if (!a) return;
-    const retenida = vivo.esperando && tiempo >= AUT.rechaza - 0.002 && tiempo < AUT.rechaza;
+    const retenida = vivo.esperando && tiempo >= AUT.espera - 0.002 && tiempo < AUT.espera;
     if (retenida && !a.paused) { a.pause(); vozEnEspera = true; }
     else if (!retenida && vozEnEspera) {
       vozEnEspera = false;
@@ -788,10 +816,13 @@
     document.body.classList.toggle("md-corriendo", corriendo);
     if (corriendo) {
       // Si se pausó a mitad del nieto o de la narradora, el mp3 sigue desde donde iba.
-      const tramos = [["nieto", LLAMADA.nieto, LLAMADA.cuelga], ...Object.entries(NARRA).map(([k, n]) => [k, n.en, n.en + n.dura])];
+      const tramos = [["abuela_tomas", LLAMADA.abuela2, LLAMADA.abuela2 + ABUELA2_S], ...Object.entries(NARRA).map(([k, n]) => [k, n.en, n.en + n.dura])];
       for (const [k, desde, hasta] of tramos) {
         if (pistas[k] && tiempo > desde && tiempo < hasta && !mudo) { pistas[k].currentTime = tiempo - desde; pistas[k].play().catch(() => {}); }
       }
+      // El nieto tiene un corte en medio (la pregunta de la abuela): sigue solo si el segundo cae en uno de sus dos tramos.
+      const enNieto = (tiempo > LLAMADA.nieto && tiempo < LLAMADA.pausa) || (tiempo > LLAMADA.sigue && tiempo < LLAMADA.cuelga);
+      if (pistas.nieto && enNieto && !mudo) { pistas.nieto.currentTime = nietoOff(tiempo); pistas.nieto.play().catch(() => {}); }
       previo = 0; requestAnimationFrame(cuadro);
     } else callar();
   }
@@ -811,6 +842,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === " " || e.code === "Space") { e.preventDefault(); alternar(); }
     else if (e.key === "r" || e.key === "R") irA(0, true);
+    else if ((e.key === "s" || e.key === "S") && vivo.esperando) vivo.esperando = false;   // respaldo: el WhatsApp no llegó
     else if (e.key === "m" || e.key === "M") { mudo = !mudo; if (mudo) callar(); }
     else if (/^[1-4]$/.test(e.key)) irA(ACTOS[+e.key].desde, true);
     else if (e.key === "v" || e.key === "V") { abrirRevisor(); escalar(); render(tiempo); }   // V abre los controles de revisión

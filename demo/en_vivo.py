@@ -6,7 +6,7 @@ presentador (KAPSO_OWNER_NUMBER) el mismo pedido que manda la doble autorizació
 (scamshield/mcp/alerta_whatsapp.py): el texto «Grifter pide aprobación…» y los botones Aprobar y Rechazar.
 
 Seguridad:
-- La ruta existe solo con GRIFTER_DEMO_WHATSAPP=1 en el entorno: sin eso responde 404. En Render nunca está.
+- La ruta existe solo con GRIFTER_DEMO_WHATSAPP=1 en el entorno: sin eso responde 404. En Render se prende solo para el pitch.
 - Pide una clave de un solo uso que se genera al arrancar y se imprime en la consola local. Va en la URL, que se
   proyecta y queda en el historial y en el log de acceso: por eso nunca es una clave fija de .env, y muere al reiniciar.
   Se compara en tiempo constante.

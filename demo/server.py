@@ -388,7 +388,7 @@ def probar_estafa(correo: CorreoJuez, request: Request) -> dict[str, Any]:
 
 
 # --- Demo en vivo: el pedido de aprobación de Pablo llega de verdad por WhatsApp (demo/en_vivo.py) ------------
-# Solo con GRIFTER_DEMO_WHATSAPP=1 (en Render nunca está), con la clave de un solo uso del arranque, tope a las claves
+# Solo con GRIFTER_DEMO_WHATSAPP=1 (en Render, solo para el pitch), con la clave de un solo uso del arranque, tope a las claves
 # malas y un envío cada 30 s (que se devuelve si Kapso falla).
 demo_en_vivo = en_vivo.EnVivo()
 
