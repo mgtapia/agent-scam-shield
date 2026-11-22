@@ -1311,10 +1311,10 @@
 
   // --- En vivo. Con ?whatsapp=1, el pedido a Pablo llega de verdad a su WhatsApp cuando aparece su panel, y su rechazo
   // también puede ser real: al terminar la pista (a) la demo espera su respuesta (el presentador toca
-  // «Rechazar» en su teléfono) hasta 7 s desde que se detiene (?espera=N cambia el máximo) y sigue
+  // «Rechazar» en su teléfono) hasta 10 s desde que se detiene (?espera=N cambia el máximo) y sigue
   // con el rechazo simulado; si el WhatsApp no llega, la tecla S hace lo mismo. Si el envío falla, no espera. Sin
   // ?whatsapp=1 nada de esto corre. Es la lógica de demo.js (versión A) ---
-  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : 7;   // máximo de la pausa, contado desde que el video se detiene
+  const ESPERA_S = Number(params.get("espera")) > 0 ? Number(params.get("espera")) : 10;   // máximo de la pausa, contado desde que el video se detiene
   const T_PANEL = K.dos + 0.5;   // cuando aparece el panel «Grifter · WhatsApp a Pablo»
   let avisado = false;
   const vivo = { id: null, desde: 0, esperando: false, real: null, limite: null };
